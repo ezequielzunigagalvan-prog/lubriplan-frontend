@@ -11,7 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+import { API_ASSETS_URL } from "../services/api";
 
 /* =========================
    HELPERS
@@ -56,7 +56,7 @@ const buildImgUrl = (raw) => {
   if (!raw) return "";
   const s = String(raw);
   if (s.startsWith("http://") || s.startsWith("https://")) return s;
-  if (s.startsWith("/")) return `${API_URL}${s}`;
+  if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
   return s;
 };
 
@@ -1467,5 +1467,6 @@ const btnKpiGray = {
   boxShadow: "0 8px 18px rgba(2,6,23,0.18)",
   transition: "all 160ms ease",
 };
+
 
 

@@ -5,7 +5,7 @@ import MainLayout from "../layouts/MainLayout";
 
 import { createRoute, uploadRouteImage } from "../services/routesService";
 import { getEquipment } from "../services/equipmentService";
-import { API_URL } from "../services/api";
+import { API_ASSETS_URL } from "../services/api";
 
 /* ================== HELPERS ================== */
 const norm = (v) => String(v ?? "").toLowerCase().trim();
@@ -348,7 +348,7 @@ export default function NewRoutePage() {
                     />
                   ) : form.imageUrl ? (
                     <img
-                      src={`${API_URL}${form.imageUrl}`}
+                      src={`${API_ASSETS_URL}${form.imageUrl}`}
                       alt="Imagen"
                       style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }}
                     />

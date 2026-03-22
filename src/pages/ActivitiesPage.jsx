@@ -17,13 +17,13 @@ import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+import { API_ASSETS_URL } from "../services/api";
 
 const buildImgUrl = (raw) => {
   if (!raw) return "";
   const s = String(raw);
   if (s.startsWith("http://") || s.startsWith("https://")) return s;
-  if (s.startsWith("/")) return `${API_URL}${s}`;
+  if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
   return s;
 };
 
@@ -219,10 +219,10 @@ export default function ActivitiesPage() {
 
   const myTechId = user?.technicianId != null ? Number(user.technicianId) : null;
 
-  // âœ… filtro por técnico (solo ADMIN/SUP)
+  // ✅ filtro por t�cnico (solo ADMIN/SUP)
   const [techFilterId, setTechFilterId] = useState(""); // "" = todos
 
-  // âœ… Reglas nuevas por rol
+  // ✅ Reglas nuevas por rol
   const canCompleteActivities = isTech;
   const canAssignTech = role === "SUPERVISOR" || role === "ADMIN";
   const canSchedule = role === "SUPERVISOR" || role === "ADMIN";
@@ -257,16 +257,16 @@ export default function ActivitiesPage() {
   const [executions, setExecutions] = useState([]);
   const [err, setErr] = useState("");
 
-  // âœ… modal state
+  // ✅ modal state
   const [completeOpen, setCompleteOpen] = useState(false);
   const [selectedExecutionId, setSelectedExecutionId] = useState(null);
   const [showEmergency, setShowEmergency] = useState(false);
   const [openReportCondition, setOpenReportCondition] = useState(false);
 
-  // âœ… animaciÃ³n al completar
+  // ✅ animación al completar
   const [completePulse, setCompletePulse] = useState(false);
 
-  // âœ… Programar actividad (manual)
+  // ✅ Programar actividad (manual)
   const [openSchedule, setOpenSchedule] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [scheduleErr, setScheduleErr] = useState("");
@@ -287,7 +287,7 @@ const highlightedCardRef = useRef(null);
 
   const todayYMD = useMemo(() => toLocalYMD(new Date()), []);
 
-  // ===== Técnicos (Supervisor / Admin) =====
+  // ===== T�cnicos (Supervisor / Admin) =====
   const [techs, setTechs] = useState([]);
   const [assigningId, setAssigningId] = useState(null);
 
@@ -385,7 +385,7 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, completedRange, month, currentPlantId, techFilterId]);
 
- // âœ… inicial + deep-links
+ // ✅ inicial + deep-links
 useEffect(() => {
   if (deep.filter === "overdue") setFilter("Atrasada");
   if (deep.filter === "unassigned") setUnassignedOnly(true);
@@ -396,7 +396,7 @@ useEffect(() => {
   if (deep.q) setQ(deep.q);
   if (deep.unassigned) setUnassignedOnly(true);
 
-  // âœ… si viene desde notificaciÃ³n, limpia filtros para no ocultar la actividad
+  // ✅ si viene desde notificación, limpia filtros para no ocultar la actividad
   if (highlightExecutionId || highlightActivityId || highlightReportId) {
     setFilter("Todas");
     setQ("");
@@ -410,7 +410,7 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
-  // âœ… abrir modal emergente desde state
+  // ✅ abrir modal emergente desde state
   useEffect(() => {
     if (location.state?.openEmergency) {
       setShowEmergency(true);
@@ -419,7 +419,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  // âœ… cargar técnicos (Supervisor / Admin cuando aplique)
+  // ✅ cargar t�cnicos (Supervisor / Admin cuando aplique)
   useEffect(() => {
     if (!(canAssignTech || canSchedule) || !currentPlantId) {
       setTechs([]);
@@ -436,13 +436,13 @@ useEffect(() => {
           : [];
         setTechs(items);
       } catch (e) {
-        console.error("Error cargando técnicos:", e);
+        console.error("Error cargando t�cnicos:", e);
         setTechs([]);
       }
     })();
   }, [canAssignTech, canSchedule, currentPlantId]);
 
-  // âœ… cargar equipos (solo si puede programar)
+  // ✅ cargar equipos (solo si puede programar)
   useEffect(() => {
     if (!canSchedule || !currentPlantId) {
       setEquipments([]);
@@ -509,13 +509,13 @@ useEffect(() => {
       await load();
     } catch (e) {
       console.error(e);
-      setErr(e?.message || "Error asignando técnico");
+      setErr(e?.message || "Error asignando t�cnico");
     } finally {
       setAssigningId(null);
     }
   };
 
-  // âœ… programar actividad
+  // ✅ programar actividad
   const openScheduleModal = () => {
     setScheduleErr("");
     setScheduleForm({
@@ -558,7 +558,7 @@ useEffect(() => {
           : Number(scheduleForm.technicianId);
 
       if (technicianId !== null && !Number.isFinite(technicianId)) {
-        return setScheduleErr("Técnico inválido.");
+        return setScheduleErr("T�cnico inv�lido.");
       }
 
       setSavingSchedule(true);
@@ -658,8 +658,8 @@ useEffect(() => {
         const plannedLabel = !isManual
           ? plannedLub?.name
             ? `${plannedLub.name}${plannedLub.code ? ` (${plannedLub.code})` : ""}`
-            : route?.lubricantType || "â€”"
-          : "â€”";
+            : route?.lubricantType || "—"
+          : "—";
 
         const moves = Array.isArray(ex?.lubricantMovements) ? ex.lubricantMovements : [];
         const usedMove =
@@ -676,7 +676,7 @@ useEffect(() => {
 
         const activityName = isManual
           ? ex?.manualTitle || "Actividad programada"
-          : route?.name || "â€”";
+          : route?.name || "—";
 
         return {
           id: ex.id,
@@ -770,7 +770,7 @@ useEffect(() => {
     });
   }, [sorted, completedFromTo, futureFromTo]);
 
-  // âœ… TECH ve: sin asignar + asignadas a su technicianId
+  // ✅ TECH ve: sin asignar + asignadas a su technicianId
   const techScoped = useMemo(() => {
     if (!isTech) return scoped;
 
@@ -807,7 +807,7 @@ useEffect(() => {
     if (isAdminPriorityDeepLink) {
       list = list.filter((a) => {
         const crit = String(a?.equipmentCriticality || "").toUpperCase();
-        const isCriticalEq = ["ALTA", "CRITICA", "CRÍTICA"].includes(crit);
+        const isCriticalEq = ["ALTA", "CRITICA", "CR�TICA"].includes(crit);
         const fromConditionReport = a?.conditionReportId != null;
         return isCriticalEq || fromConditionReport;
       });
@@ -963,7 +963,7 @@ useEffect(() => {
             <div style={kicker}>  </div>
             <h1 style={title}>Actividades</h1>
             <div style={subtitle}>
-              Gestión diaria de ejecución, asignación y control
+              Gesti�n diaria de ejecuci�n, asignaci�n y control
               {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
             </div>
           </div>
@@ -1003,10 +1003,10 @@ useEffect(() => {
                 type="button"
                 onClick={() => setOpenReportCondition(true)}
                 style={btnGhost}
-                title="Reportar condición anormal"
+                title="Reportar condici�n anormal"
               >
                 <Icon name="warn" style={{ width: 16, height: 16 }} />
-                <span>Reportar condición</span>
+                <span>Reportar condici�n</span>
               </button>
             ) : null}
           </div>
@@ -1021,7 +1021,7 @@ useEffect(() => {
               <div style={modalHeader}>
                 <div>
                   <div style={modalKicker}>PROGRAMAR</div>
-                  <div style={modalTitle}>Actividad única</div>
+                  <div style={modalTitle}>Actividad �nica</div>
                 </div>
 
                 <button
@@ -1035,7 +1035,7 @@ useEffect(() => {
               </div>
 
               <div style={modalHint}>
-                Se crea como actividad <b>única</b> (no recurrente). <b></b>
+                Se crea como actividad <b>�nica</b> (no recurrente). <b></b>
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
@@ -1122,7 +1122,7 @@ useEffect(() => {
                 </label>
 
                 <label style={lbl}>
-                  Técnico (opcional)
+                  T�cnico (opcional)
                   <select
                     value={scheduleForm.technicianId}
                     onChange={(e) =>
@@ -1149,7 +1149,7 @@ useEffect(() => {
                         manualInstructions: e.target.value,
                       }))
                     }
-                    placeholder="Puntos, riesgos, EPP, pasosâ€¦"
+                    placeholder="Puntos, riesgos, EPP, pasos…"
                     style={{ ...modalInput, minHeight: 90, resize: "vertical" }}
                   />
                 </label>
@@ -1272,17 +1272,17 @@ useEffect(() => {
                     <Icon name="warn" style={{ width: 18, height: 18, color: "#0b1220" }} />
                   </span>
                   <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                    Condición mala / crítica
+                    Condici�n mala / cr�tica
                   </div>
                 </div>
 
                 <div style={infoText}>
                   <div>
-                    <b>Por qu? aparece:</b> actividades completadas con condición <b>MALO</b> o{" "}
+                    <b>Por qu? aparece:</b> actividades completadas con condici�n <b>MALO</b> o{" "}
                     <b>CR?TICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendación:</b> revisa observaci?n/evidencia y prioriza inspección.
+                    <b>Recomendaci�n:</b> revisa observaci?n/evidencia y prioriza inspecci�n.
                   </div>
                 </div>
               </div>
@@ -1330,8 +1330,8 @@ useEffect(() => {
               style={controlSelect}
             >
               <option value="MONTH">Este mes</option>
-              <option value="30D">?ltimos 30 días</option>
-              <option value="90D">?ltimos 90 días</option>
+              <option value="30D">?ltimos 30 d�as</option>
+              <option value="90D">?ltimos 90 d�as</option>
             </select>
           </div>
         </div>
@@ -1357,9 +1357,9 @@ useEffect(() => {
               value={techFilterId}
               onChange={(e) => setTechFilterId(e.target.value)}
               style={controlSelect}
-              title="Filtrar por técnico"
+              title="Filtrar por t�cnico"
             >
-              <option value="">Todos los técnicos</option>
+              <option value="">Todos los t�cnicos</option>
               {techs.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} {t.code ? `(${t.code})` : ""}
@@ -1373,7 +1373,7 @@ useEffect(() => {
             onClick={() => setUnassignedOnly((v) => !v)}
             style={{ ...filterBtn, ...(unassignedOnly ? filterBtnOn : {}) }}
           >
-            {unassignedOnly ? "Sin técnico (activo)" : "Sin técnico"}
+            {unassignedOnly ? "Sin t�cnico (activo)" : "Sin t�cnico"}
           </button>
         </div>
 
@@ -1397,7 +1397,7 @@ useEffect(() => {
 
         {loading ? (
           <p style={{ marginTop: 14, fontWeight: 900, color: "#475569" }}>
-            Cargando actividadesâ€¦
+            Cargando actividades…
           </p>
         ) : null}
 
@@ -1586,14 +1586,14 @@ export function ActivityCard({
       }}
       title={
         !canComplete && activity.computedStatus !== "Completada"
-          ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
+          ? `Programada para ${safeDateLabel || "?"} (a�n no disponible)`
           : ""
       }
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={cardTopRow}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={cardTaskLabel}>QUÉ VOY A HACER</div>
+            <div style={cardTaskLabel}>QU� VOY A HACER</div>
             <div style={{ ...cardTaskTitle, ...(isMobile ? cardTaskTitleMobile : null) }}>
               {activity.activityName}
             </div>
@@ -1632,7 +1632,7 @@ export function ActivityCard({
                   "rgba(239,68,68,0.40)"
                 )}
               >
-                {activity.overdueDays} día{activity.overdueDays === 1 ? "" : "s"} tarde
+                {activity.overdueDays} d�a{activity.overdueDays === 1 ? "" : "s"} tarde
               </span>
             ) : null}
 
@@ -1644,7 +1644,7 @@ export function ActivityCard({
 
             {isCriticalEq ? (
               <span style={miniPill("rgba(239,68,68,0.12)", "#7f1d1d")}>
-                Equipo crítico
+                Equipo cr�tico
               </span>
             ) : null}
           </div>
@@ -1666,7 +1666,7 @@ export function ActivityCard({
               {activity.equipmentLocation ? (
                 <span>{activity.equipmentLocation}</span>
               ) : (
-                <span>Sin ubicación</span>
+                <span>Sin ubicaci�n</span>
               )}
             </div>
           </div>
@@ -1700,13 +1700,13 @@ export function ActivityCard({
           <div style={{ ...summaryCard, ...(isMobile ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="tool" size="sm" />
-              <span>Método</span>
+              <span>M�todo</span>
             </div>
             <div style={{ ...summaryValue, ...(isMobile ? summaryValueMobile : null) }}>
               {methodText}
             </div>
             <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null) }}>
-              Aplicación
+              Aplicaci�n
             </div>
           </div>
         </div>
@@ -1722,7 +1722,7 @@ export function ActivityCard({
           <span style={{ ...infoChip, ...(isMobile ? infoChipMobile : null) }}>
             <Icon name="user" size="sm" />
             <span>
-              Técnico:{" "}
+              T�cnico:{" "}
               <b style={{ color: "#0f172a" }}>
                 {activity?.technician?.name ||
                   (activity?.technicianId ? `#${activity.technicianId}` : "Sin asignar")}
@@ -1760,7 +1760,7 @@ export function ActivityCard({
           <div style={noteBox}>
             <div style={noteTitle}>
               <Icon name="doc" size="sm" />
-              <span>Observación</span>
+              <span>Observaci�n</span>
             </div>
             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.35 }}>
               {normalizedNotes}
@@ -1795,7 +1795,7 @@ export function ActivityCard({
               onChange={(e) => onAssignTech(activity.id, e.target.value)}
               disabled={assigningId === activity.id}
               style={{ ...techSelect, ...(isMobile ? techSelectMobile : null) }}
-              title="Asignar técnico"
+              title="Asignar t�cnico"
             >
               <option value="">Sin asignar</option>
               {techs.map((t) => (
@@ -1814,7 +1814,7 @@ export function ActivityCard({
         {!canComplete && activity.isFuture ? (
           <div style={futureNote}>
             <Icon name="clock" size="sm" />
-            <span>Programada para esa fecha (no disponible aún)</span>
+            <span>Programada para esa fecha (no disponible a�n)</span>
           </div>
         ) : null}
       </div>
@@ -2729,6 +2729,7 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
 
 
 

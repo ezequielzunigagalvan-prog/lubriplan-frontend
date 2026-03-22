@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getExecutionById, completeExecution } from "../services/executionsService";
 import { getTechnicians } from "../services/techniciansService";
 import { getExecutionLubricants } from "../services/lubricantsService";
-import { API_URL } from "../services/api";
+import { API_ASSETS_URL } from "../services/api";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
 
@@ -23,7 +23,7 @@ const isTechActive = (t) => {
   return st === "activo";
 };
 
-const API_BASE = String(API_URL || "http://localhost:3001/api").replace(/\/api\/?$/, "");
+const API_BASE = String(API_ASSETS_URL || "http://localhost:3001").replace(/\/+$/, "");
 
 const buildAssetUrl = (raw) => {
   if (!raw) return "";
@@ -78,10 +78,10 @@ const loggedTechId = user?.technicianId != null ? Number(user.technicianId) : nu
     }
 
     if (v.startsWith("/")) {
-      return `${API_URL}${v}`;
+      return `${API_BASE}${v}`;
     }
 
-    return `${API_URL}/${v}`;
+    return `${API_BASE}/${v}`;
   }
 
   if (value instanceof File || value instanceof Blob) {
@@ -1536,3 +1536,4 @@ const inputLocked = {
   cursor: "not-allowed",
   border: "1px solid rgba(148,163,184,0.35)",
 };
+

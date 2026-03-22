@@ -190,17 +190,13 @@ function getNextDateByFrequency(lastDateStr, frequency, weeklyDays = []) {
   return "";
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace(
-  /\/api\/?$/,
-  ""
-);
 
 const buildImgUrl = (raw) => {
   if (!raw) return "";
   const s = String(raw);
   if (s.startsWith("http://") || s.startsWith("https://")) return s;
-  if (s.startsWith("/")) return `${API_BASE}${s}`;
-  return `${API_BASE}/${s}`;
+  if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
+  return `${API_ASSETS_URL}/${s}`;
 };
 
 const norm = (v) => String(v ?? "").toLowerCase().trim();
@@ -2071,3 +2067,5 @@ const weekDayBtnActive = {
   color: "#9a3412",
   boxShadow: "0 8px 18px rgba(249,115,22,0.12)",
 };
+
+

@@ -1,9 +1,11 @@
 // src/services/api.js
 import { getToken, clearAuth } from "../auth/auth.js";
 
-export const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:3001/api"
-).replace(/\/$/, "");
+const RAW_API_URL = String(import.meta.env.VITE_API_URL || "http://localhost:3001/api").trim();
+
+export const API_URL = RAW_API_URL.replace(/\/+$/, "");
+export const API_BASE_URL = API_URL.replace(/\/api\/?$/i, "");
+export const API_ASSETS_URL = String(import.meta.env.VITE_ASSETS_BASE_URL || API_BASE_URL).replace(/\/+$/, "");
 
 function emitAuthInvalid(reason = "HTTP_401") {
   try {
@@ -52,7 +54,6 @@ export async function apiFetch(path, options = {}) {
     ? await res.json().catch(() => ({}))
     : await res.text().catch(() => "");
 
-  // ✅ sesión inválida / expirada
   if (res.status === 401) {
     try {
       clearAuth();
@@ -65,7 +66,7 @@ export async function apiFetch(path, options = {}) {
     throw new Error(
       data && typeof data === "object" && data.error
         ? data.error
-        : "Sesión expirada"
+        : "Sesi�n expirada"
     );
   }
 
@@ -85,7 +86,6 @@ export async function apiFetch(path, options = {}) {
     throw new Error(msg);
   }
 
-  // ✅ request exitosa = actividad real del backend
   try {
     window.dispatchEvent(new Event("lubriplan:backend-activity"));
   } catch {
