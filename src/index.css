@@ -1,0 +1,99 @@
+:root {
+  /* STATUS COLORS */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  --success-rgb: 34,197,94;
+  --warning-rgb: 245,158,11;
+  --danger-rgb: 239,68,68;
+
+  /* UI */
+  --card: #ffffff;
+  --text: #1f2933;
+  --muted: #6b7280;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+
+  /* CHARTS */
+  --grid: rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+  --card: #1e293b;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --shadow: 0 12px 30px rgba(0,0,0,0.45);
+
+  /* CHARTS */
+  --grid: rgba(255,255,255,0.15);
+}
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+    
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+    @keyframes shimmer {
+  0% {
+    background-position: -450px 0;
+  }
+  100% {
+    background-position: 450px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #eeeeee 25%,
+    #f5f5f5 37%,
+    #eeeeee 63%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+  }
+  
+}
+
+/* ===== LubriPlan Premium Focus ===== */
+.lp-input,
+.lp-textarea,
+.lp-select {
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.lp-input:focus,
+.lp-textarea:focus,
+.lp-select:focus {
+  border-color: rgba(249, 115, 22, 0.85) !important; /* naranja */
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.16) !important;
+}
+
+.lp-input:disabled,
+.lp-textarea:disabled,
+.lp-select:disabled {
+  background: rgba(241, 245, 249, 0.85) !important;
+  color: rgba(15, 23, 42, 0.65) !important;
+  cursor: not-allowed !important;
+}
+
+/* opcional: hover sutil */
+.lp-input:hover:not(:disabled),
+.lp-textarea:hover:not(:disabled),
+.lp-select:hover:not(:disabled) {
+  border-color: rgba(148, 163, 184, 0.9);
+}

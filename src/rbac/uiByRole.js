@@ -1,0 +1,35 @@
+export const UI_BY_ROLE = {
+  ADMIN: {
+    showDonut: true,
+    showPredictive: true,
+    canManageRoutes: true,
+    canSeeAnalysis: true,
+    canSeeInventory: true,
+    canSeeUsers: true,
+    canSeeExport: true,
+    canSeeTechnicians: true,
+    routesDetails: true,
+  },
+  SUPERVISOR: {
+    showDonut: true,
+    showPredictive: true,
+    canManageRoutes: true,
+    canSeeAnalysis: true,
+    canSeeInventory: true,
+    canSeeUsers: false,
+    canSeeExport: true,
+    canSeeTechnicians: true,
+    routesDetails: true,
+  },
+  TECHNICIAN: {
+    showDonut: false,
+    showPredictive: false,
+    canManageRoutes: false,
+    canSeeAnalysis: false,
+    canSeeInventory: false,
+    canSeeUsers: false,
+    canSeeExport: false,
+    canSeeTechnicians: false,
+    routesDetails: false, // 👈 clave: NO detalle
+  },
+};

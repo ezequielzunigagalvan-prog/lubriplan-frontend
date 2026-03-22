@@ -1,0 +1,220 @@
+﻿import { Icon } from "./lpIcons";
+
+export default function ActivityCard({ activity, onOpen }) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const status = activity?.status || activity?.computedStatus || "Pendiente";
+  const isCompleted = status === "Completada" || activity?.statusRaw === "COMPLETED";
+
+  const dateStr =
+    (typeof activity?.date === "string" && activity.date) ||
+    (activity?.scheduledAt ? new Date(activity.scheduledAt).toISOString().slice(0, 10) : "") ||
+    (activity?.dateLabel || "") ||
+    "";
+
+  const isFuture = !isCompleted && dateStr && dateStr > today;
+  const clickable = !isCompleted && !isFuture;
+
+  const eqObj =
+    activity?.equipment && typeof activity.equipment === "object"
+      ? activity.equipment
+      : activity?.route?.equipment && typeof activity.route.equipment === "object"
+      ? activity.route.equipment
+      : null;
+
+  const equipmentName =
+    eqObj?.name ||
+    activity?.equipmentName ||
+    (typeof activity?.equipment === "string" ? activity.equipment : "") ||
+    "—";
+
+  const equipmentCode = eqObj?.code || activity?.equipmentCode || "";
+  const equipmentLocation = eqObj?.location || activity?.equipmentLocation || "";
+
+  const lubObj = activity?.lubricant && typeof activity.lubricant === "object" ? activity.lubricant : null;
+  const lubricantName =
+    lubObj?.name || (typeof activity?.lubricant === "string" ? activity.lubricant : "") || "—";
+
+  const conditionRaw = String(
+    activity?.condition ?? activity?.executionCondition ?? activity?.route?.condition ?? ""
+  )
+    .trim()
+    .toUpperCase();
+
+  const isBadCondition =
+    conditionRaw === "MALO" || conditionRaw === "CRITICO" || conditionRaw === "CRÍTICO";
+
+  const critRaw = String(
+    eqObj?.criticality ?? activity?.equipmentCriticality ?? activity?.route?.equipment?.criticality ?? ""
+  )
+    .trim()
+    .toUpperCase();
+
+  const isHighCriticality = critRaw === "ALTA" || critRaw === "CRITICA" || critRaw === "CRÍTICA";
+
+  const isOverdue =
+    status === "Atrasada" || activity?.statusRaw === "OVERDUE" || activity?.status === "OVERDUE";
+
+  const leftAccent = isOverdue ? "#ef4444" : isBadCondition ? "#ef4444" : isHighCriticality ? "#f59e0b" : "#e5e7eb";
+
+  const borderStyle =
+    isOverdue || isBadCondition || isHighCriticality
+      ? { border: `1px solid rgba(148,163,184,0.35)`, borderLeft: `6px solid ${leftAccent}` }
+      : { border: "1px solid #e5e7eb" };
+
+  const showAlertChip = isOverdue || isBadCondition || isHighCriticality;
+
+  return (
+    <div
+      style={{
+        ...card,
+        ...borderStyle,
+        cursor: clickable ? "pointer" : "default",
+        opacity: isCompleted ? 0.6 : 1,
+      }}
+      onClick={() => {
+        if (clickable && onOpen) onOpen(activity);
+      }}
+      title={isFuture ? `Esta actividad está programada para ${dateStr}` : ""}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <strong
+            style={{
+              display: "block",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {activity?.routeName || activity?.route?.name || activity?.activityName || "Ruta"}
+          </strong>
+
+          <div style={muted}>
+            <span style={{ fontWeight: 800, color: "#334155" }}>{equipmentName}</span>
+            {equipmentCode ? <span> · {equipmentCode}</span> : null}
+            {equipmentLocation ? <span> · {equipmentLocation}</span> : null}
+          </div>
+        </div>
+
+        {showAlertChip ? (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {isOverdue && <span style={pill("#fee2e2", "#991b1b")}>ATRASADA</span>}
+            {isBadCondition && <span style={pill("#fee2e2", "#991b1b")}>EQUIPO {conditionRaw}</span>}
+            {isHighCriticality && !isBadCondition && <span style={pill("#fef3c7", "#92400e")}>CRITICIDAD {critRaw}</span>}
+          </div>
+        ) : null}
+
+        {activity?.hasEvidence && (
+          <button
+            type="button"
+            title="Ver evidencia"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpen) onOpen(activity);
+            }}
+            style={cameraBtn}
+          >
+            <Icon name="camera" size="md" />
+          </button>
+        )}
+      </div>
+
+      <div style={row}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <Icon name="calendar" size="sm" />
+          {dateStr || "—"}
+        </span>
+        <span style={badge(status)}>{status}</span>
+      </div>
+
+      <div style={details}>
+        <div>
+          <strong>Lubricante:</strong> {lubricantName}
+        </div>
+        <div>
+          <strong>Comercial:</strong> {activity?.commercialName || "—"}
+        </div>
+        <div>
+          <strong>Cantidad:</strong> {(activity?.quantityLabel ?? activity?.quantity) ?? "—"}
+        </div>
+        <div>
+          <strong>Método:</strong> {activity?.method || "—"}
+        </div>
+      </div>
+
+      {isFuture && (
+        <div style={futureNote}>
+          Programada para: <strong>{dateStr}</strong>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const card = {
+  background: "#fff",
+  borderRadius: 14,
+  padding: 16,
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+};
+
+const row = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const details = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 8,
+  fontSize: 14,
+};
+
+const muted = {
+  fontSize: 12,
+  color: "#6b7280",
+};
+
+const badge = (status) => ({
+  padding: "4px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 700,
+  background: status === "Atrasada" ? "#fee2e2" : status === "Pendiente" ? "#fef3c7" : "#dcfce7",
+  color: status === "Atrasada" ? "#b91c1c" : status === "Pendiente" ? "#92400e" : "#166534",
+});
+
+const pill = (bg, color) => ({
+  background: bg,
+  color,
+  borderRadius: 999,
+  padding: "4px 10px",
+  fontSize: 11,
+  fontWeight: 900,
+  border: "1px solid rgba(226,232,240,0.9)",
+  whiteSpace: "nowrap",
+});
+
+const futureNote = {
+  marginTop: 6,
+  fontSize: 12,
+  color: "#64748b",
+};
+
+const cameraBtn = {
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  borderRadius: 10,
+  padding: "6px 10px",
+  cursor: "pointer",
+  fontWeight: 900,
+  height: 34,
+  alignSelf: "flex-start",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
