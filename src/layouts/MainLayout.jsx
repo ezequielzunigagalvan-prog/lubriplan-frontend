@@ -20,9 +20,9 @@ export default function MainLayout({ children }) {
   const { currentPlant, currentPlantId } = usePlant();
 
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
-  const userName = String(user?.name || "?").trim();
+  const displayName = String(user?.name || "?").trim();
   const roleText = roleLabel(role);
-  const showRoleText = userName.localeCompare(roleText, "es", { sensitivity: "base" }) !== 0;
+  const showRoleText = displayName.localeCompare(roleText, "es", { sensitivity: "base" }) !== 0;
   const canSeeAlerts = role === "ADMIN" || role === "SUPERVISOR";
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -265,7 +265,7 @@ export default function MainLayout({ children }) {
 
         <div style={who}>
           <div style={{ minWidth: 0 }}>
-            <div style={whoName}>{userName}</div>
+            <div style={whoName}>{displayName}</div>
             {showRoleText ? <div style={whoRole}>{roleText}</div> : null}
           </div>
 
@@ -1116,5 +1116,6 @@ const seeAll = {
   fontWeight: 950,
   color: "#0f172a",
 };
+
 
 
