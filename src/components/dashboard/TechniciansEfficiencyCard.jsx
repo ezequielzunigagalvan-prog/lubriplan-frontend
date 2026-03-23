@@ -29,7 +29,7 @@ export default function TechniciansEfficiencyCard({
           <div style={{ minWidth: 0 }}>
             <div style={title}>Desempeño por técnico</div>
             <div style={sub}>
-              Ranking del mes · score (A tiempo 100% · Tarde 60% · Vencidas 20%){" "}
+              Ranking del mes · score (A tiempo 100% Â· Tarde 60% Â· Vencidas 20%){" "}
               <span style={monthPill}>
                 <Icon name="calendar" size="sm" /> {month || "Mes actual"}
               </span>
@@ -40,7 +40,7 @@ export default function TechniciansEfficiencyCard({
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {onRefresh ? (
             <button type="button" style={btnMini} onClick={onRefresh} disabled={loading} title="Actualizar">
-              {loading ? "…" : <Icon name="refresh" size="sm" />}
+              {loading ? "..." : <Icon name="refresh" size="sm" />}
             </button>
           ) : null}
         </div>
@@ -49,7 +49,7 @@ export default function TechniciansEfficiencyCard({
       {error ? <div style={errBox}>{error}</div> : null}
 
       {loading ? (
-        <div style={muted}>Cargando…</div>
+        <div style={muted}>Cargando...</div>
       ) : top.length === 0 ? (
         <div style={muted}>Sin datos para este mes.</div>
       ) : (
@@ -81,7 +81,7 @@ export default function TechniciansEfficiencyCard({
                   <div style={rowTop}>
                     <div style={{ minWidth: 0 }}>
                       <div style={nameLine}>
-                        <span style={nameTxt}>{t?.name || "Técnico"}</span>
+                        <span style={nameTxt}>{t?.name || "técnico"}</span>
                         {t?.code ? <span style={tag}>#{t.code}</span> : null}
                         {t?.specialty ? <span style={tagSoft}>{t.specialty}</span> : null}
                       </div>
@@ -143,7 +143,7 @@ export default function TechniciansEfficiencyCard({
       )}
 
       <div style={hint}>
-        Tip: toca un técnico para filtrar sus actividades del mes (si habilitas la navegación).
+        Tip: toca un técnico para filtrar sus actividades del mes (si habilitas la navegaciÃ³n).
       </div>
     </div>
   );

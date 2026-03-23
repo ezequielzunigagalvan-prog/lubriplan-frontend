@@ -48,7 +48,7 @@ export default function EditEquipmentPage() {
   });
 
   // =========================
-  // Asignaci髇 t閏nico masiva
+  // Asignaci贸n t茅cnico masiva
   // =========================
   const [techs, setTechs] = useState([]);
   const [techId, setTechId] = useState("");
@@ -67,8 +67,8 @@ export default function EditEquipmentPage() {
 
   const criticalityHelp = useMemo(() => {
     const c = String(form.criticality || "MEDIA").toUpperCase();
-    if (c === "CRITICA") return "Impacto directo en seguridad/producci?n. Prioridad m?xima.";
-    if (c === "ALTA") return "Impacto alto. Requiere atenci?n prioritaria.";
+    if (c === "CRITICA") return "Impacto directo en seguridad/producci贸n. Prioridad m谩xima.";
+    if (c === "ALTA") return "Impacto alto. Requiere atenci贸n prioritaria.";
     if (c === "MEDIA") return "Impacto moderado. Mantenimiento planeado.";
     return "Impacto bajo. Riesgo limitado.";
   }, [form.criticality]);
@@ -97,7 +97,7 @@ export default function EditEquipmentPage() {
     } catch (e) {
       console.error(e);
       setAreas([]);
-      setAreaErr(e?.message || "No se pudieron cargar 醨eas");
+      setAreaErr(e?.message || "No se pudieron cargar 谩reas");
     }
   };
 
@@ -106,7 +106,7 @@ export default function EditEquipmentPage() {
       setError("");
 
       if (!Number.isFinite(equipmentId)) {
-        setError("ID inv?lido");
+        setError("ID inv谩lido");
         return;
       }
 
@@ -185,7 +185,7 @@ export default function EditEquipmentPage() {
       };
 
       if (!payload.name || !payload.location || !payload.status) {
-        setError("Nombre, ubicaci髇 y estado son obligatorios.");
+        setError("Nombre, ubicaci贸n y estado son obligatorios.");
         return;
       }
 
@@ -219,12 +219,12 @@ export default function EditEquipmentPage() {
 
       setAssignMsg(
         updated != null
-          ? `Listo ? Se asign? a ${updated} actividad(es).`
-          : "Listo ? Se aplic? la asignaci髇."
+          ? `Listo 路 Se asign贸 a ${updated} actividad(es).`
+          : "Listo 路 Se aplic贸 la asignaci贸n."
       );
     } catch (e) {
       console.error(e);
-      setAssignErr(e?.message || "Error asignando t閏nico");
+      setAssignErr(e?.message || "Error asignando t茅cnico");
     } finally {
       setAssigning(false);
     }
@@ -283,7 +283,7 @@ export default function EditEquipmentPage() {
 </div>
 <h1 style={title}>Editar equipo</h1>
               <div style={subtitle}>
-                Actualiza datos: c骴igo/tag ? 醨ea ? criticidad ? estado
+                Actualiza datos: c贸digo/tag - 谩rea - criticidad - estado
               </div>
             </div>
 
@@ -300,7 +300,7 @@ export default function EditEquipmentPage() {
 
         {loading ? (
           <div style={{ marginTop: 14 }}>
-            <div style={loadingCard}>Cargando?</div>
+            <div style={loadingCard}>Cargando</div>
           </div>
         ) : (
           <div style={layoutGrid}>
@@ -322,7 +322,7 @@ export default function EditEquipmentPage() {
               {error ? <div style={{ marginBottom: 12, ...miniError }}>{error}</div> : null}
 
               <div style={grid2}>
-                <Field label="C骴igo / Tag">
+                <Field label="C贸digo / Tag">
                   <input
                     name="code"
                     value={form.code}
@@ -361,7 +361,7 @@ export default function EditEquipmentPage() {
                   />
                 </Field>
 
-                <Field label="Ubicaci髇 *">
+                <Field label="Ubicaci贸n *">
                   <input
                     name="location"
                     value={form.location}
@@ -374,7 +374,7 @@ export default function EditEquipmentPage() {
               </div>
 
               <div style={grid2}>
-                <Field label="醨ea *">
+                <Field label="谩rea *">
                   <select
                     name="areaId"
                     value={form.areaId}
@@ -382,7 +382,7 @@ export default function EditEquipmentPage() {
                     style={input}
                     required
                   >
-                    <option value="">Selecciona un 醨ea</option>
+                    <option value="">Selecciona un 谩rea</option>
                     {areas.map((a) => (
                       <option key={a.id} value={String(a.id)}>
                         {a.name}
@@ -391,7 +391,7 @@ export default function EditEquipmentPage() {
                   </select>
 
                   {areaErr ? <div style={{ marginTop: 8, ...miniError }}>{areaErr}</div> : null}
-                  <small style={hint}>Se usa para filtrar y agrupar equipos por 醨ea.</small>
+                  <small style={hint}>Se usa para filtrar y agrupar equipos por 谩rea.</small>
                 </Field>
 
                 <Field label="Criticidad *">
@@ -405,11 +405,11 @@ export default function EditEquipmentPage() {
                     <option value="BAJA">BAJA</option>
                     <option value="MEDIA">MEDIA</option>
                     <option value="ALTA">ALTA</option>
-                    <option value="CRITICA">CR蚑ICA</option>
+                    <option value="CRITICA">CR脥TICA</option>
                   </select>
 
                   <div style={critBox(form.criticality)}>
-                    <div style={critTitle}>Gu?a r?pida</div>
+                    <div style={critTitle}>Gu铆a r谩pida</div>
                     <div style={critText}>{criticalityHelp}</div>
                   </div>
                 </Field>
@@ -447,23 +447,23 @@ export default function EditEquipmentPage() {
 
             {/* SIDE */}
             <div style={side}>
-              {/* Asignaci髇 */}
+              {/* Asignaci贸n */}
               {canAssignTech ? (
                 <div style={sideCard}>
                   <div style={sideHeader}>
-                    <div style={sideTitle}>Asignar t閏nico</div>
+                    <div style={sideTitle}>Asignar t茅cnico</div>
                     <div style={sideBadge}>Masivo</div>
                   </div>
 
                   <div style={sideDesc}>
-                    Asigna el t閏nico a las actividades (ejecuciones) ligadas a las rutas de este equipo.
+                    Asigna el t锟絚nico a las actividades (ejecuciones) ligadas a las rutas de este equipo.
                   </div>
 
                   <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
                     <div>
-                      <div style={miniLbl2}>T閏nico</div>
+                      <div style={miniLbl2}>T茅cnico</div>
                       <select value={techId} onChange={(e) => setTechId(e.target.value)} style={input}>
-                        <option value="">Selecciona un t閏nico</option>
+                        <option value="">Selecciona un t茅cnico</option>
                         {techs.map((t) => (
                           <option key={t.id} value={t.id}>
                             {t.name} {t.code ? `(${t.code})` : ""}
@@ -488,7 +488,7 @@ export default function EditEquipmentPage() {
                         checked={forceAssign}
                         onChange={(e) => setForceAssign(e.target.checked)}
                       />
-                      <span style={checkText}>Sobrescribir si ya tiene t閏nico</span>
+                      <span style={checkText}>Sobrescribir si ya tiene tecnico</span>
                     </label>
 
                     <button
@@ -515,15 +515,15 @@ export default function EditEquipmentPage() {
               <div style={sideCard}>
                 <div style={sideTitle}>Tips</div>
                 <ul style={sideList}>
-                  <li><b>Tag</b>: evita espacios, usa patr?n fijo.</li>
-                  <li><b>醨ea</b>: mant?n nombres consistentes (Planta/L?nea).</li>
-                  <li><b>Criticidad</b>: ?sala para priorizar rutas/alertas.</li>
+                  <li><b>Tag</b>: evita espacios, usa patr贸n fijo.</li>
+                  <li><b>脕rea</b>: mant茅n nombres consistentes (Planta/L铆nea).</li>
+                  <li><b>Criticidad</b>: 脷sala para priorizar rutas/alertas.</li>
                 </ul>
               </div>
 
               <div style={sideCard}>
                 <div style={sideTitle}>Atajo</div>
-                <div style={sideDesc}>Regresa al listado para ver equipos agrupados por 醨ea.</div>
+                <div style={sideDesc}>Regresa al listado para ver equipos agrupados por 谩rea.</div>
 
                 <button
                   type="button"

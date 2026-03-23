@@ -66,7 +66,7 @@ export async function apiFetch(path, options = {}) {
     throw new Error(
       data && typeof data === "object" && data.error
         ? data.error
-        : "Sesión expirada"
+        : "SesiÃ³n expirada"
     );
   }
 

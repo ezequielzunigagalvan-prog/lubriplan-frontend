@@ -79,7 +79,7 @@ export default function ExecutionsKpis({ days = 180, techId }) {
         key: "overdue",
         label: "Vencidas",
         value: safe.overdue ?? 0,
-        hint: "Requieren atención",
+        hint: "Requieren atenciÃ³n",
         tone: "danger",
         icon: "alert",
       },
@@ -119,7 +119,7 @@ export default function ExecutionsKpis({ days = 180, techId }) {
             </div>
 
             <div style={{ ...kpiValue, ...toneValue(c.tone) }}>
-              {loading ? "…" : c.value}
+              {loading ? "â€¦" : c.value}
             </div>
 
             <div style={kpiSub}>{c.hint}</div>

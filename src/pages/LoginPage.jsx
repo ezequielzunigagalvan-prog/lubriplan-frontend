@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import lubriPlanMark from "../assets/lubriplan-logo.png.png";
@@ -259,11 +259,10 @@ export default function LoginPage() {
                 </label>
                 <input
                   id="email"
-                  placeholder="tu@correo.com"
+                  placeholder="tu@empresa.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="username"
-                  autoFocus
                   disabled={loading}
                   style={inputStyle}
                 />
@@ -365,5 +364,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-

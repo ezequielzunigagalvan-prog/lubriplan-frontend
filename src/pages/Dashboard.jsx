@@ -1,4 +1,4 @@
-﻿// src/pages/Dashboard.jsx
+// src/pages/Dashboard.jsx
 import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
@@ -1056,7 +1056,7 @@ function AdminPanel({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+            gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.22fr) minmax(280px, 0.78fr)",
             gap: 14,
             alignItems: "start",
           }}
@@ -1150,8 +1150,8 @@ function AdminPanel({
                   pending={Number(currentMonthTotals.pending || 0)}
                   overdue={Number(currentMonthTotals.overdue || 0)}
                   onClickSlice={onClickDonut}
-                  size={isMobile ? 178 : 224}
-                  stroke={isMobile ? 16 : 20}
+                  size={224}
+                  stroke={20}
                 />
               )}
               <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "#475569", lineHeight: 1.45 }}>
@@ -1206,7 +1206,7 @@ function AdminPanel({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
               gap: 12,
               alignItems: "start",
             }}
@@ -2989,7 +2989,7 @@ useEffect(() => {
       }
 
       if (eventName === "execution.critical") {
-        showToast("Se marc� una ejecuci�n como CRÍTICA", "red");
+        showToast("Se marcó una ejecución como CRÍTICA", "red");
         refreshAlerts?.();
         refreshPred?.();
         load?.();
@@ -3394,7 +3394,7 @@ function SupervisorExecutivePanel({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+          gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.05fr) minmax(340px, 0.95fr)",
           gap: 12,
           alignItems: "start",
         }}
