@@ -153,7 +153,7 @@ export default function LubriPlanLanding() {
             <div style={heroStatsRow}>
               <MicroStat icon="checkCircle" label="Trazabilidad por actividad" />
               <MicroStat icon="alert" label="Prioridad operativa inmediata" />
-              <MicroStat icon="trendUp" label="Indicadores para supervisi�n" />
+              <MicroStat icon="trendUp" label="Indicadores para supervisión" />
             </div>
           </div>
 

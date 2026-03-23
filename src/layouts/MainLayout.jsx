@@ -461,8 +461,8 @@ export default function MainLayout({ children }) {
         <div style={{ flex: 1 }} />
 
         <div style={sideFooter}>
-          <button onClick={onLogout} style={logoutBtn} title="Cerrar sesi�n" type="button">
-            Cerrar sesi�n
+          <button onClick={onLogout} style={logoutBtn} title="Cerrar sesión" type="button">
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -477,7 +477,7 @@ export default function MainLayout({ children }) {
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
                 style={menuBtn}
-                title="Abrir men�"
+                title="Abrir menú"
               >
                 <Icon name="menu" />
               </button>
@@ -520,7 +520,7 @@ export default function MainLayout({ children }) {
                     <div>
                       <div style={{ fontWeight: 1000, color: "#0f172a" }}>Notificaciones</div>
                       <div style={{ marginTop: 2, fontSize: 11, fontWeight: 800, color: "#94a3b8" }}>
-                    {notifLoading ? "Actualizando�" : unreadCount ? `${unreadCount} sin leer` : "Todo al d�a"}
+                    {notifLoading ? "Actualizando" : unreadCount ? `${unreadCount} sin leer` : "Todo al día"}
                       </div>
                     </div>
 
@@ -543,7 +543,7 @@ export default function MainLayout({ children }) {
                         style={notifMiniBtn}
                         disabled={!unreadCount}
                         type="button"
-                      title="Marcar todas como le�das"
+                      title="Marcar todas como leídas"
                       >
                         Marcar
                       </button>
@@ -575,7 +575,7 @@ export default function MainLayout({ children }) {
                           type="button"
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ fontWeight: 950, color: "#0f172a" }}>{n.title || "Notificaci�n"}</div>
+                          <div style={{ fontWeight: 950, color: "#0f172a" }}>{n.title || "Notificación"}</div>
                             {!n.readAt ? <span style={dotLive} /> : null}
                           </div>
 

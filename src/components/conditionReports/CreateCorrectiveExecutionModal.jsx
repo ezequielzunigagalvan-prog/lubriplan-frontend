@@ -75,7 +75,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
   const onSubmit = async () => {
     try {
       setErr("");
-      if (!report?.id) return setErr("Reporte inv�lido");
+      if (!report?.id) return setErr("Reporte inválido");
       if (!scheduledAt) return setErr("Selecciona fecha programada");
       if (!instructions.trim()) return setErr("Escribe instrucciones");
 
@@ -90,7 +90,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
       onSaved?.();
     } catch (e) {
       console.error(e);
-      setErr(e?.error || e?.message || "Error creando acci�n correctiva");
+      setErr(e?.error || e?.message || "Error creando acción correctiva");
       setSaving(false);
     }
   };
@@ -101,8 +101,8 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
         <div style={head}>
           <div>
             <div style={kicker}>SEGUIMIENTO CORRECTIVO</div>
-            <div style={title}>Programar acci�n correctiva</div>
-            <div style={sub}>Se crear� una actividad ligada al reporte y el reporte pasar� a IN_PROGRESS.</div>
+            <div style={title}>Programar acción correctiva</div>
+            <div style={sub}>Se crear una actividad ligada al reporte y el reporte pasar a IN_PROGRESS.</div>
           </div>
           <button onClick={onClose} style={xBtn} title="Cerrar" disabled={saving}>?</button>
         </div>
@@ -176,7 +176,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
         <div style={foot}>
           <button onClick={onClose} style={btnGhost} disabled={saving}>Cancelar</button>
           <button onClick={onSubmit} style={btnPrimary} disabled={saving}>
-            {saving ? "Guardando�" : "Crear acci�n"}
+            {saving ? "Guardando" : "Crear accin"}
           </button>
         </div>
       </div>

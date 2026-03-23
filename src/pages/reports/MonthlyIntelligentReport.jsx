@@ -1103,7 +1103,7 @@ const anomaliesTop =
         title: "Days-to-empty",
         msg: `${x?.lubricantName || "Lubricante"} con riesgo de quedarse sin stock (~${Math.round(
           Number(x?.daysToEmpty || 0)
-        )} d�as).`,
+        )} días).`,
         tone: String(x?.risk || "").toUpperCase() === "HIGH" ? "red" : "amber",
         action: x?.underMin ? "Ya está bajo mínimo. Reabastecer o transferir stock." : "Programar compra/traspaso inmediato.",
       });

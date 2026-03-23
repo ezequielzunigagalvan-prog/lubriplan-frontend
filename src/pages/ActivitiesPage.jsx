@@ -219,7 +219,7 @@ export default function ActivitiesPage() {
 
   const myTechId = user?.technicianId != null ? Number(user.technicianId) : null;
 
-  // ✅ filtro por t�cnico (solo ADMIN/SUP)
+  // ✅ filtro por técnico (solo ADMIN/SUP)
   const [techFilterId, setTechFilterId] = useState(""); // "" = todos
 
   // ✅ Reglas nuevas por rol
@@ -287,7 +287,7 @@ const highlightedCardRef = useRef(null);
 
   const todayYMD = useMemo(() => toLocalYMD(new Date()), []);
 
-  // ===== T�cnicos (Supervisor / Admin) =====
+  // ===== Técnicos (Supervisor / Admin) =====
   const [techs, setTechs] = useState([]);
   const [assigningId, setAssigningId] = useState(null);
 
@@ -419,7 +419,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  // ✅ cargar t�cnicos (Supervisor / Admin cuando aplique)
+  // ✅ cargar técnicos (Supervisor / Admin cuando aplique)
   useEffect(() => {
     if (!(canAssignTech || canSchedule) || !currentPlantId) {
       setTechs([]);
@@ -436,7 +436,7 @@ useEffect(() => {
           : [];
         setTechs(items);
       } catch (e) {
-        console.error("Error cargando t�cnicos:", e);
+        console.error("Error cargando técnicos:", e);
         setTechs([]);
       }
     })();
@@ -509,7 +509,7 @@ useEffect(() => {
       await load();
     } catch (e) {
       console.error(e);
-      setErr(e?.message || "Error asignando t�cnico");
+      setErr(e?.message || "Error asignando técnico");
     } finally {
       setAssigningId(null);
     }
@@ -558,7 +558,7 @@ useEffect(() => {
           : Number(scheduleForm.technicianId);
 
       if (technicianId !== null && !Number.isFinite(technicianId)) {
-        return setScheduleErr("T�cnico inv�lido.");
+        return setScheduleErr("Técnico inválido.");
       }
 
       setSavingSchedule(true);
@@ -807,7 +807,7 @@ useEffect(() => {
     if (isAdminPriorityDeepLink) {
       list = list.filter((a) => {
         const crit = String(a?.equipmentCriticality || "").toUpperCase();
-        const isCriticalEq = ["ALTA", "CRITICA", "CR�TICA"].includes(crit);
+        const isCriticalEq = ["ALTA", "CRITICA", "CRÍTICA"].includes(crit);
         const fromConditionReport = a?.conditionReportId != null;
         return isCriticalEq || fromConditionReport;
       });
@@ -963,7 +963,7 @@ useEffect(() => {
             <div style={kicker}>  </div>
             <h1 style={title}>Actividades</h1>
             <div style={subtitle}>
-              Gesti�n diaria de ejecuci�n, asignaci�n y control
+              Gestión diaria de ejecución, asignación y control
               {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
             </div>
           </div>
@@ -1003,10 +1003,10 @@ useEffect(() => {
                 type="button"
                 onClick={() => setOpenReportCondition(true)}
                 style={btnGhost}
-                title="Reportar condici�n anormal"
+                title="Reportar condición anormal"
               >
                 <Icon name="warn" style={{ width: 16, height: 16 }} />
-                <span>Reportar condici�n</span>
+                <span>Reportar condición</span>
               </button>
             ) : null}
           </div>
@@ -1021,7 +1021,7 @@ useEffect(() => {
               <div style={modalHeader}>
                 <div>
                   <div style={modalKicker}>PROGRAMAR</div>
-                  <div style={modalTitle}>Actividad �nica</div>
+                  <div style={modalTitle}>Actividad única</div>
                 </div>
 
                 <button
@@ -1035,7 +1035,7 @@ useEffect(() => {
               </div>
 
               <div style={modalHint}>
-                Se crea como actividad <b>�nica</b> (no recurrente). <b></b>
+                Se crea como actividad <b>única</b> (no recurrente). <b></b>
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
@@ -1122,7 +1122,7 @@ useEffect(() => {
                 </label>
 
                 <label style={lbl}>
-                  T�cnico (opcional)
+                  Técnico (opcional)
                   <select
                     value={scheduleForm.technicianId}
                     onChange={(e) =>
@@ -1272,17 +1272,17 @@ useEffect(() => {
                     <Icon name="warn" style={{ width: 18, height: 18, color: "#0b1220" }} />
                   </span>
                   <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                    Condici�n mala / cr�tica
+                    Condición mala / crítica
                   </div>
                 </div>
 
                 <div style={infoText}>
                   <div>
-                    <b>Por qu? aparece:</b> actividades completadas con condici�n <b>MALO</b> o{" "}
+                    <b>Por qu? aparece:</b> actividades completadas con condición <b>MALO</b> o{" "}
                     <b>CR?TICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendaci�n:</b> revisa observaci?n/evidencia y prioriza inspecci�n.
+                    <b>Recomendación:</b> revisa observaci?n/evidencia y prioriza inspección.
                   </div>
                 </div>
               </div>
@@ -1330,8 +1330,8 @@ useEffect(() => {
               style={controlSelect}
             >
               <option value="MONTH">Este mes</option>
-              <option value="30D">?ltimos 30 d�as</option>
-              <option value="90D">?ltimos 90 d�as</option>
+              <option value="30D">?ltimos 30 días</option>
+              <option value="90D">?ltimos 90 días</option>
             </select>
           </div>
         </div>
@@ -1357,9 +1357,9 @@ useEffect(() => {
               value={techFilterId}
               onChange={(e) => setTechFilterId(e.target.value)}
               style={controlSelect}
-              title="Filtrar por t�cnico"
+              title="Filtrar por técnico"
             >
-              <option value="">Todos los t�cnicos</option>
+              <option value="">Todos los técnicos</option>
               {techs.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} {t.code ? `(${t.code})` : ""}
@@ -1373,7 +1373,7 @@ useEffect(() => {
             onClick={() => setUnassignedOnly((v) => !v)}
             style={{ ...filterBtn, ...(unassignedOnly ? filterBtnOn : {}) }}
           >
-            {unassignedOnly ? "Sin t�cnico (activo)" : "Sin t�cnico"}
+            {unassignedOnly ? "Sin técnico (activo)" : "Sin técnico"}
           </button>
         </div>
 
@@ -1586,14 +1586,14 @@ export function ActivityCard({
       }}
       title={
         !canComplete && activity.computedStatus !== "Completada"
-          ? `Programada para ${safeDateLabel || "?"} (a�n no disponible)`
+          ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
           : ""
       }
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={cardTopRow}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={cardTaskLabel}>QU� VOY A HACER</div>
+            <div style={cardTaskLabel}>QUÉ VOY A HACER</div>
             <div style={{ ...cardTaskTitle, ...(isMobile ? cardTaskTitleMobile : null) }}>
               {activity.activityName}
             </div>
@@ -1644,7 +1644,7 @@ export function ActivityCard({
 
             {isCriticalEq ? (
               <span style={miniPill("rgba(239,68,68,0.12)", "#7f1d1d")}>
-                Equipo cr�tico
+                Equipo crítico
               </span>
             ) : null}
           </div>
@@ -1666,7 +1666,7 @@ export function ActivityCard({
               {activity.equipmentLocation ? (
                 <span>{activity.equipmentLocation}</span>
               ) : (
-                <span>Sin ubicaci�n</span>
+                <span>Sin ubicación</span>
               )}
             </div>
           </div>
@@ -1700,13 +1700,13 @@ export function ActivityCard({
           <div style={{ ...summaryCard, ...(isMobile ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="tool" size="sm" />
-              <span>M�todo</span>
+              <span>Método</span>
             </div>
             <div style={{ ...summaryValue, ...(isMobile ? summaryValueMobile : null) }}>
               {methodText}
             </div>
             <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null) }}>
-              Aplicaci�n
+              Aplicación
             </div>
           </div>
         </div>
@@ -1722,7 +1722,7 @@ export function ActivityCard({
           <span style={{ ...infoChip, ...(isMobile ? infoChipMobile : null) }}>
             <Icon name="user" size="sm" />
             <span>
-              T�cnico:{" "}
+              Técnico:{" "}
               <b style={{ color: "#0f172a" }}>
                 {activity?.technician?.name ||
                   (activity?.technicianId ? `#${activity.technicianId}` : "Sin asignar")}
@@ -1760,7 +1760,7 @@ export function ActivityCard({
           <div style={noteBox}>
             <div style={noteTitle}>
               <Icon name="doc" size="sm" />
-              <span>Observaci�n</span>
+              <span>Observación</span>
             </div>
             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.35 }}>
               {normalizedNotes}
@@ -1795,7 +1795,7 @@ export function ActivityCard({
               onChange={(e) => onAssignTech(activity.id, e.target.value)}
               disabled={assigningId === activity.id}
               style={{ ...techSelect, ...(isMobile ? techSelectMobile : null) }}
-              title="Asignar t�cnico"
+              title="Asignar técnico"
             >
               <option value="">Sin asignar</option>
               {techs.map((t) => (
@@ -1814,7 +1814,7 @@ export function ActivityCard({
         {!canComplete && activity.isFuture ? (
           <div style={futureNote}>
             <Icon name="clock" size="sm" />
-            <span>Programada para esa fecha (no disponible a�n)</span>
+            <span>Programada para esa fecha (no disponible aún)</span>
           </div>
         ) : null}
       </div>

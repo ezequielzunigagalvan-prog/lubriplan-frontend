@@ -1,4 +1,4 @@
-// src/pages/EditEquipmentPage.jsx
+﻿// src/pages/EditEquipmentPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
@@ -456,7 +456,7 @@ export default function EditEquipmentPage() {
                   </div>
 
                   <div style={sideDesc}>
-                    Asigna el t�cnico a las actividades (ejecuciones) ligadas a las rutas de este equipo.
+                    Asigna el técnico a las actividades (ejecuciones) ligadas a las rutas de este equipo.
                   </div>
 
                   <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
