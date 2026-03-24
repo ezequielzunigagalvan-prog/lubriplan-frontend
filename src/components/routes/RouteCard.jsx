@@ -1,4 +1,4 @@
-// src/components/routes/RouteCard.jsx
+﻿// src/components/routes/RouteCard.jsx
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/lpIcons";
@@ -7,18 +7,18 @@ import { Icon } from "../ui/lpIcons";
    COLOR MAP (solo texto)
 ========================= */
 const LUBE_TEXT = {
-  "Aceite hidráulico": { color: "#1d4ed8", softBg: "rgba(59,130,246,0.10)", border: "rgba(59,130,246,0.25)" },
+  "Aceite hidrÃ¡ulico": { color: "#1d4ed8", softBg: "rgba(59,130,246,0.10)", border: "rgba(59,130,246,0.25)" },
   "Aceite para engranes": { color: "#4338ca", softBg: "rgba(99,102,241,0.10)", border: "rgba(99,102,241,0.25)" },
   "Aceite para compresor": { color: "#0369a1", softBg: "rgba(14,165,233,0.10)", border: "rgba(14,165,233,0.25)" },
-  "Aceite de circulación": { color: "#0e7490", softBg: "rgba(6,182,212,0.10)", border: "rgba(6,182,212,0.25)" },
+  "Aceite de circulaciÃ³n": { color: "#0e7490", softBg: "rgba(6,182,212,0.10)", border: "rgba(6,182,212,0.25)" },
   "Aceite para cadenas": { color: "#0284c7", softBg: "rgba(56,189,248,0.10)", border: "rgba(56,189,248,0.25)" },
-  "Aceite para unidades neumáticas": { color: "#047857", softBg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.25)" },
+  "Aceite para unidades neumÃ¡ticas": { color: "#047857", softBg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.25)" },
 
   "Grasa EP": { color: "#b45309", softBg: "rgba(245,158,11,0.14)", border: "rgba(245,158,11,0.30)" },
   "Grasa alta temperatura": { color: "#b91c1c", softBg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.30)" },
   "Grasa grado alimenticio": { color: "#15803d", softBg: "rgba(34,197,94,0.12)", border: "rgba(34,197,94,0.30)" },
-  "Grasa multipropósito": { color: "#7e22ce", softBg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.30)" },
-  "Grasa para motores eléctricos": { color: "#0f766e", softBg: "rgba(20,184,166,0.12)", border: "rgba(20,184,166,0.30)" },
+  "Grasa multipropÃ³sito": { color: "#7e22ce", softBg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.30)" },
+  "Grasa para motores elÃ©ctricos": { color: "#0f766e", softBg: "rgba(20,184,166,0.12)", border: "rgba(20,184,166,0.30)" },
   "Grasa para altas velocidades": { color: "#be185d", softBg: "rgba(244,114,182,0.12)", border: "rgba(244,114,182,0.30)" },
 
   Otro: { color: "#334155", softBg: "rgba(148,163,184,0.14)", border: "rgba(148,163,184,0.30)" },
@@ -34,7 +34,7 @@ const pickMethodLabel = (route) =>
   route?.lubricationMethod ||
   route?.applyMethod ||
   route?.methodName ||
-  "—";
+  "â€”";
 
 const pickNextAtRaw = (route) =>
   route?.nextActivityAt ||
@@ -53,10 +53,10 @@ function formatLocalYMD(date) {
 }
 
 function buildNextInfo(nextAtRaw) {
-  if (!nextAtRaw) return { label: "Sin próxima", tone: "muted" };
+  if (!nextAtRaw) return { label: "Sin prÃ³xima", tone: "muted" };
 
   const d = new Date(nextAtRaw);
-  if (Number.isNaN(d.getTime())) return { label: "Sin próxima", tone: "muted" };
+  if (Number.isNaN(d.getTime())) return { label: "Sin prÃ³xima", tone: "muted" };
 
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -69,10 +69,10 @@ function buildNextInfo(nextAtRaw) {
     String(d.getDate()).padStart(2, "0"),
   ].join("-");
 
-  if (diffDays < 0) return { label: `Atrasada · ${ymd}`, tone: "danger" };
-  if (diffDays === 0) return { label: `Hoy · ${ymd}`, tone: "warn" };
-  if (diffDays === 1) return { label: `Mañana · ${ymd}`, tone: "ok" };
-  return { label: `Próx · ${ymd}`, tone: "ok" };
+  if (diffDays < 0) return { label: `Atrasada Â· ${ymd}`, tone: "danger" };
+  if (diffDays === 0) return { label: `Hoy Â· ${ymd}`, tone: "warn" };
+  if (diffDays === 1) return { label: `MaÃ±ana Â· ${ymd}`, tone: "ok" };
+  return { label: `PrÃ³x Â· ${ymd}`, tone: "ok" };
 }
 
 function buildFrequencyLabel(route) {
@@ -92,9 +92,9 @@ function buildFrequencyLabel(route) {
   if (frequencyDays === 120) return "Cuatrimestral";
   if (frequencyDays === 180) return "Semestral";
   if (frequencyDays === 365) return "Anual";
-  if (frequencyDays > 0) return `Cada ${frequencyDays} días`;
+  if (frequencyDays > 0) return `Cada ${frequencyDays} dÃ­as`;
 
-  return "—";
+  return "â€”";
 }
 
 function buildWeeklyDaysLabel(route) {
@@ -103,17 +103,17 @@ function buildWeeklyDaysLabel(route) {
   const map = {
     1: "Lun",
     2: "Mar",
-    3: "Mié",
+    3: "MiÃ©",
     4: "Jue",
     5: "Vie",
-    6: "Sáb",
+    6: "SÃ¡b",
     7: "Dom",
   };
 
   return weeklyDays
     .map((d) => map[Number(d)])
     .filter(Boolean)
-    .join(" · ");
+    .join(" Â· ");
 }
 
 export default function RouteCard({
@@ -149,7 +149,7 @@ export default function RouteCard({
   const pumpStrokeUnit = String(route?.pumpStrokeUnit || "").trim();
 
   const qtyLabel = useMemo(() => {
-    if (route?.quantity == null) return "—";
+    if (route?.quantity == null) return "â€”";
     if (isBombazos) {
       return `${route.quantity} bombazo${Number(route.quantity) === 1 ? "" : "s"}`;
     }
@@ -168,7 +168,7 @@ export default function RouteCard({
     if (Number.isFinite(pts) && pts > 0) {
       return "por punto";
     }
-    return "dosificación";
+    return "dosificaciÃ³n";
   }, [isBombazos, pumpStrokeValue, pumpStrokeUnit, route?.points]);
 
   
@@ -183,7 +183,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
   const technicianName =
     route?.technician?.name ||
     route?.nextExecutionTechnician?.name ||
-    "Sin técnico";
+    "Sin tÃ©cnico";
   const technicianCode =
     route?.technician?.code ||
     route?.nextExecutionTechnician?.code ||
@@ -246,7 +246,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
       <div style={head}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={routeName} title={route?.name || ""}>
-            {route?.name || "—"}
+            {route?.name || "â€”"}
           </div>
 
           <div style={eqRow}>
@@ -257,11 +257,11 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
               </span>
 
               {equipmentCode ? (
-                <span style={tagInlinePill} title="Código / TAG">
+                <span style={tagInlinePill} title="CÃ³digo / TAG">
                   <Icon name="tag" style={miniIconSm} /> {equipmentCode}
                 </span>
               ) : (
-                <span style={tagInlinePillMuted} title="Sin código/tag">
+                <span style={tagInlinePillMuted} title="Sin cÃ³digo/tag">
                   <Icon name="tag" style={miniIconSm} /> SIN TAG
                 </span>
               )}
@@ -277,8 +277,8 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
               <button
                 style={iconBtnTech}
                 onClick={() => setShowTechnicianSelect((v) => !v)}
-                title="Asignar técnico"
-                aria-label="Asignar técnico"
+                title="Asignar tÃ©cnico"
+                aria-label="Asignar tÃ©cnico"
                 type="button"
               >
                 <Icon name="user" style={icon18} />
@@ -310,20 +310,20 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
         ) : null}
       </div>
 
-      {/* SELECT TÉCNICO DESPLEGABLE */}
+      {/* SELECT TÃ‰CNICO DESPLEGABLE */}
       {showTechnicianSelect && typeof onAssignTechnician === "function" ? (
         <div style={assignWrap} onClick={(e) => e.stopPropagation()}>
           <select
             value={route?.technicianId ?? route?.technician?.id ?? route?.nextExecutionTechnicianId ?? route?.nextExecutionTechnician?.id ?? ""}
             onChange={handleTechnicianChange}
             style={assignSelect}
-            title="Asignar técnico"
+            title="Asignar tÃ©cnico"
           >
-            <option value="">Sin técnico</option>
+            <option value="">Sin tÃ©cnico</option>
             {(technicians || []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
-                {t.code ? ` — (${t.code})` : ""}
+                {t.code ? ` â€” (${t.code})` : ""}
               </option>
             ))}
           </select>
@@ -347,7 +347,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
           </div>
 
           <div style={{ ...miniValue, color: lubeTheme.color }} title={route?.lubricantType || ""}>
-            {route?.lubricantType || "—"}
+            {route?.lubricantType || "â€”"}
           </div>
 
           <div style={miniSub} title={lubeName || ""}>
@@ -357,7 +357,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
                 <span style={{ color: "#0f172a", fontWeight: 900 }}>{lubeName}</span>
               </>
             ) : (
-              <span style={{ color: "#94a3b8", fontWeight: 850 }}>—</span>
+              <span style={{ color: "#94a3b8", fontWeight: 850 }}>â€”</span>
             )}
           </div>
         </div>
@@ -396,12 +396,12 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
         </div>
       </div>
 
-      {/* MINI CARD TÉCNICO PEQUEÑA */}
+      {/* MINI CARD TÃ‰CNICO PEQUEÃ‘A */}
       <div style={techMiniCard}>
         <div style={techMiniTop}>
           <span style={techMiniChip}>
             <Icon name="user" style={techMiniIcon} />
-            TÉCNICO
+            TÃ‰CNICO
           </span>
         </div>
 
@@ -410,20 +410,20 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
             {technicianName}
           </span>
 
-          <span style={techMiniCode} title={technicianCode || "Sin código"}>
-            {technicianCode || "Sin código"}
+          <span style={techMiniCode} title={technicianCode || "Sin cÃ³digo"}>
+            {technicianCode || "Sin cÃ³digo"}
           </span>
         </div>
       </div>
 
       {/* FILA COMPACTA ABAJO */}
       <div style={belowRow} onClick={(e) => e.stopPropagation()}>
-        <span style={methodPill} title={`Método: ${methodLabel}`}>
+        <span style={methodPill} title={`MÃ©todo: ${methodLabel}`}>
           <Icon name="tool" style={miniIcon} />
-          <span style={{ fontWeight: 950 }}>Método:</span> {methodLabel}
+          <span style={{ fontWeight: 950 }}>MÃ©todo:</span> {methodLabel}
         </span>
 
-        <span style={nextBadgeSmall(nextInfo.tone)} title="Próxima actividad">
+        <span style={nextBadgeSmall(nextInfo.tone)} title="PrÃ³xima actividad">
           <Icon name="calendar" style={miniIcon} />
           {nextInfo.label}
         </span>
@@ -445,7 +445,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
             }}
             type="button"
           >
-            Ver detalles →
+            Ver detalles â†’
           </button>
         ) : null}
       </div>
@@ -646,7 +646,7 @@ const miniSubBombazos = {
   wordBreak: "break-word",
 };
 
-/* MINI CARD TÉCNICO */
+/* MINI CARD TÃ‰CNICO */
 const techMiniCard = {
   marginTop: 10,
   border: "1px solid rgba(226,232,240,0.95)",
@@ -845,3 +845,4 @@ const nextBadgeSmall = (tone) => {
     color: "#475569",
   };
 };
+

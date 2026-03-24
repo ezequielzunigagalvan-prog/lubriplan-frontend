@@ -1632,7 +1632,7 @@ export function ActivityCard({
                   "rgba(239,68,68,0.40)"
                 )}
               >
-                {activity.overdueDays} d�a{activity.overdueDays === 1 ? "" : "s"} tarde
+                {activity.overdueDays} día{activity.overdueDays === 1 ? "" : "s"} tarde
               </span>
             ) : null}
 
@@ -2729,6 +2729,9 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
+
+
 
 
 

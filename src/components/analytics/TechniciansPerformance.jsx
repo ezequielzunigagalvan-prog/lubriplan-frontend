@@ -1,4 +1,4 @@
-// src/components/analytics/TechniciansPerformance.jsx
+ï»¿// src/components/analytics/TechniciansPerformance.jsx
 import { useEffect, useMemo, useState } from "react";
 import { getTechniciansPerformance } from "../../services/analyticsService";
 
@@ -206,7 +206,7 @@ export default function TechniciansPerformance({ days = 180 }) {
                     </div>
 
                     <div style={meta}>
-                      Completadas: <b>{r.completed}</b> · Sanas: <b>{r.onTime}</b> · Malas: <b>{r.late}</b> · Criticas: <b>{r.overdue}</b>
+                      Completadas: <b>{r.completed}</b> Â· Sanas: <b>{r.onTime}</b> Â· Malas: <b>{r.late}</b> Â· Criticas: <b>{r.overdue}</b>
                     </div>
                   </div>
 
@@ -390,3 +390,4 @@ const pctTxt = {
   color: "#334155",
   fontSize: 12,
 };
+

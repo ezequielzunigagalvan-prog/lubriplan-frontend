@@ -1,4 +1,4 @@
-// src/pages/HistoryPage.jsx
+﻿// src/pages/HistoryPage.jsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
@@ -32,23 +32,23 @@ const endOfMonthLocal = (d = new Date()) =>
 
 const safeDateLabel = (iso) => {
   try {
-    if (!iso) return "—";
+    if (!iso) return "â€”";
     const dt = new Date(iso);
-    if (Number.isNaN(dt.getTime())) return "—";
+    if (Number.isNaN(dt.getTime())) return "â€”";
     return dt.toLocaleDateString();
   } catch {
-    return "—";
+    return "â€”";
   }
 };
 
 const safeDateTimeLabel = (iso) => {
   try {
-    if (!iso) return "—";
+    if (!iso) return "â€”";
     const dt = new Date(iso);
-    if (Number.isNaN(dt.getTime())) return "—";
+    if (Number.isNaN(dt.getTime())) return "â€”";
     return dt.toLocaleString();
   } catch {
-    return "—";
+    return "â€”";
   }
 };
 
@@ -67,9 +67,9 @@ const conditionChip = (conditionRaw) => {
   if (c === "BUENO") return { bg: "#dcfce7", bd: "#bbf7d0", fg: "#166534", label: "Bueno", icon: "check" };
   if (c === "REGULAR") return { bg: "#e0e7ff", bd: "#c7d2fe", fg: "#3730a3", label: "Regular", icon: "dot" };
   if (c === "MALO") return { bg: "#fef3c7", bd: "#fde68a", fg: "#92400e", label: "Malo", icon: "warn" };
-  if (c === "CRITICO" || c === "CRÍTICO")
-    return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Crítico", icon: "alert" };
-  return { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: conditionRaw || "—", icon: "dot" };
+  if (c === "CRITICO" || c === "CRÃTICO")
+    return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "CrÃ­tico", icon: "alert" };
+  return { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: conditionRaw || "â€”", icon: "dot" };
 };
 
 const normMoveType = (raw) => {
@@ -87,7 +87,7 @@ const moveBadge = (t) => {
     OUT: { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Salida", icon: "arrowDown" },
     ADJUST: { bg: "#e0e7ff", bd: "#c7d2fe", fg: "#3730a3", label: "Ajuste", icon: "settings" },
   };
-  return map[type] || { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: type || "—", icon: "dot" };
+  return map[type] || { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: type || "â€”", icon: "dot" };
 };
 
 const monthToFromTo = (monthStr) => {
@@ -139,7 +139,7 @@ export default function HistoryPage() {
   const [condition, setCondition] = useState("ALL"); // ALL | BUENO | REGULAR | MALO | CRITICO
   const [q, setQ] = useState("");
 
-  // paginación actividades
+  // paginaciÃ³n actividades
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -149,7 +149,7 @@ export default function HistoryPage() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
 
-  // drawer detalle ejecución
+  // drawer detalle ejecuciÃ³n
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -164,7 +164,7 @@ export default function HistoryPage() {
   const [mvType, setMvType] = useState("ALL");
   const [mvPage, setMvPage] = useState(1);
   const [mvPageSize, setMvPageSize] = useState(10);
-  const [mvLubQ, setMvLubQ] = useState(""); // filtro por nombre/código (client-side)
+  const [mvLubQ, setMvLubQ] = useState(""); // filtro por nombre/cÃ³digo (client-side)
 
   /* =========================
      LOADERS
@@ -192,7 +192,7 @@ export default function HistoryPage() {
 
         const raw = Array.isArray(resp?.items) ? resp.items : [];
 
-        // Scope técnico: solo lo suyo
+        // Scope tÃ©cnico: solo lo suyo
         const scopedRaw = isTech
           ? raw.filter((x) => {
               const techId = x?.technicianId ?? x?.technician?.id ?? null;
@@ -203,7 +203,7 @@ export default function HistoryPage() {
 
         // deep link bad condition
         const filtered = isBadCondition
-          ? scopedRaw.filter((x) => ["MALO", "CRITICO", "CRÍTICO"].includes(up(x?.condition)))
+          ? scopedRaw.filter((x) => ["MALO", "CRITICO", "CRÃTICO"].includes(up(x?.condition)))
           : scopedRaw;
 
         setItems(filtered);
@@ -245,7 +245,7 @@ export default function HistoryPage() {
         const resp = await getHistoryLubricantMovements(params);
         const all = Array.isArray(resp?.items) ? resp.items : [];
 
-        // Scope técnico: ocultar manuales; solo movimientos ligados a sus ejecuciones
+        // Scope tÃ©cnico: ocultar manuales; solo movimientos ligados a sus ejecuciones
         const scoped = isTech
           ? all.filter((m) => {
               const ex = m?.execution;
@@ -318,7 +318,7 @@ export default function HistoryPage() {
     const t = { total: items.length, CRITICO: 0, MALO: 0, BUENO: 0 };
     for (const it of items) {
       const c = up(it?.condition);
-      if (c === "CRITICO" || c === "CRÍTICO") t.CRITICO += 1;
+      if (c === "CRITICO" || c === "CRÃTICO") t.CRITICO += 1;
       else if (c === "MALO") t.MALO += 1;
       else if (c === "BUENO") t.BUENO += 1;
     }
@@ -415,7 +415,7 @@ export default function HistoryPage() {
         >
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             <Icon name="reset" />
-            {loading || mvLoading ? "Actualizando…" : "Actualizar"}
+            {loading || mvLoading ? "Actualizandoâ€¦" : "Actualizar"}
           </span>
         </button>
       </div>
@@ -430,12 +430,12 @@ export default function HistoryPage() {
               <span style={miniOrange}>
                 <Icon name="warn" />
               </span>
-              Condición mala/crítica (Historial)
+              CondiciÃ³n mala/crÃ­tica (Historial)
             </div>
 
             <div style={warnBannerText}>
-              Son ejecuciones <b>COMPLETADAS</b> donde el técnico reportó condición <b>MALO</b> o <b>CRÍTICO</b>. Revisa
-              observación y evidencia y genera acción correctiva.
+              Son ejecuciones <b>COMPLETADAS</b> donde el tÃ©cnico reportÃ³ condiciÃ³n <b>MALO</b> o <b>CRÃTICO</b>. Revisa
+              observaciÃ³n y evidencia y genera acciÃ³n correctiva.
             </div>
           </div>
 
@@ -457,7 +457,7 @@ export default function HistoryPage() {
       {/* KPIs */}
       <div style={statsGrid}>
         <KpiCard title="Equipos" value={scopedTotals.total} icon="list" />
-        <KpiCard title="Críticos" value={scopedTotals.CRITICO} icon="warn" />
+        <KpiCard title="CrÃ­ticos" value={scopedTotals.CRITICO} icon="warn" />
         <KpiCard title="Malos" value={scopedTotals.MALO} icon="alert" />
         <KpiCard title="Buenos" value={scopedTotals.BUENO} icon="check" />
       </div>
@@ -473,7 +473,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {meta ? `Página ${meta.page} de ${meta.pages} • ${meta.total} registros` : ""}
+            {meta ? `PÃ¡gina ${meta.page} de ${meta.pages} â€¢ ${meta.total} registros` : ""}
           </div>
         </div>
 
@@ -489,13 +489,13 @@ export default function HistoryPage() {
           </div>
 
           <div style={field}>
-            <label style={label}>Condición</label>
+            <label style={label}>CondiciÃ³n</label>
             <select value={condition} onChange={(e) => setCondition(e.target.value)} style={input}>
               <option value="ALL">Todas</option>
               <option value="BUENO">Bueno</option>
               <option value="REGULAR">Regular</option>
               <option value="MALO">Malo</option>
-              <option value="CRITICO">Crítico</option>
+              <option value="CRITICO">CrÃ­tico</option>
             </select>
           </div>
 
@@ -504,12 +504,12 @@ export default function HistoryPage() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Equipo, ruta, lubricante o técnico…"
+              placeholder="Equipo, ruta, lubricante o tÃ©cnicoâ€¦"
               style={input}
             />
           </div>
 
-          {/* ✅ Buscar en gris ghost */}
+          {/* âœ… Buscar en gris ghost */}
         <button
   className="lpPress"
   onClick={() => {
@@ -529,7 +529,7 @@ export default function HistoryPage() {
 
         <div style={{ ...filtersRow, marginTop: 10 }}>
           <div style={field}>
-            <label style={label}>Por página</label>
+            <label style={label}>Por pÃ¡gina</label>
             <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={input}>
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -545,7 +545,7 @@ export default function HistoryPage() {
       </div>
 
       {/* LISTADO EJECUCIONES */}
-      {loading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando historial…</p>}
+      {loading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando historialâ€¦</p>}
       {!loading && items.length === 0 && (
         <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>No hay registros en este rango.</p>
       )}
@@ -556,7 +556,7 @@ export default function HistoryPage() {
         ))}
       </div>
 
-      {/* PAGINACIÓN EJECUCIONES */}
+      {/* PAGINACIÃ“N EJECUCIONES */}
       {meta && meta.pages > 1 && (
         <div style={pager}>
           <button
@@ -565,7 +565,7 @@ export default function HistoryPage() {
             disabled={loading || meta.page <= 1}
             onClick={() => load({ page: meta.page - 1 })}
           >
-            ← Anterior
+            â† Anterior
           </button>
 
           <div style={{ fontWeight: 950, color: "#0f172a" }}>
@@ -578,7 +578,7 @@ export default function HistoryPage() {
             disabled={loading || meta.page >= meta.pages}
             onClick={() => load({ page: meta.page + 1 })}
           >
-            Siguiente →
+            Siguiente â†’
           </button>
         </div>
       )}
@@ -595,7 +595,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {mvMeta ? `Página ${mvMeta.page} de ${mvMeta.pages} • ${mvMeta.total} movimientos` : ""}
+            {mvMeta ? `PÃ¡gina ${mvMeta.page} de ${mvMeta.pages} â€¢ ${mvMeta.total} movimientos` : ""}
           </div>
         </div>
 
@@ -611,7 +611,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={field}>
-            <label style={label}>Por página</label>
+            <label style={label}>Por pÃ¡gina</label>
             <select value={mvPageSize} onChange={(e) => setMvPageSize(Number(e.target.value))} style={input}>
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -624,7 +624,7 @@ export default function HistoryPage() {
             <input
               value={mvLubQ}
               onChange={(e) => setMvLubQ(e.target.value)}
-              placeholder="Filtra por nombre o código…"
+              placeholder="Filtra por nombre o cÃ³digoâ€¦"
               style={input}
             />
           </div>
@@ -638,14 +638,14 @@ export default function HistoryPage() {
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="reset" />
-              {mvLoading ? "Actualizando…" : "Actualizar"}
+              {mvLoading ? "Actualizandoâ€¦" : "Actualizar"}
             </span>
           </button>
         </div>
 
         {mvErr && <div style={errorBox}>{mvErr}</div>}
 
-        {mvLoading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando movimientos…</p>}
+        {mvLoading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando movimientosâ€¦</p>}
         {!mvLoading && mvFilteredItems.length === 0 && (
           <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>
             No hay movimientos en este rango / filtro.
@@ -666,7 +666,7 @@ export default function HistoryPage() {
               disabled={mvLoading || mvMeta.page <= 1}
               onClick={() => loadMovements({ page: mvMeta.page - 1 })}
             >
-              ← Anterior
+              â† Anterior
             </button>
 
             <div style={{ fontWeight: 950, color: "#0f172a" }}>
@@ -679,7 +679,7 @@ export default function HistoryPage() {
               disabled={mvLoading || mvMeta.page >= mvMeta.pages}
               onClick={() => loadMovements({ page: mvMeta.page + 1 })}
             >
-              Siguiente →
+              Siguiente â†’
             </button>
           </div>
         )}
@@ -767,7 +767,7 @@ function HistoryCard({ ex, onOpen }) {
   const eq = route?.equipment || ex?.equipment || {};
   const tech = ex?.technician || {};
   const dateLabel = safeDateLabel(ex?.executedAt);
-  const activityName = ex?.manualTitle || route?.name || "�";
+  const activityName = ex?.manualTitle || route?.name || "ï¿½";
 
   return (
     <div className="lpCard lpPress" style={{ ...card, cursor: "pointer" }} onClick={onOpen} title="Ver detalle">
@@ -788,8 +788,8 @@ function HistoryCard({ ex, onOpen }) {
 
           <div style={metaRow}>
             <span style={metaItem}>
-              <Icon name="pin" /> {eq?.name || "—"}
-              {eq?.code ? ` · ${eq.code}` : eq?.tag ? ` · ${eq.tag}` : ""}
+              <Icon name="pin" /> {eq?.name || "â€”"}
+              {eq?.code ? ` Â· ${eq.code}` : eq?.tag ? ` Â· ${eq.tag}` : ""}
             </span>
 
             <span style={metaItem}>
@@ -807,7 +807,7 @@ function HistoryCard({ ex, onOpen }) {
             <div style={{ ...notes, marginTop: 10 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="doc" />
-                <b>Observación:</b> {ex.observations}
+                <b>ObservaciÃ³n:</b> {ex.observations}
               </span>
             </div>
           ) : null}
@@ -971,20 +971,20 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
           </div>
 
           <button style={drawerCloseBtn} className="lpPress" onClick={onClose} aria-label="Cerrar">
-            ✕
+            âœ•
           </button>
         </div>
 
-        {loading && <div style={{ padding: 14, color: "#64748b", fontWeight: 900 }}>Cargando detalle…</div>}
+        {loading && <div style={{ padding: 14, color: "#64748b", fontWeight: 900 }}>Cargando detalleâ€¦</div>}
         {error && <div style={{ ...errorBox, margin: 14 }}>{error}</div>}
 
         {!loading && !error && (
           <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={sectionCard}>
-              <div style={sectionTitle}>Información</div>
+              <div style={sectionTitle}>InformaciÃ³n</div>
               <div style={kvGrid}>
-                <KV label="Condición" value={<ConditionChip value={ex?.condition} />} />
-                <KV label="Técnico" value={tech?.name || "???"} />
+                <KV label="CondiciÃ³n" value={<ConditionChip value={ex?.condition} />} />
+                <KV label="TÃ©cnico" value={tech?.name || "???"} />
                 <KV label="Equipo" value={eq?.name || "???"} />
                 <KV label="Actividad" value={activityName} />
               </div>
@@ -1029,7 +1029,7 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
               <div style={sectionTitle}>Observaciones</div>
               <div style={{ ...noteBox, marginTop: 8 }}>
                 <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap" }}>
-                  {ex?.observations || "—"}
+                  {ex?.observations || "â€”"}
                 </div>
               </div>
             </div>
@@ -1116,7 +1116,7 @@ const kpiTopBandDarkThin = {
   left: 0,
   right: 0,
   top: 0,
-  height: 6, // ✅ más delgada (como Equipos)
+  height: 6, // âœ… mÃ¡s delgada (como Equipos)
   background: "#334155",
   borderTopLeftRadius: 14,
   borderTopRightRadius: 14,
@@ -1126,11 +1126,11 @@ const kpiIconBox = {
   width: 44,
   height: 44,
   borderRadius: 14,
-  background: "#f97316", // ✅ naranja
+  background: "#f97316", // âœ… naranja
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#0f172a", // ✅ icono negro
+  color: "#0f172a", // âœ… icono negro
   border: "1px solid rgba(2,6,23,0.10)",
   boxShadow: "0 10px 20px rgba(249,115,22,0.18)",
 };
@@ -1467,6 +1467,7 @@ const btnKpiGray = {
   boxShadow: "0 8px 18px rgba(2,6,23,0.18)",
   transition: "all 160ms ease",
 };
+
 
 
 

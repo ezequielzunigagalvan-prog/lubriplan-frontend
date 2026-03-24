@@ -101,7 +101,24 @@ export default function MainLayout({ children }) {
   }, [currentPlantId, refreshNotif, refreshNotifSoon]);
 
   const [openNotif, setOpenNotif] = useState(false);
+  const [bellPulse, setBellPulse] = useState(false);
   const notifRef = useRef(null);
+  const prevUnreadRef = useRef(Number(unreadCount || 0));
+
+  useEffect(() => {
+    const nextUnread = Number(unreadCount || 0);
+    const prevUnread = Number(prevUnreadRef.current || 0);
+
+    if (nextUnread > 0 && nextUnread > prevUnread) {
+      setBellPulse(true);
+      const timer = window.setTimeout(() => setBellPulse(false), 1800);
+      prevUnreadRef.current = nextUnread;
+      return () => window.clearTimeout(timer);
+    }
+
+    if (nextUnread === 0) setBellPulse(false);
+    prevUnreadRef.current = nextUnread;
+  }, [unreadCount]);
 
   useEffect(() => {
     const onDoc = (ev) => {
@@ -192,7 +209,17 @@ export default function MainLayout({ children }) {
         }
 
         .lpBellBtn {
-          transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+          transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 160ms ease, color 160ms ease;
+        }
+
+        .lpBellBtn--alert {
+          border-color: rgba(220, 38, 38, 0.55) !important;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), 0 12px 26px rgba(220, 38, 38, 0.12);
+          color: #b91c1c;
+        }
+
+        .lpBellBtn--pulse {
+          animation: lpBellPulse 1.2s ease-in-out 2;
         }
 
         .lpBellBtn:hover {
@@ -219,6 +246,13 @@ export default function MainLayout({ children }) {
         @keyframes lpPop {
           0% { transform: scale(0.92); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes lpBellPulse {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.22); }
+          35% { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.12); }
+          70% { transform: scale(0.98); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
         @media (max-width: 820px) {
@@ -500,10 +534,16 @@ export default function MainLayout({ children }) {
 
             <div ref={notifRef} style={{ position: "relative" }}>
               <button
-                className="lpBellBtn"
+                className={`lpBellBtn${unreadCount > 0 ? " lpBellBtn--alert" : ""}${bellPulse ? " lpBellBtn--pulse" : ""}`}
                 type="button"
                 onClick={() => setOpenNotif((v) => !v)}
-                style={{ ...btnGhost, padding: "8px 10px", position: "relative" }}
+                style={{
+                  ...btnGhost,
+                  padding: "8px 10px",
+                  position: "relative",
+                  border: unreadCount > 0 ? "1px solid rgba(220,38,38,0.35)" : btnGhost.border,
+                  color: unreadCount > 0 ? "#b91c1c" : btnGhost.color,
+                }}
                 title="Notificaciones"
               >
                 <Icon name="bell" size="md" />
@@ -532,7 +572,7 @@ export default function MainLayout({ children }) {
                         title="Actualizar"
                         type="button"
                       >
-                    {notifLoading ? "�" : "?"}
+                    {notifLoading ? "…" : "↻"}
                       </button>
 
                       <button
@@ -1116,6 +1156,9 @@ const seeAll = {
   fontWeight: 950,
   color: "#0f172a",
 };
+
+
+
 
 
 
