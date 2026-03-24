@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import {
   getUsers,
@@ -652,11 +652,11 @@ export default function UsersPage() {
             </div>
 
             <div className="lpMuted" style={{ marginTop: 6 }}>
-              Define qu? usuario t?cnico corresponde a qu? registro operativo para actividades, filtros y trazabilidad.
+              Define qu? usuario t?cnico corresponde a qué registro operativo para actividades, filtros y trazabilidad.
             </div>
 
             {linksLoading ? (
-              <div className="lpMuted" style={{ marginTop: 12 }}>Cargando v?nculos...</div>
+              <div className="lpMuted" style={{ marginTop: 12 }}>Cargando vínculos...</div>
             ) : techUsers.length === 0 ? (
               <div className="lpMuted" style={{ marginTop: 12 }}>No hay usuarios t?cnicos activos.</div>
             ) : (
@@ -682,9 +682,9 @@ export default function UsersPage() {
                           onChange={(event) => onChangeLink(user, event.target.value)}
                           disabled={busyUserId === user.id}
                           style={{ minWidth: 0, width: "100%", maxWidth: 360 }}
-                          title="Selecciona el t?cnico correspondiente"
+                          title="Selecciona el técnico correspondiente"
                         >
-                          <option value="">? Sin t?cnico ?</option>
+                          <option value="">? Sin técnico ?</option>
                           {technicians.map((tech) => {
                             const takenByOther = tech.user?.id && Number(tech.user.id) !== Number(user.id);
                             const label = `${tech.name}${tech.code ? ` (${tech.code})` : ""}${takenByOther ? ` ? Ocupado por ${tech.user?.name}` : ""}`;

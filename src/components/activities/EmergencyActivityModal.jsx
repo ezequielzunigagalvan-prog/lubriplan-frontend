@@ -130,7 +130,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
   );
 
   const lubricantOptions = useMemo(
-    () => (lubricants || []).map((l) => ({ value: String(l.id), label: `${l.name}${l.code ? ` · ${l.code}` : ""}${l.unit ? ` (${l.unit})` : ""}` })),
+    () => (lubricants || []).map((l) => ({ value: String(l.id), label: `${l.name}${l.code ? ` ? ${l.code}` : ""}${l.unit ? ` (${l.unit})` : ""}` })),
     [lubricants]
   );
 
@@ -216,7 +216,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
             <h2 style={modalTitle}>Registrar actividad emergente</h2>
             <div style={modalSub}>Trabajos no programados: fuga, ajuste urgente, reabastecimiento o atención inmediata.</div>
           </div>
-          <button style={xBtn} onClick={onClose} disabled={saving} aria-label="Cerrar"><Icon name="close" /></button>
+          <button style={xBtn} onClick={onClose} disabled={saving} aria-label="Cerrar">?</button>
         </div>
 
         {err ? <div style={errorBox}>{err}</div> : null}
@@ -240,7 +240,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
             </div>
 
             {selectedEquipment ? (
-              <div style={helperCard}><span style={helperCardLabel}>Equipo:</span> {selectedEquipment.name || "-"}{selectedEquipment.code ? ` · ${selectedEquipment.code}` : ""}{selectedEquipment.location ? ` · ${selectedEquipment.location}` : ""}</div>
+              <div style={helperCard}><span style={helperCardLabel}>Equipo:</span> {selectedEquipment.name || "-"}{selectedEquipment.code ? ` ? ${selectedEquipment.code}` : ""}{selectedEquipment.location ? ` ? ${selectedEquipment.location}` : ""}</div>
             ) : null}
 
             <div style={row2}>
@@ -275,7 +275,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
             </div>
 
             {selectedLubricant ? (
-              <div style={helperCard}><span style={helperCardLabel}>Lubricante:</span> {selectedLubricant.name || "-"}{selectedLubricant.code ? ` · ${selectedLubricant.code}` : ""}{selectedLubricant.unit ? ` · Unidad base: ${selectedLubricant.unit}` : ""}</div>
+              <div style={helperCard}><span style={helperCardLabel}>Lubricante:</span> {selectedLubricant.name || "-"}{selectedLubricant.code ? ` ? ${selectedLubricant.code}` : ""}{selectedLubricant.unit ? ` ? Unidad base: ${selectedLubricant.unit}` : ""}</div>
             ) : null}
 
             <div style={row2}>
@@ -304,7 +304,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
                 <option value="BUENO">Bueno</option>
                 <option value="REGULAR">Regular</option>
                 <option value="MALO">Malo</option>
-                <option value="CRITICO">Crítico</option>
+                <option value="CRITICO">Cr?tico</option>
               </select>
             </div>
 
@@ -318,7 +318,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
 
             <div style={field}>
               <label style={label}>Evidencia visual</label>
-              <div style={helperText}>Puedes adjuntar una imagen del punto atendido o tomar una foto desde el móvil.</div>
+              <div style={helperText}>Puedes adjuntar una imagen del punto atendido o tomar una foto desde el m?vil.</div>
               <div style={fileRow}>
                 <button type="button" onClick={() => uploadInputRef.current?.click()} style={btnGhostSmall} disabled={saving}><span style={btnRow}><Icon name="upload" size="sm" /> Subir imagen</span></button>
                 <button type="button" onClick={() => cameraInputRef.current?.click()} style={btnGhostSmall} disabled={saving}><span style={btnRow}><Icon name="camera" size="sm" /> Tomar foto</span></button>
@@ -330,7 +330,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
 
             <div style={field}>
               <label style={label}>Nota de evidencia</label>
-              <textarea name="evidenceNote" value={form.evidenceNote} onChange={handleChange} placeholder="Qu? muestra la imagen o qu? debe revisarse despu?s" style={{ ...input, minHeight: 84, resize: "vertical" }} disabled={saving} />
+              <textarea name="evidenceNote" value={form.evidenceNote} onChange={handleChange} placeholder="Qué muestra la imagen o qué debe revisarse después" style={{ ...input, minHeight: 84, resize: "vertical" }} disabled={saving} />
             </div>
           </div>
         </div>
@@ -345,14 +345,14 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
 }
 
 const overlay = { position: "fixed", inset: 0, background: "rgba(2,6,23,0.6)", display: "grid", placeItems: "center", padding: 14, zIndex: 60 };
-const modal = { width: "min(760px, calc(100vw - 24px))", maxHeight: "calc(100vh - 24px)", overflow: "auto", background: "rgba(255,255,255,0.97)", borderRadius: 24, border: "1px solid rgba(226,232,240,0.95)", boxShadow: "0 24px 60px rgba(2,6,23,0.25)", backdropFilter: "blur(8px)" };
-const modalHeader = { position: "sticky", top: 0, zIndex: 1, background: "rgba(255,255,255,0.96)", borderBottom: "1px solid #eef2f7", padding: 14, display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", flexWrap: "wrap" };
+const modal = { width: "min(920px, 100%)", maxHeight: "92vh", overflow: "auto", background: "rgba(255,255,255,0.97)", borderRadius: 24, border: "1px solid rgba(226,232,240,0.95)", boxShadow: "0 24px 60px rgba(2,6,23,0.25)", backdropFilter: "blur(8px)" };
+const modalHeader = { position: "sticky", top: 0, zIndex: 1, background: "rgba(255,255,255,0.96)", borderBottom: "1px solid #eef2f7", padding: 16, display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start" };
 const kicker = { fontSize: 11, letterSpacing: "0.14em", fontWeight: 900, color: "#b45309" };
 const modalTitle = { margin: "2px 0 0", fontSize: 20, fontWeight: 980, color: "#0f172a" };
 const modalSub = { marginTop: 6, color: "#64748b", fontWeight: 850, fontSize: 13 };
 const xBtn = { border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.9)", borderRadius: 12, width: 40, height: 40, display: "grid", placeItems: "center", cursor: "pointer" };
 const errorBox = { margin: "16px 16px 0", background: "#fee2e2", border: "1px solid #fecaca", padding: 12, borderRadius: 12, color: "#991b1b", fontWeight: 900 };
-const body = { padding: 14, display: "grid", gap: 14 };
+const body = { padding: 16, display: "grid", gap: 14 };
 const sectionBox = { display: "grid", gap: 12, padding: 14, borderRadius: 18, border: "1px solid #e5e7eb", background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))" };
 const sectionTitle = { fontWeight: 950, color: "#0f172a", fontSize: 14 };
 const field = { display: "grid", gap: 6 };

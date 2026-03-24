@@ -176,7 +176,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
         <div style={foot}>
           <button onClick={onClose} style={btnGhost} disabled={saving}>Cancelar</button>
           <button onClick={onSubmit} style={btnPrimary} disabled={saving}>
-            {saving ? "Guardando" : "Crear accin"}
+            {saving ? "Guardando" : "Crear acción"}
           </button>
         </div>
       </div>

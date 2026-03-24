@@ -262,7 +262,7 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Qué viste, dónde, qu? tan severo es, qué riesgo representa y qué sugieres revisar."
+                placeholder="Qué viste, dónde, qué tan severo es, qué riesgo representa y qué sugieres revisar."
                 style={{ ...input, minHeight: 120, resize: "vertical" }}
                 disabled={saving}
               />

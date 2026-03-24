@@ -981,7 +981,7 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
         {!loading && !error && (
           <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={sectionCard}>
-              <div style={sectionTitle}>Informaci??n</div>
+              <div style={sectionTitle}>Información</div>
               <div style={kvGrid}>
                 <KV label="Condición" value={<ConditionChip value={ex?.condition} />} />
                 <KV label="Técnico" value={tech?.name || "???"} />

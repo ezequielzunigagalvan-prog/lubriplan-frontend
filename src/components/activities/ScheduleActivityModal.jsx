@@ -142,7 +142,7 @@ export default function ScheduleActivityModal({ open, onClose, onSaved, canAssig
       form.technicianId === "" || form.technicianId == null ? null : Number(form.technicianId);
 
     if (technicianId !== null && !Number.isFinite(technicianId)) {
-      return setErr("Técnico inv?lido.");
+      return setErr("Técnico inválido.");
     }
 
     setSaving(true);

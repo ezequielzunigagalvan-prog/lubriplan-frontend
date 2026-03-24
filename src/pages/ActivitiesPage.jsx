@@ -1236,7 +1236,7 @@ useEffect(() => {
                     con riesgo <b>MED/HIGH</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendaci?n:</b> prioriza, reasigna si hay sobrecarga y reprograma.
+                    <b>Recomendación:</b> prioriza, reasigna si hay sobrecarga y reprograma.
                   </div>
                 </div>
               </div>
@@ -1282,7 +1282,7 @@ useEffect(() => {
                     <b>CR?TICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendación:</b> revisa observaci?n/evidencia y prioriza inspección.
+                    <b>Recomendación:</b> revisa observación/evidencia y prioriza inspección.
                   </div>
                 </div>
               </div>
@@ -1620,7 +1620,7 @@ export function ActivityCard({
                   "rgba(249,115,22,0.40)"
                 )}
               >
-                Desde notificaci?n
+                Desde notificación
               </span>
             ) : null}
 

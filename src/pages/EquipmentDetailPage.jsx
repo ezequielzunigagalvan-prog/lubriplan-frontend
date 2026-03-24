@@ -322,7 +322,7 @@ export default function EquipmentDetailPage() {
                   <span style={critPill(isCritical(equipment?.criticality))}>
                     Criticidad: {equipmentCriticality}
                   </span>
-                  {!canAssignTech ? <span style={readOnlyPill}>Solo visualizaci?n</span> : null}
+                  {!canAssignTech ? <span style={readOnlyPill}>Solo visualización</span> : null}
                 </div>
               </div>
             </div>
@@ -375,7 +375,7 @@ export default function EquipmentDetailPage() {
             </div>
 
             <div style={{ marginTop: 14 }}>
-              <div style={miniLabel}>Descripci?n / notas</div>
+              <div style={miniLabel}>Descripción / notas</div>
               <div style={notesBox}>{equipment?.description || "Sin notas adicionales."}</div>
             </div>
           </section>
@@ -386,7 +386,7 @@ export default function EquipmentDetailPage() {
             <div style={summaryMiniCard}>
               <div style={summaryMiniLabel}>Técnico más usado</div>
               <div style={summaryMiniValue}>
-                {mostUsedTechnician?.technician?.name || "Sin hist?rico suficiente"}
+                {mostUsedTechnician?.technician?.name || "Sin histórico suficiente"}
               </div>
               <div style={summaryMiniSub}>
                 {mostUsedTechnician?.count
@@ -463,7 +463,7 @@ export default function EquipmentDetailPage() {
               </>
             ) : (
               <div style={emptyBox}>
-                Tu perfil es de solo visualizaci?n. La asignación de técnicos est? disponible para Admin y Supervisor.
+                Tu perfil es de solo visualización. La asignación de técnicos est? disponible para Admin y Supervisor.
               </div>
             )}
           </section>

@@ -550,7 +550,7 @@ export default function AnalysisPage() {
     if (tab === "consumo") return "Exportar consumo";
     if (tab === "actividades") return "Exportar actividades";
     if (tab === "fallas") return "Exportar fallas";
-    if (tab === "condicion") return "Exportar condici?n";
+    if (tab === "condicion") return "Exportar condición";
     return "Exportar";
   }, [tab]);
 
@@ -662,7 +662,7 @@ export default function AnalysisPage() {
         <div style={{ minWidth: 0 }}>
           <h1 style={{ margin: 0 }}>Análisis</h1>
           <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 900 }}>
-            Consumo - tendencias - anomalías - productividad - fallas
+            Tendencias y estadísticas de lubricación
             {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
           </p>
         </div>
@@ -769,8 +769,8 @@ export default function AnalysisPage() {
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <Tag tone="blue">Aceites ? anomalías: {oilAnomCount}</Tag>
-            <Tag tone="green">Grasas ? anomalías: {greaseAnomCount}</Tag>
+            <Tag tone="blue">Aceites - anomalías: {oilAnomCount}</Tag>
+            <Tag tone="green">Grasas - anomalías: {greaseAnomCount}</Tag>
             <Tag tone="steel">Rango: {days} días</Tag>
           </div>
         </div>
@@ -862,7 +862,7 @@ export default function AnalysisPage() {
                     title="Resumen"
                     tag="GRASAS"
                     tone="green"
-                    subtitle="Unidad base de análisis: g / kg. Si el backend env?a captura original (ej. bombazos), se muestra tambi?n."
+                    subtitle="Unidad base de análisis: g / kg. Si el backend env?a captura original (ej. bombazos), se muestra también."
                     right={
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                         <span style={miniLbl}>Lubricante</span>
@@ -1119,7 +1119,7 @@ export default function AnalysisPage() {
               <PanelHeader
                 icon={<Icon name="doc" />}
                 title="Actividades ? análisis y tendencias"
-                subtitle="KPIs, cumplimiento y tendencia mensual. Enfocado a supervisión y operaci?n."
+                subtitle="KPIs, cumplimiento y tendencia mensual. Enfocado a supervisión y operación."
                 right={
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

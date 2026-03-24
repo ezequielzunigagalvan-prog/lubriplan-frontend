@@ -78,7 +78,7 @@ function firstDefined(...vals) {
 }
 
 /**
- * Navegaci?n inteligente:
+ * Navegación inteligente:
  * - Si backend ya manda link espec?fico, se usa.
  * - Si es EXEC_CRITICAL o EXEC_ASSIGNED, intenta mandar a ActivitiesPage
  *   enfocado en esa ejecución/actividad.
@@ -420,7 +420,7 @@ export default function NotificationsPage() {
                 const meta = getNotifMeta(n.type);
                 const unread = !n.readAt;
 
-                const safeTitle = stripEmojiText(n.title || "Notificaci?n");
+                const safeTitle = stripEmojiText(n.title || "Notificación");
                 const safeMessage = stripEmojiText(n.message || "");
                 const target = resolveNotificationTarget(n);
 

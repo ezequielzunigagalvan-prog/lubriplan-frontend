@@ -43,7 +43,7 @@ const role = String(user?.role || "TECHNICIAN").toUpperCase();
 const canManageRoutes = Boolean(permissions?.canManageRoutes);
 const canDeleteRoute = canManageRoutes && role === "ADMIN";
 
-  // Si quieres Toast aqu? tambi?n:
+  // Si quieres Toast aqu? también:
   // const [toast, setToast] = useState(null);
   // const pushToast = (type, title, message) => {
   //   setToast({ id: crypto.randomUUID?.() || String(Date.now()), type, title, message });
@@ -219,7 +219,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
         {/* TOP */}
         <div style={topBar}>
           <div style={{ minWidth: 0 }}>
-            <div style={kicker}>LUBRIPLAN ? RUTAS</div>
+            <div style={kicker}>LUBRIPLAN - RUTAS</div>
             <h1 style={pageTitle}>{route?.name || "Detalle de ruta"}</h1>
 
             <div style={subRow}>

@@ -331,7 +331,7 @@ export default function EditEquipmentPage() {
                     style={input}
                   />
                   <small style={hint}>
-                    Recomendado: ?nico y legible. Se normaliza a may?sculas con guiones.
+                    Recomendado: único y legible. Se normaliza a may?sculas con guiones.
                   </small>
                 </Field>
 
@@ -355,7 +355,7 @@ export default function EditEquipmentPage() {
                     name="name"
                     value={form.name}
                     onChange={handleChange}
-                    placeholder="Ej: Motor Principal L?nea 1"
+                    placeholder="Ej: Motor Principal Línea 1"
                     style={input}
                     required
                   />
@@ -415,12 +415,12 @@ export default function EditEquipmentPage() {
                 </Field>
               </div>
 
-              <Field label="Descripci?n / Notas">
+              <Field label="Descripción / Notas">
                 <textarea
                   name="description"
                   value={form.description}
                   onChange={handleChange}
-                  placeholder="Informaci?n adicional del equipo?"
+                  placeholder="Información adicional del equipo?"
                   rows={4}
                   style={{ ...input, resize: "vertical", minHeight: 110 }}
                 />
