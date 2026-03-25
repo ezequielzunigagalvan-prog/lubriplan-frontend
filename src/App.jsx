@@ -165,7 +165,7 @@ export default function App() {
         path="/routes/:routeId/activities"
         element={
           <ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}>
-            <CompleteExecutionModal />
+            <ActivitiesDetailPage />
           </ProtectedRoute>
         }
       />
@@ -244,4 +244,6 @@ export default function App() {
     </Routes>
   );
 }
+
+
 

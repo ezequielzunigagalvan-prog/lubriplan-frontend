@@ -1,16 +1,23 @@
 ﻿import { Icon } from "./lpIcons";
 
+const toLocalYMD = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return "";
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const d = String(dt.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 export default function ActivityCard({ activity, onOpen }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalYMD(new Date());
 
   const status = activity?.status || activity?.computedStatus || "Pendiente";
   const isCompleted = status === "Completada" || activity?.statusRaw === "COMPLETED";
 
-  const dateStr =
-    (typeof activity?.date === "string" && activity.date) ||
-    (activity?.scheduledAt ? new Date(activity.scheduledAt).toISOString().slice(0, 10) : "") ||
-    (activity?.dateLabel || "") ||
-    "";
+  const dateStr = toLocalYMD(activity?.date || activity?.scheduledAt || activity?.dateLabel || "");
 
   const isFuture = !isCompleted && dateStr && dateStr > today;
   const clickable = !isCompleted && !isFuture;
@@ -52,8 +59,7 @@ export default function ActivityCard({ activity, onOpen }) {
 
   const isHighCriticality = critRaw === "ALTA" || critRaw === "CRITICA" || critRaw === "CRÍTICA";
 
-  const isOverdue =
-    status === "Atrasada" || activity?.statusRaw === "OVERDUE" || activity?.status === "OVERDUE";
+  const isOverdue = status === "Atrasada";
 
   const leftAccent = isOverdue ? "#ef4444" : isBadCondition ? "#ef4444" : isHighCriticality ? "#f59e0b" : "#e5e7eb";
 
@@ -218,3 +224,4 @@ const cameraBtn = {
   alignItems: "center",
   justifyContent: "center",
 };
+

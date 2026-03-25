@@ -625,18 +625,19 @@ useEffect(() => {
             ""
           : route?.instructions ?? "";
 
-        const computedStatus =
-          ex?.status === "COMPLETED"
-            ? "Completada"
-            : ex?.status === "OVERDUE"
-            ? "Atrasada"
-            : "Pendiente";
+        const rawStatus = String(ex?.status || "").toUpperCase();
         const dateISO =
-          computedStatus === "Completada"
+          rawStatus === "COMPLETED"
             ? ex?.executedAt
             : ex?.scheduledAt || ex?.executedAt;
 
         const dateLabel = dateISO ? toLocalYMD(dateISO) : "";
+        const computedStatus =
+          rawStatus === "COMPLETED"
+            ? "Completada"
+            : dateLabel && dateLabel < todayYMD
+            ? "Atrasada"
+            : "Pendiente";
 
         const isFuture = computedStatus !== "Completada" && dateLabel && dateLabel > todayYMD;
         const isToday = computedStatus !== "Completada" && dateLabel && dateLabel === todayYMD;
@@ -728,10 +729,12 @@ useEffect(() => {
             !isManual && route?.quantity != null
               ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""} por punto`
               : "?",
+          pointsCount: !isManual && route?.points != null ? Number(route.points) : null,
           method: !isManual ? route?.method || "?" : "?",
           instructions: String(instructionsTxt || ""),
           technicianId: ex?.technicianId ?? ex?.technician?.id ?? null,
           technician: ex?.technician ?? null,
+          technicianName: ex?.technician?.name ?? ex?.technicianName ?? null,
         };
       });
   }, [executions, todayYMD]);
@@ -1548,6 +1551,8 @@ export function ActivityCard({
     activity?.quantityLabel && String(activity.quantityLabel).includes("por punto")
       ? "Por punto"
       : "?";
+  const pointsCount = Number(activity?.pointsCount);
+  const hasPointsCount = Number.isFinite(pointsCount) && pointsCount > 0;
 
   const methodText =
     String(activity?.method || "?").trim().toLowerCase() === "grasera"
@@ -1692,8 +1697,13 @@ export function ActivityCard({
             <div style={{ ...summaryValue, ...(isMobile ? summaryValueMobile : null) }}>
               {quantityText}
             </div>
-            <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null) }}>
-              {pointsText}
+            <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null), display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span>{pointsText}</span>
+              {hasPointsCount ? (
+                <span style={{ ...tagPill, fontSize: 12, fontWeight: 900 }}>
+                  {pointsCount} punto{pointsCount === 1 ? "" : "s"}
+                </span>
+              ) : null}
             </div>
           </div>
 
@@ -2729,6 +2739,11 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
+
+
+
+
 
 
 
