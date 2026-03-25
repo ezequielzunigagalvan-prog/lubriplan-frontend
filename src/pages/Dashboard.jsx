@@ -405,14 +405,30 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
   const err = aiState?.error;
   const data = aiState?.data;
   const summary = data?.summary;
-
+  const kpis = summary?.kpis || {};
   const cached = !!data?.cached;
   const model = data?.model;
   const generatedAt = data?.generatedAt ? fmtDateTimeLocal(data.generatedAt) : null;
+  const isFallback = /fallback/i.test(String(summary?.title || ""));
+
+  const statusLine = loading
+    ? "Generando lectura ejecutiva…"
+    : err
+    ? "No se pudo generar el resumen IA."
+    : summary
+    ? "IA lista · " + (cached ? "cache" : "nuevo") + (model ? " · " + model : "") + (generatedAt ? " · " + generatedAt : "")
+    : "Listo para generar una lectura ejecutiva de riesgos, alertas y prioridades.";
+
+  const quickKpis = [
+    { label: "Completadas", value: Number(kpis.completed || 0), tone: "#166534", bg: "rgba(34,197,94,0.10)" },
+    { label: "Pendientes", value: Number(kpis.pending || 0), tone: "#92400e", bg: "rgba(245,158,11,0.12)" },
+    { label: "Vencidas", value: Number(kpis.overdue || 0), tone: "#991b1b", bg: "rgba(239,68,68,0.10)" },
+    { label: "Condición abierta", value: Number(kpis.conditionOpen || 0) + Number(kpis.conditionInProgress || 0), tone: "#1d4ed8", bg: "rgba(59,130,246,0.10)" },
+  ];
 
   return (
     <div style={aiBox}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div>
           <div style={{ fontWeight: 950, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
             <Icon name="search" size="sm" />
@@ -420,29 +436,27 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
           </div>
 
           <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
-            {loading
-              ? "Generando resumen…"
-              : err
-              ? "No se pudo generar el resumen IA."
-              : summary
-              ? `IA lista · ${cached ? "cache" : "nuevo"}${model ? ` · ${model}` : ""}${generatedAt ? ` · ${generatedAt}` : ""}`
-              : "Listo para integrar IA: resumen de riesgos, backlog y recomendaciones."}
+            {statusLine}
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <button
             type="button"
             style={{
               ...aiBtn,
+              background: "linear-gradient(135deg, rgba(249,115,22,0.96) 0%, rgba(251,146,60,0.96) 100%)",
+              color: "#0f172a",
+              borderColor: "rgba(249,115,22,0.55)",
+              boxShadow: "0 10px 24px rgba(249,115,22,0.18)",
               cursor: loading ? "not-allowed" : "pointer",
               opacity: loading ? 0.55 : 1,
             }}
             disabled={loading}
             onClick={onGenerate}
-            title="Generar / refrescar resumen"
+            title="Generar o refrescar resumen"
           >
-            {loading ? "Generando…" : "Generar →"}
+            {loading ? "Generando…" : summary ? "Actualizar lectura →" : "Generar →"}
           </button>
 
           {canForceRefreshAi ? (
@@ -451,7 +465,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
               style={{ ...btnAdminGhost, padding: "10px 12px" }}
               disabled={loading}
               onClick={onRefresh}
-              title="Forzar regeneración (invalida cache)"
+              title="Forzar regeneración"
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="refresh" size="sm" />
@@ -464,81 +478,112 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
 
       <div style={aiBody}>
         {loading ? (
-          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Preparando resumen para {month}…</div>
+          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Preparando lectura para {month}…</div>
         ) : err ? (
           <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>
             {err}
             <div style={{ marginTop: 8, fontWeight: 800, color: "#64748b" }}>
-              Tip: revisa que backend tenga `/api/ai/summary` y que el token de sesión esté OK.
+              Tip: revisa que el backend tenga /api/ai/summary, la key de OpenAI y el modelo configurado.
             </div>
           </div>
         ) : summary ? (
-          <div style={{ display: "grid", gap: 10 }}>
-            <div style={{ fontWeight: 900, color: "#0f172a" }}>{summary.title || "Resumen ejecutivo"}</div>
-            <div style={{ fontSize: 13, fontWeight: 850, color: "#334155", lineHeight: 1.45 }}>
-              {summary.executiveSummary || "—"}
+          <div style={{ display: "grid", gap: 14 }}>
+            <div
+              style={{
+                borderRadius: 18,
+                padding: 16,
+                border: isFallback ? "1px solid rgba(245,158,11,0.28)" : "1px solid rgba(59,130,246,0.18)",
+                background: isFallback
+                  ? "linear-gradient(135deg, rgba(255,247,237,0.96) 0%, rgba(255,255,255,0.92) 100%)"
+                  : "linear-gradient(135deg, rgba(239,246,255,0.92) 0%, rgba(255,255,255,0.96) 100%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.65)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 950, color: isFallback ? "#b45309" : "#1d4ed8", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    {isFallback ? "Modo seguro" : "Lectura ejecutiva"}
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 24, lineHeight: 1.05, fontWeight: 1000, color: "#0f172a" }}>
+                    {summary.title || "Resumen ejecutivo"}
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 14, fontWeight: 850, color: "#334155", lineHeight: 1.6, maxWidth: 920 }}>
+                    {summary.executiveSummary || "—"}
+                  </div>
+                </div>
+                <div style={{ display: "grid", gap: 8, minWidth: 210 }}>
+                  <div style={{ fontSize: 12, fontWeight: 900, color: "#64748b", textTransform: "uppercase" }}>Estado</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ ...pqBadge, ...(isFallback ? pqBadgeWarn : pqBadgeInfo) }}>{isFallback ? "Fallback" : "Provider"}</span>
+                    {model ? <span style={{ ...pqBadge, ...pqBadgeInfo }}>{model}</span> : null}
+                    {cached ? <span style={{ ...pqBadge, ...pqBadgeInfo }}>Cache</span> : <span style={{ ...pqBadge, ...pqBadgeInfo }}>Nuevo</span>}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {Array.isArray(summary.highlights) && summary.highlights.length > 0 ? (
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Highlights</div>
-                <ul style={{ marginTop: 8, paddingLeft: 18, display: "grid", gap: 6 }}>
-                  {summary.highlights.slice(0, 6).map((h, i) => (
-                    <li key={i} style={{ fontSize: 13, fontWeight: 850, color: "#0f172a" }}>
-                      {h}
-                    </li>
+            <div style={{ display: "grid", gridTemplateColumns: typeof window !== "undefined" && window.innerWidth < 860 ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10 }}>
+              {quickKpis.map((item) => (
+                <div key={item.label} style={{ borderRadius: 16, padding: 14, border: "1px solid rgba(226,232,240,0.95)", background: item.bg }}>
+                  <div style={{ fontSize: 12, fontWeight: 900, color: "#64748b", textTransform: "uppercase" }}>{item.label}</div>
+                  <div style={{ marginTop: 6, fontSize: 28, lineHeight: 1, fontWeight: 1000, color: item.tone }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: typeof window !== "undefined" && window.innerWidth < 980 ? "1fr" : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", gap: 12, alignItems: "start" }}>
+              <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 14, background: "rgba(255,255,255,0.88)" }}>
+                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Hallazgos clave</div>
+                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                  {(Array.isArray(summary.highlights) ? summary.highlights : []).slice(0, 5).map((h, i) => (
+                    <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      <span style={{ width: 10, height: 10, marginTop: 5, borderRadius: 999, background: "#f97316", flexShrink: 0 }} />
+                      <div style={{ fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.5 }}>{h}</div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
-            ) : null}
+
+              <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 14, background: "rgba(255,255,255,0.88)" }}>
+                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Acciones recomendadas</div>
+                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                  {(Array.isArray(summary.recommendations) ? summary.recommendations : []).slice(0, 4).map((x, i) => (
+                    <div key={i} style={{ borderRadius: 12, padding: "10px 12px", background: "rgba(248,250,252,0.95)", border: "1px solid rgba(226,232,240,0.95)", fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.45 }}>
+                      {x}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {Array.isArray(summary.risks) && summary.risks.length > 0 ? (
               <div>
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Riesgos</div>
-
-                <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Riesgos detectados</div>
+                <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
                   {summary.risks.slice(0, 4).map((r, i) => {
                     const lvl = String(r.level || "LOW").toUpperCase();
-                    const tone =
-                      lvl === "CRITICAL" || lvl === "HIGH" ? "#991b1b" : lvl === "MEDIUM" ? "#92400e" : "#166534";
+                    const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
+                    const isMedium = lvl === "MEDIUM";
+                    const tone = isHigh ? "#991b1b" : isMedium ? "#92400e" : "#166534";
+                    const bg = isHigh ? "rgba(254,242,242,0.96)" : isMedium ? "rgba(255,247,237,0.96)" : "rgba(240,253,244,0.96)";
+                    const stripe = isHigh ? "#ef4444" : isMedium ? "#f59e0b" : "#22c55e";
 
                     return (
-                      <div
-                        key={i}
-                        style={{
-                          border: "1px solid rgba(226,232,240,0.95)",
-                          borderRadius: 14,
-                          padding: 10,
-                          background: "rgba(255,255,255,0.75)",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ fontWeight: 950, color: "#0f172a" }}>{r.message || "—"}</div>
-                          <span style={{ fontWeight: 950, color: tone }}>{lvl}</span>
-                        </div>
-                        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-                          Acción: <b style={{ color: "#0f172a" }}>{r.action || "—"}</b>
+                      <div key={i} style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, overflow: "hidden", background: bg }}>
+                        <div style={{ height: 5, background: stripe }} />
+                        <div style={{ padding: 14, display: "grid", gap: 8 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+                            <div style={{ fontWeight: 950, color: "#0f172a", lineHeight: 1.35 }}>{r.message || "—"}</div>
+                            <span style={{ ...pqBadge, color: tone, borderColor: tone + '33', background: "rgba(255,255,255,0.55)" }}>{lvl}</span>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 850, color: "#475569", lineHeight: 1.5 }}>
+                            Acción sugerida: <b style={{ color: "#0f172a" }}>{r.action || "—"}</b>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            ) : null}
-
-            {Array.isArray(summary.recommendations) && summary.recommendations.length > 0 ? (
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>
-                  Recomendaciones
-                </div>
-
-                <ul style={{ marginTop: 8, paddingLeft: 18, display: "grid", gap: 6 }}>
-                  {summary.recommendations.slice(0, 6).map((x, i) => (
-                    <li key={i} style={{ fontSize: 13, fontWeight: 850, color: "#0f172a" }}>
-                      {x}
-                    </li>
-                  ))}
-                </ul>
               </div>
             ) : null}
           </div>
@@ -5011,6 +5056,7 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 
