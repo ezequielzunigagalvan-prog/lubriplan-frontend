@@ -342,7 +342,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
                 <div style={{ color: "#64748b", fontWeight: 800 }}>Cargando historial...</div>
               ) : history.length === 0 ? (
                 <div style={{ color: "#64748b", fontWeight: 800 }}>
-                  A?n no hay ejecuciones para esta ruta.
+                  Aún no hay ejecuciones para esta ruta.
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
