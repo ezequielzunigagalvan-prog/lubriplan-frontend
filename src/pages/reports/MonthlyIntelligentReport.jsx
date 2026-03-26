@@ -1,4 +1,4 @@
-// src/pages/reports/MonthlyIntelligentReport.jsx
+﻿// src/pages/reports/MonthlyIntelligentReport.jsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
@@ -14,7 +14,7 @@ import useDashboardPriorityQueue from "../../hooks/useDashboardPriorityQueue";
 import { getAiSummary, refreshAiSummary } from "../../services/aiService";
 import { Icon } from "../../components/ui/lpIcons";
 
-// ✅ Recharts
+// âœ… Recharts
 import {
   ResponsiveContainer,
   PieChart,
@@ -31,7 +31,7 @@ import {
   Line,
 } from "recharts";
 
-// ✅ Export PDF
+// âœ… Export PDF
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -47,9 +47,9 @@ function ymNow() {
 }
 
 function fmtDateTimeLocal(d) {
-  if (!d) return "—";
+  if (!d) return "â€”";
   const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return "—";
+  if (Number.isNaN(dt.getTime())) return "â€”";
   return dt.toLocaleString("es-MX", {
     year: "numeric",
     month: "2-digit",
@@ -96,7 +96,7 @@ function riskTone(level) {
 
 function pqSeverityLabel(severity) {
   const s = String(severity || "").toUpperCase();
-  if (s === "CRITICAL") return "Atención inmediata";
+  if (s === "CRITICAL") return "AtenciÃ³n inmediata";
   if (s === "HIGH") return "Alta prioridad";
   if (s === "MED") return "Atender hoy";
   return "Seguimiento";
@@ -105,10 +105,10 @@ function pqSeverityLabel(severity) {
 function pqTypeLabel(type) {
   const t = String(type || "").toUpperCase();
   if (t === "EXEC_OVERDUE") return "Actividad vencida";
-  if (t === "EXEC_UNASSIGNED") return "Actividad sin técnico";
-  if (t === "COND_REPORT") return "Condición reportada";
+  if (t === "EXEC_UNASSIGNED") return "Actividad sin tÃ©cnico";
+  if (t === "COND_REPORT") return "CondiciÃ³n reportada";
   if (t === "DAYS_TO_EMPTY") return "Inventario en riesgo";
-  if (t === "CONSUMPTION_ANOMALY") return "Consumo fuera de patrón";
+  if (t === "CONSUMPTION_ANOMALY") return "Consumo fuera de patrÃ³n";
   return "Prioridad";
 }
 
@@ -116,7 +116,7 @@ function pqOwnerLabel(owner) {
   const o = String(owner || "").toUpperCase();
   if (o === "ADMIN") return "Administrador";
   if (o === "SUPERVISOR") return "Supervisor";
-  if (o === "TECHNICIAN") return "Técnico";
+  if (o === "TECHNICIAN") return "TÃ©cnico";
   return "Equipo";
 }
 
@@ -338,13 +338,13 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
             style={{ marginTop: 4, fontSize: 12, fontWeight: 850, color: "#64748b" }}
           >
             {loading
-              ? "Generando resumen…"
+              ? "Generando resumenâ€¦"
               : err
               ? "No se pudo generar el resumen IA."
               : summary
-              ? `IA lista · ${cached ? "cache" : "nuevo"}${
-                  model ? ` · ${model}` : ""
-                }${generatedAt ? ` · ${generatedAt}` : ""}`
+              ? `IA lista Â· ${cached ? "cache" : "nuevo"}${
+                  model ? ` Â· ${model}` : ""
+                }${generatedAt ? ` Â· ${generatedAt}` : ""}`
               : "Genera un resumen ejecutivo del mes."}
           </div>
         </div>
@@ -365,7 +365,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
               opacity: loading ? 0.6 : 1,
             }}
           >
-            {loading ? "Generando…" : "Generar →"}
+            {loading ? "Generandoâ€¦" : "Generar â†’"}
           </button>
 
           {canForceRefresh ? (
@@ -381,7 +381,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
                 background: "#fff",
                 cursor: loading ? "not-allowed" : "pointer",
               }}
-              title="Forzar regeneración (invalida cache)"
+              title="Forzar regeneraciÃ³n (invalida cache)"
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="refresh" size="sm" />
@@ -392,67 +392,280 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
         </div>
       </div>
 
-      <div style={{ marginTop: 10 }}>
+      <div style={{ marginTop: 14 }}>
+        <style>{`
+          @keyframes lpAiSummaryReveal {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
         {loading ? (
-          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-            Preparando resumen para {month}…
+          <div
+            style={{
+              borderRadius: 24,
+              padding: "18px 20px",
+              background: "linear-gradient(180deg, #171c2c 0%, #101522 100%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#cbd5e1",
+              fontSize: 13,
+              fontWeight: 850,
+            }}
+          >
+            Preparando resumen para {month}...
           </div>
         ) : err ? (
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>{err}</div>
+          <div
+            style={{
+              borderRadius: 20,
+              padding: "16px 18px",
+              background: "linear-gradient(180deg, #2a1515 0%, #1b1010 100%)",
+              border: "1px solid rgba(248,113,113,0.28)",
+              color: "#fecaca",
+              fontSize: 13,
+              fontWeight: 900,
+            }}
+          >
+            {err}
+          </div>
         ) : summary ? (
-          <div style={{ display: "grid", gap: 10 }}>
-            <div style={{ fontWeight: 950, color: "#0f172a" }}>
-              {summary.title || "Resumen ejecutivo"}
-            </div>
+          <div
+            style={{
+              display: "grid",
+              gap: 16,
+              padding: 18,
+              borderRadius: 28,
+              background:
+                "radial-gradient(circle at top left, rgba(249,115,22,0.14), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #0f1421 100%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 24px 60px rgba(15,23,42,0.28)",
+              animation: "lpAiSummaryReveal 420ms ease",
+            }}
+          >
             <div
               style={{
-                fontSize: 13,
-                fontWeight: 850,
-                color: "#334155",
-                lineHeight: 1.45,
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "center",
+                flexWrap: "wrap",
               }}
             >
-              {summary.executiveSummary || "—"}
+              <div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 950,
+                    letterSpacing: 1,
+                    textTransform: "uppercase",
+                    color: "#fb923c",
+                  }}
+                >
+                  Resumen inteligente del periodo
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 12,
+                    fontWeight: 800,
+                    color: "#94a3b8",
+                  }}
+                >
+                  {summary.title || "Resumen ejecutivo"}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 12px",
+                    borderRadius: 999,
+                    background: summary.title && String(summary.title).toLowerCase().includes("fallback")
+                      ? "rgba(245,158,11,0.14)"
+                      : "rgba(34,197,94,0.14)",
+                    border: summary.title && String(summary.title).toLowerCase().includes("fallback")
+                      ? "1px solid rgba(245,158,11,0.28)"
+                      : "1px solid rgba(34,197,94,0.28)",
+                    color: summary.title && String(summary.title).toLowerCase().includes("fallback")
+                      ? "#fde68a"
+                      : "#bbf7d0",
+                    fontSize: 12,
+                    fontWeight: 950,
+                  }}
+                >
+                  {summary.title && String(summary.title).toLowerCase().includes("fallback")
+                    ? "Fallback seguro"
+                    : "IA activa"}
+                </span>
+                {summary?.model ? (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "8px 12px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "#e2e8f0",
+                      fontSize: 12,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {summary.model}
+                  </span>
+                ) : null}
+              </div>
             </div>
 
-            {Array.isArray(summary.highlights) && summary.highlights.length > 0 ? (
-              <div>
+            <div
+              style={{
+                borderRadius: 24,
+                padding: "24px 22px",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 950,
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  color: "#fb923c",
+                }}
+              >
+                Diagnóstico ejecutivo
+              </div>
+              <div
+                style={{
+                  marginTop: 12,
+                  fontFamily: '"DM Serif Display", Georgia, serif',
+                  fontSize: "clamp(28px, 3.2vw, 42px)",
+                  lineHeight: 1.04,
+                  color: "#f8fafc",
+                  maxWidth: 980,
+                }}
+              >
+                {summary.executiveSummary || "Sin diagnóstico disponible para este periodo."}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: 14,
+              }}
+            >
+              {Array.isArray(summary.highlights) && summary.highlights.length > 0 ? (
                 <div
                   style={{
-                    fontSize: 12,
-                    fontWeight: 950,
-                    color: "#64748b",
-                    textTransform: "uppercase",
+                    borderRadius: 24,
+                    padding: 18,
+                    background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+                    border: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
-                  Highlights
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                      color: "#fb923c",
+                    }}
+                  >
+                    Hallazgos clave
+                  </div>
+                  <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+                    {summary.highlights.slice(0, 4).map((h, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          borderRadius: 18,
+                          padding: "14px 16px",
+                          background: "rgba(12,18,32,0.58)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "#f8fafc",
+                          fontSize: 14,
+                          fontWeight: 850,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {h}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <ul style={{ marginTop: 8, paddingLeft: 18, display: "grid", gap: 6 }}>
-                  {summary.highlights.slice(0, 6).map((h, i) => (
-                    <li
-                      key={i}
-                      style={{ fontSize: 13, fontWeight: 850, color: "#0f172a" }}
-                    >
-                      {h}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+              ) : null}
+
+              {Array.isArray(summary.recommendations) && summary.recommendations.length > 0 ? (
+                <div
+                  style={{
+                    borderRadius: 24,
+                    padding: 18,
+                    background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                      color: "#fb923c",
+                    }}
+                  >
+                    Acciones recomendadas
+                  </div>
+                  <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+                    {summary.recommendations.slice(0, 4).map((x, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          borderRadius: 18,
+                          padding: "14px 16px",
+                          background: "rgba(12,18,32,0.58)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "#f8fafc",
+                          fontSize: 14,
+                          fontWeight: 850,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {x}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
 
             {Array.isArray(summary.risks) && summary.risks.length > 0 ? (
-              <div>
+              <div
+                style={{
+                  borderRadius: 24,
+                  padding: 18,
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
                 <div
                   style={{
                     fontSize: 12,
                     fontWeight: 950,
-                    color: "#64748b",
+                    letterSpacing: 1,
                     textTransform: "uppercase",
+                    color: "#fb923c",
                   }}
                 >
-                  Riesgos
+                  Riesgos detectados
                 </div>
-                <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
+                <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
                   {summary.risks.slice(0, 4).map((r, i) => {
                     const tone = riskTone(r.level);
                     const lvl = String(r.level || "LOW").toUpperCase();
@@ -460,27 +673,50 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
                       <div
                         key={i}
                         style={{
-                          border: "1px solid rgba(226,232,240,0.95)",
-                          borderRadius: 14,
-                          padding: 10,
-                          background: "#fff",
+                          borderRadius: 20,
+                          padding: "16px 18px",
+                          background: "rgba(12,18,32,0.62)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          boxShadow:
+                            tone === "danger"
+                              ? "inset 0 4px 0 rgba(239,68,68,0.85)"
+                              : tone === "warn"
+                              ? "inset 0 4px 0 rgba(245,158,11,0.85)"
+                              : "inset 0 4px 0 rgba(59,130,246,0.75)",
                         }}
                       >
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                            {r.message || "—"}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            alignItems: "flex-start",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: "#f8fafc",
+                              fontSize: 16,
+                              fontWeight: 950,
+                              lineHeight: 1.3,
+                              maxWidth: 980,
+                            }}
+                          >
+                            {r.message || "Sin descripción disponible."}
                           </div>
                           <Chip tone={tone}>{lvl}</Chip>
                         </div>
                         <div
                           style={{
-                            marginTop: 6,
-                            fontSize: 12,
-                            fontWeight: 850,
-                            color: "#64748b",
+                            marginTop: 10,
+                            color: "#cbd5e1",
+                            fontSize: 13,
+                            fontWeight: 800,
+                            lineHeight: 1.45,
                           }}
                         >
-                          Acción: <b style={{ color: "#0f172a" }}>{r.action || "—"}</b>
+                          Acción sugerida: <b style={{ color: "#f8fafc" }}>{r.action || "Sin acción sugerida."}</b>
                         </div>
                       </div>
                     );
@@ -488,36 +724,20 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
                 </div>
               </div>
             ) : null}
-
-            {Array.isArray(summary.recommendations) &&
-            summary.recommendations.length > 0 ? (
-              <div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 950,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Recomendaciones
-                </div>
-                <ul style={{ marginTop: 8, paddingLeft: 18, display: "grid", gap: 6 }}>
-                  {summary.recommendations.slice(0, 6).map((x, i) => (
-                    <li
-                      key={i}
-                      style={{ fontSize: 13, fontWeight: 850, color: "#0f172a" }}
-                    >
-                      {x}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
           </div>
         ) : (
-          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-            No hay resumen aún. Presiona <b>Generar</b>.
+          <div
+            style={{
+              borderRadius: 24,
+              padding: "18px 20px",
+              background: "linear-gradient(180deg, #171c2c 0%, #101522 100%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#cbd5e1",
+              fontSize: 13,
+              fontWeight: 850,
+            }}
+          >
+            No hay resumen todavía. Presiona <b style={{ color: "#fff" }}>Generar</b>.
           </div>
         )}
       </div>
@@ -652,7 +872,7 @@ function StableChart({ height = 260, children }) {
 ========================= */
 
 async function captureSectionToCanvas(el, { scale = 2 } = {}) {
-  if (!el) throw new Error("No se encontró la sección para exportar.");
+  if (!el) throw new Error("No se encontrÃ³ la secciÃ³n para exportar.");
   const canvas = await html2canvas(el, {
     scale,
     backgroundColor: "#ffffff",
@@ -1070,19 +1290,19 @@ const anomaliesTop =
     if (Number(predAlerts?.riskPendingCount || 0) > 0) {
       rows.push({
         title: "Riesgo de atraso",
-        msg: `${Number(predAlerts.riskPendingCount || 0)} actividades con señal de atraso en el mes.`,
+        msg: `${Number(predAlerts.riskPendingCount || 0)} actividades con seÃ±al de atraso en el mes.`,
         tone: Number(predAlerts?.riskOverdueCount || 0) > 0 ? "red" : "amber",
         action:
           Number(predAlerts?.riskOverdueCount || 0) > 0
-            ? `${Number(predAlerts.riskOverdueCount || 0)} ya están vencidas.`
+            ? `${Number(predAlerts.riskOverdueCount || 0)} ya estÃ¡n vencidas.`
             : "Revisar carga y anticipar reasignaciones.",
       });
     }
 
     if (Number(predAlerts?.criticalUnassignedCount || 0) > 0) {
       rows.push({
-        title: "Críticas sin técnico",
-        msg: `${Number(predAlerts.criticalUnassignedCount || 0)} actividades críticas vencidas siguen sin asignación.`,
+        title: "CrÃ­ticas sin tÃ©cnico",
+        msg: `${Number(predAlerts.criticalUnassignedCount || 0)} actividades crÃ­ticas vencidas siguen sin asignaciÃ³n.`,
         tone: "red",
         action: "Asignar responsable inmediato y bloquear rezago.",
       });
@@ -1091,9 +1311,9 @@ const anomaliesTop =
     if (Number(predAlerts?.repeatedFailuresCount || 0) > 0) {
       rows.push({
         title: "Reincidencia",
-        msg: `${Number(predAlerts.repeatedFailuresCount || 0)} equipos muestran patrón repetido de fallas o malas condiciones.`,
+        msg: `${Number(predAlerts.repeatedFailuresCount || 0)} equipos muestran patrÃ³n repetido de fallas o malas condiciones.`,
         tone: "amber",
-        action: "Atacar causa raíz y revisar frecuencia/condición operativa.",
+        action: "Atacar causa raÃ­z y revisar frecuencia/condiciÃ³n operativa.",
       });
     }
 
@@ -1103,19 +1323,19 @@ const anomaliesTop =
         title: "Days-to-empty",
         msg: `${x?.lubricantName || "Lubricante"} con riesgo de quedarse sin stock (~${Math.round(
           Number(x?.daysToEmpty || 0)
-        )} días).`,
+        )} dÃ­as).`,
         tone: String(x?.risk || "").toUpperCase() === "HIGH" ? "red" : "amber",
-        action: x?.underMin ? "Ya está bajo mínimo. Reabastecer o transferir stock." : "Programar compra/traspaso inmediato.",
+        action: x?.underMin ? "Ya estÃ¡ bajo mÃ­nimo. Reabastecer o transferir stock." : "Programar compra/traspaso inmediato.",
       });
     }
 
     if (anomaliesTop.length > 0) {
       const x = anomaliesTop[0];
       rows.push({
-        title: "Anomalía de consumo",
-        msg: `${x?.equipmentName || "Equipo"} con consumo anómalo (${String(x?.risk || "MED").toUpperCase()}).`,
+        title: "AnomalÃ­a de consumo",
+        msg: `${x?.equipmentName || "Equipo"} con consumo anÃ³malo (${String(x?.risk || "MED").toUpperCase()}).`,
         tone: String(x?.risk || "").toUpperCase() === "HIGH" ? "red" : "amber",
-        action: "Revisar fugas, puntos, frecuencia y dosificación.",
+        action: "Revisar fugas, puntos, frecuencia y dosificaciÃ³n.",
       });
     }
 
@@ -1136,8 +1356,8 @@ const anomaliesTop =
       const execEl = executiveRef.current;
       const annexEl = annexRef.current;
 
-      if (!execEl) throw new Error("No se encontró sección ejecutiva.");
-      if (!annexEl) throw new Error("No se encontró sección de anexos.");
+      if (!execEl) throw new Error("No se encontrÃ³ secciÃ³n ejecutiva.");
+      if (!annexEl) throw new Error("No se encontrÃ³ secciÃ³n de anexos.");
 
       const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
 
@@ -1184,8 +1404,8 @@ const anomaliesTop =
               }}
             >
               {user?.name ? `Generado para: ${user.name}` : ""}
-{currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
- · {monthLabel(month)} · Última actualización: {fmtDateTimeLocal(summary?.updatedAt)}
+{currentPlant?.name ? ` Â· Planta: ${currentPlant.name}` : ""}
+ Â· {monthLabel(month)} Â· Ãšltima actualizaciÃ³n: {fmtDateTimeLocal(summary?.updatedAt)}
             </div>
           </div>
 
@@ -1226,7 +1446,7 @@ const anomaliesTop =
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="refresh" size="sm" />
-                {loading ? "Actualizando…" : "Actualizar"}
+                {loading ? "Actualizandoâ€¦" : "Actualizar"}
               </span>
             </button>
 
@@ -1248,7 +1468,7 @@ const anomaliesTop =
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="export" size="sm" />
-                {exporting ? "Exportando…" : "Exportar PDF"}
+                {exporting ? "Exportandoâ€¦" : "Exportar PDF"}
               </span>
             </button>
 
@@ -1264,7 +1484,7 @@ const anomaliesTop =
               type="button"
               title="Ir a resumen ejecutivo"
             >
-              Ejecutivo →
+              Ejecutivo â†’
             </button>
 
             <button
@@ -1279,7 +1499,7 @@ const anomaliesTop =
               type="button"
               title="Ir a anexos"
             >
-              Anexos →
+              Anexos â†’
             </button>
 
             <button
@@ -1332,7 +1552,7 @@ const anomaliesTop =
         ) : null}
 
         {/* =========================
-            EJECUTIVO (1 “página”)
+            EJECUTIVO (1 â€œpÃ¡ginaâ€)
         ========================= */}
         <div ref={executiveRef} style={{ marginTop: 14, minWidth: 0 }}>
           <div
@@ -1352,7 +1572,7 @@ const anomaliesTop =
                 letterSpacing: 0.4,
               }}
             >
-              Resumen ejecutivo (1 página)
+              Resumen ejecutivo (1 pÃ¡gina)
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Chip tone="gray">{monthLabel(month)}</Chip>
@@ -1405,7 +1625,7 @@ const anomaliesTop =
             <KPI label="Pendientes" value={kpis.pending} hint="Programadas futuras (mes)" tone="dark" />
             <KPI label="Atrasadas" value={kpis.overdue} hint="Pendientes con fecha vencida" tone="red" />
             <KPI
-              label="Condición abierta"
+              label="CondiciÃ³n abierta"
               value={kpis.conditionOpen + kpis.conditionInProgress}
               hint="OPEN + IN_PROGRESS"
               tone="red"
@@ -1422,7 +1642,7 @@ const anomaliesTop =
             }}
           >
             <ChartBox
-              title="Distribución de actividades"
+              title="DistribuciÃ³n de actividades"
               subtitle="Completadas vs pendientes vs atrasadas"
               right={<Chip tone="gray">Total: {kpis.total}</Chip>}
             >
@@ -1459,7 +1679,7 @@ const anomaliesTop =
             <ChartBox
               title="Backlog del mes"
               subtitle="Pendientes vs atrasadas"
-              right={<Chip tone={kpis.overdue > 0 ? "red" : "green"}>{kpis.overdue > 0 ? "Atención" : "OK"}</Chip>}
+              right={<Chip tone={kpis.overdue > 0 ? "red" : "green"}>{kpis.overdue > 0 ? "AtenciÃ³n" : "OK"}</Chip>}
             >
               <div style={{ width: "100%", height: "100%", minWidth: 0 }}>
                 <StableChart height={260}>
@@ -1515,12 +1735,12 @@ const anomaliesTop =
   !canSeePredictive
     ? "Desactivado en ajustes"
     : predLoading
-    ? "Calculando…"
+    ? "Calculandoâ€¦"
     : predError
     ? "No disponible"
     : predTotal
     ? `Detectados: ${predTotal}`
-    : "Sin señales relevantes"
+    : "Sin seÃ±ales relevantes"
 }
              right={
   canSeePredictive ? (
@@ -1541,7 +1761,7 @@ const anomaliesTop =
     >
       <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
         <Icon name="refresh" size="sm" />
-        {predLoading ? "…" : "Actualizar"}
+        {predLoading ? "â€¦" : "Actualizar"}
       </span>
     </button>
   ) : null
@@ -1549,7 +1769,7 @@ const anomaliesTop =
             >
               {!canSeePredictive ? (
   <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-    Las alertas predictivas están desactivadas en Ajustes.
+    Las alertas predictivas estÃ¡n desactivadas en Ajustes.
   </div>
 ) : predError ? (
   <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>{predError}</div>
@@ -1592,7 +1812,7 @@ const anomaliesTop =
                             color: "#0f172a",
                           }}
                         >
-                          Acción:{" "}
+                          AcciÃ³n:{" "}
                           <span style={{ fontWeight: 850, color: "#334155" }}>{r.action}</span>
                         </div>
                       </div>
@@ -1621,9 +1841,9 @@ const anomaliesTop =
 
           <div style={{ marginTop: 12 }}>
             <ChartBox
-              title="Tendencia (últimos 6 meses)"
-              subtitle={trendLoading ? "Cargando…" : trendErr ? "No disponible" : "Cumplimiento mensual"}
-              right={trendLoading ? <Chip tone="gray">…</Chip> : <Chip tone="gray">6 meses</Chip>}
+              title="Tendencia (Ãºltimos 6 meses)"
+              subtitle={trendLoading ? "Cargandoâ€¦" : trendErr ? "No disponible" : "Cumplimiento mensual"}
+              right={trendLoading ? <Chip tone="gray">â€¦</Chip> : <Chip tone="gray">6 meses</Chip>}
             >
               {trendErr ? (
                 <EmptyChart text={trendErr} />
@@ -1757,7 +1977,7 @@ const anomaliesTop =
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                           <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                            {x?.title || "Acción prioritaria"}
+                            {x?.title || "AcciÃ³n prioritaria"}
                           </div>
                           <Chip tone={riskTone(x?.severity)}>{x?.priorityLabel || pqSeverityLabel(x?.severity)}</Chip>
                         </div>
@@ -1807,7 +2027,7 @@ const anomaliesTop =
               background: "rgba(255,255,255,0.65)",
             }}
           >
-            <div style={{ fontWeight: 1000, color: "#0f172a" }}>Exportación</div>
+            <div style={{ fontWeight: 1000, color: "#0f172a" }}>ExportaciÃ³n</div>
             <div
               style={{
                 marginTop: 6,
@@ -1816,8 +2036,8 @@ const anomaliesTop =
                 color: "#64748b",
               }}
             >
-              Este PDF se genera con captura visual (HTML → Canvas → PDF). Si luego quieres PDF
-              “nativo” con tablas perfectas, lo armamos con backend.
+              Este PDF se genera con captura visual (HTML â†’ Canvas â†’ PDF). Si luego quieres PDF
+              â€œnativoâ€ con tablas perfectas, lo armamos con backend.
             </div>
           </div>
         </div>
@@ -1825,4 +2045,5 @@ const anomaliesTop =
     </MainLayout>
   );
 }
+
 
