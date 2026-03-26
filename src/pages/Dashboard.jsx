@@ -405,10 +405,20 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
   const err = aiState?.error;
   const data = aiState?.data;
   const summary = data?.summary;
-
   const cached = !!data?.cached;
   const model = data?.model;
   const generatedAt = data?.generatedAt ? fmtDateTimeLocal(data.generatedAt) : null;
+  const isFallback = /fallback/i.test(String(summary?.title || ""));
+  const hallazgos = Array.isArray(summary?.highlights) ? summary.highlights.slice(0, 4) : [];
+  const acciones = Array.isArray(summary?.recommendations) ? summary.recommendations.slice(0, 4) : [];
+  const riesgos = Array.isArray(summary?.risks) ? summary.risks.slice(0, 4) : [];
+  const statusLine = loading
+    ? "Generando lectura ejecutiva…"
+    : err
+    ? "No se pudo generar el resumen IA."
+    : summary
+    ? "IA lista · " + (cached ? "cache" : "nuevo") + (model ? " · " + model : "") + (generatedAt ? " · " + generatedAt : "")
+    : "Listo para generar una lectura ejecutiva de riesgos y prioridades.";
 
   return (
     <div style={aiBox}>
@@ -418,19 +428,18 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
             <Icon name="search" size="sm" />
             Resumen inteligente
           </div>
-
           <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
-            {loading
-              ? "Generando resumen…"
-              : err
-              ? "No se pudo generar el resumen IA."
-              : summary
-              ? "IA lista · " + (cached ? "cache" : "nuevo") + (model ? " · " + model : "") + (generatedAt ? " · " + generatedAt : "")
-              : "Listo para integrar IA: resumen de riesgos, backlog y recomendaciones."}
+            {statusLine}
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          {summary ? (
+            <span style={{ ...pqBadge, ...(isFallback ? pqBadgeWarn : pqBadgeInfo) }}>
+              {isFallback ? "Fallback seguro" : "IA activa"}
+            </span>
+          ) : null}
+
           <button
             type="button"
             style={{
@@ -440,9 +449,9 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
             }}
             disabled={loading}
             onClick={onGenerate}
-            title="Generar / refrescar resumen"
+            title="Generar o refrescar resumen"
           >
-            {loading ? "Generando…" : "Generar →"}
+            {loading ? "Generando…" : summary ? "Actualizar →" : "Generar →"}
           </button>
 
           {canForceRefreshAi ? (
@@ -451,7 +460,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
               style={{ ...btnAdminGhost, padding: "10px 12px" }}
               disabled={loading}
               onClick={onRefresh}
-              title="Forzar regeneración (invalida cache)"
+              title="Forzar regeneración"
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="refresh" size="sm" />
@@ -464,81 +473,85 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
 
       <div style={aiBody}>
         {loading ? (
-          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Preparando resumen para {month}…</div>
+          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Preparando lectura para {month}…</div>
         ) : err ? (
           <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>
             {err}
             <div style={{ marginTop: 8, fontWeight: 800, color: "#64748b" }}>
-              Tip: revisa que backend tenga /api/ai/summary y que el token de sesión esté OK.
+              Tip: revisa la conexión con OpenAI, la cuota del proyecto y la configuración del backend.
             </div>
           </div>
         ) : summary ? (
-          <div style={{ display: "grid", gap: 10 }}>
-            <div style={{ fontWeight: 900, color: "#0f172a" }}>{summary.title || "Resumen ejecutivo"}</div>
-            <div style={{ fontSize: 13, fontWeight: 850, color: "#334155", lineHeight: 1.45 }}>
-              {summary.executiveSummary || "—"}
+          <div style={{ display: "grid", gap: 12 }}>
+            <div
+              style={{
+                border: isFallback ? "1px solid rgba(245,158,11,0.24)" : "1px solid rgba(59,130,246,0.18)",
+                borderRadius: 16,
+                padding: 16,
+                background: isFallback
+                  ? "linear-gradient(135deg, rgba(255,247,237,0.94) 0%, rgba(255,255,255,0.96) 100%)"
+                  : "linear-gradient(135deg, rgba(239,246,255,0.92) 0%, rgba(255,255,255,0.96) 100%)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 950, color: isFallback ? "#b45309" : "#1d4ed8", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {summary.title || "Resumen ejecutivo"}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 15, fontWeight: 850, color: "#0f172a", lineHeight: 1.65 }}>
+                {summary.executiveSummary || "—"}
+              </div>
             </div>
 
-            {Array.isArray(summary.highlights) && summary.highlights.length > 0 ? (
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Hallazgos</div>
-                <ul style={{ marginTop: 8, paddingLeft: 18, display: "grid", gap: 6 }}>
-                  {summary.highlights.slice(0, 6).map((h, i) => (
-                    <li key={i} style={{ fontSize: 13, fontWeight: 850, color: "#0f172a" }}>
-                      {h}
-                    </li>
-                  ))}
-                </ul>
+            <div style={{ display: "grid", gridTemplateColumns: typeof window !== "undefined" && window.innerWidth < 980 ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+              <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 14, background: "rgba(255,255,255,0.88)" }}>
+                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Hallazgos clave</div>
+                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                  {hallazgos.length ? hallazgos.map((item, i) => (
+                    <div key={i} style={{ borderRadius: 12, padding: "10px 12px", background: "rgba(248,250,252,0.96)", border: "1px solid rgba(226,232,240,0.95)", fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.45 }}>
+                      {item}
+                    </div>
+                  )) : <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Sin hallazgos disponibles.</div>}
+                </div>
               </div>
-            ) : null}
 
-            {Array.isArray(summary.risks) && summary.risks.length > 0 ? (
+              <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 14, background: "rgba(255,255,255,0.88)" }}>
+                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Acciones recomendadas</div>
+                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                  {acciones.length ? acciones.map((item, i) => (
+                    <div key={i} style={{ borderRadius: 12, padding: "10px 12px", background: "rgba(248,250,252,0.96)", border: "1px solid rgba(226,232,240,0.95)", fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.45 }}>
+                      {item}
+                    </div>
+                  )) : <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Sin acciones sugeridas.</div>}
+                </div>
+              </div>
+            </div>
+
+            {riesgos.length ? (
               <div>
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Riesgos</div>
-
-                <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
-                  {summary.risks.slice(0, 4).map((r, i) => {
+                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>Riesgos detectados</div>
+                <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                  {riesgos.map((r, i) => {
                     const lvl = String(r.level || "LOW").toUpperCase();
-                    const tone =
-                      lvl === "CRITICAL" || lvl === "HIGH" ? "#991b1b" : lvl === "MEDIUM" ? "#92400e" : "#166534";
-
+                    const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
+                    const isMedium = lvl === "MEDIUM";
+                    const tone = isHigh ? "#991b1b" : isMedium ? "#92400e" : "#166534";
+                    const stripe = isHigh ? "#ef4444" : isMedium ? "#f59e0b" : "#22c55e";
+                    const bg = isHigh ? "rgba(254,242,242,0.94)" : isMedium ? "rgba(255,247,237,0.94)" : "rgba(240,253,244,0.94)";
                     return (
-                      <div
-                        key={i}
-                        style={{
-                          border: "1px solid rgba(226,232,240,0.95)",
-                          borderRadius: 14,
-                          padding: 10,
-                          background: "rgba(255,255,255,0.75)",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ fontWeight: 950, color: "#0f172a" }}>{r.message || "—"}</div>
-                          <span style={{ fontWeight: 950, color: tone }}>{lvl}</span>
-                        </div>
-                        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-                          Acción: <b style={{ color: "#0f172a" }}>{r.action || "—"}</b>
+                      <div key={i} style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, overflow: "hidden", background: bg }}>
+                        <div style={{ height: 5, background: stripe }} />
+                        <div style={{ padding: 14, display: "grid", gap: 8 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+                            <div style={{ fontWeight: 950, color: "#0f172a", lineHeight: 1.35 }}>{r.message || "—"}</div>
+                            <span style={{ ...pqBadge, color: tone, borderColor: tone + '33', background: "rgba(255,255,255,0.58)" }}>{lvl}</span>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 850, color: "#475569", lineHeight: 1.5 }}>
+                            Acción sugerida: <b style={{ color: "#0f172a" }}>{r.action || "—"}</b>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            ) : null}
-
-            {Array.isArray(summary.recommendations) && summary.recommendations.length > 0 ? (
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>
-                  Recomendaciones
-                </div>
-
-                <ul style={{ marginTop: 8, paddingLeft: 18, display: "grid", gap: 6 }}>
-                  {summary.recommendations.slice(0, 6).map((x, i) => (
-                    <li key={i} style={{ fontSize: 13, fontWeight: 850, color: "#0f172a" }}>
-                      {x}
-                    </li>
-                  ))}
-                </ul>
               </div>
             ) : null}
           </div>
@@ -5011,6 +5024,7 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 
