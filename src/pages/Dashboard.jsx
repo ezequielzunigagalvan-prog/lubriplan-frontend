@@ -486,188 +486,250 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
             </div>
           </div>
         ) : summary ? (
-          <div style={{ display: "grid", gap: 12 }}>
-            <style>{`@keyframes lpAiSummaryEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+  <div style={{ display: "grid", gap: 12 }}>
+    <div
+      style={{
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 20,
+        padding: 16,
+        background:
+          "radial-gradient(circle at top left, rgba(249,115,22,0.10), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #111624 100%)",
+        boxShadow: "0 18px 40px rgba(15,23,42,0.18)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 950,
+              color: "#fb923c",
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            Diagnóstico ejecutivo
+          </div>
+          <div style={{ marginTop: 6, fontSize: 12, fontWeight: 850, color: "#94a3b8" }}>
+            {summary.title || "Lectura ejecutiva del periodo"}
+          </div>
+        </div>
 
-            <div
-              style={{
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 20,
-                padding: 16,
-                background:
-                  "radial-gradient(circle at top left, rgba(249,115,22,0.12), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #111624 100%)",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.18)",
-                animation: "lpAiSummaryEnter 360ms ease",
-              }}
-            >
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 12px",
+            borderRadius: 999,
+            background: isFallback ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)",
+            border: isFallback ? "1px solid rgba(245,158,11,0.26)" : "1px solid rgba(34,197,94,0.26)",
+            color: isFallback ? "#fde68a" : "#bbf7d0",
+            fontSize: 12,
+            fontWeight: 950,
+          }}
+        >
+          {isFallback ? "Fallback seguro" : "IA activa"}
+        </span>
+      </div>
+
+      <div
+        style={{
+          marginTop: 14,
+          fontSize: 24,
+          lineHeight: 1.2,
+          color: "#f8fafc",
+          fontWeight: 980,
+          maxWidth: 920,
+        }}
+      >
+        {executiveCompact}
+      </div>
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          borderRadius: 18,
+          padding: 14,
+          background: "#ffffff",
+          border: "1px solid rgba(226,232,240,0.95)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 950,
+            color: "#f97316",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+          }}
+        >
+          Hallazgos clave
+        </div>
+
+        <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+          {hallazgos.length ? (
+            hallazgos.slice(0, 3).map((item, i) => (
               <div
+                key={i}
                 style={{
+                  borderRadius: 14,
+                  padding: "12px 13px",
+                  background: "#f8fafc",
+                  border: "1px solid rgba(226,232,240,0.95)",
+                  fontSize: 13,
+                  fontWeight: 850,
+                  color: "#0f172a",
+                  lineHeight: 1.4,
+                }}
+              >
+                {item}
+              </div>
+            ))
+          ) : (
+            <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
+              Sin hallazgos disponibles.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div
+        style={{
+          borderRadius: 18,
+          padding: 14,
+          background: "#ffffff",
+          border: "1px solid rgba(226,232,240,0.95)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 950,
+            color: "#f97316",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+          }}
+        >
+          Acciones recomendadas
+        </div>
+
+        <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+          {acciones.length ? (
+            acciones.slice(0, 3).map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  borderRadius: 14,
+                  padding: "12px 13px",
+                  background: "#f8fafc",
+                  border: "1px solid rgba(226,232,240,0.95)",
+                  fontSize: 13,
+                  fontWeight: 900,
+                  color: "#0f172a",
+                  lineHeight: 1.4,
+                }}
+              >
+                {item}
+              </div>
+            ))
+          ) : (
+            <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
+              Sin acciones sugeridas.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {riesgos.length ? (
+      <div
+        style={{
+          borderRadius: 18,
+          padding: 14,
+          background: "#ffffff",
+          border: "1px solid rgba(226,232,240,0.95)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 950,
+            color: "#64748b",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+          }}
+        >
+          Riesgos detectados
+        </div>
+
+        <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+          {riesgos.slice(0, 2).map((r, i) => {
+            const lvl = String(r.level || "LOW").toUpperCase();
+            const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
+            const isMedium = lvl === "MEDIUM";
+
+            const tone = isHigh ? "#991b1b" : isMedium ? "#92400e" : "#166534";
+            const bg = isHigh
+              ? "rgba(254,226,226,0.60)"
+              : isMedium
+              ? "rgba(254,243,199,0.65)"
+              : "rgba(220,252,231,0.65)";
+
+            return (
+              <div
+                key={i}
+                style={{
+                  borderRadius: 14,
+                  padding: "12px 13px",
+                  background: bg,
+                  border: "1px solid rgba(226,232,240,0.95)",
                   display: "flex",
                   justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "center",
+                  gap: 10,
+                  alignItems: "flex-start",
                   flexWrap: "wrap",
                 }}
               >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 950,
-                      color: "#fb923c",
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                    }}
-                  >
-                    Diagnóstico ejecutivo
-                  </div>
-                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 850, color: "#94a3b8" }}>
-                    {summary.title || "Resumen ejecutivo"}
+                <div style={{ fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.4 }}>
+                  <div>{r.message || "Sin descripción disponible."}</div>
+                  <div style={{ marginTop: 6, fontSize: 12, color: "#475569" }}>
+                    Acción: <b style={{ color: "#0f172a" }}>{r.action || "Sin acción sugerida."}</b>
                   </div>
                 </div>
 
                 <span
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderRadius: 999,
-                    background: isFallback ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)",
-                    border: isFallback ? "1px solid rgba(245,158,11,0.26)" : "1px solid rgba(34,197,94,0.26)",
-                    color: isFallback ? "#fde68a" : "#bbf7d0",
-                    fontSize: 12,
-                    fontWeight: 950,
+                    ...pqBadge,
+                    color: tone,
+                    borderColor: tone + "33",
+                    background: "rgba(255,255,255,0.70)",
                   }}
                 >
-                  {isFallback ? "Fallback seguro" : "IA activa"}
+                  {lvl}
                 </span>
               </div>
-
-              <div
-                style={{
-                  marginTop: 14,
-                  fontFamily: '"DM Serif Display", Georgia, serif',
-                  fontSize: "clamp(22px, 2.4vw, 34px)",
-                  lineHeight: 1.08,
-                  color: "#f8fafc",
-                  maxWidth: 820,
-                }}
-              >
-                {executiveCompact}
-              </div>
-
-              {executiveText && executiveText !== executiveCompact ? (
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "#cbd5e1",
-                    fontSize: 13,
-                    fontWeight: 750,
-                    lineHeight: 1.55,
-                    maxWidth: 820,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
-                >
-                  {executiveText}
-                </div>
-              ) : null}
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  typeof window !== "undefined" && window.innerWidth < 980
-                    ? "1fr"
-                    : "repeat(2, minmax(0, 1fr))",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  borderRadius: 18,
-                  padding: 14,
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#fb923c", textTransform: "uppercase", letterSpacing: 1 }}>
-                  Hallazgos clave
-                </div>
-                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                  {hallazgos.length ? hallazgos.slice(0, 3).map((item, i) => (
-                    <div key={i} style={{ borderRadius: 14, padding: "12px 13px", background: "rgba(12,18,32,0.56)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 13, fontWeight: 850, color: "#f8fafc", lineHeight: 1.4 }}>
-                      {item}
-                    </div>
-                  )) : <div style={{ fontSize: 12, fontWeight: 850, color: "#94a3b8" }}>Sin hallazgos disponibles.</div>}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  borderRadius: 18,
-                  padding: 14,
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#fb923c", textTransform: "uppercase", letterSpacing: 1 }}>
-                  Acciones recomendadas
-                </div>
-                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                  {acciones.length ? acciones.slice(0, 3).map((item, i) => (
-                    <div key={i} style={{ borderRadius: 14, padding: "12px 13px", background: "rgba(12,18,32,0.56)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 13, fontWeight: 850, color: "#f8fafc", lineHeight: 1.4 }}>
-                      {item}
-                    </div>
-                  )) : <div style={{ fontSize: 12, fontWeight: 850, color: "#94a3b8" }}>Sin acciones sugeridas.</div>}
-                </div>
-              </div>
-            </div>
-
-            {riesgos.length ? (
-              <div style={{ display: "grid", gap: 10 }}>
-                <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Riesgos detectados
-                </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      typeof window !== "undefined" && window.innerWidth < 980
-                        ? "1fr"
-                        : "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  {riesgos.slice(0, 3).map((r, i) => {
-                    const lvl = String(r.level || "LOW").toUpperCase();
-                    const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
-                    const isMedium = lvl === "MEDIUM";
-                    const tone = isHigh ? "#991b1b" : isMedium ? "#92400e" : "#166534";
-                    const stripe = isHigh ? "#ef4444" : isMedium ? "#f59e0b" : "#22c55e";
-                    return (
-                      <div key={i} style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 18, overflow: "hidden", background: "rgba(255,255,255,0.98)" }}>
-                        <div style={{ height: 4, background: stripe }} />
-                        <div style={{ padding: 14, display: "grid", gap: 8 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
-                            <div style={{ fontWeight: 950, color: "#0f172a", lineHeight: 1.35, fontSize: 14 }}>{r.message || "Sin descripción disponible."}</div>
-                            <span style={{ ...pqBadge, color: tone, borderColor: tone + '33', background: "rgba(255,255,255,0.58)" }}>{lvl}</span>
-                          </div>
-                          <div style={{ fontSize: 12, fontWeight: 850, color: "#475569", lineHeight: 1.45 }}>
-                            Acción: <b style={{ color: "#0f172a" }}>{r.action || "Sin acción sugerida."}</b>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-          </div>
+            );
+          })}
+        </div>
+      </div>
+    ) : null}
+  </div>
         ) : (
           <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
             No hay resumen aún. Presiona <b>Generar</b>.
@@ -4850,8 +4912,292 @@ const seeAllBtn = {
   const chipRedMini = { background: "#fee2e2", border: "1px solid #fecaca", color: "#991b1b" };
   const chipBlueMini = { background: "#dbeafe", border: "1px solid #bfdbfe", color: "#1d4ed8" };
 
-  /* ============ premium alerts head + AI box ============ */
+/* ================= IA SUMMARY STYLES ================= */
 
+const aiWrapCard = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderRadius: 22,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)",
+  boxShadow: "0 16px 36px rgba(15,23,42,0.08)",
+  overflow: "hidden",
+};
+
+const aiHead = {
+  padding: 16,
+  borderBottom: "1px solid rgba(226,232,240,0.9)",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  flexWrap: "wrap",
+  alignItems: "center",
+};
+
+const aiHeadTitle = {
+  fontWeight: 950,
+  color: "#0f172a",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+};
+
+const aiHeadSub = {
+  marginTop: 4,
+  fontSize: 12,
+  fontWeight: 800,
+  color: "#64748b",
+};
+
+const aiHeadActions = {
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+  flexWrap: "wrap",
+};
+
+const aiStateBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 950,
+  border: "1px solid transparent",
+};
+
+const aiStateBadgeOk = {
+  background: "rgba(34,197,94,0.12)",
+  borderColor: "rgba(34,197,94,0.22)",
+  color: "#166534",
+};
+
+const aiStateBadgeWarn = {
+  background: "rgba(245,158,11,0.12)",
+  borderColor: "rgba(245,158,11,0.22)",
+  color: "#92400e",
+};
+
+const aiPrimaryBtn = {
+  border: "1px solid rgba(249,115,22,0.55)",
+  background: "rgba(249,115,22,0.92)",
+  color: "#0b1220",
+  borderRadius: 12,
+  padding: "10px 14px",
+  cursor: "pointer",
+  fontWeight: 980,
+  boxShadow: "0 12px 24px rgba(249,115,22,0.18)",
+};
+
+const aiGhostBtn = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.92)",
+  borderRadius: 12,
+  padding: "10px 12px",
+  cursor: "pointer",
+  fontWeight: 950,
+  color: "#0f172a",
+};
+
+const aiMainBody = {
+  padding: 16,
+};
+
+const aiHeroCard = {
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 20,
+  padding: 16,
+  background:
+    "radial-gradient(circle at top left, rgba(249,115,22,0.10), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #111624 100%)",
+  boxShadow: "0 18px 40px rgba(15,23,42,0.18)",
+};
+
+const aiHeroTop = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  alignItems: "center",
+  flexWrap: "wrap",
+};
+
+const aiHeroKicker = {
+  fontSize: 12,
+  fontWeight: 950,
+  color: "#fb923c",
+  textTransform: "uppercase",
+  letterSpacing: 1,
+};
+
+const aiHeroMiniTitle = {
+  marginTop: 6,
+  fontSize: 12,
+  fontWeight: 850,
+  color: "#94a3b8",
+};
+
+const aiHeroStatus = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 950,
+  border: "1px solid transparent",
+};
+
+const aiHeroStatusOk = {
+  background: "rgba(34,197,94,0.14)",
+  borderColor: "rgba(34,197,94,0.26)",
+  color: "#bbf7d0",
+};
+
+const aiHeroStatusWarn = {
+  background: "rgba(245,158,11,0.14)",
+  borderColor: "rgba(245,158,11,0.26)",
+  color: "#fde68a",
+};
+
+const aiHeroText = {
+  marginTop: 14,
+  fontSize: 24,
+  lineHeight: 1.2,
+  color: "#f8fafc",
+  fontWeight: 980,
+  maxWidth: 920,
+};
+
+const aiCompactGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: 12,
+};
+
+const aiSectionCard = {
+  borderRadius: 18,
+  padding: 14,
+  background: "#ffffff",
+  border: "1px solid rgba(226,232,240,0.95)",
+};
+
+const aiSectionTitle = {
+  fontSize: 12,
+  fontWeight: 950,
+  color: "#f97316",
+  textTransform: "uppercase",
+  letterSpacing: 1,
+};
+
+const aiList = {
+  marginTop: 10,
+  display: "grid",
+  gap: 8,
+};
+
+const aiBulletCard = {
+  borderRadius: 14,
+  padding: "12px 13px",
+  background: "#f8fafc",
+  border: "1px solid rgba(226,232,240,0.95)",
+  fontSize: 13,
+  fontWeight: 850,
+  color: "#0f172a",
+  lineHeight: 1.4,
+  display: "flex",
+  gap: 10,
+  alignItems: "flex-start",
+};
+
+const aiBulletDot = {
+  width: 8,
+  height: 8,
+  borderRadius: 999,
+  background: "#f97316",
+  marginTop: 5,
+  flex: "0 0 auto",
+};
+
+const aiActionCard = {
+  borderRadius: 14,
+  padding: "12px 13px",
+  background: "#f8fafc",
+  border: "1px solid rgba(226,232,240,0.95)",
+  fontSize: 13,
+  fontWeight: 900,
+  color: "#0f172a",
+  lineHeight: 1.4,
+  display: "flex",
+  gap: 10,
+  alignItems: "flex-start",
+};
+
+const aiActionIndex = {
+  width: 24,
+  height: 24,
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.14)",
+  color: "#9a3412",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 12,
+  fontWeight: 1000,
+  flex: "0 0 auto",
+};
+
+const aiRiskRow = {
+  borderRadius: 14,
+  padding: "12px 13px",
+  border: "1px solid rgba(226,232,240,0.95)",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 10,
+  alignItems: "flex-start",
+  flexWrap: "wrap",
+};
+
+const aiRiskMsg = {
+  fontSize: 13,
+  fontWeight: 850,
+  color: "#0f172a",
+  lineHeight: 1.4,
+};
+
+const aiRiskAction = {
+  marginTop: 6,
+  fontSize: 12,
+  color: "#475569",
+};
+
+const aiRiskBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "6px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 950,
+  background: "rgba(255,255,255,0.72)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  whiteSpace: "nowrap",
+};
+
+const aiInfoBox = {
+  fontSize: 12,
+  fontWeight: 850,
+  color: "#64748b",
+};
+
+const aiEmptyTxt = {
+  fontSize: 12,
+  fontWeight: 850,
+  color: "#64748b",
+};
+
+const aiErrorBox = {
+  fontSize: 12,
+  fontWeight: 900,
+  color: "#991b1b",
+};
+  
   const alertsPremiumHead = {
     background: "#0f172a",
     borderRadius: 16,
