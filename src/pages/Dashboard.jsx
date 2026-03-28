@@ -3434,6 +3434,7 @@ function AdminDashboard(props) {
       <DashTop {...props} title="Panel de Control" executive />
 
       <AdminPanel
+        isMobile={props.isMobile}
         month={month}
         donutTotals={donutTotals}
         donutLoading={donutLoading}
