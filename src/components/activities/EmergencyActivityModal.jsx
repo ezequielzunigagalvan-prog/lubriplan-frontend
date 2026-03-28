@@ -135,7 +135,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
   );
 
   const technicianOptions = useMemo(
-    () => (technicians || []).map((t) => ({ value: String(t.id), label: `${t.name || t.fullName || `TÃ©cnico #${t.id}`}${t.code ? ` ? ${t.code}` : ""}` })),
+    () => (technicians || []).map((t) => ({ value: String(t.id), label: `${t.name || t.fullName || `Técnico #${t.id}`}${t.code ? ` · ${t.code}` : ""}` })),
     [technicians]
   );
 
@@ -167,9 +167,9 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
       setErr("");
       if (!form.equipmentId) return setErr("Falta: Equipo");
       if (!form.emergencyReason?.trim()) return setErr("Falta: Motivo de la emergencia");
-      if (!form.executedAt) return setErr("Falta: Fecha de realizaciÃ³n");
+      if (!form.executedAt) return setErr("Falta: Fecha de realización");
       if (!form.lubricantId) return setErr("Falta: Lubricante (inventario)");
-      if (!form.technicianId && !isTech) return setErr("Falta: TÃ©cnico responsable");
+      if (!form.technicianId && !isTech) return setErr("Falta: Técnico responsable");
 
       const payload = {
         equipmentId: Number(form.equipmentId),
@@ -186,11 +186,11 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
       };
 
       if (!Number.isFinite(payload.quantity) || payload.quantity <= 0) {
-        return setErr("Cantidad invÃ¡lida");
+        return setErr("Cantidad inválida");
       }
 
       if (!payload.technicianId) {
-        return setErr("Falta: TÃ©cnico responsable");
+        return setErr("Falta: Técnico responsable");
       }
 
       setSaving(true);
@@ -214,7 +214,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
           <div>
             <div style={kicker}>ACTIVIDAD EMERGENTE</div>
             <h2 style={modalTitle}>Registrar actividad emergente</h2>
-            <div style={modalSub}>Trabajos no programados: fuga, ajuste urgente, reabastecimiento o atenciÃ³n inmediata.</div>
+            <div style={modalSub}>Trabajos no programados: fuga, ajuste urgente, reabastecimiento o atención inmediata.</div>
           </div>
           <button style={xBtn} onClick={onClose} disabled={saving} aria-label="Cerrar">?</button>
         </div>
@@ -223,10 +223,10 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
 
         <div style={body}>
           <div style={sectionBox}>
-            <div style={sectionTitle}>Equipo y ejecuciÃ³n</div>
+            <div style={sectionTitle}>Equipo y ejecución</div>
 
             <div style={field}>
-              <label style={label}>Buscar equipo / cÃ³digo</label>
+              <label style={label}>Buscar equipo / código</label>
               <input value={equipmentSearch} onChange={(e) => setEquipmentSearch(e.target.value)} placeholder="Ej: bomba, EQ-102, reductor, molino..." style={input} disabled={saving} />
               <div style={helperText}>{equipmentSearch.trim() ? `${equipmentOptions.length} resultado(s)` : `${equipmentOptions.length} equipo(s) disponibles`}</div>
             </div>
@@ -249,18 +249,18 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
                 <input type="date" name="executedAt" value={form.executedAt} onChange={handleChange} style={input} disabled={saving} />
               </div>
               <div style={{ ...field, flex: 1, minWidth: 220 }}>
-                <label style={label}>TÃ©cnico responsable *</label>
-                <select name="technicianId" value={form.technicianId} onChange={handleChange} style={input} disabled={saving || isTech} title={isTech ? "Asignado automÃ¡ticamente a tu usuario" : "Selecciona tÃ©cnico"}>
-                  <option value="">{isTech ? "Mi usuario" : "Seleccionar tÃ©cnico"}</option>
+                <label style={label}>Técnico responsable *</label>
+                <select name="technicianId" value={form.technicianId} onChange={handleChange} style={input} disabled={saving || isTech} title={isTech ? "Asignado automáticamente a tu usuario" : "Selecciona técnico"}>
+                  <option value="">{isTech ? "Mi usuario" : "Seleccionar técnico"}</option>
                   {technicianOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-                {isTech && !myTechId ? <div style={warnMini}>Tu usuario no tiene tÃ©cnico asociado.</div> : null}
+                {isTech && !myTechId ? <div style={warnMini}>Tu usuario no tiene técnico asociado.</div> : null}
               </div>
             </div>
 
             <div style={field}>
               <label style={label}>Motivo de la emergencia *</label>
-              <textarea name="emergencyReason" value={form.emergencyReason} onChange={handleChange} placeholder="QuÃ© pasÃ³, por quÃ© fue urgente y quÃ© se atendiÃ³." style={{ ...input, minHeight: 100, resize: "vertical" }} disabled={saving} />
+              <textarea name="emergencyReason" value={form.emergencyReason} onChange={handleChange} placeholder="Qué pasó, por qué fue urgente y qué se atendió." style={{ ...input, minHeight: 100, resize: "vertical" }} disabled={saving} />
             </div>
           </div>
 
@@ -299,7 +299,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
             <div style={sectionTitle}>Resultado y evidencia</div>
 
             <div style={field}>
-              <label style={label}>CondiciÃ³n del equipo</label>
+              <label style={label}>Condición del equipo</label>
               <select name="condition" value={form.condition} onChange={handleChange} style={input} disabled={saving}>
                 <option value="BUENO">Bueno</option>
                 <option value="REGULAR">Regular</option>
@@ -330,7 +330,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
 
             <div style={field}>
               <label style={label}>Nota de evidencia</label>
-              <textarea name="evidenceNote" value={form.evidenceNote} onChange={handleChange} placeholder="QuÃ© muestra la imagen o quÃ© debe revisarse despuÃ©s" style={{ ...input, minHeight: 84, resize: "vertical" }} disabled={saving} />
+              <textarea name="evidenceNote" value={form.evidenceNote} onChange={handleChange} placeholder="Qué muestra la imagen o qué debe revisarse después" style={{ ...input, minHeight: 84, resize: "vertical" }} disabled={saving} />
             </div>
           </div>
         </div>
@@ -371,4 +371,7 @@ const evidenceImg = { width: "100%", maxHeight: 260, objectFit: "cover", borderR
 const actions = { padding: 16, borderTop: "1px solid #eef2f7", background: "rgba(255,255,255,0.9)", display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" };
 const btnGhost = { border: "1px solid #e5e7eb", background: "rgba(255,255,255,0.88)", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontWeight: 950 };
 const btnPrimary = { border: "none", background: "#0f172a", color: "#fff", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontWeight: 950 };
+
+
+
 
