@@ -1735,6 +1735,7 @@ export function ActivityCard({
               Técnico:{" "}
               <b style={{ color: "#0f172a" }}>
                 {activity?.technician?.name ||
+                  activity?.technicianName ||
                   (activity?.technicianId ? `#${activity.technicianId}` : "Sin asignar")}
               </b>
             </span>
@@ -2739,6 +2740,7 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
 
 
 

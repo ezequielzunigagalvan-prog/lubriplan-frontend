@@ -2494,6 +2494,7 @@ function TechnicianActivitiesFocusCard({
               month={month}
               navigate={navigate}
               openExecutionModal={openExecutionModal}
+              isMobile={isMobile}
               emptyText="No tienes actividades atrasadas."
             />
 
@@ -2504,6 +2505,7 @@ function TechnicianActivitiesFocusCard({
               month={month}
               navigate={navigate}
               openExecutionModal={openExecutionModal}
+              isMobile={isMobile}
               emptyText="No tienes actividades pendientes."
             />
 
@@ -2514,6 +2516,7 @@ function TechnicianActivitiesFocusCard({
               month={month}
               navigate={navigate}
               openExecutionModal={openExecutionModal}
+              isMobile={isMobile}
               emptyText="No tienes actividades próximas."
             />
           </>
@@ -2531,6 +2534,7 @@ function ActivitiesSection({
   navigate,
   openExecutionModal,
   emptyText,
+  isMobile = false,
 }) {
   const toneMap = {
     red: {
@@ -2580,6 +2584,7 @@ function ActivitiesSection({
               month={month}
               navigate={navigate}
               openExecutionModal={openExecutionModal}
+              isMobile={isMobile}
             />
           ))}
         </div>
@@ -2588,7 +2593,7 @@ function ActivitiesSection({
   );
 }
 
-function TechnicianActivityCard({ activity, month, navigate, openExecutionModal }) {
+function TechnicianActivityCard({ activity, month, navigate, openExecutionModal, isMobile = false }) {
   const todayYMD = toLocalYMD(new Date());
 
   return (
@@ -2602,6 +2607,7 @@ function TechnicianActivityCard({ activity, month, navigate, openExecutionModal 
         assigningId={null}
         canAssignTech={false}
         canCompleteActivities={true}
+        isMobile={isMobile}
       />
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
@@ -5484,6 +5490,9 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
+
+
 
 
 

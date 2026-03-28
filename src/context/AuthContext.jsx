@@ -14,7 +14,7 @@ import { startSSE, stopSSE } from "../realtime/sseClient";
 
 const AuthContext = createContext(null);
 
-const INACTIVITY_TIMEOUT_MS = 12 * 60 * 60 * 1000;
+const INACTIVITY_TIMEOUT_MS = 16 * 60 * 60 * 1000;
 const WARNING_BEFORE_LOGOUT_MS = 2 * 60 * 1000;
 
 export function AuthProvider({ children }) {
@@ -494,4 +494,5 @@ const btnGhostStyle = {
   fontWeight: 900,
   cursor: "pointer",
 };
+
 
