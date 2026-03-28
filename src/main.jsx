@@ -1,10 +1,13 @@
-import React from "react";
+﻿import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
-import AppGate from "./AppGate";   // 👈 este sí lo usamos
+import AppGate from "./AppGate";
 import { AuthProvider } from "./context/AuthContext";
 import { PlantProvider } from "./context/PlantContext";
+import { registerPwa } from "./pwa/registerPwa";
+
+registerPwa();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -17,4 +20,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
- 

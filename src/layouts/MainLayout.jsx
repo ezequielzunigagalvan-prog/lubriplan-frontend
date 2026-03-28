@@ -9,6 +9,7 @@ import { Icon } from "../components/ui/lpIcons";
 import PlantSwitcher from "../components/plants/PlantSwitcher";
 import lubriPlanMark from "../assets/lubriplan-logo.png.png";
 import { usePlant } from "../context/PlantContext";
+import useInstallPrompt from "../hooks/useInstallPrompt";
 
 const EXEC_DISPLAY_FONT = "\"Iowan Old Style\", \"Palatino Linotype\", \"Book Antiqua\", Georgia, serif";
 const EXEC_TEXT_FONT = "\"Aptos\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif";
@@ -26,6 +27,10 @@ export default function MainLayout({ children }) {
   const canSeeAlerts = role === "ADMIN" || role === "SUPERVISOR";
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine
+  );
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= 820 : false
   );
@@ -58,6 +63,21 @@ export default function MainLayout({ children }) {
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   const {
@@ -127,6 +147,21 @@ export default function MainLayout({ children }) {
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   const { alerts: rawAlerts } = useDashboardAlerts({
@@ -527,6 +562,50 @@ export default function MainLayout({ children }) {
           </div>
 
           <div style={topbarRight}>
+            {isInstalled ? (
+              <span
+                style={{
+                  ...installChip,
+                  background: "rgba(34,197,94,0.14)",
+                  border: "1px solid rgba(34,197,94,0.28)",
+                  color: "#166534",
+                }}
+                title="LubriPlan ya está instalado en este dispositivo"
+              >
+                <Icon name="checkCircle" size="sm" />
+                {!isMobile ? <span>App instalada</span> : null}
+              </span>
+            ) : null}
+
+            {!isOnline ? (
+              <span
+                style={{
+                  ...installChip,
+                  background: "rgba(245,158,11,0.14)",
+                  border: "1px solid rgba(245,158,11,0.28)",
+                  color: "#92400e",
+                }}
+                title="Sin conexión"
+              >
+                <Icon name="warn" size="sm" />
+                {!isMobile ? <span>Sin conexión</span> : null}
+              </span>
+            ) : null}
+
+            {canInstall ? (
+              <button
+                type="button"
+                onClick={promptInstall}
+                style={{ ...btnGhost, padding: isMobile ? "8px 10px" : "8px 12px" }}
+                title="Instalar LubriPlan"
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <Icon name="download" size="sm" />
+                  {!isMobile ? <span>Instalar</span> : null}
+                </span>
+              </button>
+            ) : null}
+
             <div className="lpTopPlantWrap">
               <div style={plantDot} />
               <PlantSwitcher compact />
@@ -998,6 +1077,17 @@ const pageTitle = {
   letterSpacing: "-0.02em",
 };
 
+const installChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 950,
+  whiteSpace: "nowrap",
+};
+
 const topbarPlantName = {
   fontSize: 12,
   fontWeight: 900,
@@ -1156,6 +1246,8 @@ const seeAll = {
   fontWeight: 950,
   color: "#0f172a",
 };
+
+
 
 
 

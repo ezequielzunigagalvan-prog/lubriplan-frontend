@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { getExecutionById, completeExecution } from "../services/executionsService";
 import { getTechnicians } from "../services/techniciansService";
 import { getExecutionLubricants } from "../services/lubricantsService";
@@ -228,16 +228,16 @@ setForm((prev) => ({
   const usesOptionalConsumption = isManual || isCorrectiveLike;
 
   const equipment = isManual ? execution?.equipment : execution?.route?.equipment;
-  const equipmentName = equipment?.name || "—";
+  const equipmentName = equipment?.name || "â€”";
   const equipmentTag = equipment?.code || equipment?.tag || "";
   const equipmentLocation = equipment?.location || "";
 
   const manualTitle = String(execution?.manualTitle || "").trim();
-  const routeName = execution?.route?.name || "—";
+  const routeName = execution?.route?.name || "â€”";
 
   const instructions = isManual
-    ? execution?.manualInstructions || "—"
-    : execution?.route?.instructions || "—";
+    ? execution?.manualInstructions || "â€”"
+    : execution?.route?.instructions || "â€”";
 
   const routeImg = !isManual ? execution?.route?.imageUrl || "" : "";
 
@@ -245,10 +245,10 @@ setForm((prev) => ({
     execution?.route?.lubricant?.name ||
     execution?.route?.lubricantName ||
     execution?.route?.lubricantType ||
-    "—";
+    "â€”";
 
   const routeLubricantCode = execution?.route?.lubricant?.code || "";
-  const lubricantType = execution?.route?.lubricantType || "—";
+  const lubricantType = execution?.route?.lubricantType || "â€”";
   const unit = execution?.route?.unit || "";
   const routeUnitNorm = String(execution?.route?.unit || "").trim().toUpperCase();
   const isPumpRoute = !isManual && routeUnitNorm === "BOMBAZOS";
@@ -341,7 +341,7 @@ setForm((prev) => ({
   const onPickEvidence = async (file) => {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) {
-      setErr("Selecciona una imagen válida.");
+      setErr("Selecciona una imagen vÃ¡lida.");
       return;
     }
 
@@ -359,8 +359,8 @@ setForm((prev) => ({
     e.preventDefault();
 
     if (!canSave) {
-      if (isFutureExecution) return setErr(`Esta actividad está programada para ${scheduledLabel}.`);
-      if (selectedTechInactive) return setErr("No puedes asignar un técnico inactivo.");
+      if (isFutureExecution) return setErr(`Esta actividad estÃ¡ programada para ${scheduledLabel}.`);
+      if (selectedTechInactive) return setErr("No puedes asignar un tÃ©cnico inactivo.");
 
       if (usesOptionalConsumption && usedLubricant) {
         if (!form.usedLubricantId) return setErr("Selecciona el lubricante utilizado.");
@@ -435,13 +435,13 @@ setForm((prev) => ({
 
             <div style={sub}>
               {usesOptionalConsumption
-                ? "Registra ejecución real · consumo opcional"
-                : "Registra ejecución real"}
+                ? "Registra ejecuciÃ³n real Â· consumo opcional"
+                : "Registra ejecuciÃ³n real"}
             </div>
 
             {isCorrectiveLike ? (
               <div style={microWarn}>
-                Actividad correctiva · consumo opcional
+                Actividad correctiva Â· consumo opcional
               </div>
             ) : null}
 
@@ -469,7 +469,7 @@ setForm((prev) => ({
           {loading && <p style={{ margin: 0, fontWeight: 900, color: "#475569" }}>Cargando...</p>}
           {!loading && !execution && (
             <p style={{ margin: 0, fontWeight: 900, color: "#475569" }}>
-              No se encontró la ejecución.
+              No se encontrÃ³ la ejecuciÃ³n.
             </p>
           )}
 
@@ -483,7 +483,7 @@ setForm((prev) => ({
                   sub={
                     <>
                       {equipmentTag ? `TAG: ${equipmentTag}` : "Sin TAG"}
-                      {equipmentLocation ? ` · ${equipmentLocation}` : ""}
+                      {equipmentLocation ? ` Â· ${equipmentLocation}` : ""}
                     </>
                   }
                 />
@@ -494,7 +494,7 @@ setForm((prev) => ({
                   value={routeLubricantName}
                   sub={
                     routeLubricantCode
-                      ? `${routeLubricantCode}${lubricantType && lubricantType !== routeLubricantName ? ` · ${lubricantType}` : ""}`
+                      ? `${routeLubricantCode}${lubricantType && lubricantType !== routeLubricantName ? ` Â· ${lubricantType}` : ""}`
                       : lubricantType
                   }
                 />
@@ -503,13 +503,13 @@ setForm((prev) => ({
                   icon="route"
                   label="Ruta"
                   value={isManual ? "Actividad programada" : routeName}
-                  sub={isManual ? "Manual / única" : "Ruta recurrente"}
+                  sub={isManual ? "Manual / Ãºnica" : "Ruta recurrente"}
                 />
 
                 <MiniInfoCard
                   icon="calendar"
                   label="Programada"
-                  value={scheduledLabel || "—"}
+                  value={scheduledLabel || "â€”"}
                   sub={execution?.status === "COMPLETED" ? "Ya completada" : "Fecha objetivo"}
                 />
               </div>
@@ -541,14 +541,14 @@ setForm((prev) => ({
                 </div>
               ) : null}
 
-              {String(instructions || "").trim() && instructions !== "—" ? (
+              {String(instructions || "").trim() && instructions !== "â€”" ? (
                 <div style={instructionsHero}>
                   <div style={instructionsHeroHead}>
                     <span style={instructionsIconWrap}>
                       <Icon name="doc" style={{ width: 18, height: 18, color: "#052e16" }} />
                     </span>
                     <div>
-                      <div style={instructionsHeroTitle}>Instrucciones de ejecución</div>
+                      <div style={instructionsHeroTitle}>Instrucciones de ejecuciÃ³n</div>
                       <div style={instructionsHeroSub}>Visible antes de registrar la actividad</div>
                     </div>
                   </div>
@@ -561,12 +561,12 @@ setForm((prev) => ({
 
               {isFutureExecution ? (
                 <div style={warnBox}>
-                  <b>Programada para:</b> {scheduledLabel}. No se puede completar aún.
+                  <b>Programada para:</b> {scheduledLabel}. No se puede completar aÃºn.
                 </div>
               ) : null}
 
               <div style={formGrid2}>
-                <Field label="Fecha de realización *">
+                <Field label="Fecha de realizaciÃ³n *">
                   <input
                     type="date"
                     name="executedAt"
@@ -578,7 +578,7 @@ setForm((prev) => ({
                   />
                 </Field>
 
-                <Field label="Técnico responsable *">
+                <Field label="TÃ©cnico responsable *">
                   <select
   name="technicianId"
   value={form.technicianId}
@@ -589,28 +589,28 @@ setForm((prev) => ({
   }}
   disabled={saving || isCompleted || isTechUser}
 >
-  <option value="">Seleccionar técnico</option>
+  <option value="">Seleccionar tÃ©cnico</option>
   {techs.map((t) => {
     const inactive = !isTechActive(t);
     return (
       <option key={t.id} value={t.id} disabled={inactive}>
         {t.name}
         {t.code ? ` (${t.code})` : ""}
-        {inactive ? " — (Inactivo)" : ""}
+        {inactive ? " â€” (Inactivo)" : ""}
       </option>
     );
   })}
 </select>
 
                   {selectedTechInactive ? (
-  <div style={errorHint}>Ese técnico está inactivo. Selecciona otro.</div>
+  <div style={errorHint}>Ese tÃ©cnico estÃ¡ inactivo. Selecciona otro.</div>
 ) : isTechUser ? (
   <div style={hint}>
-    Técnico detectado automáticamente desde tu sesión.
+    TÃ©cnico detectado automÃ¡ticamente desde tu sesiÃ³n.
   </div>
 ) : (
   <div style={hint}>
-    Los técnicos inactivos aparecen deshabilitados para conservar histórico.
+    Los tÃ©cnicos inactivos aparecen deshabilitados para conservar histÃ³rico.
   </div>
 )}
                 </Field>
@@ -646,11 +646,11 @@ setForm((prev) => ({
                       }}
                       disabled={saving || isCompleted}
                     >
-                      {usedLubricant ? "Sí, se utilizó lubricante" : "No / No aplica"}
+                      {usedLubricant ? "SÃ­, se utilizÃ³ lubricante" : "No / No aplica"}
                     </button>
 
                     <div style={hintMini}>
-                      Úsalo solo si realmente hubo consumo de inventario.
+                      Ãšsalo solo si realmente hubo consumo de inventario.
                     </div>
                   </div>
 
@@ -666,11 +666,11 @@ setForm((prev) => ({
                           disabled={saving || isCompleted}
                         >
                           <option value="">
-                            {lubeLoading ? "Cargando…" : "Seleccionar lubricante"}
+                            {lubeLoading ? "Cargandoâ€¦" : "Seleccionar lubricante"}
                           </option>
                           {lubricants.map((l) => (
                             <option key={l.id} value={l.id}>
-                              {l.name} {l.code ? `(${l.code})` : ""} · Stock:{" "}
+                              {l.name} {l.code ? `(${l.code})` : ""} Â· Stock:{" "}
                               {Number(l.stock ?? 0).toFixed(2)} {l.unit || "ml"}
                             </option>
                           ))}
@@ -732,8 +732,8 @@ setForm((prev) => ({
 
                   {isPumpRoute ? (
                     <div style={hint}>
-                      Puntos: <b>{points}</b>. 1 bombazo = <b>{pumpStrokeValue || "—"}</b>{" "}
-                      <b>{pumpStrokeUnit || ""}</b>. El sistema convierte automáticamente para
+                      Puntos: <b>{points}</b>. 1 bombazo = <b>{pumpStrokeValue || "â€”"}</b>{" "}
+                      <b>{pumpStrokeUnit || ""}</b>. El sistema convierte automÃ¡ticamente para
                       inventario e historial.
                     </div>
                   ) : (
@@ -745,7 +745,7 @@ setForm((prev) => ({
               )}
 
               <div style={formGrid2}>
-                <Field label="Condición del equipo *">
+                <Field label="CondiciÃ³n del equipo *">
                   <select
                     name="condition"
                     value={form.condition}
@@ -756,7 +756,7 @@ setForm((prev) => ({
                     <option value="BUENO">Bueno</option>
                     <option value="REGULAR">Regular</option>
                     <option value="MALO">Malo</option>
-                    <option value="CRITICO">Crítico</option>
+                    <option value="CRITICO">CrÃ­tico</option>
                   </select>
                 </Field>
 
@@ -775,7 +775,7 @@ setForm((prev) => ({
               <div style={evidenceCard}>
                 <div style={evidenceCardHead}>
                   <div>
-                    <div style={evidenceCardTitle}>Evidencia fotográfica</div>
+                    <div style={evidenceCardTitle}>Evidencia fotogrÃ¡fica</div>
                     <div style={evidenceCardSub}>
                       Toma una foto en campo o sube una imagen existente
                     </div>
@@ -803,11 +803,11 @@ setForm((prev) => ({
                   </div>
 
                   <div style={dropTitle}>
-                    Arrastra una imagen aquí o usa una de las opciones de abajo
+                    Arrastra una imagen aquÃ­ o usa una de las opciones de abajo
                   </div>
 
                   <div style={dropHint}>
-                    Formatos: JPG, PNG o WEBP · Ideal para evidencia clara del punto atendido
+                    Formatos: JPG, PNG o WEBP Â· Ideal para evidencia clara del punto atendido
                   </div>
 
                   <div style={evidenceActions}>
@@ -937,7 +937,7 @@ function MiniInfoCard({ icon, label, value, sub }) {
         </span>
         <span style={miniInfoLabel}>{label}</span>
       </div>
-      <div style={miniInfoValue}>{value || "—"}</div>
+      <div style={miniInfoValue}>{value || "â€”"}</div>
       {sub ? <div style={miniInfoSub}>{sub}</div> : null}
     </div>
   );
@@ -1411,9 +1411,9 @@ const dropHint = {
 
 const evidenceActions = {
   marginTop: 14,
-  display: "flex",
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
   gap: 10,
-  flexWrap: "wrap",
 };
 
 const evidencePrimaryBtn = {
@@ -1428,6 +1428,8 @@ const evidencePrimaryBtn = {
   cursor: "pointer",
   fontWeight: 980,
   boxShadow: "0 14px 28px rgba(249,115,22,0.18)",
+  justifyContent: "center",
+  width: "100%",
 };
 
 const evidenceGhostBtn = {
@@ -1441,6 +1443,8 @@ const evidenceGhostBtn = {
   padding: "10px 12px",
   cursor: "pointer",
   fontWeight: 950,
+  justifyContent: "center",
+  width: "100%",
 };
 
 const evidencePreviewBox = {
@@ -1497,6 +1501,8 @@ const miniBtnDanger = {
   padding: "8px 10px",
   cursor: "pointer",
   fontWeight: 950,
+  justifyContent: "center",
+  width: "100%",
 };
 
 const footer = {
@@ -1536,4 +1542,5 @@ const inputLocked = {
   cursor: "not-allowed",
   border: "1px solid rgba(148,163,184,0.35)",
 };
+
 

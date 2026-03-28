@@ -1,0 +1,128 @@
+﻿<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f97316" />
+    <title>Sin conexión | LubriPlan</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: "Aptos", "Segoe UI", Arial, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(249,115,22,0.16), transparent 28%),
+          linear-gradient(180deg, #171c2c 0%, #0f1421 100%);
+        color: #f8fafc;
+      }
+      .shell {
+        width: min(760px, 100%);
+        border-radius: 28px;
+        padding: 28px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
+        box-shadow: 0 24px 60px rgba(15,23,42,0.28);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .brand img {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        object-fit: contain;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #fb923c;
+      }
+      h1 {
+        margin: 18px 0 0;
+        font-family: "Iowan Old Style", Georgia, serif;
+        font-size: clamp(34px, 7vw, 56px);
+        line-height: 0.98;
+      }
+      p {
+        margin: 18px 0 0;
+        font-size: 18px;
+        line-height: 1.6;
+        color: #cbd5e1;
+        max-width: 640px;
+      }
+      .tips {
+        margin-top: 22px;
+        display: grid;
+        gap: 10px;
+      }
+      .tip {
+        border-radius: 18px;
+        padding: 14px 16px;
+        background: rgba(12,18,32,0.58);
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 14px;
+        font-weight: 800;
+        color: #f8fafc;
+      }
+      .actions {
+        margin-top: 22px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        appearance: none;
+        border: 0;
+        border-radius: 14px;
+        padding: 14px 18px;
+        font-size: 15px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: #f97316;
+        color: #0b1220;
+      }
+      .btn-ghost {
+        background: rgba(255,255,255,0.06);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="brand">
+        <img src="/pwa-192x192.png" alt="LubriPlan" />
+        <div>
+          <div class="eyebrow">Modo sin conexión</div>
+          <div style="margin-top:6px;font-size:14px;font-weight:800;color:#94a3b8;">LubriPlan sigue listo para abrir, pero esta vista necesita red para cargar datos actualizados.</div>
+        </div>
+      </div>
+      <h1>Volvamos a planta cuando regrese la señal.</h1>
+      <p>La app está instalada y el entorno básico sigue disponible, pero en este momento no hay conexión para traer información nueva del servidor.</p>
+      <div class="tips">
+        <div class="tip">Verifica tu conexión a internet o a la red de la planta.</div>
+        <div class="tip">Si ya recuperaste señal, usa el botón de recargar para volver al sistema.</div>
+        <div class="tip">Tus credenciales y sesiones seguirán funcionando cuando el backend vuelva a estar disponible.</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="window.location.reload()">Reintentar</button>
+        <button class="btn btn-ghost" onclick="window.location.href='/'">Ir al inicio</button>
+      </div>
+    </main>
+  </body>
+</html>

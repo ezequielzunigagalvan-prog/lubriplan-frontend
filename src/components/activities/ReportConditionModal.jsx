@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../ui/lpIcons";
 import { getEquipment } from "../../services/equipmentService";
 import { createConditionReport } from "../../services/conditionReportsService";
@@ -143,8 +143,8 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
       };
 
       if (!payload.equipmentId) return setErr("Falta: Equipo");
-      if (!payload.detectedAt) return setErr("Falta: Fecha de detección");
-      if (!payload.description) return setErr("Falta: Descripción");
+      if (!payload.detectedAt) return setErr("Falta: Fecha de detecciÃ³n");
+      if (!payload.description) return setErr("Falta: DescripciÃ³n");
 
       const fd = new FormData();
       fd.append("equipmentId", String(payload.equipmentId));
@@ -160,7 +160,7 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
       onClose?.();
     } catch (e) {
       console.error(e);
-      setErr(e?.message || "Error reportando condición");
+      setErr(e?.message || "Error reportando condiciÃ³n");
     } finally {
       setSaving(false);
     }
@@ -169,7 +169,7 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
   if (!open) return null;
 
   return (
-    <div style={overlay} onMouseDown={saving ? undefined : onClose} role="dialog" aria-modal="true" aria-label="Reporte de condición">
+    <div style={overlay} onMouseDown={saving ? undefined : onClose} role="dialog" aria-modal="true" aria-label="Reporte de condiciÃ³n">
       <div style={modal} onMouseDown={(e) => e.stopPropagation()}>
         <div style={modalHeader}>
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -177,8 +177,8 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
               <Icon name="alert" size="lg" weight="bold" />
             </div>
             <div>
-              <div style={kicker}>REPORTE DE CONDICIÓN</div>
-              <h2 style={modalTitle}>Reportar condición anormal</h2>
+              <div style={kicker}>REPORTE DE CONDICIÃ“N</div>
+              <h2 style={modalTitle}>Reportar condiciÃ³n anormal</h2>
               <div style={modalSub}>Registra el hallazgo y, si puedes, deja evidencia visual para seguimiento.</div>
             </div>
           </div>
@@ -220,35 +220,35 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
             {selectedEquipment ? (
               <div style={helperCard}>
                 <span style={helperCardLabel}>Equipo:</span> {selectedEquipment.name || "-"}
-                {selectedEquipment.code ? ` · ${selectedEquipment.code}` : ""}
-                {selectedEquipment.location ? ` · ${selectedEquipment.location}` : ""}
+                {selectedEquipment.code ? ` Â· ${selectedEquipment.code}` : ""}
+                {selectedEquipment.location ? ` Â· ${selectedEquipment.location}` : ""}
               </div>
             ) : null}
 
             <div style={row2}>
               <div style={{ ...field, flex: 1, minWidth: 220 }}>
-                <label style={label}>Fecha de detección *</label>
+                <label style={label}>Fecha de detecciÃ³n *</label>
                 <input type="date" name="detectedAt" value={form.detectedAt} onChange={handleChange} style={input} disabled={saving} />
               </div>
               <div style={{ ...field, flex: 1, minWidth: 220 }}>
-                <label style={label}>Nivel de condición *</label>
+                <label style={label}>Nivel de condiciÃ³n *</label>
                 <select name="condition" value={form.condition} onChange={handleChange} style={input} disabled={saving}>
                   <option value="BUENO">Bueno</option>
                   <option value="REGULAR">Regular</option>
                   <option value="MALO">Malo</option>
-                  <option value="CRITICO">Crítico</option>
+                  <option value="CRITICO">CrÃ­tico</option>
                 </select>
               </div>
             </div>
 
             <div style={field}>
-              <label style={label}>Categoría</label>
+              <label style={label}>CategorÃ­a</label>
               <select name="category" value={form.category} onChange={handleChange} style={input} disabled={saving}>
                 <option value="FUGA">Fuga</option>
                 <option value="RUIDO">Ruido</option>
-                <option value="VIBRACION">Vibración</option>
+                <option value="VIBRACION">VibraciÃ³n</option>
                 <option value="TEMPERATURA">Temperatura</option>
-                <option value="CONTAMINACION">Contaminación</option>
+                <option value="CONTAMINACION">ContaminaciÃ³n</option>
                 <option value="OTRO">Otro</option>
               </select>
             </div>
@@ -257,12 +257,12 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
           <div style={sectionBox}>
             <div style={sectionTitle}>Hallazgo</div>
             <div style={field}>
-              <label style={label}>Descripción *</label>
+              <label style={label}>DescripciÃ³n *</label>
               <textarea
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Qué viste, dónde, qué tan severo es, qué riesgo representa y qué sugieres revisar."
+                placeholder="QuÃ© viste, dÃ³nde, quÃ© tan severo es, quÃ© riesgo representa y quÃ© sugieres revisar."
                 style={{ ...input, minHeight: 120, resize: "vertical" }}
                 disabled={saving}
               />
@@ -271,17 +271,17 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
 
           <div style={sectionBox}>
             <div style={sectionTitle}>Evidencia visual</div>
-            <div style={helperText}>En móvil puedes tomar la foto directamente. Si no tienes evidencia, puedes guardar el reporte sin adjunto.</div>
+            <div style={helperText}>En mÃ³vil puedes tomar la foto directamente. Si no tienes evidencia, puedes guardar el reporte sin adjunto.</div>
 
             <input ref={uploadInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => onPickFile(e.target.files?.[0] || null)} />
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={(e) => onPickFile(e.target.files?.[0] || null)} />
 
             <div style={fileRow}>
+              <button type="button" onClick={() => cameraInputRef.current?.click()} style={btnPrimarySmall} disabled={saving}>
+                <span style={btnRow}><Icon name="camera" size="sm" /> Tomar foto</span>
+              </button>
               <button type="button" onClick={() => uploadInputRef.current?.click()} style={btnGhostSmall} disabled={saving}>
                 <span style={btnRow}><Icon name="upload" size="sm" /> Subir imagen</span>
-              </button>
-              <button type="button" onClick={() => cameraInputRef.current?.click()} style={btnGhostSmall} disabled={saving}>
-                <span style={btnRow}><Icon name="camera" size="sm" /> Tomar foto</span>
               </button>
               {file ? (
                 <button type="button" onClick={clearFile} style={btnGhostSmall} disabled={saving}>
@@ -328,11 +328,13 @@ const helperText = { fontSize: 12, color: "#64748b", fontWeight: 850 };
 const helperCard = { background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1d4ed8", borderRadius: 12, padding: "10px 12px", fontSize: 12, fontWeight: 850 };
 const helperCardLabel = { fontWeight: 950, marginRight: 6 };
 const row2 = { display: "flex", gap: 12, flexWrap: "wrap" };
-const fileRow = { display: "flex", gap: 10, flexWrap: "wrap" };
-const btnGhostSmall = { border: "1px solid #e5e7eb", background: "#fff", color: "#0f172a", borderRadius: 12, padding: "10px 12px", fontWeight: 900, cursor: "pointer" };
+const fileRow = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))", gap: 10 };
+const btnGhostSmall = { border: "1px solid #e5e7eb", background: "#fff", color: "#0f172a", borderRadius: 12, padding: "10px 12px", fontWeight: 900, cursor: "pointer", width: "100%", justifyContent: "center" };
+const btnPrimarySmall = { border: "1px solid rgba(249,115,22,0.55)", background: "rgba(249,115,22,0.92)", color: "#0b1220", borderRadius: 12, padding: "10px 12px", fontWeight: 900, cursor: "pointer", width: "100%", justifyContent: "center", boxShadow: "0 14px 28px rgba(249,115,22,0.18)" };
 const btnRow = { display: "inline-flex", gap: 8, alignItems: "center" };
 const evidenceImg = { width: "100%", maxHeight: 260, objectFit: "cover", borderRadius: 14, border: "1px solid #e5e7eb", display: "block" };
 const actions = { padding: 16, borderTop: "1px solid #eef2f7", background: "rgba(255,255,255,0.9)", display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" };
 const btnGhost = { border: "1px solid #e5e7eb", background: "rgba(255,255,255,0.88)", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontWeight: 950 };
 const btnPrimary = { border: "none", background: "#0f172a", color: "#fff", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontWeight: 950 };
 const errorBox = { margin: "16px 16px 0", background: "#fee2e2", border: "1px solid #fecaca", padding: 12, borderRadius: 12, color: "#991b1b", fontWeight: 900 };
+
