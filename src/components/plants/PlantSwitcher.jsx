@@ -88,7 +88,7 @@ export default function PlantSwitcher({ compact = false }) {
           ))}
         </select>
 
-        <div style={{ color: "#BDBDBD", fontSize: 12, userSelect: "none" }}>?</div>
+        
       </div>
 
       {plantsError ? (
@@ -97,3 +97,4 @@ export default function PlantSwitcher({ compact = false }) {
     </div>
   );
 }
+
