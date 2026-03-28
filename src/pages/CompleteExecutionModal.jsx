@@ -228,16 +228,16 @@ setForm((prev) => ({
   const usesOptionalConsumption = isManual || isCorrectiveLike;
 
   const equipment = isManual ? execution?.equipment : execution?.route?.equipment;
-  const equipmentName = equipment?.name || "â€”";
+  const equipmentName = equipment?.name || "—";
   const equipmentTag = equipment?.code || equipment?.tag || "";
   const equipmentLocation = equipment?.location || "";
 
   const manualTitle = String(execution?.manualTitle || "").trim();
-  const routeName = execution?.route?.name || "â€”";
+  const routeName = execution?.route?.name || "—";
 
   const instructions = isManual
-    ? execution?.manualInstructions || "â€”"
-    : execution?.route?.instructions || "â€”";
+    ? execution?.manualInstructions || "—"
+    : execution?.route?.instructions || "—";
 
   const routeImg = !isManual ? execution?.route?.imageUrl || "" : "";
 
@@ -245,10 +245,10 @@ setForm((prev) => ({
     execution?.route?.lubricant?.name ||
     execution?.route?.lubricantName ||
     execution?.route?.lubricantType ||
-    "â€”";
+    "—";
 
   const routeLubricantCode = execution?.route?.lubricant?.code || "";
-  const lubricantType = execution?.route?.lubricantType || "â€”";
+  const lubricantType = execution?.route?.lubricantType || "—";
   const unit = execution?.route?.unit || "";
   const routeUnitNorm = String(execution?.route?.unit || "").trim().toUpperCase();
   const isPumpRoute = !isManual && routeUnitNorm === "BOMBAZOS";
@@ -341,7 +341,7 @@ setForm((prev) => ({
   const onPickEvidence = async (file) => {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) {
-      setErr("Selecciona una imagen vÃ¡lida.");
+      setErr("Selecciona una imagen válida.");
       return;
     }
 
@@ -359,8 +359,8 @@ setForm((prev) => ({
     e.preventDefault();
 
     if (!canSave) {
-      if (isFutureExecution) return setErr(`Esta actividad estÃ¡ programada para ${scheduledLabel}.`);
-      if (selectedTechInactive) return setErr("No puedes asignar un tÃ©cnico inactivo.");
+      if (isFutureExecution) return setErr(`Esta actividad está programada para ${scheduledLabel}.`);
+      if (selectedTechInactive) return setErr("No puedes asignar un técnico inactivo.");
 
       if (usesOptionalConsumption && usedLubricant) {
         if (!form.usedLubricantId) return setErr("Selecciona el lubricante utilizado.");
@@ -435,13 +435,13 @@ setForm((prev) => ({
 
             <div style={sub}>
               {usesOptionalConsumption
-                ? "Registra ejecuciÃ³n real Â· consumo opcional"
-                : "Registra ejecuciÃ³n real"}
+                ? "Registra ejecución real · consumo opcional"
+                : "Registra ejecución real"}
             </div>
 
             {isCorrectiveLike ? (
               <div style={microWarn}>
-                Actividad correctiva Â· consumo opcional
+                Actividad correctiva · consumo opcional
               </div>
             ) : null}
 
@@ -469,7 +469,7 @@ setForm((prev) => ({
           {loading && <p style={{ margin: 0, fontWeight: 900, color: "#475569" }}>Cargando...</p>}
           {!loading && !execution && (
             <p style={{ margin: 0, fontWeight: 900, color: "#475569" }}>
-              No se encontrÃ³ la ejecuciÃ³n.
+              No se encontró la ejecución.
             </p>
           )}
 
@@ -503,13 +503,13 @@ setForm((prev) => ({
                   icon="route"
                   label="Ruta"
                   value={isManual ? "Actividad programada" : routeName}
-                  sub={isManual ? "Manual / Ãºnica" : "Ruta recurrente"}
+                  sub={isManual ? "Manual / Única" : "Ruta recurrente"}
                 />
 
                 <MiniInfoCard
                   icon="calendar"
                   label="Programada"
-                  value={scheduledLabel || "â€”"}
+                  value={scheduledLabel || "—"}
                   sub={execution?.status === "COMPLETED" ? "Ya completada" : "Fecha objetivo"}
                 />
               </div>
@@ -541,14 +541,14 @@ setForm((prev) => ({
                 </div>
               ) : null}
 
-              {String(instructions || "").trim() && instructions !== "â€”" ? (
+              {String(instructions || "").trim() && instructions !== "—" ? (
                 <div style={instructionsHero}>
                   <div style={instructionsHeroHead}>
                     <span style={instructionsIconWrap}>
                       <Icon name="doc" style={{ width: 18, height: 18, color: "#052e16" }} />
                     </span>
                     <div>
-                      <div style={instructionsHeroTitle}>Instrucciones de ejecuciÃ³n</div>
+                      <div style={instructionsHeroTitle}>Instrucciones de ejecución</div>
                       <div style={instructionsHeroSub}>Visible antes de registrar la actividad</div>
                     </div>
                   </div>
@@ -561,12 +561,12 @@ setForm((prev) => ({
 
               {isFutureExecution ? (
                 <div style={warnBox}>
-                  <b>Programada para:</b> {scheduledLabel}. No se puede completar aÃºn.
+                  <b>Programada para:</b> {scheduledLabel}. No se puede completar aún.
                 </div>
               ) : null}
 
               <div style={formGrid2}>
-                <Field label="Fecha de realizaciÃ³n *">
+                <Field label="Fecha de realización *">
                   <input
                     type="date"
                     name="executedAt"
@@ -578,7 +578,7 @@ setForm((prev) => ({
                   />
                 </Field>
 
-                <Field label="TÃ©cnico responsable *">
+                <Field label="Técnico responsable *">
                   <select
   name="technicianId"
   value={form.technicianId}
@@ -589,28 +589,28 @@ setForm((prev) => ({
   }}
   disabled={saving || isCompleted || isTechUser}
 >
-  <option value="">Seleccionar tÃ©cnico</option>
+  <option value="">Seleccionar técnico</option>
   {techs.map((t) => {
     const inactive = !isTechActive(t);
     return (
       <option key={t.id} value={t.id} disabled={inactive}>
         {t.name}
         {t.code ? ` (${t.code})` : ""}
-        {inactive ? " â€” (Inactivo)" : ""}
+        {inactive ? " — (Inactivo)" : ""}
       </option>
     );
   })}
 </select>
 
                   {selectedTechInactive ? (
-  <div style={errorHint}>Ese tÃ©cnico estÃ¡ inactivo. Selecciona otro.</div>
+  <div style={errorHint}>Ese técnico está inactivo. Selecciona otro.</div>
 ) : isTechUser ? (
   <div style={hint}>
-    TÃ©cnico detectado automÃ¡ticamente desde tu sesiÃ³n.
+    Técnico detectado automáticamente desde tu sesión.
   </div>
 ) : (
   <div style={hint}>
-    Los tÃ©cnicos inactivos aparecen deshabilitados para conservar histÃ³rico.
+    Los técnicos inactivos aparecen deshabilitados para conservar histórico.
   </div>
 )}
                 </Field>
@@ -646,11 +646,11 @@ setForm((prev) => ({
                       }}
                       disabled={saving || isCompleted}
                     >
-                      {usedLubricant ? "SÃ­, se utilizÃ³ lubricante" : "No / No aplica"}
+                      {usedLubricant ? "Sí­, se utilizá lubricante" : "No / No aplica"}
                     </button>
 
                     <div style={hintMini}>
-                      Ãšsalo solo si realmente hubo consumo de inventario.
+                      Úsalo solo si realmente hubo consumo de inventario.
                     </div>
                   </div>
 
@@ -666,7 +666,7 @@ setForm((prev) => ({
                           disabled={saving || isCompleted}
                         >
                           <option value="">
-                            {lubeLoading ? "Cargandoâ€¦" : "Seleccionar lubricante"}
+                            {lubeLoading ? "Cargando" : "Seleccionar lubricante"}
                           </option>
                           {lubricants.map((l) => (
                             <option key={l.id} value={l.id}>
@@ -732,8 +732,8 @@ setForm((prev) => ({
 
                   {isPumpRoute ? (
                     <div style={hint}>
-                      Puntos: <b>{points}</b>. 1 bombazo = <b>{pumpStrokeValue || "â€”"}</b>{" "}
-                      <b>{pumpStrokeUnit || ""}</b>. El sistema convierte automÃ¡ticamente para
+                      Puntos: <b>{points}</b>. 1 bombazo = <b>{pumpStrokeValue || "—"}</b>{" "}
+                      <b>{pumpStrokeUnit || ""}</b>. El sistema convierte automáticamente para
                       inventario e historial.
                     </div>
                   ) : (
@@ -745,7 +745,7 @@ setForm((prev) => ({
               )}
 
               <div style={formGrid2}>
-                <Field label="CondiciÃ³n del equipo *">
+                <Field label="Condición del equipo *">
                   <select
                     name="condition"
                     value={form.condition}
@@ -756,7 +756,7 @@ setForm((prev) => ({
                     <option value="BUENO">Bueno</option>
                     <option value="REGULAR">Regular</option>
                     <option value="MALO">Malo</option>
-                    <option value="CRITICO">CrÃ­tico</option>
+                    <option value="CRITICO">Crí­tico</option>
                   </select>
                 </Field>
 
@@ -775,7 +775,7 @@ setForm((prev) => ({
               <div style={evidenceCard}>
                 <div style={evidenceCardHead}>
                   <div>
-                    <div style={evidenceCardTitle}>Evidencia fotogrÃ¡fica</div>
+                    <div style={evidenceCardTitle}>Evidencia fotográfica</div>
                     <div style={evidenceCardSub}>
                       Toma una foto en campo o sube una imagen existente
                     </div>
@@ -803,11 +803,11 @@ setForm((prev) => ({
                   </div>
 
                   <div style={dropTitle}>
-                    Arrastra una imagen aquÃ­ o usa una de las opciones de abajo
+                    Arrastra una imagen aquí­ o usa una de las opciones de abajo
                   </div>
 
                   <div style={dropHint}>
-                    Formatos: JPG, PNG o WEBP Â· Ideal para evidencia clara del punto atendido
+                    Formatos: JPG, PNG o WEBP · Ideal para evidencia clara del punto atendido
                   </div>
 
                   <div style={evidenceActions}>
@@ -937,7 +937,7 @@ function MiniInfoCard({ icon, label, value, sub }) {
         </span>
         <span style={miniInfoLabel}>{label}</span>
       </div>
-      <div style={miniInfoValue}>{value || "â€”"}</div>
+      <div style={miniInfoValue}>{value || "—"}</div>
       {sub ? <div style={miniInfoSub}>{sub}</div> : null}
     </div>
   );
@@ -1542,5 +1542,7 @@ const inputLocked = {
   cursor: "not-allowed",
   border: "1px solid rgba(148,163,184,0.35)",
 };
+
+
 
 

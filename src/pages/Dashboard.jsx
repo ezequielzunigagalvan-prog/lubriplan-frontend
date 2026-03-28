@@ -2163,6 +2163,7 @@ function TechnicianPerfectPanel(props) {
         loading={loading}
         userId={userId}
         openExecutionModal={openExecutionModal}
+        isMobile={isMobile}
       />
 
       <div
@@ -2306,6 +2307,7 @@ function TechnicianActivitiesFocusCard({
   loading,
   userId,
   openExecutionModal,
+  isMobile = false,
 }) {
   const [range, setRange] = useState("TODAY");
   const [includeUnassigned, setIncludeUnassigned] = useState(true);

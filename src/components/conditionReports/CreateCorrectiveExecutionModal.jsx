@@ -27,8 +27,8 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
   const equipmentLabel = useMemo(() => {
     const eq = report?.equipment || {};
     const code = eq?.code ? ` (${eq.code})` : "";
-    const loc = eq?.location ? ` ï¿½ ${eq.location}` : "";
-    return `${eq?.name || "ï¿½"}${code}${loc}`;
+    const loc = eq?.location ? ` · ${eq.location}` : "";
+    return `${eq?.name || "·"}${code}${loc}`;
   }, [report]);
 
   const evidenceImage = report?.evidenceImage || "";
@@ -75,7 +75,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
   const onSubmit = async () => {
     try {
       setErr("");
-      if (!report?.id) return setErr("Reporte invÃ¡lido");
+      if (!report?.id) return setErr("Reporte inválido");
       if (!scheduledAt) return setErr("Selecciona fecha programada");
       if (!instructions.trim()) return setErr("Escribe instrucciones");
 
@@ -116,7 +116,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
                 <span style={summaryIcon}><Icon name="tool" size="sm" /></span>
                 <div>
                   <div style={summaryTitle}>{equipmentLabel}</div>
-                  <div style={summaryMeta}>Reporte #{report?.id || "ï¿½"}</div>
+                  <div style={summaryMeta}>Reporte #{report?.id || "·"}</div>
                 </div>
               </div>
               <div style={badgesWrap}>
@@ -153,7 +153,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
                   {techs.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.name || `Técnico ${t.id}`}
-                      {t.code ? ` ï¿½ ${t.code}` : ""}
+                      {t.code ? ` · ${t.code}` : ""}
                     </option>
                   ))}
                 </select>
@@ -176,7 +176,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
         <div style={foot}>
           <button onClick={onClose} style={btnGhost} disabled={saving}>Cancelar</button>
           <button onClick={onSubmit} style={btnPrimary} disabled={saving}>
-            {saving ? "Guardando" : "Crear acciÃ³n"}
+            {saving ? "Guardando" : "Crear acción"}
           </button>
         </div>
       </div>
@@ -267,4 +267,6 @@ const btnGhost = { border: "1px solid #e5e7eb", background: "rgba(255,255,255,0.
 const errorBox = { marginTop: 12, background: "#fee2e2", border: "1px solid #fecaca", padding: 12, borderRadius: 12, color: "#991b1b", fontWeight: 900 };
 const statusBadge = { display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "6px 10px", background: "#e2e8f0", color: "#334155", fontWeight: 900, fontSize: 11 };
 const conditionBadge = (condition) => ({ display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "6px 10px", background: condition === "CRITICO" ? "#fee2e2" : condition === "MALO" ? "#ffedd5" : condition === "REGULAR" ? "#fef3c7" : "#dcfce7", color: condition === "CRITICO" ? "#991b1b" : condition === "MALO" ? "#9a3412" : condition === "REGULAR" ? "#92400e" : "#166534", fontWeight: 900, fontSize: 11 });
+
+
 

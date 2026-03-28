@@ -1486,6 +1486,8 @@ export function ActivityCard({
   showPreviewAction = false,
   previewActionLabel = "Abrir",
 }) {
+  const mobileView =
+    isMobile || (typeof window !== "undefined" && Number(window.innerWidth || 0) <= 820);
   const evidenceUrl = buildImgUrl(activity?.evidenceImage);
 
   const safeDateLabel = (() => {
@@ -1563,7 +1565,7 @@ export function ActivityCard({
     <div
       style={{
         ...card,
-        ...(isMobile ? cardMobile : null),
+        ...(mobileView ? cardMobile : null),
         border: highlighted
           ? "2px solid rgba(249,115,22,0.65)"
           : `2px solid ${cardBorder}`,
@@ -1575,12 +1577,12 @@ export function ActivityCard({
           : "0 12px 30px rgba(2,6,23,0.06)",
       }}
       onMouseEnter={(e) => {
-        if ((!canComplete && !canOpenPreview) || isMobile) return;
+        if ((!canComplete && !canOpenPreview) || mobileView) return;
         e.currentTarget.style.transform = "translateY(-2px)";
         e.currentTarget.style.boxShadow = "0 18px 38px rgba(2,6,23,0.12)";
       }}
       onMouseLeave={(e) => {
-        if (isMobile) return;
+        if (mobileView) return;
         e.currentTarget.style.transform = "translateY(0px)";
         e.currentTarget.style.boxShadow = highlighted
           ? "0 18px 40px rgba(249,115,22,0.18)"
@@ -1599,7 +1601,7 @@ export function ActivityCard({
         <div style={cardTopRow}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={cardTaskLabel}>QUÉ VOY A HACER</div>
-            <div style={{ ...cardTaskTitle, ...(isMobile ? cardTaskTitleMobile : null) }}>
+            <div style={{ ...cardTaskTitle, ...(mobileView ? cardTaskTitleMobile : null) }}>
               {activity.activityName}
             </div>
           </div>
@@ -1655,16 +1657,16 @@ export function ActivityCard({
           </div>
         </div>
 
-        <div style={{ ...summaryGrid, ...(isMobile ? summaryGridMobile : null) }}>
-          <div style={{ ...summaryCard, ...(isMobile ? summaryCardMobile : null) }}>
+        <div style={{ ...summaryGrid, ...(mobileView ? summaryGridMobile : null) }}>
+          <div style={{ ...summaryCard, ...(mobileView ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="equipment" size="sm" />
               <span>Equipo</span>
             </div>
-            <div style={{ ...summaryValue, ...(isMobile ? summaryValueMobile : null) }}>
+            <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
               {activity.equipmentName}
             </div>
-            <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null) }}>
+            <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null) }}>
               {activity.equipmentCode ? (
                 <span style={tagPill}>{activity.equipmentCode}</span>
               ) : null}
@@ -1676,28 +1678,28 @@ export function ActivityCard({
             </div>
           </div>
 
-          <div style={{ ...summaryCard, ...(isMobile ? summaryCardMobile : null) }}>
+          <div style={{ ...summaryCard, ...(mobileView ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="drop" size="sm" />
               <span>Lubricante</span>
             </div>
-            <div style={{ ...summaryValue, ...(isMobile ? summaryValueMobile : null) }}>
+            <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
               {plannedLubricant}
             </div>
-            <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null) }}>
+            <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null) }}>
               Producto planeado
             </div>
           </div>
 
-          <div style={{ ...summaryCard, ...(isMobile ? summaryCardMobile : null) }}>
+          <div style={{ ...summaryCard, ...(mobileView ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="quantity" size="sm" />
               <span>Cantidad</span>
             </div>
-            <div style={{ ...summaryValue, ...(isMobile ? summaryValueMobile : null) }}>
+            <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
               {quantityText}
             </div>
-            <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null), display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null), display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <span>{pointsText}</span>
               {hasPointsCount ? (
                 <span style={{ ...tagPill, fontSize: 12, fontWeight: 900 }}>
@@ -1707,29 +1709,29 @@ export function ActivityCard({
             </div>
           </div>
 
-          <div style={{ ...summaryCard, ...(isMobile ? summaryCardMobile : null) }}>
+          <div style={{ ...summaryCard, ...(mobileView ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="tool" size="sm" />
               <span>Método</span>
             </div>
-            <div style={{ ...summaryValue, ...(isMobile ? summaryValueMobile : null) }}>
+            <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
               {methodText}
             </div>
-            <div style={{ ...summarySub, ...(isMobile ? summarySubMobile : null) }}>
+            <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null) }}>
               Aplicación
             </div>
           </div>
         </div>
 
-        <div style={{ ...infoRow, ...(isMobile ? infoRowMobile : null) }}>
+        <div style={{ ...infoRow, ...(mobileView ? infoRowMobile : null) }}>
           {safeDateLabel ? (
-            <span style={{ ...infoChip, ...(isMobile ? infoChipMobile : null) }}>
+            <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
               <Icon name="calendar" size="sm" />
               <span>{safeDateLabel}</span>
             </span>
           ) : null}
 
-          <span style={{ ...infoChip, ...(isMobile ? infoChipMobile : null) }}>
+          <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
             <Icon name="user" size="sm" />
             <span>
               Técnico:{" "}
@@ -1742,7 +1744,7 @@ export function ActivityCard({
           </span>
 
           {activity.hasEvidence ? (
-            <span style={{ ...infoChip, ...(isMobile ? infoChipMobile : null) }}>
+            <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
               <Icon name="camera" size="sm" />
               <span>Evidencia</span>
             </span>
@@ -1799,13 +1801,13 @@ export function ActivityCard({
         ) : null}
 
         {activity.computedStatus !== "Completada" && canAssignTech ? (
-          <div style={{ ...techRow, ...(isMobile ? techRowMobile : null) }}>
+          <div style={{ ...techRow, ...(mobileView ? techRowMobile : null) }}>
             <select
               value={activity.technicianId ?? ""}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => onAssignTech(activity.id, e.target.value)}
               disabled={assigningId === activity.id}
-              style={{ ...techSelect, ...(isMobile ? techSelectMobile : null) }}
+              style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
               title="Asignar técnico"
             >
               <option value="">Sin asignar</option>
@@ -1830,11 +1832,11 @@ export function ActivityCard({
         ) : null}
       </div>
 
-      <div style={{ ...cardAside, ...(isMobile ? cardAsideMobile : null) }}>
+      <div style={{ ...cardAside, ...(mobileView ? cardAsideMobile : null) }}>
         <span
           style={{
             ...badge(activity.computedStatus),
-            ...(isMobile ? badgeMobile : null),
+            ...(mobileView ? badgeMobile : null),
           }}
         >
           {activity.computedStatus}
@@ -1846,7 +1848,7 @@ export function ActivityCard({
               e.stopPropagation();
               onOpen();
             }}
-            style={{ ...completeBtnPro, ...(isMobile ? completeBtnProMobile : null) }}
+            style={{ ...completeBtnPro, ...(mobileView ? completeBtnProMobile : null) }}
             type="button"
           >
             <Icon name="checkCircle" size="sm" />
@@ -1860,7 +1862,7 @@ export function ActivityCard({
             }}
             style={{
               ...notReadyBox,
-              ...(isMobile ? notReadyBoxMobile : null),
+              ...(mobileView ? notReadyBoxMobile : null),
               cursor: "pointer",
               background: "rgba(255,255,255,0.96)",
               color: "#0f172a",
@@ -1872,7 +1874,7 @@ export function ActivityCard({
             <span>{previewActionLabel}</span>
           </button>
         ) : activity.computedStatus !== "Completada" ? (
-          <div style={{ ...notReadyBox, ...(isMobile ? notReadyBoxMobile : null) }}>
+          <div style={{ ...notReadyBox, ...(mobileView ? notReadyBoxMobile : null) }}>
             <Icon name="clock" size="sm" />
             <span>No disponible</span>
           </div>
@@ -2285,6 +2287,10 @@ const card = {
   justifyContent: "space-between",
   alignItems: "flex-start",
   gap: 12,
+  width: "100%",
+  maxWidth: "100%",
+  boxSizing: "border-box",
+  overflow: "hidden",
   boxShadow: "0 18px 34px rgba(2,6,23,0.06)",
   transition: "transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease",
 };
@@ -2548,6 +2554,7 @@ const cardMobile = {
   alignItems: "stretch",
   padding: 10,
   gap: 10,
+  width: "100%",
 };
 
 const summaryGridMobile = {
