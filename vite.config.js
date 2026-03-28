@@ -55,7 +55,10 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: ({ url }) => url.origin === "https://api.lubriplan.com" && url.pathname.startsWith("/api/"),
+            urlPattern: ({ url }) =>
+            url.origin === "https://api.lubriplan.com" &&
+            url.pathname.startsWith("/api/") &&
+            !url.pathname.startsWith("/api/realtime/stream"),
             handler: "NetworkOnly",
           },
         ],
@@ -71,3 +74,4 @@ export default defineConfig({
     },
   },
 });
+
