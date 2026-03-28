@@ -256,9 +256,9 @@ function PanelHeader({ title, tag, tone = "gray", right, icon, subtitle }) {
   );
 }
 
-function SegmentedTabs({ value, onChange, items }) {
+function SegmentedTabs({ value, onChange, items, compact = false }) {
   return (
-    <div style={tabsWrap}>
+    <div style={{ ...tabsWrap, display: compact ? "flex" : tabsWrap.display, width: compact ? "100%" : undefined, overflowX: compact ? "auto" : undefined, flexWrap: compact ? "nowrap" : undefined, WebkitOverflowScrolling: compact ? "touch" : undefined }}>
       {items.map((it) => {
         const active = it.value === value;
         return (
@@ -268,6 +268,7 @@ function SegmentedTabs({ value, onChange, items }) {
             className="lpPress"
             style={{
               ...tabBtn,
+              ...(compact ? { flex: "0 0 auto", whiteSpace: "nowrap", padding: "10px 14px" } : {}),
               ...(active ? tabBtnActive : {}),
             }}
             type="button"
@@ -334,6 +335,15 @@ export default function AnalysisPage() {
   const [crLoading, setCrLoading] = useState(false);
   const [crErr, setCrErr] = useState("");
   const [crData, setCrData] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const { alerts: predictiveAlerts } = useDashboardPredictiveAlerts({
     month: analysisMonth,
@@ -658,7 +668,7 @@ export default function AnalysisPage() {
         }
       `}</style>
 
-      <div style={headerRow}>
+      <div style={{ ...headerRow, alignItems: isMobile ? "stretch" : headerRow.alignItems }}>
         <div style={{ minWidth: 0 }}>
           <h1 style={{ margin: 0 }}>Análisis</h1>
           <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 900 }}>
@@ -675,11 +685,11 @@ export default function AnalysisPage() {
             {tab === "condicion" ? <Tag tone="amber">Rango condición: {crRange}</Tag> : null}
           </div>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", width: isMobile ? "100%" : undefined }}>
           <button
             onClick={handleReset}
             className="lpPress"
-            style={btnGhost}
+            style={{ ...btnGhost, flex: isMobile ? "1 1 100%" : undefined, width: isMobile ? "100%" : undefined, justifyContent: "center" }}
             disabled={busy}
             type="button"
           >
@@ -692,7 +702,7 @@ export default function AnalysisPage() {
           <button
             onClick={() => loadAll({ hard: false })}
             className="lpPress"
-            style={btnGhost}
+            style={{ ...btnGhost, flex: isMobile ? "1 1 100%" : undefined, width: isMobile ? "100%" : undefined, justifyContent: "center" }}
             disabled={busy}
             title="Actualizar"
             type="button"
@@ -706,7 +716,7 @@ export default function AnalysisPage() {
           <button
             onClick={handleExport}
             className="lpPress"
-            style={btnPrimary}
+            style={{ ...btnPrimary, flex: isMobile ? "1 1 100%" : undefined, width: isMobile ? "100%" : undefined, justifyContent: "center" }}
             disabled={busy}
             title={exportLabel}
             type="button"
@@ -719,8 +729,9 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 12, overflowX: "auto" }}>
         <SegmentedTabs
+          compact={isMobile}
           value={tab}
           onChange={setTab}
           items={[
@@ -734,7 +745,7 @@ export default function AnalysisPage() {
 
       {tab === "consumo" && (
         <div style={stickyFilters}>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", width: isMobile ? "100%" : undefined }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={miniLbl}>Rango</span>
               <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={selectMini}>
@@ -745,14 +756,14 @@ export default function AnalysisPage() {
               </select>
             </div>
 
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: isMobile ? "stretch" : "center", flexWrap: "wrap", flex: isMobile ? "1 1 100%" : undefined, minWidth: 0 }}>
               <span style={miniLbl}>Buscar equipo</span>
               <input
                 className="lpInput"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Nombre, código, ubicación"
-                style={{ width: 260 }}
+                style={{ width: isMobile ? "100%" : 260, minWidth: 0 }}
               />
             </div>
 
@@ -1121,7 +1132,7 @@ export default function AnalysisPage() {
                 title="Actividades ? análisis y tendencias"
                 subtitle="KPIs, cumplimiento y tendencia mensual. Enfocado a supervisión y operación."
                 right={
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", width: isMobile ? "100%" : undefined }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <span style={miniLbl}>A?o</span>
                       <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={selectMini}>
@@ -1152,11 +1163,11 @@ export default function AnalysisPage() {
                 }
               />
 
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 12, overflowX: "auto" }}>
                 <ExecutionsKpis days={180} techId={techId ? Number(techId) : undefined} />
               </div>
 
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 12, overflowX: "auto" }}>
                 <ExecutionsMonthlyChart year={year} techId={techId ? Number(techId) : undefined} />
               </div>
 
@@ -1177,7 +1188,7 @@ export default function AnalysisPage() {
                 title="Condición ? reportes y tendencias"
                 subtitle="Backlog, categorías, MTTR promedio y reincidencia. Listo para alimentar predicción."
                 right={
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", width: isMobile ? "100%" : undefined }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <span style={miniLbl}>Rango</span>
                       <select value={crRange} onChange={(e) => setCrRange(e.target.value)} style={selectMini}>
@@ -1715,4 +1726,6 @@ const tagBase = {
 };
 
 const tagWrapFix = { display: "inline-flex", alignItems: "center" };
+
+
 

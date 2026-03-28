@@ -76,6 +76,15 @@ export default function ActivitiesDonut({
   const [loading, setLoading] = useState(shouldFetch);
   const [error, setError] = useState(null);
   const [activeKey, setActiveKey] = useState(null);
+  const [isCompact, setIsCompact] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const onResize = () => setIsCompact(window.innerWidth < 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     if (!shouldFetch) return;
@@ -117,16 +126,16 @@ export default function ActivitiesDonut({
 
   const activeIndex = useMemo(() => data.findIndex((x) => x.key === activeKey), [data, activeKey]);
   const activeItem = activeIndex >= 0 ? data[activeIndex] : null;
-  const innerRadius = Math.max(44, size * 0.28);
-  const outerRadius = Math.max(innerRadius + 18, size * 0.42);
-
+  const chartSize = isCompact ? Math.min(size, 176) : size;
+  const innerRadius = Math.max(40, chartSize * 0.28);
+  const outerRadius = Math.max(innerRadius + 18, chartSize * 0.42);
   if (shouldFetch && loading) {
     return <div style={wrap}>Cargando gráfica…</div>;
   }
 
   if (shouldFetch && error) {
     return (
-      <div style={wrap}>
+      <div style={{ ...wrap, padding: isCompact ? 12 : wrap.padding }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={iconChip}>
             <Icon name="alert" size="sm" weight="bold" />
@@ -141,9 +150,9 @@ export default function ActivitiesDonut({
   }
 
   return (
-    <div style={wrap}>
-      <div style={titleRow}>
-        <div style={titleLeft}>
+    <div style={{ ...wrap, padding: isCompact ? 12 : wrap.padding }}>
+      <div style={{ ...titleRow, flexDirection: isCompact ? "column" : "row", alignItems: isCompact ? "stretch" : titleRow.alignItems }}>
+        <div style={{ ...titleLeft, alignItems: isCompact ? "flex-start" : titleLeft.alignItems }}>
           <span style={iconChip}>
             <Icon name="search" size="sm" weight="bold" />
           </span>
@@ -153,7 +162,7 @@ export default function ActivitiesDonut({
           </div>
         </div>
 
-        <div style={rightMeta}>
+        <div style={{ ...rightMeta, width: isCompact ? "100%" : undefined, justifyContent: isCompact ? "flex-start" : undefined }}>
           <div style={metaPill}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="calendar" size="sm" />
@@ -163,9 +172,9 @@ export default function ActivitiesDonut({
         </div>
       </div>
 
-      <div style={body}>
-        <div style={{ width: size, minWidth: size, height: size, minHeight: size, position: "relative", flex: `0 0 ${size}px` }}>
-          <PieChart width={size} height={size}>
+      <div style={{ ...body, flexDirection: isCompact ? "column" : "row", alignItems: isCompact ? "stretch" : body.alignItems, gap: isCompact ? 12 : body.gap }}>
+        <div style={{ width: chartSize, minWidth: isCompact ? 0 : chartSize, height: chartSize, minHeight: chartSize, position: "relative", flex: isCompact ? "0 1 auto" : `0 0 ${chartSize}px`, alignSelf: "center", maxWidth: "100%" }}>
+          <PieChart width={chartSize} height={chartSize}>
             <Pie
               data={data}
               dataKey="value"
@@ -199,9 +208,9 @@ export default function ActivitiesDonut({
           </PieChart>
 
           <div style={center}>
-            <div style={centerTop}>{total ? "Este mes" : "Sin datos"}</div>
-            <div style={centerBig}>{total}</div>
-            <div style={centerSub}>
+            <div style={{ ...centerTop, fontSize: isCompact ? 11 : centerTop.fontSize }}>{total ? "Este mes" : "Sin datos"}</div>
+            <div style={{ ...centerBig, fontSize: isCompact ? 24 : centerBig.fontSize }}>{total}</div>
+            <div style={{ ...centerSub, marginTop: isCompact ? 6 : centerSub.marginTop, fontSize: isCompact ? 11 : centerSub.fontSize, maxWidth: isCompact ? 148 : undefined, textAlign: "center", lineHeight: 1.25 }}>
               {activeItem ? (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <span style={miniDot(activeItem.color)} />
@@ -214,7 +223,7 @@ export default function ActivitiesDonut({
           </div>
         </div>
 
-        <div style={legend}>
+        <div style={{ ...legend, minWidth: isCompact ? 0 : legend.minWidth, flex: isCompact ? "1 1 100%" : legend.flex, width: isCompact ? "100%" : undefined }}>
           {data.map((item) => {
             const isActive = activeKey === item.key;
             const tone = toneForKey(item.key);
@@ -377,5 +386,6 @@ function miniDot(color) {
     boxShadow: `0 0 0 4px ${color}1f`,
   };
 }
+
 
 
