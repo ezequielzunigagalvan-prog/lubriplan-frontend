@@ -3,8 +3,8 @@ import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import lubriPlanMark from "../assets/lubriplan-logo.png.png";
 
-const EXEC_TEXT_FONT = '"Aptos", "Segoe UI", sans-serif';
-const EXEC_DISPLAY_FONT = '"Georgia", "Times New Roman", serif';
+const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();

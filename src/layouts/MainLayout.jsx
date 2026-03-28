@@ -11,8 +11,8 @@ import lubriPlanMark from "../assets/lubriplan-logo.png.png";
 import { usePlant } from "../context/PlantContext";
 import useInstallPrompt from "../hooks/useInstallPrompt";
 
-const EXEC_DISPLAY_FONT = "\"Iowan Old Style\", \"Palatino Linotype\", \"Book Antiqua\", Georgia, serif";
-const EXEC_TEXT_FONT = "\"Aptos\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif";
+const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 export default function MainLayout({ children }) {
   const { pathname } = useLocation();

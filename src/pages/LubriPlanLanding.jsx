@@ -4,8 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import lubriPlanLogo from "../assets/lubriplan-logo.png.png";
 
-const EXEC_DISPLAY_FONT = '"Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif';
-const EXEC_TEXT_FONT = '"Aptos", "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 export default function LubriPlanLanding() {
   const { isAuthenticated } = useAuth();
