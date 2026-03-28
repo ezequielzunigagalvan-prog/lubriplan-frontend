@@ -53,10 +53,10 @@ function formatLocalYMD(date) {
 }
 
 function buildNextInfo(nextAtRaw) {
-  if (!nextAtRaw) return { label: "Sin prÃ³xima", tone: "muted" };
+  if (!nextAtRaw) return { label: "Sin próxima", tone: "muted" };
 
   const d = new Date(nextAtRaw);
-  if (Number.isNaN(d.getTime())) return { label: "Sin prÃ³xima", tone: "muted" };
+  if (Number.isNaN(d.getTime())) return { label: "Sin próxima", tone: "muted" };
 
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -69,10 +69,10 @@ function buildNextInfo(nextAtRaw) {
     String(d.getDate()).padStart(2, "0"),
   ].join("-");
 
-  if (diffDays < 0) return { label: `Atrasada Â· ${ymd}`, tone: "danger" };
-  if (diffDays === 0) return { label: `Hoy Â· ${ymd}`, tone: "warn" };
-  if (diffDays === 1) return { label: `MaÃ±ana Â· ${ymd}`, tone: "ok" };
-  return { label: `PrÃ³x Â· ${ymd}`, tone: "ok" };
+  if (diffDays < 0) return { label: `Atrasada · ${ymd}`, tone: "danger" };
+  if (diffDays === 0) return { label: `Hoy · ${ymd}`, tone: "warn" };
+  if (diffDays === 1) return { label: `Mañana · ${ymd}`, tone: "ok" };
+  return { label: `Próxima· ${ymd}`, tone: "ok" };
 }
 
 function buildFrequencyLabel(route) {
@@ -92,7 +92,7 @@ function buildFrequencyLabel(route) {
   if (frequencyDays === 120) return "Cuatrimestral";
   if (frequencyDays === 180) return "Semestral";
   if (frequencyDays === 365) return "Anual";
-  if (frequencyDays > 0) return `Cada ${frequencyDays} dÃ­as`;
+  if (frequencyDays > 0) return `Cada ${frequencyDays} días`;
 
   return "â€”";
 }
@@ -103,10 +103,10 @@ function buildWeeklyDaysLabel(route) {
   const map = {
     1: "Lun",
     2: "Mar",
-    3: "MiÃ©",
+    3: "Mié",
     4: "Jue",
     5: "Vie",
-    6: "SÃ¡b",
+    6: "Sáb",
     7: "Dom",
   };
 
@@ -168,7 +168,7 @@ export default function RouteCard({
     if (Number.isFinite(pts) && pts > 0) {
       return "por punto";
     }
-    return "dosificaciÃ³n";
+    return "dosificación";
   }, [isBombazos, pumpStrokeValue, pumpStrokeUnit, route?.points]);
 
   
@@ -183,7 +183,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
   const technicianName =
     route?.technician?.name ||
     route?.nextExecutionTechnician?.name ||
-    "Sin tÃ©cnico";
+    "Sin técnico";
   const technicianCode =
     route?.technician?.code ||
     route?.nextExecutionTechnician?.code ||
@@ -257,11 +257,11 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
               </span>
 
               {equipmentCode ? (
-                <span style={tagInlinePill} title="CÃ³digo / TAG">
+                <span style={tagInlinePill} title="Código / TAG">
                   <Icon name="tag" style={miniIconSm} /> {equipmentCode}
                 </span>
               ) : (
-                <span style={tagInlinePillMuted} title="Sin cÃ³digo/tag">
+                <span style={tagInlinePillMuted} title="Sin código/tag">
                   <Icon name="tag" style={miniIconSm} /> SIN TAG
                 </span>
               )}
@@ -277,8 +277,8 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
               <button
                 style={iconBtnTech}
                 onClick={() => setShowTechnicianSelect((v) => !v)}
-                title="Asignar tÃ©cnico"
-                aria-label="Asignar tÃ©cnico"
+                title="Asignar técnico"
+                aria-label="Asignar técnico"
                 type="button"
               >
                 <Icon name="user" style={icon18} />
@@ -310,16 +310,16 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
         ) : null}
       </div>
 
-      {/* SELECT TÃ‰CNICO DESPLEGABLE */}
+      {/* SELECT TéCNICO DESPLEGABLE */}
       {showTechnicianSelect && typeof onAssignTechnician === "function" ? (
         <div style={assignWrap} onClick={(e) => e.stopPropagation()}>
           <select
             value={route?.technicianId ?? route?.technician?.id ?? route?.nextExecutionTechnicianId ?? route?.nextExecutionTechnician?.id ?? ""}
             onChange={handleTechnicianChange}
             style={assignSelect}
-            title="Asignar tÃ©cnico"
+            title="Asignar técnico"
           >
-            <option value="">Sin tÃ©cnico</option>
+            <option value="">Sin técnico</option>
             {(technicians || []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -396,12 +396,12 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
         </div>
       </div>
 
-      {/* MINI CARD TÃ‰CNICO PEQUEÃ‘A */}
+      {/* MINI CARD TÉCNICO PEQUEÑA */}
       <div style={techMiniCard}>
         <div style={techMiniTop}>
           <span style={techMiniChip}>
             <Icon name="user" style={techMiniIcon} />
-            TÃ‰CNICO
+            TÉCNICO
           </span>
         </div>
 
@@ -410,20 +410,20 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
             {technicianName}
           </span>
 
-          <span style={techMiniCode} title={technicianCode || "Sin cÃ³digo"}>
-            {technicianCode || "Sin cÃ³digo"}
+          <span style={techMiniCode} title={technicianCode || "Sin código"}>
+            {technicianCode || "Sin código"}
           </span>
         </div>
       </div>
 
       {/* FILA COMPACTA ABAJO */}
       <div style={belowRow} onClick={(e) => e.stopPropagation()}>
-        <span style={methodPill} title={`MÃ©todo: ${methodLabel}`}>
+        <span style={methodPill} title={`Método: ${methodLabel}`}>
           <Icon name="tool" style={miniIcon} />
-          <span style={{ fontWeight: 950 }}>MÃ©todo:</span> {methodLabel}
+          <span style={{ fontWeight: 950 }}>Método:</span> {methodLabel}
         </span>
 
-        <span style={nextBadgeSmall(nextInfo.tone)} title="PrÃ³xima actividad">
+        <span style={nextBadgeSmall(nextInfo.tone)} title="Próxima actividad">
           <Icon name="calendar" style={miniIcon} />
           {nextInfo.label}
         </span>
@@ -445,7 +445,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
             }}
             type="button"
           >
-            Ver detalles â†’
+            Ver detalles 
           </button>
         ) : null}
       </div>

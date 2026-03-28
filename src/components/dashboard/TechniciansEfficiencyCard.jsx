@@ -143,7 +143,7 @@ export default function TechniciansEfficiencyCard({
       )}
 
       <div style={hint}>
-        Tip: toca un técnico para filtrar sus actividades del mes (si habilitas la navegaciÃ³n).
+        Tip: toca un técnico para filtrar sus actividades del mes (si habilitas la navegación).
       </div>
     </div>
   );

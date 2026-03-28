@@ -45,7 +45,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
 
     const eq = report?.equipment || {};
     const base = [
-      "AcciÃ³n correctiva por condiciÃ³n anormal.",
+      "Acción correctiva por condición anormal.",
       eq?.name ? `Equipo: ${eq.name}${eq.code ? ` (${eq.code})` : ""}` : null,
       report?.description ? `Hallazgo: ${report.description}` : null,
       "Define seguridad, puntos a intervenir y criterio de cierre.",
@@ -90,7 +90,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
       onSaved?.();
     } catch (e) {
       console.error(e);
-      setErr(e?.error || e?.message || "Error creando acciÃ³n correctiva");
+      setErr(e?.error || e?.message || "Error creando acción correctiva");
       setSaving(false);
     }
   };
@@ -101,7 +101,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
         <div style={head}>
           <div>
             <div style={kicker}>SEGUIMIENTO CORRECTIVO</div>
-            <div style={title}>Programar acciÃ³n correctiva</div>
+            <div style={title}>Programar acción correctiva</div>
             <div style={sub}>Se crear una actividad ligada al reporte y el reporte pasar a IN_PROGRESS.</div>
           </div>
           <button onClick={onClose} style={xBtn} title="Cerrar" disabled={saving}>?</button>
@@ -152,7 +152,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
                   <option value="">{techLoading ? "Cargando" : "Sin asignar"}</option>
                   {techs.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.name || `TÃ©cnico ${t.id}`}
+                      {t.name || `Técnico ${t.id}`}
                       {t.code ? ` ï¿½ ${t.code}` : ""}
                     </option>
                   ))}
@@ -166,7 +166,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
                 style={ta}
-                placeholder="Describe quÃ© hacer, riesgos, bloqueo-etiquetado, puntos a revisar y criterio de cierre."
+                placeholder="Describe qué hacer, riesgos, bloqueo-etiquetado, puntos a revisar y criterio de cierre."
                 rows={7}
               />
             </label>

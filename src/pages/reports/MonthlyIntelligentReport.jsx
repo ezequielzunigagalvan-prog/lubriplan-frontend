@@ -96,7 +96,7 @@ function riskTone(level) {
 
 function pqSeverityLabel(severity) {
   const s = String(severity || "").toUpperCase();
-  if (s === "CRITICAL") return "AtenciÃ³n inmediata";
+  if (s === "CRITICAL") return "Atención inmediata";
   if (s === "HIGH") return "Alta prioridad";
   if (s === "MED") return "Atender hoy";
   return "Seguimiento";
@@ -105,10 +105,10 @@ function pqSeverityLabel(severity) {
 function pqTypeLabel(type) {
   const t = String(type || "").toUpperCase();
   if (t === "EXEC_OVERDUE") return "Actividad vencida";
-  if (t === "EXEC_UNASSIGNED") return "Actividad sin tÃ©cnico";
-  if (t === "COND_REPORT") return "CondiciÃ³n reportada";
+  if (t === "EXEC_UNASSIGNED") return "Actividad sin técnico";
+  if (t === "COND_REPORT") return "Condición reportada";
   if (t === "DAYS_TO_EMPTY") return "Inventario en riesgo";
-  if (t === "CONSUMPTION_ANOMALY") return "Consumo fuera de patrÃ³n";
+  if (t === "CONSUMPTION_ANOMALY") return "Consumo fuera de patrón";
   return "Prioridad";
 }
 
@@ -116,7 +116,7 @@ function pqOwnerLabel(owner) {
   const o = String(owner || "").toUpperCase();
   if (o === "ADMIN") return "Administrador";
   if (o === "SUPERVISOR") return "Supervisor";
-  if (o === "TECHNICIAN") return "TÃ©cnico";
+  if (o === "TECHNICIAN") return "Técnico";
   return "Equipo";
 }
 
@@ -291,7 +291,7 @@ function KPI({ label, value, hint, tone = "dark" }) {
    AI SUMMARY BOX
 ========================= */
 
-function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }) {
+function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh = false }) {
   const loading = !!aiState?.loading;
   const err = aiState?.error;
   const data = aiState?.data;
@@ -300,19 +300,130 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
   const cached = !!data?.cached;
   const model = data?.model;
   const generatedAt = data?.generatedAt ? fmtDateTimeLocal(data.generatedAt) : null;
-  
+  const isFallback = String(summary?.title || "").toLowerCase().includes("fallback");
+
+  const highlights = Array.isArray(summary?.highlights) ? summary.highlights.slice(0, 4) : [];
+  const recommendations = Array.isArray(summary?.recommendations)
+    ? summary.recommendations.slice(0, 4)
+    : [];
+  const risks = Array.isArray(summary?.risks) ? summary.risks.slice(0, 4) : [];
 
   return (
-    <div
-      style={{
-        border: "1px solid rgba(226,232,240,0.95)",
-        borderRadius: 16,
-        padding: 12,
-        background: "rgba(248,250,252,0.9)",
-        minWidth: 0,
-      }}
-    >
+    <div className="ai-summary-box" style={aiSummaryRoot}>
+      <style>{`
+        @keyframes lpAiSummaryReveal {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media print {
+          @page {
+            size: A4;
+            margin: 14mm;
+          }
+
+          .ai-summary-box {
+            background: #ffffff !important;
+            border: 1px solid #dbe2ea !important;
+            box-shadow: none !important;
+            border-radius: 14px !important;
+            overflow: visible !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .ai-summary-toolbar {
+            display: none !important;
+          }
+
+          .ai-summary-status {
+            color: #475569 !important;
+          }
+
+          .ai-summary-screen-hero {
+            background: #ffffff !important;
+            border: 1px solid #dbe2ea !important;
+            box-shadow: none !important;
+            color: #0f172a !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .ai-summary-screen-hero * {
+            color: #0f172a !important;
+          }
+
+          .ai-summary-screen-chip {
+            background: #f8fafc !important;
+            border: 1px solid #dbe2ea !important;
+            color: #0f172a !important;
+          }
+
+          .ai-summary-print-title {
+            display: block !important;
+          }
+
+          .ai-summary-screen-title {
+            font-family: Georgia, serif !important;
+            font-size: 22px !important;
+            line-height: 1.25 !important;
+            color: #0f172a !important;
+            max-width: 100% !important;
+          }
+
+          .ai-summary-grid {
+            display: block !important;
+          }
+
+          .ai-summary-card {
+            background: #ffffff !important;
+            border: 1px solid #dbe2ea !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin-top: 12px !important;
+          }
+
+          .ai-summary-dark-card {
+            background: #ffffff !important;
+            border: 1px solid #dbe2ea !important;
+            box-shadow: none !important;
+          }
+
+          .ai-summary-dark-card * {
+            color: #0f172a !important;
+          }
+
+          .ai-summary-risk-card {
+            background: #ffffff !important;
+            border: 1px solid #dbe2ea !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .ai-summary-risk-card * {
+            color: #0f172a !important;
+          }
+
+          .ai-summary-risk-card .risk-level-badge {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+          }
+
+          .ai-summary-section-title {
+            color: #9a3412 !important;
+          }
+
+          .ai-summary-subtle {
+            color: #475569 !important;
+          }
+        }
+      `}</style>
+
       <div
+        className="ai-summary-toolbar"
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -334,17 +445,19 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
             <Icon name="search" size="sm" />
             Resumen inteligente
           </div>
+
           <div
+            className="ai-summary-status"
             style={{ marginTop: 4, fontSize: 12, fontWeight: 850, color: "#64748b" }}
           >
             {loading
-              ? "Generando resumenâ€¦"
+              ? "Generando resumen"
               : err
               ? "No se pudo generar el resumen IA."
               : summary
-              ? `IA lista Â· ${cached ? "cache" : "nuevo"}${
-                  model ? ` Â· ${model}` : ""
-                }${generatedAt ? ` Â· ${generatedAt}` : ""}`
+              ? `IA lista · ${cached ? "cache" : "nuevo"}${model ? ` · ${model}` : ""}${
+                  generatedAt ? ` · ${generatedAt}` : ""
+                }`
               : "Genera un resumen ejecutivo del mes."}
           </div>
         </div>
@@ -365,7 +478,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
               opacity: loading ? 0.6 : 1,
             }}
           >
-            {loading ? "Generandoâ€¦" : "Generar â†’"}
+            {loading ? "Generando" : "Generar"}
           </button>
 
           {canForceRefresh ? (
@@ -381,7 +494,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
                 background: "#fff",
                 cursor: loading ? "not-allowed" : "pointer",
               }}
-              title="Forzar regeneraciÃ³n (invalida cache)"
+              title="Forzar regeneración"
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="refresh" size="sm" />
@@ -393,251 +506,90 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <style>{`
-          @keyframes lpAiSummaryReveal {
-            from { opacity: 0; transform: translateY(14px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
         {loading ? (
-          <div
-            style={{
-              borderRadius: 24,
-              padding: "18px 20px",
-              background: "linear-gradient(180deg, #171c2c 0%, #101522 100%)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#cbd5e1",
-              fontSize: 13,
-              fontWeight: 850,
-            }}
-          >
-            Preparando resumen para {month}...
-          </div>
+          <div style={aiLoadingBox}>Preparando resumen para {month}...</div>
         ) : err ? (
-          <div
-            style={{
-              borderRadius: 20,
-              padding: "16px 18px",
-              background: "linear-gradient(180deg, #2a1515 0%, #1b1010 100%)",
-              border: "1px solid rgba(248,113,113,0.28)",
-              color: "#fecaca",
-              fontSize: 13,
-              fontWeight: 900,
-            }}
-          >
-            {err}
-          </div>
+          <div style={aiErrorBox}>{err}</div>
         ) : summary ? (
           <div
             style={{
               display: "grid",
               gap: 16,
-              padding: 18,
-              borderRadius: 28,
-              background:
-                "radial-gradient(circle at top left, rgba(249,115,22,0.14), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #0f1421 100%)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 24px 60px rgba(15,23,42,0.28)",
               animation: "lpAiSummaryReveal 420ms ease",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 12,
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 950,
-                    letterSpacing: 1,
-                    textTransform: "uppercase",
-                    color: "#fb923c",
-                  }}
-                >
-                  Resumen inteligente del periodo
-                </div>
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: "#94a3b8",
-                  }}
-                >
-                  {summary.title || "Resumen ejecutivo"}
-                </div>
+            <div className="ai-summary-print-title" style={printTitleBox}>
+              <div style={printTitleMain}>Resumen inteligente del periodo</div>
+              <div style={printTitleSub}>
+                {summary.title || "Resumen ejecutivo"} · {month}
               </div>
+            </div>
 
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderRadius: 999,
-                    background: summary.title && String(summary.title).toLowerCase().includes("fallback")
-                      ? "rgba(245,158,11,0.14)"
-                      : "rgba(34,197,94,0.14)",
-                    border: summary.title && String(summary.title).toLowerCase().includes("fallback")
-                      ? "1px solid rgba(245,158,11,0.28)"
-                      : "1px solid rgba(34,197,94,0.28)",
-                    color: summary.title && String(summary.title).toLowerCase().includes("fallback")
-                      ? "#fde68a"
-                      : "#bbf7d0",
-                    fontSize: 12,
-                    fontWeight: 950,
-                  }}
-                >
-                  {summary.title && String(summary.title).toLowerCase().includes("fallback")
-                    ? "Fallback seguro"
-                    : "IA activa"}
-                </span>
-                {summary?.model ? (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "8px 12px",
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      color: "#e2e8f0",
-                      fontSize: 12,
-                      fontWeight: 900,
-                    }}
-                  >
-                    {summary.model}
+            <div className="ai-summary-screen-hero" style={heroBox}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div style={heroKicker}>Resumen inteligente del periodo</div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, color: "#94a3b8" }}>
+                    {summary.title || "Resumen ejecutivo"}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <span className="ai-summary-screen-chip" style={heroChip(isFallback)}>
+                    {isFallback ? "Fallback seguro" : "IA activa"}
                   </span>
-                ) : null}
+
+                  {model ? (
+                    <span className="ai-summary-screen-chip" style={heroModelChip}>
+                      {model}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              <div style={heroInner}>
+                <div style={heroDiagnosisKicker}>Diagnóstico ejecutivo</div>
+                <div className="ai-summary-screen-title" style={heroTitle}>
+                  {summary.executiveSummary || "Sin diagnóstico disponible para este periodo."}
+                </div>
               </div>
             </div>
 
-            <div
-              style={{
-                borderRadius: 24,
-                padding: "24px 22px",
-                background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 950,
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
-                  color: "#fb923c",
-                }}
-              >
-                Diagnóstico ejecutivo
-              </div>
-              <div
-                style={{
-                  marginTop: 12,
-                  fontFamily: '"DM Serif Display", Georgia, serif',
-                  fontSize: "clamp(28px, 3.2vw, 42px)",
-                  lineHeight: 1.04,
-                  color: "#f8fafc",
-                  maxWidth: 980,
-                }}
-              >
-                {summary.executiveSummary || "Sin diagnóstico disponible para este periodo."}
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                gap: 14,
-              }}
-            >
-              {Array.isArray(summary.highlights) && summary.highlights.length > 0 ? (
-                <div
-                  style={{
-                    borderRadius: 24,
-                    padding: 18,
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 950,
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                      color: "#fb923c",
-                    }}
-                  >
+            <div className="ai-summary-grid" style={screenGrid}>
+              {highlights.length > 0 ? (
+                <div className="ai-summary-card" style={sectionCard}>
+                  <div className="ai-summary-section-title" style={sectionTitle}>
                     Hallazgos clave
                   </div>
+
                   <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                    {summary.highlights.slice(0, 4).map((h, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          borderRadius: 18,
-                          padding: "14px 16px",
-                          background: "rgba(12,18,32,0.58)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          color: "#f8fafc",
-                          fontSize: 14,
-                          fontWeight: 850,
-                          lineHeight: 1.45,
-                        }}
-                      >
-                        {h}
+                    {highlights.map((item, i) => (
+                      <div className="ai-summary-dark-card" key={i} style={darkItemCard}>
+                        {item}
                       </div>
                     ))}
                   </div>
                 </div>
               ) : null}
 
-              {Array.isArray(summary.recommendations) && summary.recommendations.length > 0 ? (
-                <div
-                  style={{
-                    borderRadius: 24,
-                    padding: 18,
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 950,
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                      color: "#fb923c",
-                    }}
-                  >
+              {recommendations.length > 0 ? (
+                <div className="ai-summary-card" style={sectionCard}>
+                  <div className="ai-summary-section-title" style={sectionTitle}>
                     Acciones recomendadas
                   </div>
+
                   <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                    {summary.recommendations.slice(0, 4).map((x, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          borderRadius: 18,
-                          padding: "14px 16px",
-                          background: "rgba(12,18,32,0.58)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          color: "#f8fafc",
-                          fontSize: 14,
-                          fontWeight: 850,
-                          lineHeight: 1.45,
-                        }}
-                      >
-                        {x}
+                    {recommendations.map((item, i) => (
+                      <div className="ai-summary-dark-card" key={i} style={darkItemCard}>
+                        {item}
                       </div>
                     ))}
                   </div>
@@ -645,46 +597,17 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
               ) : null}
             </div>
 
-            {Array.isArray(summary.risks) && summary.risks.length > 0 ? (
-              <div
-                style={{
-                  borderRadius: 24,
-                  padding: 18,
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 950,
-                    letterSpacing: 1,
-                    textTransform: "uppercase",
-                    color: "#fb923c",
-                  }}
-                >
+            {risks.length > 0 ? (
+              <div className="ai-summary-card" style={sectionCard}>
+                <div className="ai-summary-section-title" style={sectionTitle}>
                   Riesgos detectados
                 </div>
+
                 <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-                  {summary.risks.slice(0, 4).map((r, i) => {
-                    const tone = riskTone(r.level);
+                  {risks.map((r, i) => {
                     const lvl = String(r.level || "LOW").toUpperCase();
                     return (
-                      <div
-                        key={i}
-                        style={{
-                          borderRadius: 20,
-                          padding: "16px 18px",
-                          background: "rgba(12,18,32,0.62)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          boxShadow:
-                            tone === "danger"
-                              ? "inset 0 4px 0 rgba(239,68,68,0.85)"
-                              : tone === "warn"
-                              ? "inset 0 4px 0 rgba(245,158,11,0.85)"
-                              : "inset 0 4px 0 rgba(59,130,246,0.75)",
-                        }}
-                      >
+                      <div key={i} className="ai-summary-risk-card" style={riskCard(lvl)}>
                         <div
                           style={{
                             display: "flex",
@@ -694,29 +617,38 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
                             flexWrap: "wrap",
                           }}
                         >
-                          <div
-                            style={{
-                              color: "#f8fafc",
-                              fontSize: 16,
-                              fontWeight: 950,
-                              lineHeight: 1.3,
-                              maxWidth: 980,
-                            }}
-                          >
-                            {r.message || "Sin descripción disponible."}
+                          <div style={{ maxWidth: 980 }}>
+                            <div
+                              style={{
+                                color: "#f8fafc",
+                                fontSize: 16,
+                                fontWeight: 950,
+                                lineHeight: 1.3,
+                              }}
+                            >
+                              {r.message || "Sin descripción disponible."}
+                            </div>
+
+                            <div
+                              className="ai-summary-subtle"
+                              style={{
+                                marginTop: 10,
+                                color: "#cbd5e1",
+                                fontSize: 13,
+                                fontWeight: 800,
+                                lineHeight: 1.45,
+                              }}
+                            >
+                              Acción sugerida:{" "}
+                              <b style={{ color: "#f8fafc" }}>
+                                {r.action || "Sin acción sugerida."}
+                              </b>
+                            </div>
                           </div>
-                          <Chip tone={tone}>{lvl}</Chip>
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 10,
-                            color: "#cbd5e1",
-                            fontSize: 13,
-                            fontWeight: 800,
-                            lineHeight: 1.45,
-                          }}
-                        >
-                          Acción sugerida: <b style={{ color: "#f8fafc" }}>{r.action || "Sin acción sugerida."}</b>
+
+                          <span className="risk-level-badge" style={riskBadge(lvl)}>
+                            {lvl}
+                          </span>
                         </div>
                       </div>
                     );
@@ -726,17 +658,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh }
             ) : null}
           </div>
         ) : (
-          <div
-            style={{
-              borderRadius: 24,
-              padding: "18px 20px",
-              background: "linear-gradient(180deg, #171c2c 0%, #101522 100%)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#cbd5e1",
-              fontSize: 13,
-              fontWeight: 850,
-            }}
-          >
+          <div style={aiLoadingBox}>
             No hay resumen todavía. Presiona <b style={{ color: "#fff" }}>Generar</b>.
           </div>
         )}
@@ -1290,19 +1212,19 @@ const anomaliesTop =
     if (Number(predAlerts?.riskPendingCount || 0) > 0) {
       rows.push({
         title: "Riesgo de atraso",
-        msg: `${Number(predAlerts.riskPendingCount || 0)} actividades con seÃ±al de atraso en el mes.`,
+        msg: `${Number(predAlerts.riskPendingCount || 0)} actividades con señal de atraso en el mes.`,
         tone: Number(predAlerts?.riskOverdueCount || 0) > 0 ? "red" : "amber",
         action:
           Number(predAlerts?.riskOverdueCount || 0) > 0
-            ? `${Number(predAlerts.riskOverdueCount || 0)} ya estÃ¡n vencidas.`
+            ? `${Number(predAlerts.riskOverdueCount || 0)} ya están vencidas.`
             : "Revisar carga y anticipar reasignaciones.",
       });
     }
 
     if (Number(predAlerts?.criticalUnassignedCount || 0) > 0) {
       rows.push({
-        title: "CrÃ­ticas sin tÃ©cnico",
-        msg: `${Number(predAlerts.criticalUnassignedCount || 0)} actividades crÃ­ticas vencidas siguen sin asignaciÃ³n.`,
+        title: "Crí­ticas sin técnico",
+        msg: `${Number(predAlerts.criticalUnassignedCount || 0)} actividades crí­ticas vencidas siguen sin asignación.`,
         tone: "red",
         action: "Asignar responsable inmediato y bloquear rezago.",
       });
@@ -1311,9 +1233,9 @@ const anomaliesTop =
     if (Number(predAlerts?.repeatedFailuresCount || 0) > 0) {
       rows.push({
         title: "Reincidencia",
-        msg: `${Number(predAlerts.repeatedFailuresCount || 0)} equipos muestran patrÃ³n repetido de fallas o malas condiciones.`,
+        msg: `${Number(predAlerts.repeatedFailuresCount || 0)} equipos muestran patrón repetido de fallas o malas condiciones.`,
         tone: "amber",
-        action: "Atacar causa raÃ­z y revisar frecuencia/condiciÃ³n operativa.",
+        action: "Atacar causa raí­z y revisar frecuencia/condición operativa.",
       });
     }
 
@@ -1323,19 +1245,19 @@ const anomaliesTop =
         title: "Days-to-empty",
         msg: `${x?.lubricantName || "Lubricante"} con riesgo de quedarse sin stock (~${Math.round(
           Number(x?.daysToEmpty || 0)
-        )} dÃ­as).`,
+        )} dí­as).`,
         tone: String(x?.risk || "").toUpperCase() === "HIGH" ? "red" : "amber",
-        action: x?.underMin ? "Ya estÃ¡ bajo mÃ­nimo. Reabastecer o transferir stock." : "Programar compra/traspaso inmediato.",
+        action: x?.underMin ? "Ya está bajo mí­nimo. Reabastecer o transferir stock." : "Programar compra/traspaso inmediato.",
       });
     }
 
     if (anomaliesTop.length > 0) {
       const x = anomaliesTop[0];
       rows.push({
-        title: "AnomalÃ­a de consumo",
-        msg: `${x?.equipmentName || "Equipo"} con consumo anÃ³malo (${String(x?.risk || "MED").toUpperCase()}).`,
+        title: "Anomalí­a de consumo",
+        msg: `${x?.equipmentName || "Equipo"} con consumo anómalo (${String(x?.risk || "MED").toUpperCase()}).`,
         tone: String(x?.risk || "").toUpperCase() === "HIGH" ? "red" : "amber",
-        action: "Revisar fugas, puntos, frecuencia y dosificaciÃ³n.",
+        action: "Revisar fugas, puntos, frecuencia y dosificación.",
       });
     }
 
@@ -1356,8 +1278,8 @@ const anomaliesTop =
       const execEl = executiveRef.current;
       const annexEl = annexRef.current;
 
-      if (!execEl) throw new Error("No se encontrÃ³ secciÃ³n ejecutiva.");
-      if (!annexEl) throw new Error("No se encontrÃ³ secciÃ³n de anexos.");
+      if (!execEl) throw new Error("No se encontra sección ejecutiva.");
+      if (!annexEl) throw new Error("No se encontra sección de anexos.");
 
       const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
 
@@ -1404,8 +1326,8 @@ const anomaliesTop =
               }}
             >
               {user?.name ? `Generado para: ${user.name}` : ""}
-{currentPlant?.name ? ` Â· Planta: ${currentPlant.name}` : ""}
- Â· {monthLabel(month)} Â· Ãšltima actualizaciÃ³n: {fmtDateTimeLocal(summary?.updatedAt)}
+{currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
+ Â· {monthLabel(month)} · última actualización: {fmtDateTimeLocal(summary?.updatedAt)}
             </div>
           </div>
 
@@ -1446,7 +1368,7 @@ const anomaliesTop =
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="refresh" size="sm" />
-                {loading ? "Actualizandoâ€¦" : "Actualizar"}
+                {loading ? "Actualizando" : "Actualizar"}
               </span>
             </button>
 
@@ -1468,7 +1390,7 @@ const anomaliesTop =
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="export" size="sm" />
-                {exporting ? "Exportandoâ€¦" : "Exportar PDF"}
+                {exporting ? "Exportando" : "Exportar PDF"}
               </span>
             </button>
 
@@ -1484,7 +1406,7 @@ const anomaliesTop =
               type="button"
               title="Ir a resumen ejecutivo"
             >
-              Ejecutivo â†’
+              Ejecutivo 
             </button>
 
             <button
@@ -1499,7 +1421,7 @@ const anomaliesTop =
               type="button"
               title="Ir a anexos"
             >
-              Anexos â†’
+              Anexos 
             </button>
 
             <button
@@ -1572,7 +1494,7 @@ const anomaliesTop =
                 letterSpacing: 0.4,
               }}
             >
-              Resumen ejecutivo (1 pÃ¡gina)
+              Resumen ejecutivo (1 página)
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Chip tone="gray">{monthLabel(month)}</Chip>
@@ -1625,7 +1547,7 @@ const anomaliesTop =
             <KPI label="Pendientes" value={kpis.pending} hint="Programadas futuras (mes)" tone="dark" />
             <KPI label="Atrasadas" value={kpis.overdue} hint="Pendientes con fecha vencida" tone="red" />
             <KPI
-              label="CondiciÃ³n abierta"
+              label="Condición abierta"
               value={kpis.conditionOpen + kpis.conditionInProgress}
               hint="OPEN + IN_PROGRESS"
               tone="red"
@@ -1642,7 +1564,7 @@ const anomaliesTop =
             }}
           >
             <ChartBox
-              title="DistribuciÃ³n de actividades"
+              title="Distribución de actividades"
               subtitle="Completadas vs pendientes vs atrasadas"
               right={<Chip tone="gray">Total: {kpis.total}</Chip>}
             >
@@ -1679,7 +1601,7 @@ const anomaliesTop =
             <ChartBox
               title="Backlog del mes"
               subtitle="Pendientes vs atrasadas"
-              right={<Chip tone={kpis.overdue > 0 ? "red" : "green"}>{kpis.overdue > 0 ? "AtenciÃ³n" : "OK"}</Chip>}
+              right={<Chip tone={kpis.overdue > 0 ? "red" : "green"}>{kpis.overdue > 0 ? "Atención" : "OK"}</Chip>}
             >
               <div style={{ width: "100%", height: "100%", minWidth: 0 }}>
                 <StableChart height={260}>
@@ -1735,12 +1657,12 @@ const anomaliesTop =
   !canSeePredictive
     ? "Desactivado en ajustes"
     : predLoading
-    ? "Calculandoâ€¦"
+    ? "Calculandose"
     : predError
     ? "No disponible"
     : predTotal
     ? `Detectados: ${predTotal}`
-    : "Sin seÃ±ales relevantes"
+    : "Sin señales relevantes"
 }
              right={
   canSeePredictive ? (
@@ -1812,7 +1734,7 @@ const anomaliesTop =
                             color: "#0f172a",
                           }}
                         >
-                          AcciÃ³n:{" "}
+                          Acción:{" "}
                           <span style={{ fontWeight: 850, color: "#334155" }}>{r.action}</span>
                         </div>
                       </div>
@@ -1841,8 +1763,8 @@ const anomaliesTop =
 
           <div style={{ marginTop: 12 }}>
             <ChartBox
-              title="Tendencia (Ãºltimos 6 meses)"
-              subtitle={trendLoading ? "Cargandoâ€¦" : trendErr ? "No disponible" : "Cumplimiento mensual"}
+              title="Tendencia (útimos 6 meses)"
+              subtitle={trendLoading ? "Cargando" : trendErr ? "No disponible" : "Cumplimiento mensual"}
               right={trendLoading ? <Chip tone="gray">â€¦</Chip> : <Chip tone="gray">6 meses</Chip>}
             >
               {trendErr ? (
@@ -1977,7 +1899,7 @@ const anomaliesTop =
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                           <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                            {x?.title || "AcciÃ³n prioritaria"}
+                            {x?.title || "Acción prioritaria"}
                           </div>
                           <Chip tone={riskTone(x?.severity)}>{x?.priorityLabel || pqSeverityLabel(x?.severity)}</Chip>
                         </div>
@@ -2027,7 +1949,7 @@ const anomaliesTop =
               background: "rgba(255,255,255,0.65)",
             }}
           >
-            <div style={{ fontWeight: 1000, color: "#0f172a" }}>ExportaciÃ³n</div>
+            <div style={{ fontWeight: 1000, color: "#0f172a" }}>Exportación</div>
             <div
               style={{
                 marginTop: 6,
@@ -2036,8 +1958,6 @@ const anomaliesTop =
                 color: "#64748b",
               }}
             >
-              Este PDF se genera con captura visual (HTML â†’ Canvas â†’ PDF). Si luego quieres PDF
-              â€œnativoâ€ con tablas perfectas, lo armamos con backend.
             </div>
           </div>
         </div>
@@ -2045,5 +1965,199 @@ const anomaliesTop =
     </MainLayout>
   );
 }
+
+const aiSummaryRoot = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderRadius: 16,
+  padding: 12,
+  background: "rgba(248,250,252,0.9)",
+  minWidth: 0,
+};
+
+const aiLoadingBox = {
+  borderRadius: 24,
+  padding: "18px 20px",
+  background: "linear-gradient(180deg, #171c2c 0%, #101522 100%)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  color: "#cbd5e1",
+  fontSize: 13,
+  fontWeight: 850,
+};
+
+const aiErrorBox = {
+  borderRadius: 20,
+  padding: "16px 18px",
+  background: "linear-gradient(180deg, #2a1515 0%, #1b1010 100%)",
+  border: "1px solid rgba(248,113,113,0.28)",
+  color: "#fecaca",
+  fontSize: 13,
+  fontWeight: 900,
+};
+
+const printTitleBox = {
+  display: "none",
+  padding: "0 0 4px 0",
+};
+
+const printTitleMain = {
+  fontSize: 18,
+  fontWeight: 1000,
+  color: "#0f172a",
+};
+
+const printTitleSub = {
+  marginTop: 4,
+  fontSize: 12,
+  fontWeight: 700,
+  color: "#475569",
+};
+
+const heroBox = {
+  display: "grid",
+  gap: 16,
+  padding: 18,
+  borderRadius: 28,
+  background:
+    "radial-gradient(circle at top left, rgba(249,115,22,0.14), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #0f1421 100%)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  boxShadow: "0 24px 60px rgba(15,23,42,0.28)",
+};
+
+const heroKicker = {
+  fontSize: 12,
+  fontWeight: 950,
+  letterSpacing: 1,
+  textTransform: "uppercase",
+  color: "#fb923c",
+};
+
+const heroChip = (isFallback) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 12px",
+  borderRadius: 999,
+  background: isFallback ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)",
+  border: isFallback
+    ? "1px solid rgba(245,158,11,0.28)"
+    : "1px solid rgba(34,197,94,0.28)",
+  color: isFallback ? "#fde68a" : "#bbf7d0",
+  fontSize: 12,
+  fontWeight: 950,
+});
+
+const heroModelChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 12px",
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  color: "#e2e8f0",
+  fontSize: 12,
+  fontWeight: 900,
+};
+
+const heroInner = {
+  borderRadius: 24,
+  padding: "24px 22px",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+  border: "1px solid rgba(255,255,255,0.08)",
+};
+
+const heroDiagnosisKicker = {
+  fontSize: 12,
+  fontWeight: 950,
+  letterSpacing: 1,
+  textTransform: "uppercase",
+  color: "#fb923c",
+};
+
+const heroTitle = {
+  marginTop: 12,
+  fontFamily: '"DM Serif Display", Georgia, serif',
+  fontSize: "clamp(28px, 3.2vw, 42px)",
+  lineHeight: 1.04,
+  color: "#f8fafc",
+  maxWidth: 980,
+};
+
+const screenGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+  gap: 14,
+};
+
+const sectionCard = {
+  borderRadius: 24,
+  padding: 18,
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+  border: "1px solid rgba(255,255,255,0.08)",
+};
+
+const sectionTitle = {
+  fontSize: 12,
+  fontWeight: 950,
+  letterSpacing: 1,
+  textTransform: "uppercase",
+  color: "#fb923c",
+};
+
+const darkItemCard = {
+  borderRadius: 18,
+  padding: "14px 16px",
+  background: "rgba(12,18,32,0.58)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  color: "#f8fafc",
+  fontSize: 14,
+  fontWeight: 850,
+  lineHeight: 1.45,
+};
+
+const riskCard = (lvl) => {
+  const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
+  const isMedium = lvl === "MEDIUM";
+
+  return {
+    borderRadius: 20,
+    padding: "16px 18px",
+    background: "rgba(12,18,32,0.62)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    boxShadow: isHigh
+      ? "inset 0 4px 0 rgba(239,68,68,0.85)"
+      : isMedium
+      ? "inset 0 4px 0 rgba(245,158,11,0.85)"
+      : "inset 0 4px 0 rgba(59,130,246,0.75)",
+  };
+};
+
+const riskBadge = (lvl) => {
+  const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
+  const isMedium = lvl === "MEDIUM";
+
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "8px 12px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 950,
+    background: isHigh
+      ? "rgba(239,68,68,0.14)"
+      : isMedium
+      ? "rgba(245,158,11,0.14)"
+      : "rgba(59,130,246,0.14)",
+    border: isHigh
+      ? "1px solid rgba(239,68,68,0.28)"
+      : isMedium
+      ? "1px solid rgba(245,158,11,0.28)"
+      : "1px solid rgba(59,130,246,0.28)",
+    color: isHigh ? "#fecaca" : isMedium ? "#fde68a" : "#bfdbfe",
+  };
+};
 
 

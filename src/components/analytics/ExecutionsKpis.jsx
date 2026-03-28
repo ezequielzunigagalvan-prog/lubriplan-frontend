@@ -79,7 +79,7 @@ export default function ExecutionsKpis({ days = 180, techId }) {
         key: "overdue",
         label: "Vencidas",
         value: safe.overdue ?? 0,
-        hint: "Requieren atenciÃ³n",
+        hint: "Requieren atención",
         tone: "danger",
         icon: "alert",
       },
