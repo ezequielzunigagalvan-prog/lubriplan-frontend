@@ -90,7 +90,12 @@ export function AuthProvider({ children }) {
       window.dispatchEvent(new Event("lubriplan:logout"));
 
       const nextUrl = reason === "inactive" ? "/login?reason=expired" : "/login";
-      window.location.href = nextUrl;
+      try {
+        window.history.replaceState({}, "", nextUrl);
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      } catch {
+        window.location.replace(nextUrl);
+      }
     },
     [clearSessionTimers, clearClientSession]
   );
@@ -489,3 +494,4 @@ const btnGhostStyle = {
   fontWeight: 900,
   cursor: "pointer",
 };
+
