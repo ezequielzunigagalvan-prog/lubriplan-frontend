@@ -1,4 +1,4 @@
-// src/realtime/sseClient.js
+﻿// src/realtime/sseClient.js
 import { API_URL } from "../services/api";
 import { getToken, clearAuth } from "../auth/auth.js";
 
