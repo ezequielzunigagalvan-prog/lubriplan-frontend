@@ -781,7 +781,9 @@ const sidebar = {
   display: "flex",
   flexDirection: "column",
   gap: 12,
-  overflow: "auto",
+  overflowX: "hidden",
+  overflowY: "auto",
+  WebkitOverflowScrolling: "touch",
   zIndex: 200,
 };
 
@@ -800,7 +802,10 @@ const sidebarMobile = {
   bottom: 0,
   width: 280,
   maxWidth: "85vw",
-  height: "100vh",
+  height: "100dvh",
+  maxHeight: "100dvh",
+  paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))",
+  overscrollBehavior: "contain",
   transform: "translateX(-100%)",
   transition: "transform 0.28s ease",
   boxShadow: "0 20px 50px rgba(2,6,23,0.25)",
@@ -1246,6 +1251,7 @@ const seeAll = {
   fontWeight: 950,
   color: "#0f172a",
 };
+
 
 
 
