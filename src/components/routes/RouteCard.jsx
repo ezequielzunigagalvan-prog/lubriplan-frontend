@@ -113,7 +113,7 @@ function buildWeeklyDaysLabel(route) {
   return weeklyDays
     .map((d) => map[Number(d)])
     .filter(Boolean)
-    .join(" Â· ");
+    .join(" · ");
 }
 
 export default function RouteCard({

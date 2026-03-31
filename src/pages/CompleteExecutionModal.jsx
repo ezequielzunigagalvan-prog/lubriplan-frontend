@@ -483,7 +483,7 @@ setForm((prev) => ({
                   sub={
                     <>
                       {equipmentTag ? `TAG: ${equipmentTag}` : "Sin TAG"}
-                      {equipmentLocation ? ` Â· ${equipmentLocation}` : ""}
+                      {equipmentLocation ? ` · ${equipmentLocation}` : ""}
                     </>
                   }
                 />
@@ -494,7 +494,7 @@ setForm((prev) => ({
                   value={routeLubricantName}
                   sub={
                     routeLubricantCode
-                      ? `${routeLubricantCode}${lubricantType && lubricantType !== routeLubricantName ? ` Â· ${lubricantType}` : ""}`
+                      ? `${routeLubricantCode}${lubricantType && lubricantType !== routeLubricantName ? ` · ${lubricantType}` : ""}`
                       : lubricantType
                   }
                 />
@@ -670,7 +670,7 @@ setForm((prev) => ({
                           </option>
                           {lubricants.map((l) => (
                             <option key={l.id} value={l.id}>
-                              {l.name} {l.code ? `(${l.code})` : ""} Â· Stock:{" "}
+                              {l.name} {l.code ? `(${l.code})` : ""} · Stock:{" "}
                               {Number(l.stock ?? 0).toFixed(2)} {l.unit || "ml"}
                             </option>
                           ))}

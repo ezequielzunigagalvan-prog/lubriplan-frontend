@@ -220,8 +220,8 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
             {selectedEquipment ? (
               <div style={helperCard}>
                 <span style={helperCardLabel}>Equipo:</span> {selectedEquipment.name || "-"}
-                {selectedEquipment.code ? ` Â· ${selectedEquipment.code}` : ""}
-                {selectedEquipment.location ? ` Â· ${selectedEquipment.location}` : ""}
+                {selectedEquipment.code ? ` · ${selectedEquipment.code}` : ""}
+                {selectedEquipment.location ? `  · ${selectedEquipment.location}` : ""}
               </div>
             ) : null}
 
