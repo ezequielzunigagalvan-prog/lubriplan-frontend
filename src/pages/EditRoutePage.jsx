@@ -113,7 +113,10 @@ export default function EditRoutePage() {
             width: "100%",
             maxWidth: 640,
             background: "#fff",
-            padding: isMobile ? 16 : 24,
+            paddingTop: isMobile ? 16 : 24,
+            paddingRight: isMobile ? 16 : 24,
+            paddingBottom: isMobile ? 16 : 24,
+            paddingLeft: isMobile ? 16 : 24,
             borderRadius: 16,
             boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
             border: "1px solid #e5e7eb",
@@ -239,7 +242,10 @@ function FormField({ label, name, value, onChange, type = "text" }) {
 
 
 const pageShell = {
-  padding: typeof window !== "undefined" && window.innerWidth <= 820 ? 12 : 16,
+  paddingTop: typeof window !== "undefined" && window.innerWidth <= 820 ? 12 : 16,
+  paddingRight: typeof window !== "undefined" && window.innerWidth <= 820 ? 12 : 16,
+  paddingBottom: typeof window !== "undefined" && window.innerWidth <= 820 ? 12 : 16,
+  paddingLeft: typeof window !== "undefined" && window.innerWidth <= 820 ? 12 : 16,
   background: "linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%)",
   borderRadius: 16,
   border: "1px solid #e5e7eb",
@@ -257,4 +263,5 @@ const subtitle = {
   marginBottom: 24,
   fontWeight: 800,
 };
+
 

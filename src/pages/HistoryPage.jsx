@@ -119,6 +119,7 @@ export default function HistoryPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = usePageMobile();
 
   // AUTH / PERMISSIONS
   const { user } = useAuth();
@@ -1519,6 +1520,8 @@ const btnKpiGray = {
   boxShadow: "0 8px 18px rgba(2,6,23,0.18)",
   transition: "all 160ms ease",
 };
+
+
 
 
 
