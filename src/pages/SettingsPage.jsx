@@ -1,4 +1,4 @@
-// src/pages/SettingsPage.jsx
+﻿// src/pages/SettingsPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { getSettings, updateSettings } from "../services/settingsService";
@@ -193,6 +193,10 @@ export default function SettingsPage() {
   const [technicianOverloadEnabled, setTechnicianOverloadEnabled] = useState(true);
   const [predictiveAlertsEnabled, setPredictiveAlertsEnabled] = useState(true);
   const [aiSummaryEnabled, setAiSummaryEnabled] = useState(true);
+  const [criticalActivityEmailEnabled, setCriticalActivityEmailEnabled] = useState(true);
+  const [conditionReportEmailEnabled, setConditionReportEmailEnabled] = useState(true);
+  const [overdueSummaryEmailEnabled, setOverdueSummaryEmailEnabled] = useState(true);
+  const [monthlyReportEmailEnabled, setMonthlyReportEmailEnabled] = useState(true);
 
   // Avanzado
   const [overloadWindowDays, setOverloadWindowDays] = useState(7);
@@ -211,6 +215,10 @@ export default function SettingsPage() {
       technicianOverloadEnabled: Boolean(technicianOverloadEnabled),
       predictiveAlertsEnabled: Boolean(predictiveAlertsEnabled),
       aiSummaryEnabled: Boolean(aiSummaryEnabled),
+      criticalActivityEmailEnabled: Boolean(criticalActivityEmailEnabled),
+      conditionReportEmailEnabled: Boolean(conditionReportEmailEnabled),
+      overdueSummaryEmailEnabled: Boolean(overdueSummaryEmailEnabled),
+      monthlyReportEmailEnabled: Boolean(monthlyReportEmailEnabled),
       overloadWindowDays: toInt(overloadWindowDays, 1, 60),
       overloadOverdueLookbackDays: toInt(overloadOverdueLookbackDays, 1, 365),
       overloadCapacityPerDay: toInt(overloadCapacityPerDay, 1, 50),
@@ -225,6 +233,10 @@ export default function SettingsPage() {
       technicianOverloadEnabled: Boolean(original.technicianOverloadEnabled ?? true),
       predictiveAlertsEnabled: Boolean(original.predictiveAlertsEnabled ?? true),
       aiSummaryEnabled: Boolean(original.aiSummaryEnabled ?? true),
+      criticalActivityEmailEnabled: Boolean(original.criticalActivityEmailEnabled ?? true),
+      conditionReportEmailEnabled: Boolean(original.conditionReportEmailEnabled ?? true),
+      overdueSummaryEmailEnabled: Boolean(original.overdueSummaryEmailEnabled ?? true),
+      monthlyReportEmailEnabled: Boolean(original.monthlyReportEmailEnabled ?? true),
       overloadWindowDays: toInt(original.overloadWindowDays ?? 7, 1, 60),
       overloadOverdueLookbackDays: toInt(original.overloadOverdueLookbackDays ?? 30, 1, 365),
       overloadCapacityPerDay: toInt(original.overloadCapacityPerDay ?? 6, 1, 50),
@@ -241,6 +253,10 @@ export default function SettingsPage() {
     technicianOverloadEnabled,
     predictiveAlertsEnabled,
     aiSummaryEnabled,
+    criticalActivityEmailEnabled,
+    conditionReportEmailEnabled,
+    overdueSummaryEmailEnabled,
+    monthlyReportEmailEnabled,
     overloadWindowDays,
     overloadOverdueLookbackDays,
     overloadCapacityPerDay,
@@ -257,10 +273,14 @@ export default function SettingsPage() {
     setPreventNegativeStock(Boolean(ss.preventNegativeStock ?? true));
     setLowStockWarningEnabled(Boolean(ss.lowStockWarningEnabled ?? true));
 
-    // Si aún no existen en backend, por defecto quedan activados
+    // Si aÃºn no existen en backend, por defecto quedan activados
     setTechnicianOverloadEnabled(Boolean(ss.technicianOverloadEnabled ?? true));
     setPredictiveAlertsEnabled(Boolean(ss.predictiveAlertsEnabled ?? true));
     setAiSummaryEnabled(Boolean(ss.aiSummaryEnabled ?? true));
+    setCriticalActivityEmailEnabled(Boolean(ss.criticalActivityEmailEnabled ?? true));
+    setConditionReportEmailEnabled(Boolean(ss.conditionReportEmailEnabled ?? true));
+    setOverdueSummaryEmailEnabled(Boolean(ss.overdueSummaryEmailEnabled ?? true));
+    setMonthlyReportEmailEnabled(Boolean(ss.monthlyReportEmailEnabled ?? true));
 
     setOverloadWindowDays(toInt(ss.overloadWindowDays ?? 7, 1, 60));
     setOverloadOverdueLookbackDays(
@@ -312,7 +332,7 @@ export default function SettingsPage() {
 
       if (warn >= crit) {
         setSaving(false);
-        setError("El umbral AVISO debe ser menor que CRÍTICO.");
+        setError("El umbral AVISO debe ser menor que CRÃTICO.");
         return;
       }
 
@@ -325,6 +345,10 @@ export default function SettingsPage() {
         technicianOverloadEnabled: Boolean(technicianOverloadEnabled),
         predictiveAlertsEnabled: Boolean(predictiveAlertsEnabled),
         aiSummaryEnabled: Boolean(aiSummaryEnabled),
+        criticalActivityEmailEnabled: Boolean(criticalActivityEmailEnabled),
+        conditionReportEmailEnabled: Boolean(conditionReportEmailEnabled),
+        overdueSummaryEmailEnabled: Boolean(overdueSummaryEmailEnabled),
+        monthlyReportEmailEnabled: Boolean(monthlyReportEmailEnabled),
 
         // Avanzado
         overloadWindowDays: toInt(overloadWindowDays, 1, 60),
@@ -353,10 +377,10 @@ export default function SettingsPage() {
             <div style={eyebrow}>AJUSTES</div>
             <h1 style={title}>Ajustes</h1>
             <div style={subtitle}>
-              Configuración de la planta{" "}
+              ConfiguraciÃ³n de la planta{" "}
               {currentPlant?.name ? <b>{currentPlant.name}</b> : "actual"}.
               <br />
-              Mantén la operación simple, clara y controlada.
+              MantÃ©n la operaciÃ³n simple, clara y controlada.
             </div>
           </div>
 
@@ -383,7 +407,7 @@ export default function SettingsPage() {
 
           <MiniBadge tone={isAdmin ? "green" : "amber"}>
             <Icon name="user" />
-            {isAdmin ? "Modo edición habilitado" : "Solo lectura"}
+            {isAdmin ? "Modo ediciÃ³n habilitado" : "Solo lectura"}
           </MiniBadge>
 
           <MiniBadge tone="gray">
@@ -393,7 +417,7 @@ export default function SettingsPage() {
         </div>
 
         {loading ? (
-          <div style={loadingBox}>Cargando ajustes…</div>
+          <div style={loadingBox}>Cargando ajustesâ€¦</div>
         ) : (
           <>
             {error ? <div style={errorBox}>{error}</div> : null}
@@ -402,7 +426,7 @@ export default function SettingsPage() {
             <div style={grid}>
               <div style={gridCol}>
                 <Card
-                  title="Ejecución"
+                  title="EjecuciÃ³n"
                   subtitle="Reglas al momento de completar actividades."
                   icon="check"
                 >
@@ -421,7 +445,7 @@ export default function SettingsPage() {
 
                 <Card
                   title="Inventario"
-                  subtitle="Control básico de stock para operación segura."
+                  subtitle="Control bÃ¡sico de stock para operaciÃ³n segura."
                   icon="drop"
                 >
                   <RowItem
@@ -438,7 +462,7 @@ export default function SettingsPage() {
 
                   <RowItem
                     title="Alertas de bajo stock"
-                    description="Activa avisos cuando un lubricante cae por debajo del mínimo."
+                    description="Activa avisos cuando un lubricante cae por debajo del mÃ­nimo."
                     right={
                       <Toggle
                         checked={lowStockWarningEnabled}
@@ -453,12 +477,12 @@ export default function SettingsPage() {
               <div style={gridCol}>
                 <Card
                   title="Alertas e inteligencia"
-                  subtitle="Activa solo lo que hoy sí aporta valor a LubriPlan."
+                  subtitle="Activa solo lo que hoy sÃ­ aporta valor a LubriPlan."
                   icon="alert"
                 >
                   <RowItem
-                    title="Sobrecarga de técnicos"
-                    description="Muestra señales cuando la carga operativa es alta."
+                    title="Sobrecarga de tÃ©cnicos"
+                    description="Muestra seÃ±ales cuando la carga operativa es alta."
                     right={
                       <Toggle
                         checked={technicianOverloadEnabled}
@@ -470,7 +494,7 @@ export default function SettingsPage() {
 
                   <RowItem
                     title="Alertas predictivas"
-                    description="Activa days-to-empty, reincidencia y consumo anómalo."
+                    description="Activa days-to-empty, reincidencia y consumo anÃ³malo."
                     right={
                       <Toggle
                         checked={predictiveAlertsEnabled}
@@ -482,7 +506,7 @@ export default function SettingsPage() {
 
                   <RowItem
                     title="Resumen inteligente IA"
-                    description="Permite generar resúmenes ejecutivos del dashboard y reporte mensual."
+                    description="Permite generar resÃºmenes ejecutivos del dashboard y reporte mensual."
                     right={
                       <Toggle
                         checked={aiSummaryEnabled}
@@ -494,8 +518,62 @@ export default function SettingsPage() {
                 </Card>
 
                 <Card
-                  title="Configuración avanzada"
-                  subtitle="Solo para ADMIN. Ajusta la lógica fina de sobrecarga."
+                  title="Correos automáticos"
+                  subtitle="Controla qué avisos y reportes automáticos se envían por correo."
+                  icon="alert"
+                >
+                  <RowItem
+                    title="Actividad con condición crítica"
+                    description="Envía correo cuando una actividad ejecutada se marca como crítica."
+                    right={
+                      <Toggle
+                        checked={criticalActivityEmailEnabled}
+                        onChange={setCriticalActivityEmailEnabled}
+                        disabled={!isAdmin || saving}
+                      />
+                    }
+                  />
+
+                  <RowItem
+                    title="Reporte de condición"
+                    description="Envía correo cuando se reporta una condición relevante del equipo."
+                    right={
+                      <Toggle
+                        checked={conditionReportEmailEnabled}
+                        onChange={setConditionReportEmailEnabled}
+                        disabled={!isAdmin || saving}
+                      />
+                    }
+                  />
+
+                  <RowItem
+                    title="Pendientes vencidas"
+                    description="Envía el resumen automático de actividades vencidas de la planta."
+                    right={
+                      <Toggle
+                        checked={overdueSummaryEmailEnabled}
+                        onChange={setOverdueSummaryEmailEnabled}
+                        disabled={!isAdmin || saving}
+                      />
+                    }
+                  />
+
+                  <RowItem
+                    title="Reporte mensual"
+                    description="Permite el envío automático del reporte ejecutivo mensual."
+                    right={
+                      <Toggle
+                        checked={monthlyReportEmailEnabled}
+                        onChange={setMonthlyReportEmailEnabled}
+                        disabled={!isAdmin || saving}
+                      />
+                    }
+                  />
+                </Card>
+
+                <Card
+                  title="ConfiguraciÃ³n avanzada"
+                  subtitle="Solo para ADMIN. Ajusta la lÃ³gica fina de sobrecarga."
                   icon="tool"
                   right={
                     <button
@@ -511,15 +589,15 @@ export default function SettingsPage() {
                   }
                 >
                   <div style={advancedNote}>
-                    Recomendado para la mayoría de plantas: dejar esta sección con valores por
+                    Recomendado para la mayorÃ­a de plantas: dejar esta secciÃ³n con valores por
                     defecto y trabajar solo con los switches superiores.
                   </div>
 
                   {showAdvanced ? (
                     <div style={advancedGrid}>
                       <Field
-                        label="Ventana (días)"
-                        hint="Días hacia adelante para estimar carga futura."
+                        label="Ventana (dÃ­as)"
+                        hint="DÃ­as hacia adelante para estimar carga futura."
                       >
                         <Input
                           value={overloadWindowDays}
@@ -534,8 +612,8 @@ export default function SettingsPage() {
                       </Field>
 
                       <Field
-                        label="Historial de vencidas (días)"
-                        hint="Cuántos días hacia atrás considerar actividades vencidas."
+                        label="Historial de vencidas (dÃ­as)"
+                        hint="CuÃ¡ntos dÃ­as hacia atrÃ¡s considerar actividades vencidas."
                       >
                         <Input
                           value={overloadOverdueLookbackDays}
@@ -552,8 +630,8 @@ export default function SettingsPage() {
                       </Field>
 
                       <Field
-                        label="Capacidad por día"
-                        hint="Máximo recomendado de actividades por técnico por día."
+                        label="Capacidad por dÃ­a"
+                        hint="MÃ¡ximo recomendado de actividades por tÃ©cnico por dÃ­a."
                       >
                         <Input
                           value={overloadCapacityPerDay}
@@ -580,7 +658,7 @@ export default function SettingsPage() {
                         />
                       </Field>
 
-                      <Field label="Umbral CRÍTICO" hint="Ej. 1.40">
+                      <Field label="Umbral CRÃTICO" hint="Ej. 1.40">
                         <Input
                           value={overloadCriticalRatio}
                           onChange={(e) =>
@@ -610,7 +688,7 @@ export default function SettingsPage() {
               <div style={stickyLeft}>
                 {hasChanges ? (
                   <span>
-                    <b style={{ color: "#f97316" }}>Cambios pendientes</b> · Guarda para aplicar en
+                    <b style={{ color: "#f97316" }}>Cambios pendientes</b> Â· Guarda para aplicar en
                     la planta actual.
                   </span>
                 ) : (
@@ -980,3 +1058,5 @@ const stickyLeft = {
   color: "#64748b",
   fontWeight: 800,
 };
+
+
