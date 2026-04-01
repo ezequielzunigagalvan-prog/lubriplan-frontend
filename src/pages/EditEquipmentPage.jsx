@@ -693,6 +693,44 @@ const grid2 = {
   gap: 12,
 };
 
+const compactHeaderRow = {
+  ...headerRow,
+  flexWrap: "wrap",
+  alignItems: "flex-start",
+};
+
+const compactHeaderRight = {
+  ...headerRight,
+  width: "100%",
+  justifyContent: "flex-start",
+};
+
+const compactLayoutGrid = {
+  ...layoutGrid,
+  gridTemplateColumns: "minmax(0, 1fr)",
+};
+
+const compactGrid2 = {
+  ...grid2,
+  gridTemplateColumns: "minmax(0, 1fr)",
+};
+
+const compactStickyActions = {
+  position: "sticky",
+  bottom: 0,
+  marginTop: 14,
+  paddingTop: 14,
+  paddingRight: 0,
+  paddingBottom: 0,
+  paddingLeft: 0,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.0), rgba(255,255,255,0.92) 40%, rgba(255,255,255,0.95))",
+  borderTop: "1px solid rgba(226,232,240,0.95)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  justifyContent: "stretch",
+  gap: 10,
+};
 const labelStyle = {
   display: "block",
   marginBottom: 6,
@@ -955,6 +993,8 @@ const btnPrimaryOrange = {
 };
 const blockedTitle = { fontWeight: 1000, fontSize: 16, color: "#0f172a" };
 const blockedSub = { marginTop: 6, color: "#64748b", fontWeight: 800, fontSize: 12 };
+
+
 
 
 

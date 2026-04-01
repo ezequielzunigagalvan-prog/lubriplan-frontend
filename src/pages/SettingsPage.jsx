@@ -332,7 +332,7 @@ export default function SettingsPage() {
 
       if (warn >= crit) {
         setSaving(false);
-        setError("El umbral AVISO debe ser menor que CRÃTICO.");
+        setError("El umbral AVISO debe ser menor que CRITICO.");
         return;
       }
 
@@ -377,10 +377,10 @@ export default function SettingsPage() {
             <div style={eyebrow}>AJUSTES</div>
             <h1 style={title}>Ajustes</h1>
             <div style={subtitle}>
-              ConfiguraciÃ³n de la planta{" "}
+              Configuración de la planta{" "}
               {currentPlant?.name ? <b>{currentPlant.name}</b> : "actual"}.
               <br />
-              MantÃ©n la operaciÃ³n simple, clara y controlada.
+              Mantén la operación simple, clara y controlada.
             </div>
           </div>
 
@@ -407,7 +407,7 @@ export default function SettingsPage() {
 
           <MiniBadge tone={isAdmin ? "green" : "amber"}>
             <Icon name="user" />
-            {isAdmin ? "Modo ediciÃ³n habilitado" : "Solo lectura"}
+            {isAdmin ? "Modo edición habilitado" : "Solo lectura"}
           </MiniBadge>
 
           <MiniBadge tone="gray">
@@ -417,7 +417,7 @@ export default function SettingsPage() {
         </div>
 
         {loading ? (
-          <div style={loadingBox}>Cargando ajustesâ€¦</div>
+          <div style={loadingBox}>Cargando ajustes</div>
         ) : (
           <>
             {error ? <div style={errorBox}>{error}</div> : null}
@@ -426,7 +426,7 @@ export default function SettingsPage() {
             <div style={grid}>
               <div style={gridCol}>
                 <Card
-                  title="EjecuciÃ³n"
+                  title="Ejecución"
                   subtitle="Reglas al momento de completar actividades."
                   icon="check"
                 >
@@ -445,7 +445,7 @@ export default function SettingsPage() {
 
                 <Card
                   title="Inventario"
-                  subtitle="Control bÃ¡sico de stock para operaciÃ³n segura."
+                  subtitle="Control básico de stock para operación segura."
                   icon="drop"
                 >
                   <RowItem
@@ -462,7 +462,7 @@ export default function SettingsPage() {
 
                   <RowItem
                     title="Alertas de bajo stock"
-                    description="Activa avisos cuando un lubricante cae por debajo del mÃ­nimo."
+                    description="Activa avisos cuando un lubricante cae por debajo del mí­nimo."
                     right={
                       <Toggle
                         checked={lowStockWarningEnabled}
@@ -477,12 +477,12 @@ export default function SettingsPage() {
               <div style={gridCol}>
                 <Card
                   title="Alertas e inteligencia"
-                  subtitle="Activa solo lo que hoy sÃ­ aporta valor a LubriPlan."
+                  subtitle="Activa solo lo que hoy sí­ aporta valor a LubriPlan."
                   icon="alert"
                 >
                   <RowItem
-                    title="Sobrecarga de tÃ©cnicos"
-                    description="Muestra seÃ±ales cuando la carga operativa es alta."
+                    title="Sobrecarga de técnicos"
+                    description="Muestra señales cuando la carga operativa es alta."
                     right={
                       <Toggle
                         checked={technicianOverloadEnabled}
@@ -494,7 +494,7 @@ export default function SettingsPage() {
 
                   <RowItem
                     title="Alertas predictivas"
-                    description="Activa days-to-empty, reincidencia y consumo anÃ³malo."
+                    description="Activa days-to-empty, reincidencia y consumo anómalo."
                     right={
                       <Toggle
                         checked={predictiveAlertsEnabled}
@@ -506,7 +506,7 @@ export default function SettingsPage() {
 
                   <RowItem
                     title="Resumen inteligente IA"
-                    description="Permite generar resÃºmenes ejecutivos del dashboard y reporte mensual."
+                    description="Permite generar resúmenes ejecutivos del dashboard y reporte mensual."
                     right={
                       <Toggle
                         checked={aiSummaryEnabled}
@@ -572,8 +572,8 @@ export default function SettingsPage() {
                 </Card>
 
                 <Card
-                  title="ConfiguraciÃ³n avanzada"
-                  subtitle="Solo para ADMIN. Ajusta la lÃ³gica fina de sobrecarga."
+                  title="Configuración avanzada"
+                  subtitle="Solo para ADMIN. Ajusta la lógica fina de sobrecarga."
                   icon="tool"
                   right={
                     <button
@@ -589,15 +589,15 @@ export default function SettingsPage() {
                   }
                 >
                   <div style={advancedNote}>
-                    Recomendado para la mayorÃ­a de plantas: dejar esta secciÃ³n con valores por
+                    Recomendado para la mayorí­a de plantas: dejar esta sección con valores por
                     defecto y trabajar solo con los switches superiores.
                   </div>
 
                   {showAdvanced ? (
                     <div style={advancedGrid}>
                       <Field
-                        label="Ventana (dÃ­as)"
-                        hint="DÃ­as hacia adelante para estimar carga futura."
+                        label="Ventana (dí­as)"
+                        hint="Dí­as hacia adelante para estimar carga futura."
                       >
                         <Input
                           value={overloadWindowDays}
@@ -612,8 +612,8 @@ export default function SettingsPage() {
                       </Field>
 
                       <Field
-                        label="Historial de vencidas (dÃ­as)"
-                        hint="CuÃ¡ntos dÃ­as hacia atrÃ¡s considerar actividades vencidas."
+                        label="Historial de vencidas (dí­as)"
+                        hint="Cuántos dí­as hacia atrás considerar actividades vencidas."
                       >
                         <Input
                           value={overloadOverdueLookbackDays}
@@ -630,8 +630,8 @@ export default function SettingsPage() {
                       </Field>
 
                       <Field
-                        label="Capacidad por dÃ­a"
-                        hint="MÃ¡ximo recomendado de actividades por tÃ©cnico por dÃ­a."
+                        label="Capacidad por dí­a"
+                        hint="Máximo recomendado de actividades por tÃ©cnico por dí­a."
                       >
                         <Input
                           value={overloadCapacityPerDay}
@@ -658,7 +658,7 @@ export default function SettingsPage() {
                         />
                       </Field>
 
-                      <Field label="Umbral CRÃTICO" hint="Ej. 1.40">
+                      <Field label="Umbral CRITICO" hint="Ej. 1.40">
                         <Input
                           value={overloadCriticalRatio}
                           onChange={(e) =>

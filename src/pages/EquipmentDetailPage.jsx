@@ -299,11 +299,11 @@ export default function EquipmentDetailPage() {
           </button>
         </div>
 
-        <div style={compactHeroCard}>
+        <div style={heroCard}>
           <div style={heroAccent} />
 
-          <div style={compactHeroHeader}>
-            <div style={compactHeroLeft}>
+          <div style={heroHeader}>
+            <div style={heroLeft}>
               <div style={heroIcon}>
                 <Settings size={24} strokeWidth={1.9} />
               </div>
@@ -359,11 +359,11 @@ export default function EquipmentDetailPage() {
           />
         </div>
 
-        <div style={compactMainGrid}>
-          <section style={compactPanel}>
+        <div style={mainGrid}>
+          <section style={panel}>
             <div style={sectionTitle}>Datos generales</div>
 
-            <div style={compactDetailsGrid}>
+            <div style={detailsGrid}>
               <DetailRow label="Nombre" value={equipmentName} />
               <DetailRow label="Código / TAG" value={equipmentCode} />
               <DetailRow label="Ubicación" value={equipmentLocation} />
@@ -380,7 +380,7 @@ export default function EquipmentDetailPage() {
             </div>
           </section>
 
-          <section style={compactPanel}>
+          <section style={panel}>
             <div style={sectionTitle}>Asignación de técnico</div>
 
             <div style={summaryMiniCard}>
@@ -418,7 +418,7 @@ export default function EquipmentDetailPage() {
                     </select>
                   </div>
 
-                  <div style={compactTwoCols}>
+                  <div style={twoCols}>
                     <div style={field}>
                       <label style={labelStyle}>Desde</label>
                       <input
@@ -469,8 +469,8 @@ export default function EquipmentDetailPage() {
           </section>
         </div>
 
-        <div style={compactBottomGrid}>
-          <section style={compactPanel}>
+        <div style={bottomGrid}>
+          <section style={panel}>
             <div style={sectionHeaderRow}>
               <div style={sectionTitle}>Rutas del equipo</div>
               {routes.length > 4 ? (
@@ -500,7 +500,7 @@ export default function EquipmentDetailPage() {
             )}
           </section>
 
-          <section style={compactPanel}>
+          <section style={panel}>
             <div style={sectionHeaderRow}>
               <div style={sectionTitle}>Condiciones reportadas</div>
               {conditionReports.length > 4 ? (
@@ -529,7 +529,7 @@ export default function EquipmentDetailPage() {
         </div>
 
         <div style={{ marginTop: 14 }}>
-          <section style={compactPanel}>
+          <section style={panel}>
             <div style={sectionHeaderRow}>
               <div style={sectionTitle}>Historial reciente de ejecución</div>
               {executions.length > 5 ? (
@@ -617,6 +617,59 @@ function DetailRow({ label, value }) {
 
 /* ===== STYLES ===== */
 
+const compactHeroCard = {
+  position: "relative",
+  overflow: "hidden",
+  background: "rgba(255,255,255,0.88)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderRadius: 18,
+  padding: 18,
+  boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
+};
+const compactHeroHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: 14,
+  marginTop: 4,
+};
+const compactHeroLeft = {
+  display: "flex",
+  gap: 14,
+  minWidth: 0,
+  flex: 1,
+};
+const compactMainGrid = {
+  marginTop: 14,
+  display: "grid",
+  gridTemplateColumns: "1.15fr 0.85fr",
+  gap: 14,
+};
+const compactBottomGrid = {
+  marginTop: 14,
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 14,
+};
+const compactPanel = {
+  background: "#fff",
+  borderRadius: 16,
+  padding: 16,
+  border: "1px solid #e5e7eb",
+  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
+};
+const compactDetailsGrid = {
+  marginTop: 14,
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: 12,
+};
+const compactTwoCols = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 12,
+  alignItems: "end",
+};
 const pageShell = {
   padding: 16,
   background: "linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%)",
@@ -1264,6 +1317,11 @@ const historyNotes = {
   fontSize: 13,
   lineHeight: 1.45,
 };
+
+
+
+
+
 
 
 

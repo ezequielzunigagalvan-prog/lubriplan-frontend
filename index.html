@@ -4,7 +4,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon-lubriplan.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      (function () {
+        var host = window.location.hostname;
+        var enableManifest =
+          host === "www.lubriplan.com" ||
+          host === "lubriplan.com" ||
+          host === "localhost" ||
+          host === "127.0.0.1";
+        if (!enableManifest) return;
+        var link = document.createElement("link");
+        link.rel = "manifest";
+        link.href = "/manifest.webmanifest";
+        document.head.appendChild(link);
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f97316" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -19,4 +33,3 @@
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-

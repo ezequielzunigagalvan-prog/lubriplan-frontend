@@ -180,7 +180,7 @@ export const isCriticality = (c) => {
     s === "CR?TICO" ||
     s === "MUY_CRITICO" ||
     s === "MUY CRITICO" ||
-    s === "MUY CR?TICO" ||
+    s === "MUY CRITICO" ||
     s === "VERY_CRITICAL"
   );
 };
@@ -828,7 +828,7 @@ useEffect(() => {
       list = list.filter((a) => {
         const c = String(a.condition || "").toUpperCase();
         const bad = c === "MALO" || c === "BAD";
-      const crit = c === "CRITICO" || c === "CR?TICO" || c === "CRITICAL";
+      const crit = c === "CRITICO" || c === "CRITICO" || c === "CRITICAL";
         return a.computedStatus === "Completada" && (bad || crit);
       });
     }

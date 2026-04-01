@@ -29,7 +29,7 @@ export default function TechniciansEfficiencyCard({
           <div style={{ minWidth: 0 }}>
             <div style={title}>Desempeño por técnico</div>
             <div style={sub}>
-              Ranking del mes · score (A tiempo 100% Â· Tarde 60% Â· Vencidas 20%){" "}
+              Ranking del mes · score (A tiempo 100% · Tarde 60% · Vencidas 20%){" "}
               <span style={monthPill}>
                 <Icon name="calendar" size="sm" /> {month || "Mes actual"}
               </span>

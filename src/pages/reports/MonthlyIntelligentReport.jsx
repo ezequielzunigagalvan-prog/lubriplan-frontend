@@ -794,7 +794,7 @@ function StableChart({ height = 260, children }) {
 ========================= */
 
 async function captureSectionToCanvas(el, { scale = 2 } = {}) {
-  if (!el) throw new Error("No se encontrÃ³ la secciÃ³n para exportar.");
+  if (!el) throw new Error("No se encontró la sección para exportar.");
   const canvas = await html2canvas(el, {
     scale,
     backgroundColor: "#ffffff",
@@ -1691,7 +1691,7 @@ const anomaliesTop =
             >
               {!canSeePredictive ? (
   <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-    Las alertas predictivas estÃ¡n desactivadas en Ajustes.
+    Las alertas predictivas están desactivadas en Ajustes.
   </div>
 ) : predError ? (
   <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>{predError}</div>

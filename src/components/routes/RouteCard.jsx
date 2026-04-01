@@ -7,18 +7,18 @@ import { Icon } from "../ui/lpIcons";
    COLOR MAP (solo texto)
 ========================= */
 const LUBE_TEXT = {
-  "Aceite hidrÃ¡ulico": { color: "#1d4ed8", softBg: "rgba(59,130,246,0.10)", border: "rgba(59,130,246,0.25)" },
+  "Aceite hidráulico": { color: "#1d4ed8", softBg: "rgba(59,130,246,0.10)", border: "rgba(59,130,246,0.25)" },
   "Aceite para engranes": { color: "#4338ca", softBg: "rgba(99,102,241,0.10)", border: "rgba(99,102,241,0.25)" },
   "Aceite para compresor": { color: "#0369a1", softBg: "rgba(14,165,233,0.10)", border: "rgba(14,165,233,0.25)" },
-  "Aceite de circulaciÃ³n": { color: "#0e7490", softBg: "rgba(6,182,212,0.10)", border: "rgba(6,182,212,0.25)" },
+  "Aceite de circulación": { color: "#0e7490", softBg: "rgba(6,182,212,0.10)", border: "rgba(6,182,212,0.25)" },
   "Aceite para cadenas": { color: "#0284c7", softBg: "rgba(56,189,248,0.10)", border: "rgba(56,189,248,0.25)" },
-  "Aceite para unidades neumÃ¡ticas": { color: "#047857", softBg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.25)" },
+  "Aceite para unidades neumáticas": { color: "#047857", softBg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.25)" },
 
   "Grasa EP": { color: "#b45309", softBg: "rgba(245,158,11,0.14)", border: "rgba(245,158,11,0.30)" },
   "Grasa alta temperatura": { color: "#b91c1c", softBg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.30)" },
   "Grasa grado alimenticio": { color: "#15803d", softBg: "rgba(34,197,94,0.12)", border: "rgba(34,197,94,0.30)" },
-  "Grasa multipropÃ³sito": { color: "#7e22ce", softBg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.30)" },
-  "Grasa para motores elÃ©ctricos": { color: "#0f766e", softBg: "rgba(20,184,166,0.12)", border: "rgba(20,184,166,0.30)" },
+  "Grasa multipropósito": { color: "#7e22ce", softBg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.30)" },
+  "Grasa para motores eléctricos": { color: "#0f766e", softBg: "rgba(20,184,166,0.12)", border: "rgba(20,184,166,0.30)" },
   "Grasa para altas velocidades": { color: "#be185d", softBg: "rgba(244,114,182,0.12)", border: "rgba(244,114,182,0.30)" },
 
   Otro: { color: "#334155", softBg: "rgba(148,163,184,0.14)", border: "rgba(148,163,184,0.30)" },

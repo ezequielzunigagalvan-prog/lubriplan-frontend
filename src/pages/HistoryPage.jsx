@@ -67,8 +67,8 @@ const conditionChip = (conditionRaw) => {
   if (c === "BUENO") return { bg: "#dcfce7", bd: "#bbf7d0", fg: "#166534", label: "Bueno", icon: "check" };
   if (c === "REGULAR") return { bg: "#e0e7ff", bd: "#c7d2fe", fg: "#3730a3", label: "Regular", icon: "dot" };
   if (c === "MALO") return { bg: "#fef3c7", bd: "#fde68a", fg: "#92400e", label: "Malo", icon: "warn" };
-  if (c === "CRITICO" || c === "CRÃTICO")
-    return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "CrÃ­tico", icon: "alert" };
+  if (c === "CRITICO" || c === "CRITICO")
+    return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Crí­tico", icon: "alert" };
   return { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: conditionRaw || "â€”", icon: "dot" };
 };
 
@@ -203,7 +203,7 @@ export default function HistoryPage() {
 
         // deep link bad condition
         const filtered = isBadCondition
-          ? scopedRaw.filter((x) => ["MALO", "CRITICO", "CRÃTICO"].includes(up(x?.condition)))
+          ? scopedRaw.filter((x) => ["MALO", "CRITICO", "CRITICO"].includes(up(x?.condition)))
           : scopedRaw;
 
         setItems(filtered);
@@ -318,7 +318,7 @@ export default function HistoryPage() {
     const t = { total: items.length, CRITICO: 0, MALO: 0, BUENO: 0 };
     for (const it of items) {
       const c = up(it?.condition);
-      if (c === "CRITICO" || c === "CRÃTICO") t.CRITICO += 1;
+      if (c === "CRITICO" || c === "CRITICO") t.CRITICO += 1;
       else if (c === "MALO") t.MALO += 1;
       else if (c === "BUENO") t.BUENO += 1;
     }
@@ -430,12 +430,12 @@ export default function HistoryPage() {
               <span style={miniOrange}>
                 <Icon name="warn" />
               </span>
-              CondiciÃ³n mala/crÃ­tica (Historial)
+              Condición mala/crí­tica (Historial)
             </div>
 
             <div style={warnBannerText}>
-              Son ejecuciones <b>COMPLETADAS</b> donde el tÃ©cnico reportÃ³ condiciÃ³n <b>MALO</b> o <b>CRÃTICO</b>. Revisa
-              observaciÃ³n y evidencia y genera acciÃ³n correctiva.
+              Son ejecuciones <b>COMPLETADAS</b> donde el técnico reporta condición <b>MALO</b> o <b>CRITICO</b>. Revisa
+              observación y evidencia y genera acción correctiva.
             </div>
           </div>
 
@@ -457,7 +457,7 @@ export default function HistoryPage() {
       {/* KPIs */}
       <div style={statsGrid}>
         <KpiCard title="Equipos" value={scopedTotals.total} icon="list" />
-        <KpiCard title="CrÃ­ticos" value={scopedTotals.CRITICO} icon="warn" />
+        <KpiCard title="Crí­ticos" value={scopedTotals.CRITICO} icon="warn" />
         <KpiCard title="Malos" value={scopedTotals.MALO} icon="alert" />
         <KpiCard title="Buenos" value={scopedTotals.BUENO} icon="check" />
       </div>
@@ -473,7 +473,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {meta ? `PÃ¡gina ${meta.page} de ${meta.pages} â€¢ ${meta.total} registros` : ""}
+            {meta ? `Página ${meta.page} de ${meta.pages} â€¢ ${meta.total} registros` : ""}
           </div>
         </div>
 
@@ -489,13 +489,13 @@ export default function HistoryPage() {
           </div>
 
           <div style={field}>
-            <label style={label}>CondiciÃ³n</label>
+            <label style={label}>Condición</label>
             <select value={condition} onChange={(e) => setCondition(e.target.value)} style={input}>
               <option value="ALL">Todas</option>
               <option value="BUENO">Bueno</option>
               <option value="REGULAR">Regular</option>
               <option value="MALO">Malo</option>
-              <option value="CRITICO">CrÃ­tico</option>
+              <option value="CRITICO">Crí­tico</option>
             </select>
           </div>
 
@@ -504,7 +504,7 @@ export default function HistoryPage() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Equipo, ruta, lubricante o tÃ©cnicoâ€¦"
+              placeholder="Equipo, ruta, lubricante o técnico"
               style={input}
             />
           </div>
@@ -529,7 +529,7 @@ export default function HistoryPage() {
 
         <div style={compactFiltersGrid2}>
           <div style={field}>
-            <label style={label}>Por pÃ¡gina</label>
+            <label style={label}>Por página</label>
             <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={input}>
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -595,7 +595,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {mvMeta ? `PÃ¡gina ${mvMeta.page} de ${mvMeta.pages} â€¢ ${mvMeta.total} movimientos` : ""}
+            {mvMeta ? `Página ${mvMeta.page} de ${mvMeta.pages} â€¢ ${mvMeta.total} movimientos` : ""}
           </div>
         </div>
 
@@ -611,7 +611,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={field}>
-            <label style={label}>Por pÃ¡gina</label>
+            <label style={label}>Por página</label>
             <select value={mvPageSize} onChange={(e) => setMvPageSize(Number(e.target.value))} style={input}>
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -624,7 +624,7 @@ export default function HistoryPage() {
             <input
               value={mvLubQ}
               onChange={(e) => setMvLubQ(e.target.value)}
-              placeholder="Filtra por nombre o cÃ³digoâ€¦"
+              placeholder="Filtra por nombre o código"
               style={input}
             />
           </div>
@@ -823,7 +823,7 @@ function HistoryCard({ ex, onOpen }) {
             <div style={{ ...notes, marginTop: 10 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="doc" />
-                <b>ObservaciÃ³n:</b> {ex.observations}
+                <b>Observación:</b> {ex.observations}
               </span>
             </div>
           ) : null}
@@ -897,7 +897,7 @@ function MovementCard({ m }) {
 
           {ex?.id ? (
             <span style={metaItem}>
-              <Icon name="link" /> EjecuciÃ³n #{ex.id}
+              <Icon name="link" /> Ejecución #{ex.id}
             </span>
           ) : (
             <span style={metaItem}>
@@ -997,10 +997,10 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
         {!loading && !error && (
           <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={sectionCard}>
-              <div style={sectionTitle}>InformaciÃ³n</div>
+              <div style={sectionTitle}>Información</div>
               <div style={kvGrid}>
-                <KV label="CondiciÃ³n" value={<ConditionChip value={ex?.condition} />} />
-                <KV label="TÃ©cnico" value={tech?.name || "?"} />
+                <KV label="Condición" value={<ConditionChip value={ex?.condition} />} />
+                <KV label="Técnico" value={tech?.name || "?"} />
                 <KV label="Equipo" value={eq?.name || "?"} />
                 <KV label="Actividad" value={activityName} />
               </div>
@@ -1097,6 +1097,42 @@ function KV({ label, value }) {
    STYLES
 ========================= */
 
+const compactHeaderRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-end",
+  gap: 12,
+  flexWrap: "wrap",
+  padding: "14px 16px",
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.92) 55%, rgba(239,246,255,0.78) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.06)",
+};
+
+const compactFiltersHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  alignItems: "center",
+  flexWrap: "wrap",
+  marginBottom: 10,
+};
+
+const compactFiltersGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 12,
+  alignItems: "end",
+};
+
+const compactFiltersGrid2 = {
+  marginTop: 12,
+  display: "flex",
+  gap: 12,
+  flexWrap: "wrap",
+  alignItems: "end",
+};
 const headerRow = {
   display: "flex",
   justifyContent: "space-between",
@@ -1483,6 +1519,7 @@ const btnKpiGray = {
   boxShadow: "0 8px 18px rgba(2,6,23,0.18)",
   transition: "all 160ms ease",
 };
+
 
 
 
