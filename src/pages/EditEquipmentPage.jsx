@@ -271,7 +271,7 @@ export default function EditEquipmentPage() {
       <div style={pageShell}>
         {/* TOP BAR */}
         <div style={topBar}>
-          <div style={headerRow}>
+          <div style={compactHeaderRow}>
             <div style={headerLeft}>
               <div style={headerBadgeRow}>
   <span style={headerBadge}>
@@ -289,7 +289,7 @@ export default function EditEquipmentPage() {
 
 
 
-            <div style={headerRight}>
+            <div style={compactHeaderRight}>
               <button type="button" onClick={() => navigate("/equipments")} style={btnHeaderGhost}>
                 <ArrowLeft size={16} strokeWidth={2} />
                 Volver
@@ -303,7 +303,7 @@ export default function EditEquipmentPage() {
             <div style={loadingCard}>Cargando</div>
           </div>
         ) : (
-          <div style={layoutGrid}>
+          <div style={compactLayoutGrid}>
             {/* FORM */}
             <form onSubmit={handleSubmit} style={formCard}>
               <div style={cardTopAccent} />
@@ -321,7 +321,7 @@ export default function EditEquipmentPage() {
 
               {error ? <div style={{ marginBottom: 12, ...miniError }}>{error}</div> : null}
 
-              <div style={grid2}>
+              <div style={compactGrid2}>
                 <Field label="Código / Tag">
                   <input
                     name="code"
@@ -331,7 +331,7 @@ export default function EditEquipmentPage() {
                     style={input}
                   />
                   <small style={hint}>
-                    Recomendado: único y legible. Se normaliza a may?sculas con guiones.
+                    Recomendado: único y legible. Se normaliza a mayúsculas con guiones.
                   </small>
                 </Field>
 
@@ -349,7 +349,7 @@ export default function EditEquipmentPage() {
                 </Field>
               </div>
 
-              <div style={grid2}>
+              <div style={compactGrid2}>
                 <Field label="Nombre del equipo *">
                   <input
                     name="name"
@@ -373,8 +373,8 @@ export default function EditEquipmentPage() {
                 </Field>
               </div>
 
-              <div style={grid2}>
-                <Field label="área *">
+              <div style={compactGrid2}>
+                <Field label="Área *">
                   <select
                     name="areaId"
                     value={form.areaId}
@@ -420,14 +420,14 @@ export default function EditEquipmentPage() {
                   name="description"
                   value={form.description}
                   onChange={handleChange}
-                  placeholder="Información adicional del equipo?"
+                  placeholder="Información adicional del equipo"
                   rows={4}
                   style={{ ...input, resize: "vertical", minHeight: 110 }}
                 />
               </Field>
 
               {/* ? Sticky actions */}
-              <div style={stickyActions}>
+              <div style={compactStickyActions}>
                 <button
                   type="button"
                   onClick={() => navigate("/equipments")}
@@ -488,7 +488,7 @@ export default function EditEquipmentPage() {
                         checked={forceAssign}
                         onChange={(e) => setForceAssign(e.target.checked)}
                       />
-                      <span style={checkText}>Sobrescribir si ya tiene tecnico</span>
+                      <span style={checkText}>Sobrescribir si ya tiene técnico</span>
                     </label>
 
                     <button
@@ -539,6 +539,22 @@ export default function EditEquipmentPage() {
       </div>
     </MainLayout>
   );
+}
+
+function usePageMobile(breakpoint = 820) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+
+  return isMobile;
 }
 
 /* ================== UI ================== */
@@ -939,5 +955,6 @@ const btnPrimaryOrange = {
 };
 const blockedTitle = { fontWeight: 1000, fontSize: 16, color: "#0f172a" };
 const blockedSub = { marginTop: 6, color: "#64748b", fontWeight: 800, fontSize: 12 };
+
 
 

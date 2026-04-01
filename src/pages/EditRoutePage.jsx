@@ -6,6 +6,7 @@ import { usePlant } from "../context/PlantContext";
 
 export default function EditRoutePage() {
   const { id } = useParams();
+  const isMobile = usePageMobile();
   const navigate = useNavigate();
   const { currentPlantId } = usePlant();
 
@@ -96,25 +97,29 @@ export default function EditRoutePage() {
 
   return (
     <MainLayout>
-      <h1>Editar ruta</h1>
-      <p style={{ color: "#666", marginBottom: 24 }}>
-        Actualiza la información de la ruta
-      </p>
+      <div style={pageShell}>
+        <h1 style={title}>Editar ruta</h1>
+        <p style={subtitle}>
+          Actualiza la información de la ruta
+        </p>
 
-      {error ? (
-        <div style={{ color: "#991b1b", marginBottom: 16, fontWeight: 700 }}>{error}</div>
-      ) : null}
+        {error ? (
+          <div style={{ color: "#991b1b", marginBottom: 16, fontWeight: 700 }}>{error}</div>
+        ) : null}
 
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          maxWidth: 520,
-          background: "#fff",
-          padding: 24,
-          borderRadius: 16,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-        }}
-      >
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            width: "100%",
+            maxWidth: 640,
+            background: "#fff",
+            padding: isMobile ? 16 : 24,
+            borderRadius: 16,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            border: "1px solid #e5e7eb",
+            boxSizing: "border-box",
+          }}
+        >
         <FormField label="Nombre de la ruta" name="name" value={form.name} onChange={handleChange} />
 
         <FormField label="Equipo" name="equipment" value={form.equipment} onChange={handleChange} />
@@ -142,7 +147,7 @@ export default function EditRoutePage() {
           onChange={handleChange}
         />
 
-        <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+        <div style={{ display: "grid", gap: 12, marginTop: 24, gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr" }}>
           <button
             type="submit"
             disabled={saving}
@@ -179,8 +184,25 @@ export default function EditRoutePage() {
           </button>
         </div>
       </form>
+      </div>
     </MainLayout>
   );
+}
+
+function usePageMobile(breakpoint = 820) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+
+  return isMobile;
 }
 
 function FormField({ label, name, value, onChange, type = "text" }) {
@@ -204,6 +226,7 @@ function FormField({ label, name, value, onChange, type = "text" }) {
         onChange={onChange}
         style={{
           width: "100%",
+          boxSizing: "border-box",
           padding: "10px 12px",
           borderRadius: 10,
           border: "1px solid #ddd",
@@ -213,3 +236,25 @@ function FormField({ label, name, value, onChange, type = "text" }) {
     </div>
   );
 }
+
+
+const pageShell = {
+  padding: typeof window !== "undefined" && window.innerWidth <= 820 ? 12 : 16,
+  background: "linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%)",
+  borderRadius: 16,
+  border: "1px solid #e5e7eb",
+};
+
+const title = {
+  margin: 0,
+  fontSize: typeof window !== "undefined" && window.innerWidth <= 820 ? 30 : 36,
+  fontWeight: 950,
+  color: "#0f172a",
+};
+
+const subtitle = {
+  color: "#64748b",
+  marginBottom: 24,
+  fontWeight: 800,
+};
+

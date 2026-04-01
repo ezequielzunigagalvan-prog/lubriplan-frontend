@@ -58,17 +58,17 @@ function ymdToday() {
 }
 
 function fmtDate(v) {
-  if (!v) return "?";
+  if (!v) return "—";
   const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return "?";
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toISOString().slice(0, 10);
 }
 
 function truncate(text, max = 110) {
   const s = String(text || "").trim();
-  if (!s) return "?";
+  if (!s) return "—";
   if (s.length <= max) return s;
-  return `${s.slice(0, max)}?`;
+  return `${s.slice(0, max)}…`;
 }
 
 export default function EquipmentDetailPage() {
@@ -109,7 +109,7 @@ export default function EquipmentDetailPage() {
 
       if (!Number.isFinite(equipmentId) || equipmentId <= 0) {
         setEquipment(null);
-        setErr("ID de equipo inv?lido.");
+        setErr("ID de equipo inválido.");
         return;
       }
 
@@ -118,7 +118,7 @@ export default function EquipmentDetailPage() {
 
       if (!eq) {
         setEquipment(null);
-        setErr("No se encontr? el equipo.");
+        setErr("No se encontró el equipo.");
         return;
       }
 
@@ -200,8 +200,8 @@ export default function EquipmentDetailPage() {
 
       setAssignMsg(
         updated != null
-          ? `Listo. Se asign? el técnico a ${updated} actividad(es).`
-          : "Listo. Se aplic? la asignación."
+          ? `Listo. Se asignó el técnico a ${updated} actividad(es).`
+          : "Listo. Se aplicó la asignación."
       );
 
       await loadEquipment({ silent: true });
@@ -299,11 +299,11 @@ export default function EquipmentDetailPage() {
           </button>
         </div>
 
-        <div style={heroCard}>
+        <div style={compactHeroCard}>
           <div style={heroAccent} />
 
-          <div style={heroHeader}>
-            <div style={heroLeft}>
+          <div style={compactHeroHeader}>
+            <div style={compactHeroLeft}>
               <div style={heroIcon}>
                 <Settings size={24} strokeWidth={1.9} />
               </div>
@@ -318,7 +318,7 @@ export default function EquipmentDetailPage() {
 
                 <div style={heroTagsRow}>
                   <span style={codePill}>{equipmentCode}</span>
-                  <span style={statusPill(active)}>{equipmentStatus || "?"}</span>
+                  <span style={statusPill(active)}>{equipmentStatus || "—"}</span>
                   <span style={critPill(isCritical(equipment?.criticality))}>
                     Criticidad: {equipmentCriticality}
                   </span>
@@ -359,19 +359,19 @@ export default function EquipmentDetailPage() {
           />
         </div>
 
-        <div style={mainGrid}>
-          <section style={panel}>
+        <div style={compactMainGrid}>
+          <section style={compactPanel}>
             <div style={sectionTitle}>Datos generales</div>
 
-            <div style={detailsGrid}>
+            <div style={compactDetailsGrid}>
               <DetailRow label="Nombre" value={equipmentName} />
               <DetailRow label="Código / TAG" value={equipmentCode} />
               <DetailRow label="Ubicación" value={equipmentLocation} />
               <DetailRow label="Área" value={equipmentArea} />
-              <DetailRow label="Estado" value={equipmentStatus || "?"} />
+              <DetailRow label="Estado" value={equipmentStatus || "—"} />
               <DetailRow label="Criticidad" value={equipmentCriticality} />
-              <DetailRow label="Marca" value={equipment?.brand || "?"} />
-              <DetailRow label="Modelo" value={equipment?.model || "?"} />
+              <DetailRow label="Marca" value={equipment?.brand || "—"} />
+              <DetailRow label="Modelo" value={equipment?.model || "—"} />
             </div>
 
             <div style={{ marginTop: 14 }}>
@@ -380,7 +380,7 @@ export default function EquipmentDetailPage() {
             </div>
           </section>
 
-          <section style={panel}>
+          <section style={compactPanel}>
             <div style={sectionTitle}>Asignación de técnico</div>
 
             <div style={summaryMiniCard}>
@@ -412,13 +412,13 @@ export default function EquipmentDetailPage() {
                       <option value="">Selecciona un técnico</option>
                       {techs.map((t) => (
                         <option key={t.id} value={t.id}>
-                          {t.name}{t.code ? ` ? (${t.code})` : ""}
+                          {t.name}{t.code ? ` (${t.code})` : ""}
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  <div style={twoCols}>
+                  <div style={compactTwoCols}>
                     <div style={field}>
                       <label style={labelStyle}>Desde</label>
                       <input
@@ -442,7 +442,7 @@ export default function EquipmentDetailPage() {
                   {selectedTechnician ? (
                     <div style={previewBox}>
                       Técnico seleccionado: <b>{selectedTechnician.name}</b>
-                      {selectedTechnician.code ? ` ? ${selectedTechnician.code}` : ""}
+                      {selectedTechnician.code ? ` · ${selectedTechnician.code}` : ""}
                     </div>
                   ) : null}
 
@@ -463,14 +463,14 @@ export default function EquipmentDetailPage() {
               </>
             ) : (
               <div style={emptyBox}>
-                Tu perfil es de solo visualización. La asignación de técnicos est? disponible para Admin y Supervisor.
+                Tu perfil es de solo visualización. La asignación de técnicos está disponible para Admin y Supervisor.
               </div>
             )}
           </section>
         </div>
 
-        <div style={bottomGrid}>
-          <section style={panel}>
+        <div style={compactBottomGrid}>
+          <section style={compactPanel}>
             <div style={sectionHeaderRow}>
               <div style={sectionTitle}>Rutas del equipo</div>
               {routes.length > 4 ? (
@@ -488,10 +488,10 @@ export default function EquipmentDetailPage() {
                   <div key={r.id} style={listCard}>
                     <div style={listTitle}>{r.name || "Ruta"}</div>
                     <div style={listMeta}>
-                      <span>{r.lubricantType || "?"}</span>
-                      <span>?</span>
-                      <span>{r.frequencyDays ? `Cada ${r.frequencyDays} días` : "Frecuencia ?"}</span>
-                      <span>?</span>
+                      <span>{r.lubricantType || "—"}</span>
+                      <span>·</span>
+                      <span>{r.frequencyDays ? `Cada ${r.frequencyDays} días` : "Frecuencia —"}</span>
+                      <span>·</span>
                       <span>Próxima: {fmtDate(r.nextDate)}</span>
                     </div>
                   </div>
@@ -500,7 +500,7 @@ export default function EquipmentDetailPage() {
             )}
           </section>
 
-          <section style={panel}>
+          <section style={compactPanel}>
             <div style={sectionHeaderRow}>
               <div style={sectionTitle}>Condiciones reportadas</div>
               {conditionReports.length > 4 ? (
@@ -517,7 +517,7 @@ export default function EquipmentDetailPage() {
                 {visibleConditions.map((c) => (
                   <div key={c.id} style={listCard}>
                     <div style={listTitleRow}>
-                      <span style={conditionPill(c.condition)}>{c.condition || "?"}</span>
+                      <span style={conditionPill(c.condition)}>{c.condition || "—"}</span>
                       <span style={datePill}>{fmtDate(c.detectedAt || c.createdAt)}</span>
                     </div>
                     <div style={listText}>{truncate(c.description, 140)}</div>
@@ -529,7 +529,7 @@ export default function EquipmentDetailPage() {
         </div>
 
         <div style={{ marginTop: 14 }}>
-          <section style={panel}>
+          <section style={compactPanel}>
             <div style={sectionHeaderRow}>
               <div style={sectionTitle}>Historial reciente de ejecución</div>
               {executions.length > 5 ? (
@@ -553,11 +553,11 @@ export default function EquipmentDetailPage() {
                     </div>
 
                     <div style={historyMeta}>
-                      <span>Estado: <b>{ex.status || "?"}</b></span>
-                      <span>?</span>
+                      <span>Estado: <b>{ex.status || "—"}</b></span>
+                      <span>·</span>
                       <span>Técnico: <b>{ex?.technician?.name || "Sin técnico"}</b></span>
-                      <span>?</span>
-                      <span>Condición: <b>{ex?.condition || "?"}</b></span>
+                      <span>·</span>
+                      <span>Condición: <b>{ex?.condition || "—"}</b></span>
                     </div>
 
                     {ex?.observations ? (
@@ -588,6 +588,22 @@ function InfoCard({ icon, title, value, sub }) {
       </div>
     </div>
   );
+}
+
+function usePageMobile(breakpoint = 820) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+
+  return isMobile;
 }
 
 function DetailRow({ label, value }) {
@@ -666,7 +682,7 @@ const heroIcon = {
 
 const title = {
   margin: 0,
-  fontSize: 30,
+  fontSize: typeof window !== "undefined" && window.innerWidth <= 820 ? 24 : 30,
   fontWeight: 1000,
   color: "#0f172a",
   lineHeight: 1.05,
@@ -1248,5 +1264,6 @@ const historyNotes = {
   fontSize: 13,
   lineHeight: 1.45,
 };
+
 
 
