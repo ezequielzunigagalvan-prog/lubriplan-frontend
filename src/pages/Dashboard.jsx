@@ -1001,7 +1001,7 @@ function AdminPanel({
     const upcoming = [];
     const isAdminPriorityCandidate = (item) => {
       const crit = String(item?.equipmentCriticality || "").toUpperCase();
-      const isCriticalEq = ["ALTA", "CRITICA", "CRÍTICA"].includes(crit);
+      const isCriticalEq = ["ALTA", "CRITICA", "CR?TICA"].includes(crit);
       const fromConditionReport = item?.conditionReportId != null;
       return isCriticalEq || fromConditionReport;
     };
@@ -1020,6 +1020,20 @@ function AdminPanel({
       maxOverdueDays: Number(overdue?.[0]?.overdueDays || 0),
     };
   }, [operationalItems, todayYMD]);
+  const operationalOverdueCount = operationalBuckets.overdue.length;
+  const operationalCriticalOverdueCount = operationalBuckets.overdue.filter((item) => {
+    const crit = String(item?.equipmentCriticality || item?.criticality || "").toUpperCase();
+    return ["ALTA", "CRITICA", "CR?TICA"].includes(crit);
+  }).length;
+  const repeatedFailuresTopCurrentMonth = useMemo(() => {
+    const list = Array.isArray(predAlerts?.repeatedFailuresTop) ? predAlerts.repeatedFailuresTop : [];
+    const targetMonth = String(month || "");
+    return list.filter((item) => {
+      const risk = String(item?.risk || "").toUpperCase();
+      const monthKey = String(toLocalYMD(item?.lastBadAt || "")).slice(0, 7);
+      return risk !== "LOW" && monthKey === targetMonth;
+    });
+  }, [predAlerts, month]);
 
   const kpis = [
     {
@@ -1075,6 +1089,7 @@ function AdminPanel({
 
   const adminPriorityQueueItems = useMemo(() => {
     const source = Array.isArray(pqItems) ? pqItems : [];
+    const targetMonth = String(month || "");
     return source.filter((item) => {
       const type = String(item?.type || "").toUpperCase();
       const crit = String(
@@ -1083,15 +1098,23 @@ function AdminPanel({
           item?.criticality ||
           ""
       ).toUpperCase();
-      const isCriticalEq = ["ALTA", "CRITICA", "CRÍTICA"].includes(crit);
+      const isCriticalEq = ["ALTA", "CRITICA", "CR?TICA"].includes(crit);
       const isConditionDerived =
         type.includes("CONDITION_REPORT") ||
         type === "COND_REPORT" ||
         type === "BAD_CONDITION" ||
         type === "REPEATED_FAILURES";
+      if (type === "REPEATED_FAILURES") {
+        const monthKey = String(toLocalYMD(item?.lastBadAt || "")).slice(0, 7);
+        if (!monthKey || monthKey !== targetMonth) return false;
+      }
+      if (type === "EXEC_OVERDUE") {
+        const scheduledKey = String(toLocalYMD(item?.scheduledAt || item?.entity?.scheduledAt || ""));
+        if (scheduledKey && scheduledKey >= todayYMD) return false;
+      }
       return isCriticalEq || isConditionDerived;
     });
-  }, [pqItems]);
+  }, [pqItems, month, todayYMD]);
 
   const adminPriorityQueueViewItems = adminPriorityQueueItems.length ? adminPriorityQueueItems : (Array.isArray(pqItems) ? pqItems : []);
 
@@ -3136,13 +3159,16 @@ useEffect(() => {
 
   const conditionReportsOpen = Number(mergedAlerts?.conditionReportsOpen || 0);
   const criticalExecutions = Number(summary?.criticalExecutions ?? mergedAlerts?.criticalExecutions ?? 0);
-  const repeatedFailuresCount = Number(mergedAlerts?.repeatedFailuresCount ?? mergedAlerts?.repeatedFailures ?? 0);
-
-  const overdueCount = Number(mergedAlerts.overdueActivities || 0);
+  const repeatedFailuresCount = isTech
+    ? Number(mergedAlerts?.repeatedFailuresCount ?? mergedAlerts?.repeatedFailures ?? 0)
+    : repeatedFailuresTopCurrentMonth.length;
+  const overdueCount = isTech ? Number(mergedAlerts.overdueActivities || 0) : operationalOverdueCount;
   const lowStockCount = Number(mergedAlerts.lowStockCount || 0);
   const unassignedPending = Number(mergedAlerts.unassignedPending || 0);
   const equipmentsWithoutRoutes = Number(mergedAlerts.equipmentWithoutRoutes || 0);
-  const criticalRiskOverdue = Number(mergedAlerts.criticalRiskOverdueCount || 0);
+  const criticalRiskOverdue = isTech
+    ? Number(mergedAlerts.criticalRiskOverdueCount || 0)
+    : operationalCriticalOverdueCount;
 
   const redTotal =
     Number(mergedAlerts.overdueActivities || 0) +
@@ -5492,6 +5518,8 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
+
 
 
 
