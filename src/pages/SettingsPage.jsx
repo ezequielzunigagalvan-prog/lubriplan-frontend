@@ -631,7 +631,7 @@ export default function SettingsPage() {
 
                       <Field
                         label="Capacidad por dí­a"
-                        hint="Máximo recomendado de actividades por tÃ©cnico por dí­a."
+                        hint="Máximo recomendado de actividades por técnico por dí­a."
                       >
                         <Input
                           value={overloadCapacityPerDay}
@@ -688,7 +688,7 @@ export default function SettingsPage() {
               <div style={stickyLeft}>
                 {hasChanges ? (
                   <span>
-                    <b style={{ color: "#f97316" }}>Cambios pendientes</b> Â· Guarda para aplicar en
+                    <b style={{ color: "#f97316" }}>Cambios pendientes</b>· Guarda para aplicar en
                     la planta actual.
                   </span>
                 ) : (

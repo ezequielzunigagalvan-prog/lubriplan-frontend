@@ -652,13 +652,13 @@ export default function UsersPage() {
             </div>
 
             <div className="lpMuted" style={{ marginTop: 6 }}>
-              Define qu? usuario t?cnico corresponde a qué registro operativo para actividades, filtros y trazabilidad.
+              Define qué usuario técnico corresponde a qué registro operativo para actividades, filtros y trazabilidad.
             </div>
 
             {linksLoading ? (
               <div className="lpMuted" style={{ marginTop: 12 }}>Cargando vínculos...</div>
             ) : techUsers.length === 0 ? (
-              <div className="lpMuted" style={{ marginTop: 12 }}>No hay usuarios t?cnicos activos.</div>
+              <div className="lpMuted" style={{ marginTop: 12 }}>No hay usuarios técnicos activos.</div>
             ) : (
               <div className="lpLinksList">
                 {techUsers.map((user) => {

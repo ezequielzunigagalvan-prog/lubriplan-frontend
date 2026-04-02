@@ -6,7 +6,7 @@ export default function Unauthorized() {
     <div style={{ padding: 40 }}>
       <h1>Acceso restringido</h1>
       <p>No tienes permisos para acceder a esta sección.</p>
-      <Link to="/dashboard">? Volver al dashboard</Link>
+      <Link to="/dashboard"> Volver al dashboard</Link>
     </div>
   );
 }

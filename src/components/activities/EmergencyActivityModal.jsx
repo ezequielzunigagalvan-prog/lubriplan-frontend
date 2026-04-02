@@ -38,9 +38,9 @@ const fileToDataUrl = (file) =>
 
 export default function EmergencyActivityModal({ open, onClose, onSaved }) {
   const { user } = useAuth();
-  const role = String(user?.role || "").toUpperCase();
+  const role = String(user.role || "").toUpperCase();
   const isTech = role === "TECHNICIAN";
-  const myTechId = user?.technicianId != null ? String(user.technicianId) : "";
+  const myTechId = user.technicianId != null ? String(user.technicianId) : "";
   const uploadInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 

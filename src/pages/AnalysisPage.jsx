@@ -671,7 +671,7 @@ export default function AnalysisPage() {
             <Tag tone="steel">Pestaña: {tab}</Tag>
             {currentPlant?.name ? <Tag tone="blue">Planta: {currentPlant.name}</Tag> : null}
             {tab === "consumo" ? <Tag tone="amber">Rango: {days} días</Tag> : null}
-            {tab === "actividades" ? <Tag tone="amber">A?o: {year}</Tag> : null}
+            {tab === "actividades" ? <Tag tone="amber">Año: {year}</Tag> : null}
             {tab === "condicion" ? <Tag tone="amber">Rango condición: {crRange}</Tag> : null}
           </div>
 
@@ -862,7 +862,7 @@ export default function AnalysisPage() {
                     title="Resumen"
                     tag="GRASAS"
                     tone="green"
-                    subtitle="Unidad base de análisis: g / kg. Si el backend env?a captura original (ej. bombazos), se muestra también."
+                    subtitle="Unidad base de análisis: g / kg. Si el backend envía captura original (ej. bombazos), se muestra también."
                     right={
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                         <span style={miniLbl}>Lubricante</span>
@@ -1118,12 +1118,12 @@ export default function AnalysisPage() {
               <div style={accentBarOrange} />
               <PanelHeader
                 icon={<Icon name="doc" />}
-                title="Actividades ? análisis y tendencias"
+                title="Actividades, análisis y tendencias"
                 subtitle="KPIs, cumplimiento y tendencia mensual. Enfocado a supervisión y operación."
                 right={
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span style={miniLbl}>A?o</span>
+                      <span style={miniLbl}>Año</span>
                       <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={selectMini}>
                         {[currentYear, currentYear - 1, currentYear - 2].map((y) => (
                           <option key={y} value={y}>
