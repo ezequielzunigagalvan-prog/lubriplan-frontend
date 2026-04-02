@@ -1235,7 +1235,7 @@ useEffect(() => {
 
                 <div style={infoText}>
                   <div>
-                    <b>Por qu? aparece:</b> vista enfocada en tareas <b>pendientes</b> del mes
+                    <b>Por qué aparece:</b> vista enfocada en tareas <b>pendientes</b> del mes
                     con riesgo <b>MED/HIGH</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
@@ -1281,7 +1281,7 @@ useEffect(() => {
 
                 <div style={infoText}>
                   <div>
-                    <b>Por qu? aparece:</b> actividades completadas con condición <b>MALO</b> o{" "}
+                    <b>Por qué aparece:</b> actividades completadas con condición <b>MALO</b> o{" "}
                     <b>CR?TICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>

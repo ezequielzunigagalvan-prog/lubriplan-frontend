@@ -204,7 +204,7 @@ function buildPriorityLink(item, month) {
 
     case "BAD_CONDITION":
     case "REPEATED_FAILURES":
-      return `/activities?filter=bad-condition&month=${m}`;
+      return `/history?filter=bad-condition&month=${m}`;
 
     case "CONDITION_REPORT_OPEN":
     case "CONDITION_REPORTS_OPEN":
@@ -1438,7 +1438,7 @@ function AdminPanel({
                     <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse."><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><Icon name="alert" size="sm" />Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(predAlerts?.repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/activities?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CRÍTICO en un periodo reciente y ya sugiere un patrón recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(predAlerts?.repeatedFailuresCount || 0)}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(predAlerts?.repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CRÍTICO en un periodo reciente y ya sugiere un patrón recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(predAlerts?.repeatedFailuresCount || 0)}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto según consumo e inventario disponible."><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y además hay muestra suficiente."><Icon name="alert" size="sm" />Consumo fuera de patrón <span style={chipCount}>{anomaliesCount}</span></button>
@@ -1864,7 +1864,7 @@ function SupervisorDistributionAlertsPanel({
                 <Icon name="warn" size="sm" />
                 Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/activities?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount}>
+              <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount}>
                 <Icon name="warn" size="sm" />
                 Reincidencia <span style={chipCount}>{repeatedFailuresCount}</span>
               </button>
@@ -5492,6 +5492,7 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 
