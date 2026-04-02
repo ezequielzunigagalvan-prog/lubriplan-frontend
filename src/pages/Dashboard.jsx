@@ -1414,7 +1414,7 @@ function AdminPanel({
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(overdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!overdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(overdueCount || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin técnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(lowStockCount ? chipAmberMini : chipOffMini) }} onClick={() => navigate(`/inventory?filter=low&month=${encodeURIComponent(month)}`)} disabled={!lowStockCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="drop" size="sm" />Bajo stock</span><span style={chipCountMini}>{Number(lowStockCount || 0)}</span></button>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(criticalRiskOverdue ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Críticas vencidas</span><span style={chipCountMini}>{Number(criticalRiskOverdue || 0)}</span></button>
+                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(criticalRiskOverdue ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Críticas vencidas</span><span style={chipCountMini}>{Number(criticalRiskOverdue || 0)}</span></button>
               </div>
             </div>
 
@@ -1436,12 +1436,12 @@ function AdminPanel({
                   const anomaliesCount = Number(predAlerts?.equipmentConsumptionAnomaliesCount || 0);
                   return (
                     <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount}><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue}><Icon name="alert" size="sm" />Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(predAlerts?.repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/activities?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.repeatedFailuresCount}><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(predAlerts?.repeatedFailuresCount || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount}><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount}><Icon name="user" size="sm" />Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount}><Icon name="alert" size="sm" />Consumo fuera de patrón <span style={chipCount}>{anomaliesCount}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse."><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><Icon name="alert" size="sm" />Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(predAlerts?.repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/activities?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CRÍTICO en un periodo reciente y ya sugiere un patrón recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(predAlerts?.repeatedFailuresCount || 0)}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto según consumo e inventario disponible."><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y además hay muestra suficiente."><Icon name="alert" size="sm" />Consumo fuera de patrón <span style={chipCount}>{anomaliesCount}</span></button>
                     </div>
                   );
                 })()}
@@ -1856,11 +1856,11 @@ function SupervisorDistributionAlertsPanel({
             </div>
             {predError ? <div style={miniError}>{predError}</div> : null}
             <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount}>
+              <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse.">
                 <Icon name="clock" size="sm" />
                 Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue}>
+              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata.">
                 <Icon name="warn" size="sm" />
                 Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
               </button>
@@ -1868,15 +1868,15 @@ function SupervisorDistributionAlertsPanel({
                 <Icon name="warn" size="sm" />
                 Reincidencia <span style={chipCount}>{repeatedFailuresCount}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount}>
+              <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto según consumo e inventario disponible.">
                 <Icon name="drop" size="sm" />
                 Inventario en riesgo <span style={chipCount}>{dteCount}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount}>
+              <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo.">
                 <Icon name="user" size="sm" />
                 Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount}>
+              <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y además hay muestra suficiente.">
                 <Icon name="alert" size="sm" />
                 Consumo fuera de patrón <span style={chipCount}>{anomaliesCount}</span>
               </button>
@@ -5492,6 +5492,7 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 
