@@ -1434,7 +1434,7 @@ function AdminPanel({
                 </div>
               </div>
               <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(overdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!overdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(overdueCount || 0)}</span></button>
+                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!operationalOverdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(operationalOverdueCount || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin técnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(lowStockCount ? chipAmberMini : chipOffMini) }} onClick={() => navigate(`/inventory?filter=low&month=${encodeURIComponent(month)}`)} disabled={!lowStockCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="drop" size="sm" />Bajo stock</span><span style={chipCountMini}>{Number(lowStockCount || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(criticalRiskOverdue ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Críticas vencidas</span><span style={chipCountMini}>{Number(criticalRiskOverdue || 0)}</span></button>
@@ -3159,16 +3159,12 @@ useEffect(() => {
 
   const conditionReportsOpen = Number(mergedAlerts?.conditionReportsOpen || 0);
   const criticalExecutions = Number(summary?.criticalExecutions ?? mergedAlerts?.criticalExecutions ?? 0);
-  const repeatedFailuresCount = isTech
-    ? Number(mergedAlerts?.repeatedFailuresCount ?? mergedAlerts?.repeatedFailures ?? 0)
-    : repeatedFailuresTopCurrentMonth.length;
-  const overdueCount = isTech ? Number(mergedAlerts.overdueActivities || 0) : operationalOverdueCount;
+  const repeatedFailuresCount = Number(mergedAlerts?.repeatedFailuresCount ?? mergedAlerts?.repeatedFailures ?? 0);
+  const overdueCount = Number(mergedAlerts.overdueActivities || 0);
   const lowStockCount = Number(mergedAlerts.lowStockCount || 0);
   const unassignedPending = Number(mergedAlerts.unassignedPending || 0);
   const equipmentsWithoutRoutes = Number(mergedAlerts.equipmentWithoutRoutes || 0);
-  const criticalRiskOverdue = isTech
-    ? Number(mergedAlerts.criticalRiskOverdueCount || 0)
-    : operationalCriticalOverdueCount;
+  const criticalRiskOverdue = Number(mergedAlerts.criticalRiskOverdueCount || 0);
 
   const redTotal =
     Number(mergedAlerts.overdueActivities || 0) +
@@ -5518,6 +5514,7 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 
