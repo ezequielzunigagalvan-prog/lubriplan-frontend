@@ -1387,7 +1387,7 @@ function AdminPanel({
       >
         {aiEnabled ? (
           <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(248,250,252,0.9)" }}>
-            <AiSummaryBox month={month} aiState={aiState} onGenerate={loadAiSummary} onRefresh={forceRefreshAi} canForceRefreshAi={canForceRefreshAi} />
+            <AiSummaryBox month={month} aiState={aiState} onGenerate={() => loadAiSummary({ force: true })} onRefresh={forceRefreshAi} canForceRefreshAi={canForceRefreshAi} />
           </div>
         ) : null}
 
@@ -3619,7 +3619,7 @@ function SupervisorExecutivePanel({
           <AiSummaryBox
             month={month}
             aiState={aiState}
-            onGenerate={loadAiSummary}
+            onGenerate={() => loadAiSummary({ force: true })}
             onRefresh={forceRefreshAi}
             canForceRefreshAi={canForceRefreshAi} />
         </div>
@@ -5492,6 +5492,7 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 

@@ -1048,19 +1048,13 @@ useEffect(() => {
 
   try {
     setAiState((p) => ({ ...p, loading: true, error: "" }));
-    const res = await refreshAiSummary({
+    await refreshAiSummary({
       period: month,
       plantId: currentPlantId,
       lang: aiLang,
     });
 
-    aiCacheRef.current.set(cacheKey, res);
-
-    setAiState({
-      loading: false,
-      error: "",
-      data: res,
-    });
+    await loadAiSummary({ force: true });
   } catch (e) {
     setAiState({
       loading: false,
@@ -1640,7 +1634,7 @@ const anomaliesTop =
     <AiSummaryBox
       month={month}
       aiState={aiState}
-      onGenerate={loadAiSummary}
+      onGenerate={() => loadAiSummary({ force: true })}
       onRefresh={forceRefreshAi}
       canForceRefresh
     />
@@ -2159,5 +2153,7 @@ const riskBadge = (lvl) => {
     color: isHigh ? "#fecaca" : isMedium ? "#fde68a" : "#bfdbfe",
   };
 };
+
+
 
 
