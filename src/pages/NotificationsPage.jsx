@@ -409,7 +409,7 @@ export default function NotificationsPage() {
       {error ? <div style={errorBox}>{error}</div> : null}
 
       {loading ? (
-        <div style={{ marginTop: 14, color: "#64748b", fontWeight: 900 }}>Cargando?</div>
+        <div style={{ marginTop: 14, color: "#64748b", fontWeight: 900 }}>Cargando</div>
       ) : (
         <>
           {items.length === 0 ? (
@@ -528,7 +528,7 @@ export default function NotificationsPage() {
                 disabled={softLoading}
                 type="button"
               >
-                {softLoading ? "Cargando?" : "Cargar más"}
+                {softLoading ? "Cargando" : "Cargar más"}
               </button>
             ) : items.length ? (
               <div style={{ color: "#94a3b8", fontWeight: 900 }}>Fin</div>

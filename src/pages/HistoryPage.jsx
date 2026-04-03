@@ -546,7 +546,7 @@ export default function HistoryPage() {
       </div>
 
       {/* LISTADO EJECUCIONES */}
-      {loading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando historialâ€¦</p>}
+      {loading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando historial</p>}
       {!loading && items.length === 0 && (
         <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>No hay registros en este rango.</p>
       )}
@@ -646,7 +646,7 @@ export default function HistoryPage() {
 
         {mvErr && <div style={errorBox}>{mvErr}</div>}
 
-        {mvLoading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando movimientosâ€¦</p>}
+        {mvLoading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando movimientos</p>}
         {!mvLoading && mvFilteredItems.length === 0 && (
           <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>
             No hay movimientos en este rango / filtro.
@@ -988,11 +988,11 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
           </div>
 
           <button style={drawerCloseBtn} className="lpPress" onClick={onClose} aria-label="Cerrar">
-            âœ•
+            Cerrar
           </button>
         </div>
 
-        {loading && <div style={{ padding: 14, color: "#64748b", fontWeight: 900 }}>Cargando detalleâ€¦</div>}
+        {loading && <div style={{ padding: 14, color: "#64748b", fontWeight: 900 }}>Cargando detalle</div>}
         {error && <div style={{ ...errorBox, margin: 14 }}>{error}</div>}
 
         {!loading && !error && (

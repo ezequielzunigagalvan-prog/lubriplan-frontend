@@ -423,7 +423,7 @@ export default function AnalysisPage() {
     } catch (e) {
       if (myReq !== crReqIdRef.current) return;
       console.error(e);
-      setCrErr(e?.message || "Error cargando anal?tica de condición");
+      setCrErr(e?.message || "Error cargando analítica de condición");
       setCrData(null);
     } finally {
       if (myReq !== crReqIdRef.current) return;

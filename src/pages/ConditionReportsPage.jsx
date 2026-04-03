@@ -276,7 +276,7 @@ function ConditionReportsPage() {
                   ) : null}
 
                   {r?.category ? (
-                    <span style={miniTag}>Categor?a: {niceCategory(r.category)}</span>
+                    <span style={miniTag}>Categoría: {niceCategory(r.category)}</span>
                   ) : null}
                 </div>
 
@@ -288,7 +288,7 @@ function ConditionReportsPage() {
                     <Icon name="calendar" size="sm" /> Detectado: {detected}
                   </span>
                   <span style={subItem}>
-                    <Icon name="user" size="sm" /> Report?: {by?.name || "?"} ({safeUpper(by?.role)})
+                    <Icon name="user" size="sm" /> Reportado: {by?.name || "?"} ({safeUpper(by?.role)})
                   </span>
                 </div>
 
