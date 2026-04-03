@@ -301,7 +301,7 @@ export default function AnalysisPage() {
 
   const [tab, setTab] = useState("consumo");
 
-  const [days, setDays] = useState(90);
+  const [days, setDays] = useState(30);
 
   const [oilLubOptions, setOilLubOptions] = useState([]);
   const [greaseLubOptions, setGreaseLubOptions] = useState([]);
@@ -598,7 +598,7 @@ export default function AnalysisPage() {
   ]);
 
   const handleReset = useCallback(() => {
-    setDays(90);
+    setDays(30);
     setOilLubId("");
     setGreaseLubId("");
     setQ("");
@@ -1715,4 +1715,5 @@ const tagBase = {
 };
 
 const tagWrapFix = { display: "inline-flex", alignItems: "center" };
+
 
