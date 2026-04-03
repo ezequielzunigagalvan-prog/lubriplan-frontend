@@ -1,6 +1,6 @@
 ﻿// src/realtime/sseClient.js
 import { API_URL } from "../services/api";
-import { getToken, clearAuth } from "../auth/auth.js";
+import { getToken } from "../auth/auth.js";
 
 let eventSourceRef = null;
 
@@ -78,12 +78,7 @@ export function startSSE({ onStatus, onEvent, onUnauthorized } = {}) {
       const stillHasToken = !!getToken();
       if (!stillHasToken) {
         stopSSE();
-        return;
       }
-
-      onUnauthorized?.();
-      emitAuthInvalid("SSE_ERROR");
-      stopSSE();
     },
   });
 
@@ -178,3 +173,4 @@ export function openSSE({
     }
   };
 }
+
