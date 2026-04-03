@@ -31,6 +31,7 @@ export function AuthProvider({ children }) {
   const warningTimerRef = useRef(null);
   const countdownIntervalRef = useRef(null);
   const logoutInProgressRef = useRef(false);
+  const appHiddenRef = useRef(false);
 
   const role = String(user?.role || "").toUpperCase() || null;
 
@@ -136,6 +137,48 @@ export function AuthProvider({ children }) {
     }, INACTIVITY_TIMEOUT_MS);
   }, [token, user, clearSessionTimers, startWarningCountdown, hardLogout]);
 
+  const restartRealtime = useCallback(
+    (nextToken, nextUser) => {
+      const plantId = localStorage.getItem("lp_currentPlantId");
+      if (!nextToken || !nextUser || !plantId) {
+        try {
+          stopSSE();
+        } catch {
+          // noop
+        }
+        return;
+      }
+
+      try {
+        stopSSE();
+      } catch {
+        // noop
+      }
+
+      startSSE({
+        onStatus: (s) => console.log("[SSE]", s),
+        onEvent: () => {},
+        onUnauthorized: () => {
+          console.warn("[SSE] unauthorized");
+          hardLogout("manual");
+        },
+      });
+    },
+    [hardLogout]
+  );
+
+  const rehydrateSession = useCallback(() => {
+    const saved = loadAuth();
+    if (!saved?.token || !saved?.user) return null;
+
+    if (token !== saved.token || user?.id !== saved.user?.id) {
+      setToken(saved.token);
+      setUser(saved.user);
+    }
+
+    return saved;
+  }, [token, user]);
+
   const continueSession = useCallback(() => {
     resetInactivityTimer();
   }, [resetInactivityTimer]);
@@ -174,14 +217,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    startSSE({
-      onStatus: (s) => console.log("[SSE]", s),
-      onEvent: () => {},
-      onUnauthorized: () => {
-        console.warn("[SSE] unauthorized");
-        hardLogout("manual");
-      },
-    });
+    restartRealtime(token, user);
 
     return () => {
       try {
@@ -190,7 +226,7 @@ export function AuthProvider({ children }) {
         // noop
       }
     };
-  }, [token, user, hardLogout]);
+  }, [token, user, restartRealtime]);
 
   useEffect(() => {
     const onPlantChange = () => {
@@ -207,21 +243,7 @@ export function AuthProvider({ children }) {
       }
 
       console.log("[SSE] restarting for new plant");
-
-      try {
-        stopSSE();
-      } catch {
-        // noop
-      }
-
-      startSSE({
-        onStatus: (s) => console.log("[SSE]", s),
-        onUnauthorized: () => {
-          console.warn("[SSE] unauthorized after plant change");
-          hardLogout("manual");
-        },
-      });
-
+      restartRealtime(getToken(), user);
       resetInactivityTimer();
     };
 
@@ -230,7 +252,7 @@ export function AuthProvider({ children }) {
     return () => {
       window.removeEventListener("lubriplan:plant-changed", onPlantChange);
     };
-  }, [resetInactivityTimer, hardLogout]);
+  }, [resetInactivityTimer, restartRealtime, user]);
 
   useEffect(() => {
     if (!token || !user) {
@@ -282,6 +304,56 @@ export function AuthProvider({ children }) {
       window.removeEventListener("lubriplan:auth-invalid", onAuthInvalid);
     };
   }, [hardLogout]);
+
+  useEffect(() => {
+    const onResume = () => {
+      appHiddenRef.current = false;
+      const restored = rehydrateSession();
+      const nextToken = restored?.token || getToken();
+      const nextUser = restored?.user || user;
+
+      if (!nextToken || !nextUser) return;
+
+      restartRealtime(nextToken, nextUser);
+      resetInactivityTimer();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        appHiddenRef.current = true;
+        try {
+          stopSSE();
+        } catch {
+          // noop
+        }
+        return;
+      }
+      onResume();
+    };
+
+    const onPageShow = () => {
+      onResume();
+    };
+
+    const onPageHide = () => {
+      appHiddenRef.current = true;
+      try {
+        stopSSE();
+      } catch {
+        // noop
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("pagehide", onPageHide);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, [rehydrateSession, resetInactivityTimer, restartRealtime, user]);
 
   const permissions = useMemo(() => {
     const canManageRoutes = isAdmin || isSupervisor;
@@ -494,5 +566,6 @@ const btnGhostStyle = {
   fontWeight: 900,
   cursor: "pointer",
 };
+
 
 
