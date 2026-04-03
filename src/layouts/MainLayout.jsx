@@ -775,7 +775,10 @@ const app = {
 };
 
 const sidebar = {
-  padding: 14,
+  paddingTop: 14,
+  paddingRight: 14,
+  paddingBottom: 14,
+  paddingLeft: 14,
   borderRight: "1px solid rgba(226,232,240,0.95)",
   background: "linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(248,250,252,0.94) 100%)",
   display: "flex",
