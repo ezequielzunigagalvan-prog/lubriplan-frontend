@@ -566,7 +566,7 @@ export default function HistoryPage() {
             disabled={loading || meta.page <= 1}
             onClick={() => load({ page: meta.page - 1 })}
           >
-            â† Anterior
+           Anterior
           </button>
 
           <div style={{ fontWeight: 950, color: "#0f172a" }}>
@@ -579,7 +579,7 @@ export default function HistoryPage() {
             disabled={loading || meta.page >= meta.pages}
             onClick={() => load({ page: meta.page + 1 })}
           >
-            Siguiente â†’
+            Siguiente 
           </button>
         </div>
       )}
@@ -667,7 +667,7 @@ export default function HistoryPage() {
               disabled={mvLoading || mvMeta.page <= 1}
               onClick={() => loadMovements({ page: mvMeta.page - 1 })}
             >
-              â† Anterior
+              Anterior
             </button>
 
             <div style={{ fontWeight: 950, color: "#0f172a" }}>
@@ -680,7 +680,7 @@ export default function HistoryPage() {
               disabled={mvLoading || mvMeta.page >= mvMeta.pages}
               onClick={() => loadMovements({ page: mvMeta.page + 1 })}
             >
-              Siguiente â†’
+              Siguiente 
             </button>
           </div>
         )}
@@ -784,7 +784,7 @@ function HistoryCard({ ex, onOpen }) {
   const eq = route?.equipment || ex?.equipment || {};
   const tech = ex?.technician || {};
   const dateLabel = safeDateLabel(ex?.executedAt);
-  const activityName = ex?.manualTitle || route?.name || "ï¿½";
+  const activityName = ex?.manualTitle || route?.name || "";
 
   return (
     <div className="lpCard lpPress" style={{ ...card, cursor: "pointer" }} onClick={onOpen} title="Ver detalle">
@@ -806,7 +806,7 @@ function HistoryCard({ ex, onOpen }) {
           <div style={metaRow}>
             <span style={metaItem}>
               <Icon name="pin" /> {eq?.name || "â€”"}
-              {eq?.code ? ` Â· ${eq.code}` : eq?.tag ? ` Â· ${eq.tag}` : ""}
+              {eq?.code ? ` · ${eq.code}` : eq?.tag ? ` · ${eq.tag}` : ""}
             </span>
 
             <span style={metaItem}>

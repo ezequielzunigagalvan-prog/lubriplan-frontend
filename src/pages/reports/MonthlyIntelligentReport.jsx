@@ -47,10 +47,11 @@ function ymNow() {
 }
 
 function fmtDateTimeLocal(d) {
-  if (!d) return "â€”";
+  if (!d) return "-";
   const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return "â€”";
+  if (Number.isNaN(dt.getTime())) return "-";
   return dt.toLocaleString("es-MX", {
+    timeZone: "America/Mexico_City",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -2153,6 +2154,7 @@ const riskBadge = (lvl) => {
     color: isHigh ? "#fecaca" : isMedium ? "#fde68a" : "#bfdbfe",
   };
 };
+
 
 
 

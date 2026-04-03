@@ -27,8 +27,8 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
   const equipmentLabel = useMemo(() => {
     const eq = report?.equipment || {};
     const code = eq?.code ? ` (${eq.code})` : "";
-    const loc = eq?.location ? ` ï¿½ ${eq.location}` : "";
-    return `${eq?.name || "ï¿½"}${code}${loc}`;
+    const loc = eq?.location ? `  ${eq.location}` : "";
+    return `${eq?.name || ""}${code}${loc}`;
   }, [report]);
 
   const evidenceImage = report?.evidenceImage || "";
@@ -75,7 +75,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
   const onSubmit = async () => {
     try {
       setErr("");
-      if (!report?.id) return setErr("Reporte invÃ¡lido");
+      if (!report?.id) return setErr("Reporte inválido");
       if (!scheduledAt) return setErr("Selecciona fecha programada");
       if (!instructions.trim()) return setErr("Escribe instrucciones");
 
@@ -116,7 +116,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
                 <span style={summaryIcon}><Icon name="tool" size="sm" /></span>
                 <div>
                   <div style={summaryTitle}>{equipmentLabel}</div>
-                  <div style={summaryMeta}>Reporte #{report?.id || "ï¿½"}</div>
+                  <div style={summaryMeta}>Reporte #{report?.id || ""}</div>
                 </div>
               </div>
               <div style={badgesWrap}>
@@ -153,7 +153,7 @@ function CreateCorrectiveExecutionModal({ open, onClose, report, onSaved }) {
                   {techs.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.name || `Técnico ${t.id}`}
-                      {t.code ? ` ï¿½ ${t.code}` : ""}
+                      {t.code ? `  ${t.code}` : ""}
                     </option>
                   ))}
                 </select>
