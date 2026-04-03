@@ -1,5 +1,5 @@
 ﻿// src/pages/ActivitiesPage.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -87,6 +87,13 @@ const toLocalDateTimeTextSafe = (value) => {
 
   return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
 };
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 // =========================
 // Query params (Dashboard deep-links)
@@ -228,6 +235,7 @@ export default function ActivitiesPage() {
   const canSchedule = role === "SUPERVISOR" || role === "ADMIN";
   const canCreateEmergency = isTech || role === "SUPERVISOR";
   const canReportCondition = isTech;
+  const canPrintActivities = role === "SUPERVISOR" || role === "ADMIN";
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -279,6 +287,9 @@ export default function ActivitiesPage() {
     scheduledAt: toLocalYMD(new Date()),
     technicianId: "",
   });
+
+  const [printFrom, setPrintFrom] = useState("");
+  const [printTo, setPrintTo] = useState("");
 
   const [completedRange, setCompletedRange] = useState("MONTH"); // MONTH | 30D | 90D
   const reqIdRef = useRef(0);
@@ -600,6 +611,11 @@ useEffect(() => {
 
   const futureFromTo = useMemo(() => monthToFromTo(month), [month]);
 
+  useEffect(() => {
+    setPrintFrom(toLocalYMD(futureFromTo.from));
+    setPrintTo(toLocalYMD(futureFromTo.to));
+  }, [futureFromTo.from, futureFromTo.to]);
+
   // =========================
   // Normaliza ejecuciones a activity UI
   // =========================
@@ -884,6 +900,72 @@ useEffect(() => {
     highlightActivityId,
     highlightReportId,
   ]);
+
+  const printRows = useMemo(() => {
+    const from = String(printFrom || "").trim();
+    const to = String(printTo || "").trim();
+
+    return filtered.filter((a) => {
+      const ymd = String(a?.dateLabel || toLocalYMD(a?.dateISO) || "").trim();
+      if (!ymd) return false;
+      if (from && ymd < from) return false;
+      if (to && ymd > to) return false;
+      return true;
+    });
+  }, [filtered, printFrom, printTo]);
+
+  const handlePrintActivities = useCallback(() => {
+    if (!canPrintActivities) return;
+    if (!printRows.length) {
+      window.alert("No hay actividades en el rango seleccionado.");
+      return;
+    }
+
+    const rangeText = `${printFrom || "-"} a ${printTo || "-"}`;
+    const plantName = currentPlant?.name || "Planta";
+    const generatedAt = toLocalDateTimeTextSafe(new Date());
+
+    const rowsHtml = printRows
+      .map((a, idx) => {
+        const technician = a?.technicianName || a?.technician?.name || "Sin asignar";
+        const equipment = [a?.equipmentName || "-", a?.equipmentCode ? `(${a.equipmentCode})` : ""]
+          .filter(Boolean)
+          .join(" ");
+
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${escapeHtml(a?.dateLabel || "-")}</td>
+            <td>${escapeHtml(equipment)}</td>
+            <td>${escapeHtml(a?.activityName || "-")}</td>
+            <td>${escapeHtml(a?.plannedLubricantLabel || a?.lubricant || "-")}</td>
+            <td>${escapeHtml(a?.quantityLabel || "-")}</td>
+            <td>${escapeHtml(technician)}</td>
+            <td>${escapeHtml(a?.computedStatus || "-")}</td>
+          </tr>`;
+      })
+      .join("");
+
+    const popup = window.open("", "_blank", "width=1200,height=800");
+    if (!popup) return;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Impresión de actividades</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:24px;color:#0f172a;}h1{margin:0 0 6px;font-size:28px;}p{margin:0 0 4px;color:#475569;font-weight:600;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;}th,td{border:1px solid #cbd5e1;padding:10px 8px;text-align:left;vertical-align:top;}th{background:#e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}tbody tr:nth-child(even){background:#f8fafc;}.meta{display:grid;gap:4px;margin-top:10px;}.count{margin-top:12px;font-weight:800;color:#0f172a;}</style></head><body><h1>LubriPlan</h1><div class="meta"><p>Planta: ${escapeHtml(plantName)}</p><p>Rango: ${escapeHtml(rangeText)}</p><p>Generado: ${escapeHtml(generatedAt)}</p></div><div class="count">Actividades: ${printRows.length}</div><table><thead><tr><th>#</th><th>Fecha</th><th>Equipo</th><th>Actividad</th><th>Lubricante</th><th>Cantidad</th><th>Técnico</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+
+    popup.document.open();
+    popup.document.write(html);
+    popup.document.close();
+    popup.focus();
+    popup.onload = () => {
+      popup.focus();
+      popup.print();
+    };
+    window.setTimeout(() => {
+      try {
+        popup.focus();
+        popup.print();
+      } catch {}
+    }, 350);
+  }, [canPrintActivities, printRows, printFrom, printTo, currentPlant]);
 
   const baseCountList = techScoped;
 
@@ -1311,6 +1393,20 @@ useEffect(() => {
         </div>
 
         <div style={controlsRow}>
+          {canPrintActivities ? (
+            <div style={{ ...controlBlock, display: "grid", gap: 8, alignItems: "start" }}>
+              <span style={controlLabel}>Imprimir actividades:</span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <input type="date" value={printFrom} onChange={(e) => setPrintFrom(e.target.value)} style={controlInput} />
+                <span style={{ color: "#64748b", fontWeight: 900 }}>a</span>
+                <input type="date" value={printTo} onChange={(e) => setPrintTo(e.target.value)} style={controlInput} />
+                <button type="button" onClick={handlePrintActivities} style={btnGhost}>
+                  <Icon name="doc" style={{ width: 16, height: 16 }} />
+                  <span>Imprimir</span>
+                </button>
+              </div>
+            </div>
+          ) : null}
           <div style={controlBlock}>
             <span style={controlLabel}>Mes base:</span>
             <input
@@ -2747,6 +2843,12 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
+
+
+
+
+
 
 
 
