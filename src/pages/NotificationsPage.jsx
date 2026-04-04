@@ -500,7 +500,7 @@ export default function NotificationsPage() {
                             {unread ? (
                               <span style={dotLive} title="Nuevo" />
                             ) : (
-                              <span style={dotOff} title="Le?do" />
+                              <span style={dotOff} title="Leído" />
                             )}
                           </div>
                         </div>
@@ -510,7 +510,7 @@ export default function NotificationsPage() {
                         <div style={notifMeta}>
                           {n.createdAt ? new Date(n.createdAt).toLocaleString("es-MX") : ""}
                         </div>
-                        {unread ? <Tag tone="amber">Nuevo</Tag> : <Tag tone="steel">Le?do</Tag>}
+                        {unread ? <Tag tone="amber">Nuevo</Tag> : <Tag tone="steel">Leído</Tag>}
                       </div>
                     </div>
                   </button>

@@ -1093,18 +1093,6 @@ function AdminPanel({
     const targetMonth = String(month || "");
     return source.filter((item) => {
       const type = String(item?.type || "").toUpperCase();
-      const crit = String(
-        item?.equipment?.criticality ||
-          item?.entity?.equipment?.criticality ||
-          item?.criticality ||
-          ""
-      ).toUpperCase();
-      const isCriticalEq = ["ALTA", "CRITICA", "CR?TICA"].includes(crit);
-      const isConditionDerived =
-        type.includes("CONDITION_REPORT") ||
-        type === "COND_REPORT" ||
-        type === "BAD_CONDITION" ||
-        type === "REPEATED_FAILURES";
       if (type === "REPEATED_FAILURES") {
         const monthKey = String(toLocalYMD(item?.lastBadAt || "")).slice(0, 7);
         if (!monthKey || monthKey !== targetMonth) return false;
@@ -1113,7 +1101,7 @@ function AdminPanel({
         const scheduledKey = String(toLocalYMD(item?.scheduledAt || item?.entity?.scheduledAt || ""));
         if (scheduledKey && scheduledKey >= todayYMD) return false;
       }
-      return isCriticalEq || isConditionDerived;
+      return true;
     });
   }, [pqItems, month, todayYMD]);
 
