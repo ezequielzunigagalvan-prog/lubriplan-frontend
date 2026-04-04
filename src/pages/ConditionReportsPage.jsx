@@ -40,7 +40,7 @@ const niceCondition = (c) => {
   if (x === "BUENO") return "BUENO";
   if (x === "REGULAR") return "REGULAR";
   if (x === "MALO") return "MALO";
-  if (x === "CRITICO" || x === "CR?TICO") return "CR?TICO";
+  if (x === "CRITICO" || x === "CRITICO") return "CRITICO";
   return x || "?";
 };
 

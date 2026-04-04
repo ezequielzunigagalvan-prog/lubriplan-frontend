@@ -1238,7 +1238,7 @@ const datePill = {
 const conditionPill = (condition) => {
   const v = String(condition || "").toUpperCase().trim();
 
-  if (v === "CRITICO" || v === "CR?TICO") {
+  if (v === "CRITICO" || v === "CRITICO") {
     return {
       display: "inline-flex",
       alignItems: "center",

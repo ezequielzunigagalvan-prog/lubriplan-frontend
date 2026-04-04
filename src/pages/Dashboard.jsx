@@ -1002,7 +1002,7 @@ function AdminPanel({
     const upcoming = [];
     const isAdminPriorityCandidate = (item) => {
       const crit = String(item?.equipmentCriticality || "").toUpperCase();
-      const isCriticalEq = ["ALTA", "CRITICA", "CR?TICA"].includes(crit);
+      const isCriticalEq = ["ALTA", "CRITICA", "CRITICA"].includes(crit);
       const fromConditionReport = item?.conditionReportId != null;
       return isCriticalEq || fromConditionReport;
     };
@@ -1024,7 +1024,7 @@ function AdminPanel({
   const operationalOverdueCount = operationalBuckets.overdue.length;
   const operationalCriticalOverdueCount = operationalBuckets.overdue.filter((item) => {
     const crit = String(item?.equipmentCriticality || item?.criticality || "").toUpperCase();
-    return ["ALTA", "CRITICA", "CR?TICA"].includes(crit);
+    return ["ALTA", "CRITICA", "CRITICA"].includes(crit);
   }).length;
   const repeatedFailuresTopCurrentMonth = useMemo(() => {
     const list = Array.isArray(predAlerts?.repeatedFailuresTop) ? predAlerts.repeatedFailuresTop : [];
@@ -1093,6 +1093,18 @@ function AdminPanel({
     const targetMonth = String(month || "");
     return source.filter((item) => {
       const type = String(item?.type || "").toUpperCase();
+      const crit = String(
+        item?.equipment?.criticality ||
+          item?.entity?.equipment?.criticality ||
+          item?.criticality ||
+          ""
+      ).toUpperCase();
+      const isCriticalEq = ["ALTA", "CRITICA", "CRITICA"].includes(crit);
+      const isConditionDerived =
+        type.includes("CONDITION_REPORT") ||
+        type === "COND_REPORT" ||
+        type === "BAD_CONDITION" ||
+        type === "REPEATED_FAILURES";
       if (type === "REPEATED_FAILURES") {
         const monthKey = String(toLocalYMD(item?.lastBadAt || "")).slice(0, 7);
         if (!monthKey || monthKey !== targetMonth) return false;
@@ -1101,7 +1113,7 @@ function AdminPanel({
         const scheduledKey = String(toLocalYMD(item?.scheduledAt || item?.entity?.scheduledAt || ""));
         if (scheduledKey && scheduledKey >= todayYMD) return false;
       }
-      return true;
+      return isCriticalEq || isConditionDerived;
     });
   }, [pqItems, month, todayYMD]);
 
@@ -1426,7 +1438,7 @@ function AdminPanel({
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!operationalOverdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(operationalOverdueCount || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin técnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(lowStockCount ? chipAmberMini : chipOffMini) }} onClick={() => navigate(`/inventory?filter=low&month=${encodeURIComponent(month)}`)} disabled={!lowStockCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="drop" size="sm" />Bajo stock</span><span style={chipCountMini}>{Number(lowStockCount || 0)}</span></button>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalCriticalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad cr?tica ya venci? y requiere atenci?n inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Cr?ticas vencidas</span><span style={chipCountMini}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
+                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalCriticalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Críticas vencidas</span><span style={chipCountMini}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
               </div>
             </div>
 
@@ -1449,7 +1461,6 @@ function AdminPanel({
                   return (
                     <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse."><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(operationalCriticalOverdueCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad cr?tica ya venci? y requiere atenci?n inmediata."><Icon name="alert" size="sm" />Cr?ticas vencidas <span style={chipCount}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(repeatedFailuresTopCurrentMonth.length ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresTopCurrentMonth.length} title="Se activa cuando un equipo repite condiciones MALO o CR?TICO en el mes activo y ya sugiere un patr?n recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(repeatedFailuresTopCurrentMonth.length || 0)}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto según consumo e inventario disponible."><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span></button>
@@ -1872,13 +1883,9 @@ function SupervisorDistributionAlertsPanel({
             </div>
             {predError ? <div style={miniError}>{predError}</div> : null}
             <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad cr?tica ya venci? y requiere atenci?n inmediata.">
+              <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse.">
                 <Icon name="clock" size="sm" />
                 Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CR?TICO en el mes activo y ya sugiere un patr?n recurrente.">
-                <Icon name="warn" size="sm" />
-                Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
               </button>
               <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount}>
                 <Icon name="warn" size="sm" />
@@ -2220,7 +2227,7 @@ function TechnicianPerfectPanel(props) {
           }
         >
           {donutLoading ? (
-            <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando&</div>
+            <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando</div>
           ) : (
             <ActivitiesDonut
               month={month}
