@@ -76,7 +76,7 @@ export default function TechniciansPerformance({ days = 180 }) {
       setRows(Array.isArray(json?.result) ? json.result : []);
     } catch (e) {
       console.error(e);
-      setErr(e?.message || "Error cargando desempeno");
+      setErr(e?.message || "Error cargando desempeño");
       setRows([]);
     } finally {
       setLoading(false);

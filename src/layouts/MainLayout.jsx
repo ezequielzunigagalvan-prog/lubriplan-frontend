@@ -499,7 +499,7 @@ export default function MainLayout({ children }) {
                 <span style={navIconStyle("/export")}>
                   <Icon name="settings" />
                 </span>
-                <span style={sideText}>Exportar</span>
+                <span style={sideText}>Exportar/Importar</span>
               </span>
             </NavLink>
           )}
@@ -757,7 +757,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/activities")) return "Actividades";
   if (pathname.startsWith("/history")) return "Historial";
   if (pathname.startsWith("/analysis")) return "Análisis";
-  if (pathname.startsWith("/export")) return "Exportar";
+  if (pathname.startsWith("/export")) return "Exportar/Importar";
   if (pathname.startsWith("/reports/monthly")) return "Reporte mensual";
   if (pathname.startsWith("/users")) return "Usuarios";
   if (pathname.startsWith("/admin/links")) return "Vínculos";

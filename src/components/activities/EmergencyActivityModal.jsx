@@ -304,7 +304,7 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
                 <option value="BUENO">Bueno</option>
                 <option value="REGULAR">Regular</option>
                 <option value="MALO">Malo</option>
-                <option value="CRITICO">Cr?tico</option>
+                <option value="CRITICO">Crítico</option>
               </select>
             </div>
 

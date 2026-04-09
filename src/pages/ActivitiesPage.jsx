@@ -184,7 +184,7 @@ export const isCriticality = (c) => {
   const s = String(c || "").toUpperCase().trim();
   return (
     s === "CRITICO" ||
-    s === "CR?TICO" ||
+    s === "CRITICO" ||
     s === "MUY_CRITICO" ||
     s === "MUY CRITICO" ||
     s === "MUY CRITICO" ||
@@ -1364,7 +1364,7 @@ useEffect(() => {
                 <div style={infoText}>
                   <div>
                     <b>Por qué aparece:</b> actividades completadas con condición <b>MALO</b> o{" "}
-                    <b>CR?TICO</b>.
+                    <b>CRITICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
                     <b>Recomendación:</b> revisa observación/evidencia y prioriza inspección.
