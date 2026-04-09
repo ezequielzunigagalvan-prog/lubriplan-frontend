@@ -47,6 +47,36 @@ export default function LubriPlanLanding() {
     []
   );
 
+  const commercialWins = useMemo(
+    () => [
+      {
+        title: "Menos atraso operativo",
+        text: "Reduce actividades vencidas, evita acumulación y mejora el seguimiento diario de la lubricación.",
+      },
+      {
+        title: "Más control en campo",
+        text: "El técnico ejecuta con instrucciones, evidencia y captura de consumo en una sola experiencia.",
+      },
+      {
+        title: "Decisión con contexto",
+        text: "Supervisión y jefatura reciben alertas, lectura ejecutiva e historial útil para priorizar mejor.",
+      },
+    ],
+    []
+  );
+
+  const industries = useMemo(
+    () => [
+      "Manufactura",
+      "Automotriz",
+      "Metalmecánica",
+      "Alimentos y bebidas",
+      "Servicios auxiliares",
+      "Plantas industriales",
+    ],
+    []
+  );
+
   const journey = useMemo(
     () => [
       ["01", "Estandarizas la lubricación", "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una base única."],
@@ -99,11 +129,13 @@ export default function LubriPlanLanding() {
         <div style={heroGrid}>
           <div>
             <div style={eyebrow}>CONTROL OPERATIVO PARA LUBRICACIÓN INDUSTRIAL</div>
-            <h1 style={heroTitle}>Ordena rutas, ejecución, condición e inventario en una sola plataforma</h1>
+            <h1 style={heroTitle}>
+              Convierte la lubricación en un proceso visible, controlado y defendible
+            </h1>
             <p style={heroText}>
-              LubriPlan centraliza el control de actividades de lubricación, la ejecución en campo,
-              el monitoreo de condición, el inventario de lubricantes y la visibilidad operativa para
-              que mantenimiento trabaje con orden, trazabilidad y contexto real.
+              LubriPlan ayuda a mantenimiento a dejar atrás el seguimiento disperso y operar con una
+              base única para rutas, ejecución, condición, consumo e inventario. El resultado es una
+              operación más ordenada, más visible y más confiable para planta.
             </p>
             <div style={heroRoleLine}>
               Diseñado para jefes de mantenimiento, supervisores y responsables de lubricación en planta.
@@ -158,6 +190,22 @@ export default function LubriPlanLanding() {
 
       <section style={section}>
         <div style={sectionHead}>
+          <div style={sectionKicker}>VALOR PARA EL CLIENTE INDUSTRIAL</div>
+          <h2 style={sectionTitle}>Lo que LubriPlan aporta a la operación desde las primeras semanas</h2>
+          <p style={sectionText}>
+            No se trata solo de digitalizar formatos. Se trata de ordenar la ejecución, recuperar
+            visibilidad y darle a mantenimiento una base confiable para actuar con prioridad.
+          </p>
+        </div>
+        <div style={winGrid}>
+          {commercialWins.map((item) => (
+            <WinCard key={item.title} {...item} />
+          ))}
+        </div>
+      </section>
+
+      <section style={section}>
+        <div style={sectionHead}>
           <div style={sectionKicker}>QUÉ RESUELVE LUBRIPLAN</div>
           <h2 style={sectionTitle}>Reduce desorden operativo y mejora el control real de la lubricación</h2>
           <p style={sectionText}>
@@ -200,6 +248,20 @@ export default function LubriPlanLanding() {
           </p>
         </div>
         <div style={featureGrid}>{capabilities.map((item) => <FeatureLine key={item} text={item} />)}</div>
+      </section>
+
+      <section style={section}>
+        <div style={sectionHead}>
+          <div style={sectionKicker}>DÓNDE ENCAJA MEJOR</div>
+          <h2 style={sectionTitle}>Pensado para operaciones industriales que necesitan más control y menos improvisación</h2>
+        </div>
+        <div style={industryWrap}>
+          {industries.map((item) => (
+            <span key={item} style={industryPill}>
+              {item}
+            </span>
+          ))}
+        </div>
       </section>
 
       <section id="como-funciona" style={section}>
@@ -285,6 +347,18 @@ function FeatureLine({ text }) {
     <div style={featureLine}>
       <span style={featureLineIcon}><Icon name="spark" size="sm" /></span>
       <span>{text}</span>
+    </div>
+  );
+}
+
+function WinCard({ title, text }) {
+  return (
+    <div style={winCard}>
+      <div style={winIcon}>
+        <Icon name="trendUp" />
+      </div>
+      <div style={winTitle}>{title}</div>
+      <div style={winText}>{text}</div>
     </div>
   );
 }
@@ -382,11 +456,18 @@ const problemText = { fontWeight: 900, lineHeight: 1.45 };
 const featureGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 };
 const featureLine = { display: "flex", gap: 12, alignItems: "flex-start", padding: 18, borderRadius: 20, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#f8fafc", fontWeight: 800, lineHeight: 1.5 };
 const featureLineIcon = { width: 34, height: 34, borderRadius: 12, background: "rgba(249,115,22,0.15)", color: "#fb923c", display: "grid", placeItems: "center", flexShrink: 0 };
+const winGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
+const winCard = { padding: 20, borderRadius: 22, background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)" };
+const winIcon = { width: 46, height: 46, borderRadius: 16, background: "rgba(249,115,22,0.15)", color: "#fb923c", display: "grid", placeItems: "center", marginBottom: 14 };
+const winTitle = { fontSize: 18, fontWeight: 950 };
+const winText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
 const journeyGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
 const journeyCard = { padding: 20, borderRadius: 24, background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)" };
 const journeyNumber = { fontSize: 34, lineHeight: 1, fontWeight: 1000, color: "#fb923c" };
 const journeyTitle = { marginTop: 12, fontSize: 19, lineHeight: 1.2, fontWeight: 950 };
 const journeyText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
+const industryWrap = { display: "flex", gap: 10, flexWrap: "wrap" };
+const industryPill = { padding: "12px 16px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "#e2e8f0", fontSize: 13, fontWeight: 900 };
 const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 72px" };
 const ctaBox = { position: "relative", overflow: "hidden", padding: "30px 24px", borderRadius: 30, background: "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)", border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 24px 70px rgba(2,6,23,0.28)" };
 const ctaTitle = { position: "relative", zIndex: 1, margin: 0, fontSize: "clamp(2rem, 4vw, 3.1rem)", lineHeight: 1, letterSpacing: -1.1 };
