@@ -1,4 +1,4 @@
-// src/pages/ExportPage.jsx
+﻿// src/pages/ExportPage.jsx
 import { useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import ExportPanel from "../components/export/ExportPanel";
@@ -103,7 +103,7 @@ export default function ExportPage() {
   }, [mode, from, to, days]);
 
   const rangeLabel = useMemo(() => {
-    if (mode === "range") return `${from || "—"} → ${to || "—"}`;
+    if (mode === "range") return `${from || "-"} -> ${to || "-"}`;
     return `Últimos ${days} días`;
   }, [mode, from, to, days]);
 
@@ -123,7 +123,7 @@ export default function ExportPage() {
       return "Fechas inválidas.";
     }
 
-    if (a > b) return "El rango es inválido: 'Desde' debe ser ≤ 'Hasta'.";
+    if (a > b) return 'El rango es inválido: "Desde" debe ser menor o igual a "Hasta".';
     return null;
   };
 
@@ -486,7 +486,7 @@ export default function ExportPage() {
         <ExportCard
           icon="drop"
           title="Consumo (Movimientos)"
-          desc="Entradas/salidas, cantidades, stock before/after, ejecución ligada, equipo y técnico."
+          desc="Entradas y salidas, cantidades, stock antes y después, ejecución ligada, equipo y técnico."
           onDownload={() =>
             doDownload("movements", buildExtraFilters(), "Movimientos")
           }
@@ -511,7 +511,7 @@ export default function ExportPage() {
               <div>
                 <div style={cardTitle}>Fallas</div>
                 <div style={cardDesc}>
-                  Ejecuciones completadas con condición <b>MALO</b> o <b>CRITICO</b>.
+                  Ejecuciones completadas con condición <b>MALO</b> o <b>CRÍTICO</b>.
                 </div>
               </div>
             </div>
@@ -549,7 +549,7 @@ export default function ExportPage() {
         <ExportCard
   icon="bolt"
   title="Actividades emergentes"
-  desc="Fuera de ruta/plan: equipo, técnico, fecha, motivo/notas y condición."
+  desc="Fuera de ruta o plan: equipo, técnico, fecha, motivo o notas y condición."
   badge="Nuevo"
   onDownload={() => doDownload("emergents", {}, "Actividades emergentes")}
   busy={busy}
@@ -637,7 +637,7 @@ function ImportBlock({
         <div style={importStep}>
           <div style={stepBadge}>1</div>
           <div style={stepTitle}>Descargar y subir plantilla</div>
-          <div style={stepText}>La plantilla incluye hojas para equipos, lubricantes, técnicos y rutas.</div>
+          <div style={stepText}>La plantilla incluye hojas para equipos, lubricantes, técnicos y rutas. Si una ruta usa BOMBAZOS, llena también la equivalencia del bombazo.</div>
           <button type="button" style={btnGhost} disabled={busy || commitBusy} onClick={onTemplate}>
             <span style={btnRow}>
               <Icon name="download" />
