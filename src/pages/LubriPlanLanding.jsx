@@ -4,8 +4,10 @@ import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import lubriPlanLogo from "../assets/lubriplan-logo.png.png";
 
-const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const EXEC_DISPLAY_FONT =
+  'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const EXEC_TEXT_FONT =
+  'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 export default function LubriPlanLanding() {
   const { isAuthenticated } = useAuth();
@@ -15,22 +17,22 @@ export default function LubriPlanLanding() {
       {
         icon: "route",
         title: "Rutas bajo control",
-        text: "Estructura frecuencias, puntos, método y responsables sin depender de hojas dispersas.",
+        text: "Organiza frecuencias, puntos, método y responsables sin depender de hojas sueltas o seguimiento informal.",
       },
       {
         icon: "checkCircle",
         title: "Ejecución trazable",
-        text: "Cada actividad queda respaldada con técnico, condición, evidencia y consumo real.",
+        text: "Cada actividad queda respaldada con técnico, condición, evidencia y consumo real aplicado.",
       },
       {
         icon: "trendUp",
         title: "Visibilidad ejecutiva",
-        text: "Dashboards, alertas y reportes conectados para decidir con contexto operativo real.",
+        text: "Dashboards, alertas y reportes para supervisar pendientes, vencidos y riesgos operativos reales.",
       },
       {
         icon: "drop",
         title: "Inventario conectado",
-        text: "El consumo de lubricantes conversa con la operación y anticipa riesgo de desabasto.",
+        text: "El consumo de lubricantes se conecta con la operación y ayuda a anticipar riesgo de desabasto.",
       },
     ],
     []
@@ -46,7 +48,7 @@ export default function LubriPlanLanding() {
       {
         icon: "alert",
         title: "Prioridad operativa inmediata",
-        text: "El sistema responde qué está mal, qué sigue y qué requiere atención antes de entrar al análisis.",
+        text: "El sistema ayuda a identificar qué está vencido, qué está crítico y qué requiere acción primero.",
       },
       {
         icon: "doc",
@@ -56,12 +58,12 @@ export default function LubriPlanLanding() {
       {
         icon: "spark",
         title: "Base lista para IA",
-        text: "Toda la estructura ya esta preparada para resúmenes ejecutivos, alertas predictivas y recomendaciones.",
+        text: "La estructura ya está preparada para resúmenes ejecutivos, alertas predictivas y recomendaciones.",
       },
       {
         icon: "users",
         title: "Trabajo por rol",
-        text: "Administrador, supervisor y técnico ven lo que necesitan para actuar, no una misma pantalla para todos.",
+        text: "Administrador, supervisor y técnico ven lo que necesitan para actuar, no una sola pantalla para todos.",
       },
       {
         icon: "shield",
@@ -77,29 +79,50 @@ export default function LubriPlanLanding() {
       {
         n: "01",
         title: "Estandarizas la lubricación",
-        text: "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una sola base.",
+        text: "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una base única.",
       },
       {
         n: "02",
-        title: "La operación se ordena sola",
-        text: "LubriPlan genera actividades, separa prioridades y mantiene visible lo vencido y lo crítico.",
+        title: "La operación se ordena",
+        text: "LubriPlan genera actividades, separa prioridades y mantiene visible lo vencido, lo pendiente y lo crítico.",
       },
       {
         n: "03",
-        title: "Campo registra con contexto",
-        text: "El técnico ejecuta con instrucciones claras, evidencia y captura del consumo real aplicado.",
+        title: "Campo ejecuta con contexto",
+        text: "El técnico trabaja con instrucciones claras, evidencia y captura del consumo real aplicado.",
       },
       {
         n: "04",
-        title: "Mantenimiento toma mejores decisiones",
-        text: "La jefatura recibe indicadores, alertas y reportes listos para priorizar y corregir a tiempo.",
+        title: "Mantenimiento decide mejor",
+        text: "La jefatura recibe indicadores, alertas y reportes para priorizar y corregir a tiempo.",
       },
     ],
     []
   );
 
   const audiences = useMemo(
-    () => ["Manufactura", "Automotriz", "Metalmecánica", "Alimentos", "Energía", "Plantas industriales"],
+    () => [
+      "Jefes de mantenimiento",
+      "Supervisores",
+      "Responsables de lubricación",
+      "Manufactura",
+      "Automotriz",
+      "Metalmecánica",
+      "Alimentos",
+      "Plantas industriales",
+    ],
+    []
+  );
+
+  const painPoints = useMemo(
+    () => [
+      "Actividades de lubricación vencidas que nadie ve a tiempo",
+      "Seguimiento en Excel, papel o WhatsApp",
+      "Ejecución inconsistente entre técnicos",
+      "Inventario separado del consumo real",
+      "Poca trazabilidad por equipo, técnico y condición",
+      "Dificultad para priorizar mantenimiento con datos claros",
+    ],
     []
   );
 
@@ -120,34 +143,54 @@ export default function LubriPlanLanding() {
             </div>
             <div>
               <div style={brandTitle}>LubriPlan</div>
-              <div style={brandSub}>Gestión industrial de lubricación</div>
+              <div style={brandSub}>Software de gestión de lubricación industrial</div>
             </div>
           </div>
 
           <div style={topActions}>
-            <a href="#arquitectura" style={topLink}>Cómo funciona</a>
-            <a href="#capacidad" style={topLink}>Capacidades</a>
-            <Link to="/login" style={topButton}>Entrar</Link>
+            <a href="#como-funciona" style={topLink}>
+              Cómo funciona
+            </a>
+            <a href="#capacidades" style={topLink}>
+              Capacidades
+            </a>
+            <a href="#contacto" style={topLink}>
+              Contacto
+            </a>
+            <Link to="/login" style={topButton}>
+              Entrar
+            </Link>
           </div>
         </header>
 
         <div style={heroGrid}>
           <div style={{ minWidth: 0, position: "relative", zIndex: 2 }}>
-            <div style={eyebrow}>OPERACIÓN INDUSTRIAL CON TRAZABILIDAD REAL</div>
+            <div style={eyebrow}>CONTROL OPERATIVO PARA LUBRICACIÓN INDUSTRIAL</div>
+
             <h1 style={heroTitle}>
-              La plataforma que convierte la lubricación en una operación controlada, visible y defendible
+              Software de gestión de lubricación industrial para controlar rutas,
+              actividades y condición de equipos
             </h1>
+
             <p style={heroText}>
-              LubriPlan conecta rutas, ejecución en campo, inventario, alertas y análisis ejecutivo para que mantenimiento deje de perseguir pendientes y empiece a operar con control real.
+              LubriPlan centraliza el control de actividades de lubricación, la
+              ejecución en campo, el monitoreo de condición, el inventario de
+              lubricantes y la visibilidad operativa para que mantenimiento
+              trabaje con orden, trazabilidad y contexto real.
             </p>
 
+            <div style={heroRoleLine}>
+              Dirigido a jefes de mantenimiento, supervisores y responsables de
+              lubricación en planta.
+            </div>
+
             <div style={heroActions}>
-              <Link to="/login" style={btnPrimary}>
-                Entrar a LubriPlan
-              </Link>
-              <a href="#arquitectura" style={btnGhost}>
-                Ver recorrido
+              <a href="#contacto" style={btnPrimary}>
+                Solicitar demo
               </a>
+              <Link to="/login" style={btnGhost}>
+                Entrar a plataforma
+              </Link>
             </div>
 
             <div style={heroStatsRow}>
@@ -161,15 +204,17 @@ export default function LubriPlanLanding() {
             <div style={heroPanelHead}>
               <div>
                 <div style={heroPanelKicker}>Vista operativa</div>
-                <div style={heroPanelTitle}>Lo que un jefe de mantenimiento necesita ver primero</div>
+                <div style={heroPanelTitle}>
+                  Lo primero que mantenimiento necesita ver para actuar
+                </div>
               </div>
               <span style={panelBadge}>Tiempo real</span>
             </div>
 
             <div style={heroMetricGrid}>
-              <MetricCard value="98%" label="Cumplimiento" tone="green" />
-              <MetricCard value="12" label="Pendientes hoy" tone="amber" />
-              <MetricCard value="3" label="Equipos críticos" tone="red" />
+              <MetricCard value="12" label="Actividades vencidas" tone="red" />
+              <MetricCard value="7" label="Pendientes críticas" tone="amber" />
+              <MetricCard value="3" label="Equipos con riesgo" tone="red" />
               <MetricCard value="24" label="Rutas activas" tone="blue" />
             </div>
 
@@ -178,8 +223,13 @@ export default function LubriPlanLanding() {
                 <div style={feedLabel}>Prioridad de hoy</div>
                 <span style={feedChipRed}>Crítica</span>
               </div>
-              <div style={feedTitle}>Prensa principal con actividad vencida y condición crítica abierta</div>
-              <div style={feedMeta}>Acción sugerida: ejecutar, validar condición y confirmar consumo real.</div>
+              <div style={feedTitle}>
+                Equipo principal con actividad vencida y condición crítica abierta
+              </div>
+              <div style={feedMeta}>
+                Acción sugerida: ejecutar, validar condición, capturar evidencia
+                y confirmar consumo real.
+              </div>
             </div>
 
             <div style={feedSplitGrid}>
@@ -188,14 +238,20 @@ export default function LubriPlanLanding() {
                   <div style={feedLabel}>Inventario</div>
                   <span style={feedChipAmber}>Riesgo</span>
                 </div>
-                <div style={feedMiniText}>Grasa alta temperatura con cobertura limitada para los próximos días.</div>
+                <div style={feedMiniText}>
+                  Lubricante crítico con cobertura limitada para próximos días.
+                </div>
               </div>
+
               <div style={feedCardSoft}>
                 <div style={feedTopRow}>
-                  <div style={feedLabel}>Seguimiento</div>
+                  <div style={feedLabel}>Lectura ejecutiva</div>
                   <span style={feedChipBlue}>IA lista</span>
                 </div>
-                <div style={feedMiniText}>El sistema ya prepara resúmenes, prioridades y señales predictivas para decisión ejecutiva.</div>
+                <div style={feedMiniText}>
+                  La base ya está preparada para resúmenes, prioridades y señales
+                  predictivas para decisión ejecutiva.
+                </div>
               </div>
             </div>
           </div>
@@ -211,12 +267,39 @@ export default function LubriPlanLanding() {
       </section>
 
       <section style={section}>
+        <div style={sectionHeadWide}>
+          <div style={sectionKicker}>QUÉ RESUELVE LUBRIPLAN</div>
+          <h2 style={sectionTitle}>
+            Reduce desorden operativo y mejora el control real de la lubricación
+          </h2>
+          <p style={sectionText}>
+            LubriPlan funciona como sistema digital para la gestión y control de
+            actividades de lubricación, ayudando a ordenar la ejecución diaria,
+            mejorar la trazabilidad y dar visibilidad a lo que pone en riesgo la
+            operación.
+          </p>
+        </div>
+
+        <div style={painGrid}>
+          {painPoints.map((item) => (
+            <PainCard key={item} text={item} />
+          ))}
+        </div>
+      </section>
+
+      <section style={sectionAlt}>
         <div style={splitSectionGrid}>
           <div style={sectionIntroBlock}>
             <div style={sectionKicker}>EL PROBLEMA OPERATIVO</div>
-            <h2 style={sectionTitle}>La lubricación se vuelve riesgosa cuando depende de seguimiento informal</h2>
+            <h2 style={sectionTitle}>
+              La lubricación se vuelve riesgosa cuando depende de seguimiento
+              informal
+            </h2>
             <p style={sectionText}>
-              Cuando la ejecución vive entre papel, mensajes, Excel o memoria operativa, los pendientes se mezclan, las prioridades no son claras y el inventario deja de representar lo que realmente pasa en planta.
+              Cuando la gestión de lubricación vive entre papel, Excel, mensajes
+              o memoria operativa, los pendientes se mezclan, las prioridades no
+              son claras y el inventario deja de representar lo que realmente pasa
+              en planta.
             </p>
           </div>
 
@@ -230,12 +313,16 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      <section id="capacidad" style={sectionAlt}>
+      <section id="capacidades" style={sectionAlt}>
         <div style={sectionHeadWide}>
           <div style={sectionKicker}>CAPACIDADES CLAVE</div>
-          <h2 style={sectionTitle}>Una sola plataforma para planear, ejecutar, alertar y dirigir</h2>
+          <h2 style={sectionTitle}>
+            Una sola plataforma para planear, ejecutar, alertar y dirigir
+          </h2>
           <p style={sectionText}>
-            LubriPlan no es solo una bitácora bonita: es una capa de control para la lubricación industrial, pensada para sostener operación diaria y lectura ejecutiva al mismo tiempo.
+            LubriPlan no es solo una bitácora: es una plataforma para mantenimiento
+            de lubricación industrial que conecta control operativo, monitoreo de
+            condición, inventario y lectura ejecutiva.
           </p>
         </div>
 
@@ -246,10 +333,12 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      <section id="arquitectura" style={section}>
+      <section id="como-funciona" style={section}>
         <div style={sectionHeadWide}>
-          <div style={sectionKicker}>RECORRIDO OPERATIVO</div>
-          <h2 style={sectionTitle}>De la planeación a la visibilidad ejecutiva, sin perder continuidad</h2>
+          <div style={sectionKicker}>CÓMO FUNCIONA</div>
+          <h2 style={sectionTitle}>
+            De la planeación a la visibilidad ejecutiva, sin perder continuidad
+          </h2>
         </div>
 
         <div style={journeyGrid}>
@@ -281,27 +370,41 @@ export default function LubriPlanLanding() {
 
       <section style={section}>
         <div style={sectionHeadWide}>
-          <div style={sectionKicker}>ENFOQUE INDUSTRIAL</div>
-          <h2 style={sectionTitle}>Pensado para plantas que necesitan orden operativo, no solo visualización</h2>
+          <div style={sectionKicker}>PARA QUIÉN ES</div>
+          <h2 style={sectionTitle}>
+            Pensado para plantas que necesitan orden operativo, trazabilidad y control
+          </h2>
         </div>
         <div style={audienceWrap}>
           {audiences.map((item) => (
-            <span key={item} style={audiencePill}>{item}</span>
+            <span key={item} style={audiencePill}>
+              {item}
+            </span>
           ))}
         </div>
       </section>
 
-      <section style={ctaSection}>
+      <section id="contacto" style={ctaSection}>
         <div style={ctaBox}>
           <div style={ctaGlow} />
-          <div style={sectionKicker}>LISTO PARA ENTRAR</div>
-          <h2 style={ctaTitle}>Empieza a operar con una base seria para la lubricación industrial</h2>
+          <div style={sectionKicker}>LISTO PARA DEMOSTRARSE EN PLANTA</div>
+          <h2 style={ctaTitle}>
+            Solicita una demo de LubriPlan y evalúa cómo ordenar tu operación de lubricación
+          </h2>
           <p style={ctaText}>
-            Si tu equipo ya trabaja dentro de LubriPlan, entra ahora. Si estás evaluando la solución, esta misma estructura está diseñada para convertirse en el centro operativo de la lubricación dentro de tu planta.
+            Si hoy tu planta depende de Excel, papel o seguimiento informal para
+            controlar actividades de lubricación, LubriPlan puede convertirse en
+            la base operativa para ejecutar mejor, ver antes los riesgos y tomar
+            decisiones con contexto real.
           </p>
+
           <div style={heroActions}>
-            <Link to="/login" style={btnPrimary}>Ir a Login</Link>
-            <a href="#arquitectura" style={btnGhostDark}>Ver capacidades</a>
+            <a href="mailto:info@hidrolub.com?subject=Quiero una demo de LubriPlan" style={btnPrimary}>
+              Solicitar demo
+            </a>
+            <Link to="/login" style={btnGhostDark}>
+              Entrar a plataforma
+            </Link>
           </div>
         </div>
       </section>
@@ -312,7 +415,9 @@ export default function LubriPlanLanding() {
 function MicroStat({ icon, label }) {
   return (
     <span style={microStat}>
-      <span style={microIcon}><Icon name={icon} size="sm" /></span>
+      <span style={microIcon}>
+        <Icon name={icon} size="sm" />
+      </span>
       {label}
     </span>
   );
@@ -339,7 +444,9 @@ function MetricCard({ value, label, tone = "blue" }) {
 function SignalCard({ icon, title, text }) {
   return (
     <div style={signalCard}>
-      <div style={signalIcon}><Icon name={icon} /></div>
+      <div style={signalIcon}>
+        <Icon name={icon} />
+      </div>
       <div>
         <div style={signalTitle}>{title}</div>
         <div style={signalText}>{text}</div>
@@ -351,7 +458,9 @@ function SignalCard({ icon, title, text }) {
 function FeatureCard({ icon, title, text }) {
   return (
     <div style={featureCard}>
-      <div style={featureIcon}><Icon name={icon} /></div>
+      <div style={featureIcon}>
+        <Icon name={icon} />
+      </div>
       <div style={featureTitle}>{title}</div>
       <div style={featureText}>{text}</div>
     </div>
@@ -371,7 +480,9 @@ function JourneyCard({ n, title, text }) {
 function ProblemLine({ icon, text }) {
   return (
     <div style={problemLine}>
-      <div style={problemLineIcon}><Icon name={icon} /></div>
+      <div style={problemLineIcon}>
+        <Icon name={icon} />
+      </div>
       <div style={problemLineText}>{text}</div>
     </div>
   );
@@ -396,8 +507,20 @@ function CompareRow({ text, bad = false, good = false }) {
   );
 }
 
+function PainCard({ text }) {
+  return (
+    <div style={painCard}>
+      <div style={painIcon}>
+        <Icon name="warn" />
+      </div>
+      <div style={painText}>{text}</div>
+    </div>
+  );
+}
+
 const page = {
-  background: "radial-gradient(circle at 14% 12%, rgba(249,115,22,0.18), transparent 24%), radial-gradient(circle at 84% 18%, rgba(234,88,12,0.14), transparent 22%), linear-gradient(180deg, #0b1220 0%, #111827 46%, #0f172a 100%)",
+  background:
+    "radial-gradient(circle at 14% 12%, rgba(249,115,22,0.18), transparent 24%), radial-gradient(circle at 84% 18%, rgba(234,88,12,0.14), transparent 22%), linear-gradient(180deg, #0b1220 0%, #111827 46%, #0f172a 100%)",
   color: "#fff",
   fontFamily: EXEC_TEXT_FONT,
   overflow: "hidden",
@@ -453,7 +576,8 @@ const brandMarkWrap = {
   width: 72,
   height: 72,
   borderRadius: 24,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05))",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05))",
   border: "1px solid rgba(255,255,255,0.10)",
   display: "grid",
   placeItems: "center",
@@ -537,19 +661,27 @@ const eyebrow = {
 const heroTitle = {
   margin: 0,
   fontFamily: EXEC_DISPLAY_FONT,
-  fontSize: "clamp(2.8rem, 6vw, 5rem)",
-  lineHeight: 0.95,
-  letterSpacing: -1.8,
-  maxWidth: 760,
+  fontSize: "clamp(2.5rem, 5.4vw, 4.6rem)",
+  lineHeight: 0.98,
+  letterSpacing: -1.6,
+  maxWidth: 860,
 };
 
 const heroText = {
   marginTop: 18,
-  maxWidth: 720,
+  maxWidth: 760,
   fontSize: 17,
   lineHeight: 1.72,
   color: "rgba(226,232,240,0.90)",
   fontWeight: 600,
+};
+
+const heroRoleLine = {
+  marginTop: 14,
+  color: "#fdba74",
+  fontSize: 14,
+  lineHeight: 1.55,
+  fontWeight: 900,
 };
 
 const heroActions = {
@@ -620,7 +752,8 @@ const microIcon = {
 const heroPanel = {
   borderRadius: 28,
   padding: 20,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)",
   border: "1px solid rgba(255,255,255,0.10)",
   boxShadow: "0 24px 60px rgba(2,6,23,0.32)",
   backdropFilter: "blur(10px)",
@@ -648,7 +781,7 @@ const heroPanelTitle = {
   fontSize: 22,
   lineHeight: 1.18,
   fontWeight: 900,
-  maxWidth: 360,
+  maxWidth: 380,
 };
 
 const panelBadge = {
@@ -696,7 +829,8 @@ const feedCardStrong = {
   marginTop: 14,
   padding: 16,
   borderRadius: 20,
-  background: "linear-gradient(180deg, rgba(15,23,42,0.84), rgba(15,23,42,0.72))",
+  background:
+    "linear-gradient(180deg, rgba(15,23,42,0.84), rgba(15,23,42,0.72))",
   border: "1px solid rgba(255,255,255,0.08)",
 };
 
@@ -886,10 +1020,44 @@ const sectionText = {
   fontWeight: 600,
 };
 
+const painGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gap: 14,
+};
+
+const painCard = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 12,
+  padding: 18,
+  borderRadius: 22,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.08)",
+};
+
+const painIcon = {
+  width: 42,
+  height: 42,
+  borderRadius: 14,
+  background: "rgba(239,68,68,0.14)",
+  color: "#fca5a5",
+  display: "grid",
+  placeItems: "center",
+  flexShrink: 0,
+};
+
+const painText = {
+  fontWeight: 900,
+  lineHeight: 1.45,
+  color: "#f8fafc",
+};
+
 const problemBoard = {
   padding: 20,
   borderRadius: 28,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))",
   border: "1px solid rgba(255,255,255,0.08)",
   display: "grid",
   gap: 12,
@@ -967,7 +1135,8 @@ const journeyGrid = {
 const journeyCard = {
   padding: 20,
   borderRadius: 24,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))",
   border: "1px solid rgba(255,255,255,0.08)",
 };
 
@@ -1072,7 +1241,8 @@ const ctaBox = {
   overflow: "hidden",
   padding: "30px 24px",
   borderRadius: 30,
-  background: "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)",
+  background:
+    "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)",
   border: "1px solid rgba(249,115,22,0.22)",
   boxShadow: "0 24px 70px rgba(2,6,23,0.28)",
 };
