@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from "react";
+import React, { useMemo } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -141,7 +141,7 @@ export default function LubriPlanLanding() {
               Diseñado para jefes de mantenimiento, supervisores y responsables de lubricación en planta.
             </div>
             <div style={actions}>
-              <a href="#contacto" style={btnPrimary}>Solicitar demo</a>
+              <a href="https://www.hidrolub.com/lubriplan" target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
               <Link to="/login" style={btnGhost}>Entrar a plataforma</Link>
             </div>
             <div style={statsRow}>
@@ -164,7 +164,7 @@ export default function LubriPlanLanding() {
               <MetricCard value="12" label="Actividades vencidas" tone="red" />
               <MetricCard value="7" label="Pendientes críticas" tone="amber" />
               <MetricCard value="3" label="Equipos con riesgo" tone="red" />
-              <MetricCard value="24" label="Rutas activas" tone="blue" />
+              <MetricCard value="24" label="Rutas activas" tone="blue" />`r`n              <MetricCard value="92%" label="Cumplimiento" tone="green" />
             </div>
 
             <div style={priorityCard}>
@@ -281,7 +281,7 @@ export default function LubriPlanLanding() {
             LubriPlan puede convertirse en la base operativa para ejecutar mejor, ver antes los riesgos y tomar decisiones con contexto real.
           </p>
           <div style={actions}>
-            <a href="mailto:info@hidrolub.com?subject=Quiero una demo de LubriPlan" style={btnPrimary}>Solicitar demo</a>
+            <a href="https://www.hidrolub.com/lubriplan" target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
             <Link to="/login" style={btnGhost}>Entrar a plataforma</Link>
           </div>
         </div>
@@ -300,7 +300,7 @@ function Tag({ icon, text }) {
 }
 
 function MetricCard({ value, label, tone = "blue" }) {
-  const color = tone === "red" ? "#ef4444" : tone === "amber" ? "#f59e0b" : "#60a5fa";
+  const color = tone === "red" ? "#ef4444" : tone === "amber" ? "#f59e0b" : tone === "green" ? "#22c55e" : "#60a5fa";
   return (
     <div style={metricCard}>
       <div style={{ ...metricValue, color }}>{value}</div>
@@ -416,7 +416,7 @@ const panelHead = { display: "flex", alignItems: "flex-start", justifyContent: "
 const panelKicker = { fontSize: 12, fontWeight: 900, letterSpacing: 0.9, color: "#fdba74", textTransform: "uppercase" };
 const panelTitle = { marginTop: 6, fontSize: 22, lineHeight: 1.18, fontWeight: 900, maxWidth: 380 };
 const liveBadge = { display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "8px 12px", borderRadius: 999, background: "rgba(34,197,94,0.14)", color: "#bbf7d0", border: "1px solid rgba(34,197,94,0.24)", fontSize: 11, fontWeight: 950 };
-const metrics = { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 };
+const metrics = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 };
 const metricCard = { borderRadius: 18, padding: 16, background: "rgba(15,23,42,0.78)", border: "1px solid rgba(255,255,255,0.08)" };
 const metricValue = { fontSize: 30, fontWeight: 1000, lineHeight: 1 };
 const metricLabel = { marginTop: 7, fontSize: 12, fontWeight: 900, letterSpacing: 0.8, textTransform: "uppercase", color: "#94a3b8" };
