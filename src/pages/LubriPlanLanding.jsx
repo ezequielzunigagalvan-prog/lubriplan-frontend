@@ -14,12 +14,12 @@ export default function LubriPlanLanding() {
       {
         icon: "route",
         title: "Rutas bajo control",
-        text: "Organiza frecuencias, puntos, mÃ©todo y responsables sin depender de hojas sueltas o seguimiento informal.",
+        text: "Organiza frecuencias, puntos, método y responsables sin depender de hojas sueltas o seguimiento informal.",
       },
       {
         icon: "checkCircle",
-        title: "EjecuciÃ³n trazable",
-        text: "Cada actividad queda respaldada con tÃ©cnico, condiciÃ³n, evidencia y consumo real aplicado.",
+        title: "Ejecución trazable",
+        text: "Cada actividad queda respaldada con técnico, condición, evidencia y consumo real aplicado.",
       },
       {
         icon: "trendUp",
@@ -29,7 +29,7 @@ export default function LubriPlanLanding() {
       {
         icon: "drop",
         title: "Inventario conectado",
-        text: "El consumo de lubricantes se conecta con la operaciÃ³n y ayuda a anticipar riesgo de desabasto.",
+        text: "El consumo de lubricantes se conecta con la operación y ayuda a anticipar riesgo de desabasto.",
       },
     ],
     []
@@ -37,12 +37,12 @@ export default function LubriPlanLanding() {
 
   const capabilities = useMemo(
     () => [
-      "Trabajo por rol para administrador, supervisor y tÃ©cnico",
-      "Historial completo por equipo, tÃ©cnico y condiciÃ³n",
+      "Trabajo por rol para administrador, supervisor y técnico",
+      "Historial completo por equipo, técnico y condición",
       "Inventario conectado con consumo real y alertas",
       "Base preparada para IA, lectura ejecutiva y alertas predictivas",
       "Control por planta sin mezclar datos entre operaciones",
-      "Soporte para ejecuciÃ³n, evidencia y seguimiento operativo",
+      "Soporte para ejecución, evidencia y seguimiento operativo",
     ],
     []
   );
@@ -51,15 +51,15 @@ export default function LubriPlanLanding() {
     () => [
       {
         title: "Menos atraso operativo",
-        text: "Reduce actividades vencidas, evita acumulaciÃ³n y mejora el seguimiento diario de la lubricaciÃ³n.",
+        text: "Reduce actividades vencidas, evita acumulación y mejora el seguimiento diario de la lubricación.",
       },
       {
-        title: "MÃ¡s control en campo",
-        text: "El tÃ©cnico ejecuta con instrucciones, evidencia y captura de consumo en una sola experiencia.",
+        title: "Más control en campo",
+        text: "El técnico ejecuta con instrucciones, evidencia y captura de consumo en una sola experiencia.",
       },
       {
-        title: "DecisiÃ³n con contexto",
-        text: "SupervisiÃ³n y jefatura reciben alertas, lectura ejecutiva e historial Ãºtil para priorizar mejor.",
+        title: "Decisión con contexto",
+        text: "Supervisión y jefatura reciben alertas, lectura ejecutiva e historial útil para priorizar mejor.",
       },
     ],
     []
@@ -69,7 +69,7 @@ export default function LubriPlanLanding() {
     () => [
       "Manufactura",
       "Automotriz",
-      "MetalmecÃ¡nica",
+      "Metalmecánica",
       "Alimentos y bebidas",
       "Servicios auxiliares",
       "Plantas industriales",
@@ -79,9 +79,9 @@ export default function LubriPlanLanding() {
 
   const journey = useMemo(
     () => [
-      ["01", "Estandarizas la lubricaciÃ³n", "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una base Ãºnica."],
-      ["02", "La operaciÃ³n se ordena", "LubriPlan genera actividades, separa prioridades y mantiene visible lo vencido, lo pendiente y lo crÃ­tico."],
-      ["03", "Campo ejecuta con contexto", "El tÃ©cnico trabaja con instrucciones claras, evidencia y captura del consumo real aplicado."],
+      ["01", "Estandarizas la lubricación", "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una base única."],
+      ["02", "La operación se ordena", "LubriPlan genera actividades, separa prioridades y mantiene visible lo vencido, lo pendiente y lo crítico."],
+      ["03", "Campo ejecuta con contexto", "El técnico trabaja con instrucciones claras, evidencia y captura del consumo real aplicado."],
       ["04", "Mantenimiento decide mejor", "La jefatura recibe indicadores, alertas y reportes para priorizar y corregir a tiempo."],
     ],
     []
@@ -91,9 +91,9 @@ export default function LubriPlanLanding() {
     () => [
       "Actividades vencidas que nadie ve a tiempo",
       "Seguimiento en Excel, papel o WhatsApp",
-      "EjecuciÃ³n inconsistente entre tÃ©cnicos",
+      "Ejecución inconsistente entre técnicos",
       "Inventario separado del consumo real",
-      "Poca trazabilidad por equipo, tÃ©cnico y condiciÃ³n",
+      "Poca trazabilidad por equipo, técnico y condición",
       "Dificultad para priorizar mantenimiento con datos claros",
     ],
     []
@@ -114,12 +114,12 @@ export default function LubriPlanLanding() {
             </div>
             <div>
               <div style={brandTitle}>LubriPlan</div>
-              <div style={brandSub}>Software de gestiÃ³n de lubricaciÃ³n industrial</div>
+              <div style={brandSub}>Software de gestión de lubricación industrial</div>
             </div>
           </div>
 
           <div style={nav}>
-            <a href="#como-funciona" style={navLink}>CÃ³mo funciona</a>
+            <a href="#como-funciona" style={navLink}>Cómo funciona</a>
             <a href="#capacidades" style={navLink}>Capacidades</a>
             <a href="#contacto" style={navLink}>Contacto</a>
             <Link to="/login" style={navBtn}>Entrar</Link>
@@ -128,17 +128,17 @@ export default function LubriPlanLanding() {
 
         <div style={heroGrid}>
           <div>
-            <div style={eyebrow}>CONTROL OPERATIVO PARA LUBRICACIÃ“N INDUSTRIAL</div>
+            <div style={eyebrow}>CONTROL OPERATIVO PARA LUBRICACIÓN INDUSTRIAL</div>
             <h1 style={heroTitle}>
-              Convierte la lubricaciÃ³n en un proceso visible, controlado y defendible
+              Convierte la lubricación en un proceso visible, controlado y defendible
             </h1>
             <p style={heroText}>
-              LubriPlan ayuda a mantenimiento a dejar atrÃ¡s el seguimiento disperso y operar con una
-              base Ãºnica para rutas, ejecuciÃ³n, condiciÃ³n, consumo e inventario. El resultado es una
-              operaciÃ³n mÃ¡s ordenada, mÃ¡s visible y mÃ¡s confiable para planta.
+              LubriPlan ayuda a mantenimiento a dejar atrás el seguimiento disperso y operar con una
+              base única para rutas, ejecución, condición, consumo e inventario. El resultado es una
+              operación más ordenada, más visible y más confiable para planta.
             </p>
             <div style={heroRoleLine}>
-              DiseÃ±ado para jefes de mantenimiento, supervisores y responsables de lubricaciÃ³n en planta.
+              Diseñado para jefes de mantenimiento, supervisores y responsables de lubricación en planta.
             </div>
             <div style={actions}>
               <a href="https://www.hidrolub.com/lubriplan" target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
@@ -147,7 +147,7 @@ export default function LubriPlanLanding() {
             <div style={statsRow}>
               <Tag icon="checkCircle" text="Trazabilidad por actividad" />
               <Tag icon="alert" text="Prioridad operativa inmediata" />
-              <Tag icon="trendUp" text="Indicadores para supervisiÃ³n" />
+              <Tag icon="trendUp" text="Indicadores para supervisión" />
             </div>
           </div>
 
@@ -171,15 +171,15 @@ export default function LubriPlanLanding() {
             <div style={priorityCard}>
               <div style={cardTopRow}>
                 <div style={miniTitle}>Prioridad de hoy</div>
-                <span style={chipRed}>CrÃ­tica</span>
+                <span style={chipRed}>Crítica</span>
               </div>
-              <div style={priorityTitle}>Equipo principal con actividad vencida y condiciÃ³n crÃ­tica abierta</div>
-              <div style={priorityText}>AcciÃ³n sugerida: ejecutar, validar condiciÃ³n, capturar evidencia y confirmar consumo real.</div>
+              <div style={priorityTitle}>Equipo principal con actividad vencida y condición crítica abierta</div>
+              <div style={priorityText}>Acción sugerida: ejecutar, validar condición, capturar evidencia y confirmar consumo real.</div>
             </div>
 
             <div style={miniGrid}>
-              <MiniCard title="Inventario" chip="Riesgo" chipStyle={chipAmber} text="Lubricante crÃ­tico con cobertura limitada para los prÃ³ximos dÃ­as." />
-              <MiniCard title="Lectura ejecutiva" chip="IA lista" chipStyle={chipBlue} text="La base ya estÃ¡ preparada para resÃºmenes, prioridades y seÃ±ales predictivas para decisiÃ³n ejecutiva." />
+              <MiniCard title="Inventario" chip="Riesgo" chipStyle={chipAmber} text="Lubricante crítico con cobertura limitada para los próximos días." />
+              <MiniCard title="Lectura ejecutiva" chip="IA lista" chipStyle={chipBlue} text="La base ya está preparada para resúmenes, prioridades y señales predictivas para decisión ejecutiva." />
             </div>
           </div>
         </div>
@@ -192,9 +192,9 @@ export default function LubriPlanLanding() {
       <section style={section}>
         <div style={sectionHead}>
           <div style={sectionKicker}>VALOR PARA EL CLIENTE INDUSTRIAL</div>
-          <h2 style={sectionTitle}>Lo que LubriPlan aporta a la operaciÃ³n desde las primeras semanas</h2>
+          <h2 style={sectionTitle}>Lo que LubriPlan aporta a la operación desde las primeras semanas</h2>
           <p style={sectionText}>
-            No se trata solo de digitalizar formatos. Se trata de ordenar la ejecuciÃ³n, recuperar
+            No se trata solo de digitalizar formatos. Se trata de ordenar la ejecución, recuperar
             visibilidad y darle a mantenimiento una base confiable para actuar con prioridad.
           </p>
         </div>
@@ -207,12 +207,12 @@ export default function LubriPlanLanding() {
 
       <section style={section}>
         <div style={sectionHead}>
-          <div style={sectionKicker}>QUÃ‰ RESUELVE LUBRIPLAN</div>
-          <h2 style={sectionTitle}>Reduce desorden operativo y mejora el control real de la lubricaciÃ³n</h2>
+          <div style={sectionKicker}>QUÉ RESUELVE LUBRIPLAN</div>
+          <h2 style={sectionTitle}>Reduce desorden operativo y mejora el control real de la lubricación</h2>
           <p style={sectionText}>
-            LubriPlan funciona como sistema digital para la gestiÃ³n y control de actividades de lubricaciÃ³n,
-            ayudando a ordenar la ejecuciÃ³n diaria, mejorar la trazabilidad y dar visibilidad a lo que pone
-            en riesgo la operaciÃ³n.
+            LubriPlan funciona como sistema digital para la gestión y control de actividades de lubricación,
+            ayudando a ordenar la ejecución diaria, mejorar la trazabilidad y dar visibilidad a lo que pone
+            en riesgo la operación.
           </p>
         </div>
         <div style={painGrid}>{pains.map((item) => <PainCard key={item} text={item} />)}</div>
@@ -222,17 +222,17 @@ export default function LubriPlanLanding() {
         <div style={twoCol}>
           <div style={glassBlock}>
             <div style={sectionKicker}>EL PROBLEMA OPERATIVO</div>
-            <h2 style={sectionTitle}>La lubricaciÃ³n se vuelve riesgosa cuando depende de seguimiento informal</h2>
+            <h2 style={sectionTitle}>La lubricación se vuelve riesgosa cuando depende de seguimiento informal</h2>
             <p style={sectionText}>
-              Cuando la gestiÃ³n de lubricaciÃ³n vive entre papel, Excel, mensajes o memoria operativa,
+              Cuando la gestión de lubricación vive entre papel, Excel, mensajes o memoria operativa,
               los pendientes se mezclan, las prioridades no son claras y el inventario deja de representar
               lo que realmente pasa en planta.
             </p>
           </div>
           <div style={board}>
             <ProblemLine icon="warn" text="Actividades vencidas que nadie ve a tiempo" />
-            <ProblemLine icon="xCircle" text="SobrelubricaciÃ³n o falta de lubricaciÃ³n por ejecuciÃ³n inconsistente" />
-            <ProblemLine icon="search" text="Sin trazabilidad clara por equipo, tÃ©cnico y condiciÃ³n" />
+            <ProblemLine icon="xCircle" text="Sobrelubricación o falta de lubricación por ejecución inconsistente" />
+            <ProblemLine icon="search" text="Sin trazabilidad clara por equipo, técnico y condición" />
             <ProblemLine icon="drop" text="Inventario que no conversa con el consumo real" />
             <ProblemLine icon="trendDown" text="Decisiones reactivas y poca visibilidad ejecutiva" />
           </div>
@@ -244,8 +244,8 @@ export default function LubriPlanLanding() {
           <div style={sectionKicker}>CAPACIDADES CLAVE</div>
           <h2 style={sectionTitle}>Una sola plataforma para planear, ejecutar, alertar y dirigir</h2>
           <p style={sectionText}>
-            LubriPlan no es solo una bitÃ¡cora: es una plataforma para mantenimiento de lubricaciÃ³n industrial
-            que conecta control operativo, monitoreo de condiciÃ³n, inventario y lectura ejecutiva.
+            LubriPlan no es solo una bitácora: es una plataforma para mantenimiento de lubricación industrial
+            que conecta control operativo, monitoreo de condición, inventario y lectura ejecutiva.
           </p>
         </div>
         <div style={featureGrid}>{capabilities.map((item) => <FeatureLine key={item} text={item} />)}</div>
@@ -253,8 +253,8 @@ export default function LubriPlanLanding() {
 
       <section style={section}>
         <div style={sectionHead}>
-          <div style={sectionKicker}>DÃ“NDE ENCAJA MEJOR</div>
-          <h2 style={sectionTitle}>Pensado para operaciones industriales que necesitan mÃ¡s control y menos improvisaciÃ³n</h2>
+          <div style={sectionKicker}>DÓNDE ENCAJA MEJOR</div>
+          <h2 style={sectionTitle}>Pensado para operaciones industriales que necesitan más control y menos improvisación</h2>
         </div>
         <div style={industryWrap}>
           {industries.map((item) => (
@@ -267,8 +267,8 @@ export default function LubriPlanLanding() {
 
       <section id="como-funciona" style={section}>
         <div style={sectionHead}>
-          <div style={sectionKicker}>CÃ“MO FUNCIONA</div>
-          <h2 style={sectionTitle}>De la planeaciÃ³n a la visibilidad ejecutiva, sin perder continuidad</h2>
+          <div style={sectionKicker}>CÓMO FUNCIONA</div>
+          <h2 style={sectionTitle}>De la planeación a la visibilidad ejecutiva, sin perder continuidad</h2>
         </div>
         <div style={journeyGrid}>{journey.map(([n, title, text]) => <JourneyCard key={n} n={n} title={title} text={text} />)}</div>
       </section>
@@ -276,9 +276,9 @@ export default function LubriPlanLanding() {
       <section id="contacto" style={ctaSection}>
         <div style={ctaBox}>
           <div style={sectionKicker}>LISTO PARA DEMOSTRARSE EN PLANTA</div>
-          <h2 style={ctaTitle}>Solicita una demo de LubriPlan y evalÃºa cÃ³mo ordenar tu operaciÃ³n de lubricaciÃ³n</h2>
+          <h2 style={ctaTitle}>Solicita una demo de LubriPlan y evalúa cómo ordenar tu operación de lubricación</h2>
           <p style={ctaText}>
-            Si hoy tu planta depende de Excel, papel o seguimiento informal para controlar actividades de lubricaciÃ³n,
+            Si hoy tu planta depende de Excel, papel o seguimiento informal para controlar actividades de lubricación,
             LubriPlan puede convertirse en la base operativa para ejecutar mejor, ver antes los riesgos y tomar decisiones con contexto real.
           </p>
           <div style={actions}>
