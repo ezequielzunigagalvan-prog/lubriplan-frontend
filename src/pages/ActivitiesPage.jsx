@@ -1594,7 +1594,7 @@ export function ActivityCard({
   const mobileView =
     isMobile || (typeof window !== "undefined" && Number(window.innerWidth || 0) <= 820);
   const technicianMode = canCompleteActivities && !canAssignTech && !showPreviewAction;
-  const evidenceUrl = buildImgUrl(activity?.previewImage || activity?.evidenceImage);
+  const evidenceUrl = buildImgUrl(activity?.previewImage || activity?.evidenceImage || activity?.routeImage || activity?.imageUrl);
 
   const safeDateLabel = (() => {
     const raw =
@@ -3659,6 +3659,7 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
 
 
 
