@@ -2,7 +2,7 @@
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
-import lubriPlanLogo from "../assets/lubriplan-logo.png.png";
+import lubriPlanLogo from "../assets/lubriplan-menu-icon.png";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
@@ -489,3 +489,4 @@ const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 72px"
 const ctaBox = { position: "relative", overflow: "hidden", padding: "30px 24px", borderRadius: 30, background: "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)", border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 24px 70px rgba(2,6,23,0.28)" };
 const ctaTitle = { position: "relative", zIndex: 1, margin: 0, fontSize: "clamp(2rem, 4vw, 3.1rem)", lineHeight: 1, letterSpacing: -1.1 };
 const ctaText = { position: "relative", zIndex: 1, marginTop: 12, maxWidth: 760, color: "#e2e8f0", fontSize: 16, lineHeight: 1.65, fontWeight: 600 };
+
