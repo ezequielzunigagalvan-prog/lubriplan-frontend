@@ -117,9 +117,9 @@ export default function LoginPage() {
           <div>
             <div
               style={{
-                width: 86,
-                height: 86,
-                borderRadius: 24,
+                width: 96,
+                height: 96,
+                borderRadius: 26,
                 display: "grid",
                 placeItems: "center",
                 background: "rgba(255,255,255,0.06)",
@@ -127,7 +127,7 @@ export default function LoginPage() {
                 boxShadow: "0 18px 40px rgba(15,23,42,0.24)",
               }}
             >
-              <img src={lubriPlanMark} alt="LubriPlan" style={{ width: 72, height: 72, objectFit: "contain", display: "block" }} />
+              <img src={lubriPlanMark} alt="LubriPlan" style={{ width: 84, height: 84, objectFit: "contain", display: "block" }} />
             </div>
 
             <div
@@ -364,3 +364,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

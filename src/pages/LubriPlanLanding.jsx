@@ -410,8 +410,8 @@ const glowA = { position: "absolute", width: 420, height: 420, borderRadius: 999
 const glowB = { position: "absolute", width: 360, height: 360, borderRadius: 999, background: "radial-gradient(circle, rgba(56,189,248,0.08), transparent 70%)", bottom: -160, left: -120, pointerEvents: "none" };
 const topBar = { position: "relative", zIndex: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, padding: "10px 0 22px", flexWrap: "wrap" };
 const brand = { display: "flex", alignItems: "center", gap: 14 };
-const brandBox = { width: 72, height: 72, borderRadius: 24, background: "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05))", border: "1px solid rgba(255,255,255,0.10)", display: "grid", placeItems: "center", boxShadow: "0 24px 40px rgba(2,6,23,0.25)", flexShrink: 0 };
-const brandLogo = { width: 54, height: 54, objectFit: "contain", display: "block" };
+const brandBox = { width: 84, height: 84, borderRadius: 24, background: "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05))", border: "1px solid rgba(255,255,255,0.10)", display: "grid", placeItems: "center", boxShadow: "0 24px 40px rgba(2,6,23,0.25)", flexShrink: 0 };
+const brandLogo = { width: 68, height: 68, objectFit: "contain", display: "block" };
 const brandTitle = { fontSize: 28, lineHeight: 1, fontWeight: 700, letterSpacing: -0.8 };
 const brandSub = { marginTop: 6, color: "rgba(226,232,240,0.78)", fontSize: 13, fontWeight: 800, letterSpacing: 0.4 };
 const nav = { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" };
@@ -489,4 +489,5 @@ const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 72px"
 const ctaBox = { position: "relative", overflow: "hidden", padding: "30px 24px", borderRadius: 30, background: "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)", border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 24px 70px rgba(2,6,23,0.28)" };
 const ctaTitle = { position: "relative", zIndex: 1, margin: 0, fontSize: "clamp(2rem, 4vw, 3.1rem)", lineHeight: 1, letterSpacing: -1.1 };
 const ctaText = { position: "relative", zIndex: 1, marginTop: 12, maxWidth: 760, color: "#e2e8f0", fontSize: 16, lineHeight: 1.65, fontWeight: 600 };
+
 
