@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -79,10 +79,26 @@ export default function LubriPlanLanding() {
 
   const journey = useMemo(
     () => [
-      ["01", "Estandarizas la lubricación", "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una base única."],
-      ["02", "La operación se ordena", "LubriPlan genera actividades, separa prioridades y mantiene visible lo vencido, lo pendiente y lo crítico."],
-      ["03", "Campo ejecuta con contexto", "El técnico trabaja con instrucciones claras, evidencia y captura del consumo real aplicado."],
-      ["04", "Mantenimiento decide mejor", "La jefatura recibe indicadores, alertas y reportes para priorizar y corregir a tiempo."],
+      [
+        "01",
+        "Estandarizas la lubricación",
+        "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una base única.",
+      ],
+      [
+        "02",
+        "La operación se ordena",
+        "LubriPlan genera actividades, separa prioridades y mantiene visible lo vencido, lo pendiente y lo crítico.",
+      ],
+      [
+        "03",
+        "Campo ejecuta con contexto",
+        "El técnico trabaja con instrucciones claras, evidencia y captura del consumo real aplicado.",
+      ],
+      [
+        "04",
+        "Mantenimiento decide mejor",
+        "La jefatura recibe indicadores, alertas y reportes para priorizar y corregir a tiempo.",
+      ],
     ],
     []
   );
@@ -162,7 +178,7 @@ export default function LubriPlanLanding() {
 
             <div style={metrics}>
               <MetricCard value="12" label="Actividades vencidas" tone="red" />
-              <MetricCard value="7" label="Pendientes criticas" tone="amber" />
+              <MetricCard value="7" label="Pendientes críticas" tone="amber" />
               <MetricCard value="3" label="Equipos con riesgo" tone="red" />
               <MetricCard value="24" label="Rutas activas" tone="blue" />
               <MetricCard value="92%" label="Cumplimiento" tone="green" />

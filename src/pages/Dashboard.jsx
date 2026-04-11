@@ -2627,7 +2627,7 @@ function TechnicianActivityCard({ activity, month, navigate, openExecutionModal,
   const todayYMD = toLocalYMD(new Date());
 
   return (
-    <div style={{ display: "grid", gap: 8 }}>
+    <div>
       <ActivityCard
         activity={activity}
         todayYMD={todayYMD}
@@ -2639,25 +2639,6 @@ function TechnicianActivityCard({ activity, month, navigate, openExecutionModal,
         canCompleteActivities={true}
         isMobile={isMobile}
       />
-
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
-        <button
-          type="button"
-          style={btnAdminGhost}
-          onClick={() =>
-            navigate(
-              `/activities?month=${encodeURIComponent(month)}&executionId=${encodeURIComponent(
-                activity?.executionId || activity?.id
-              )}`
-            )
-          }
-        >
-          <span style={btnRow}>
-            <Icon name="search" size="sm" />
-            Ver detalle
-          </span>
-        </button>
-      </div>
     </div>
   );
 }

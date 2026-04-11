@@ -24,7 +24,7 @@ const buildImgUrl = (raw) => {
   const s = String(raw);
   if (s.startsWith("http://") || s.startsWith("https://")) return s;
   if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
-  return s;
+  return `${API_ASSETS_URL}/${s}`;
 };
 
 const parseLocalDateSafe = (value) => {
@@ -226,10 +226,10 @@ export default function ActivitiesPage() {
 
   const myTechId = user?.technicianId != null ? Number(user.technicianId) : null;
 
-  // ✅ filtro por técnico (solo ADMIN/SUP)
+  // âœ… filtro por Técnico (solo ADMIN/SUP)
   const [techFilterId, setTechFilterId] = useState(""); // "" = todos
 
-  // ✅ Reglas nuevas por rol
+  // âœ… Reglas nuevas por rol
   const canCompleteActivities = isTech;
   const canAssignTech = role === "SUPERVISOR" || role === "ADMIN";
   const canSchedule = role === "SUPERVISOR" || role === "ADMIN";
@@ -265,16 +265,16 @@ export default function ActivitiesPage() {
   const [executions, setExecutions] = useState([]);
   const [err, setErr] = useState("");
 
-  // ✅ modal state
+  // âœ… modal state
   const [completeOpen, setCompleteOpen] = useState(false);
   const [selectedExecutionId, setSelectedExecutionId] = useState(null);
   const [showEmergency, setShowEmergency] = useState(false);
   const [openReportCondition, setOpenReportCondition] = useState(false);
 
-  // ✅ animación al completar
+  // âœ… animaciÃ³n al completar
   const [completePulse, setCompletePulse] = useState(false);
 
-  // ✅ Programar actividad (manual)
+  // âœ… Programar actividad (manual)
   const [openSchedule, setOpenSchedule] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [scheduleErr, setScheduleErr] = useState("");
@@ -396,7 +396,7 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, completedRange, month, currentPlantId, techFilterId]);
 
- // ✅ inicial + deep-links
+ // âœ… inicial + deep-links
 useEffect(() => {
   if (deep.filter === "overdue") setFilter("Atrasada");
   if (deep.filter === "unassigned") setUnassignedOnly(true);
@@ -407,7 +407,7 @@ useEffect(() => {
   if (deep.q) setQ(deep.q);
   if (deep.unassigned) setUnassignedOnly(true);
 
-  // ✅ si viene desde notificación, limpia filtros para no ocultar la actividad
+  // âœ… si viene Desde notificación, limpia filtros para no ocultar la actividad
   if (highlightExecutionId || highlightActivityId || highlightReportId) {
     setFilter("Todas");
     setQ("");
@@ -421,7 +421,7 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
-  // ✅ abrir modal emergente desde state
+  // âœ… abrir modal emergente desde state
   useEffect(() => {
     if (location.state?.openEmergency) {
       setShowEmergency(true);
@@ -430,7 +430,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  // ✅ cargar técnicos (Supervisor / Admin cuando aplique)
+  // âœ… cargar Técnicos (Supervisor / Admin cuando aplique)
   useEffect(() => {
     if (!(canAssignTech || canSchedule) || !currentPlantId) {
       setTechs([]);
@@ -447,13 +447,13 @@ useEffect(() => {
           : [];
         setTechs(items);
       } catch (e) {
-        console.error("Error cargando técnicos:", e);
+        console.error("Error cargando Técnicos:", e);
         setTechs([]);
       }
     })();
   }, [canAssignTech, canSchedule, currentPlantId]);
 
-  // ✅ cargar equipos (solo si puede programar)
+  // âœ… cargar equipos (solo si puede programar)
   useEffect(() => {
     if (!canSchedule || !currentPlantId) {
       setEquipments([]);
@@ -520,13 +520,13 @@ useEffect(() => {
       await load();
     } catch (e) {
       console.error(e);
-      setErr(e?.message || "Error asignando técnico");
+      setErr(e?.message || "Error asignando Técnico");
     } finally {
       setAssigningId(null);
     }
   };
 
-  // ✅ programar actividad
+  // âœ… programar actividad
   const openScheduleModal = () => {
     setScheduleErr("");
     setScheduleForm({
@@ -569,7 +569,7 @@ useEffect(() => {
           : Number(scheduleForm.technicianId);
 
       if (technicianId !== null && !Number.isFinite(technicianId)) {
-        return setScheduleErr("Técnico inválido.");
+        return setScheduleErr("Técnico invÃ¡lido.");
       }
 
       setSavingSchedule(true);
@@ -639,7 +639,11 @@ useEffect(() => {
             ex?.notes ??
             ex?.observations ??
             ""
-          : route?.instructions ?? "";
+          : route?.instructions ??
+            ex?.route?.instructions ??
+            ex?.instructions ??
+            ex?.notes ??
+            "";
 
         const rawStatus = String(ex?.status || "").toUpperCase();
         const dateISO =
@@ -675,8 +679,8 @@ useEffect(() => {
         const plannedLabel = !isManual
           ? plannedLub?.name
             ? `${plannedLub.name}${plannedLub.code ? ` (${plannedLub.code})` : ""}`
-            : route?.lubricantType || "—"
-          : "—";
+            : route?.lubricantType || "-"
+          : "-";
 
         const moves = Array.isArray(ex?.lubricantMovements) ? ex.lubricantMovements : [];
         const usedMove =
@@ -693,7 +697,7 @@ useEffect(() => {
 
         const activityName = isManual
           ? ex?.manualTitle || "Actividad programada"
-          : route?.name || "—";
+          : route?.name || "-";
 
         return {
           id: ex.id,
@@ -713,6 +717,7 @@ useEffect(() => {
           condition: ex?.condition ?? null,
           notes: ex?.notes ?? ex?.observations ?? "",
           evidenceImage: ex?.evidenceImage ?? null,
+          previewImage: ex?.evidenceImage ?? route?.imageUrl ?? ex?.route?.imageUrl ?? null,
 
           dateISO,
           dateLabel,
@@ -789,7 +794,7 @@ useEffect(() => {
     });
   }, [sorted, completedFromTo, futureFromTo]);
 
-  // ✅ TECH ve: sin asignar + asignadas a su technicianId
+  // âœ… TECH ve: sin asignar + asignadas a su technicianId
   const techScoped = useMemo(() => {
     if (!isTech) return scoped;
 
@@ -1234,7 +1239,7 @@ useEffect(() => {
                         manualInstructions: e.target.value,
                       }))
                     }
-                    placeholder="Puntos, riesgos, EPP, pasos…"
+                    placeholder="Puntos, riesgos, EPP, pasos..."
                     style={{ ...modalInput, minHeight: 90, resize: "vertical" }}
                   />
                 </label>
@@ -1357,7 +1362,7 @@ useEffect(() => {
                     <Icon name="warn" style={{ width: 18, height: 18, color: "#0b1220" }} />
                   </span>
                   <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                    Condición mala / crítica
+                    condición mala / crÃ­tica
                   </div>
                 </div>
 
@@ -1367,7 +1372,7 @@ useEffect(() => {
                     <b>CRITICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendación:</b> revisa observación/evidencia y prioriza inspección.
+                    <b>Recomendación:</b> revisa observaciÃ³n/evidencia y prioriza inspecciÃ³n.
                   </div>
                 </div>
               </div>
@@ -1429,8 +1434,8 @@ useEffect(() => {
               style={controlSelect}
             >
               <option value="MONTH">Este mes</option>
-              <option value="30D">?ltimos 30 días</option>
-              <option value="90D">?ltimos 90 días</option>
+              <option value="30D">Últimos 30 días</option>
+              <option value="90D">Últimos 90 días</option>
             </select>
           </div>
         </div>
@@ -1456,9 +1461,9 @@ useEffect(() => {
               value={techFilterId}
               onChange={(e) => setTechFilterId(e.target.value)}
               style={controlSelect}
-              title="Filtrar por técnico"
+              title="Filtrar por Técnico"
             >
-              <option value="">Todos los técnicos</option>
+              <option value="">Todos los Técnicos</option>
               {techs.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} {t.code ? `(${t.code})` : ""}
@@ -1472,7 +1477,7 @@ useEffect(() => {
             onClick={() => setUnassignedOnly((v) => !v)}
             style={{ ...filterBtn, ...(unassignedOnly ? filterBtnOn : {}) }}
           >
-            {unassignedOnly ? "Sin técnico (activo)" : "Sin técnico"}
+            {unassignedOnly ? "Sin Técnico (activo)" : "Sin Técnico"}
           </button>
         </div>
 
@@ -1496,7 +1501,7 @@ useEffect(() => {
 
         {loading ? (
           <p style={{ marginTop: 14, fontWeight: 900, color: "#475569" }}>
-            Cargando actividades…
+            Cargando actividades...
           </p>
         ) : null}
 
@@ -1584,7 +1589,8 @@ export function ActivityCard({
 }) {
   const mobileView =
     isMobile || (typeof window !== "undefined" && Number(window.innerWidth || 0) <= 820);
-  const evidenceUrl = buildImgUrl(activity?.evidenceImage);
+  const technicianMode = canCompleteActivities && !canAssignTech && !showPreviewAction;
+  const evidenceUrl = buildImgUrl(activity?.previewImage || activity?.evidenceImage);
 
   const safeDateLabel = (() => {
     const raw =
@@ -1596,7 +1602,7 @@ export function ActivityCard({
 
     if (!raw) return "";
 
-    if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    if (typeof raw === "string" && /^d{4}-d{2}-d{2}/.test(raw)) {
       return raw.slice(0, 10);
     }
 
@@ -1610,14 +1616,14 @@ export function ActivityCard({
   })();
 
   const normalizedInstructions = String(activity?.instructions || "")
-    .replace(/\s+/g, " ")
+    .replace(/\\s+/g, " ")
     .trim();
 
   const normalizedNotes = String(activity?.notes || "")
-    .replace(/\s+/g, " ")
+    .replace(/\\s+/g, " ")
     .trim();
 
-  const showInstructions = activity?.isManual && Boolean(normalizedInstructions);
+  const showInstructions = Boolean(normalizedInstructions);
 
   const showNotes =
     Boolean(normalizedNotes) &&
@@ -1656,6 +1662,237 @@ export function ActivityCard({
     String(activity?.method || "?").trim().toLowerCase() === "grasera"
       ? "Inyector"
       : activity?.method || "?";
+
+  const technicianName =
+    activity?.technician?.name ||
+    activity?.technicianName ||
+    (activity?.technicianId ? `#${activity.technicianId}` : "Sin asignar");
+
+  const statusTone =
+    activity.computedStatus === "Atrasada"
+      ? {
+          accent: "#dc2626",
+          bg: "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(255,255,255,0.98))",
+          badgeBg: "rgba(239,68,68,0.14)",
+          badgeColor: "#991b1b",
+          badgeBorder: "rgba(239,68,68,0.34)",
+        }
+      : activity.isToday
+      ? {
+          accent: "#d97706",
+          bg: "linear-gradient(180deg, rgba(255,251,235,0.98), rgba(255,255,255,0.98))",
+          badgeBg: "rgba(245,158,11,0.16)",
+          badgeColor: "#92400e",
+          badgeBorder: "rgba(245,158,11,0.34)",
+        }
+      : {
+          accent: "#16a34a",
+          bg: "linear-gradient(180deg, rgba(240,253,244,0.98), rgba(255,255,255,0.98))",
+          badgeBg: "rgba(34,197,94,0.14)",
+          badgeColor: "#166534",
+          badgeBorder: "rgba(34,197,94,0.32)",
+        };
+
+  const technicianStatusText =
+    activity.computedStatus === "Atrasada" && activity.overdueDays > 0
+      ? `Atrasada · ${activity.overdueDays} día${activity.overdueDays === 1 ? "" : "s"}`
+      : activity.isToday
+      ? "Hoy"
+      : activity.computedStatus || "Pendiente";
+
+  const quantityCompact = String(quantityText || "?").replace(/\s+por punto/gi, "/punto");
+  const showDesktopPreview = !mobileView;
+
+  if (technicianMode) {
+    return (
+      <div
+        style={{
+          ...(mobileView ? technicianCardMobile : technicianCardDesktop),
+          background: statusTone.bg,
+          borderLeft: `8px solid ${statusTone.accent}`,
+          cursor: canComplete || canOpenPreview ? "pointer" : "default",
+          opacity: activity.computedStatus === "Completada" ? 0.78 : 1,
+        }}
+        onClick={() => {
+          if (canComplete || canOpenPreview) onOpen();
+        }}
+        title={
+          !canComplete && activity.computedStatus !== "Completada"
+            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
+            : ""
+        }
+      >
+        <div style={technicianHeaderRow}>
+          <span
+            style={{
+              ...technicianStatusPill,
+              background: statusTone.badgeBg,
+              color: statusTone.badgeColor,
+              borderColor: statusTone.badgeBorder,
+            }}
+          >
+            {technicianStatusText}
+          </span>
+          {isCriticalEq ? (
+            <span style={technicianMetaChip}>
+              <Icon name="alert" size="sm" />
+              <span>Equipo crítico</span>
+            </span>
+          ) : null}
+        </div>
+
+        <div style={showDesktopPreview ? technicianDesktopBody : null}>
+          <div style={showDesktopPreview ? technicianDesktopMain : null}>
+            <div style={mobileView ? technicianTaskTitleMobile : technicianTaskTitleDesktop}>
+              {activity.activityName}
+            </div>
+
+            <div style={technicianMainFacts}>
+              <div style={technicianFactLine}>
+                <span style={technicianFactIcon}>
+                  <Icon name="equipment" size="sm" />
+                </span>
+                <span style={technicianFactText}>
+                  {activity.equipmentName}
+                  {activity.equipmentCode ? ` (${activity.equipmentCode})` : ""}
+                </span>
+              </div>
+
+              <div style={technicianFactLine}>
+                <span style={technicianFactIcon}>
+                  <Icon name="drop" size="sm" />
+                </span>
+                <span style={technicianFactText}>{plannedLubricant}</span>
+              </div>
+
+              <div style={technicianFactLine}>
+                <span style={technicianFactIcon}>
+                  <Icon name="quantity" size="sm" />
+                </span>
+                <span style={technicianFactText}>{quantityCompact}</span>
+                {hasPointsCount ? (
+                  <span style={technicianPointsBadge}>
+                    {pointsCount} punto{pointsCount === 1 ? "" : "s"}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div style={technicianMetaRow}>
+              {safeDateLabel ? (
+                <span style={technicianMetaChip}>
+                  <Icon name="calendar" size="sm" />
+                  <span>{safeDateLabel}</span>
+                </span>
+              ) : null}
+
+              <span style={technicianMetaChip}>
+                <Icon name="tool" size="sm" />
+                <span>{methodText}</span>
+              </span>
+
+              <span style={technicianMetaChip}>
+                <Icon name="user" size="sm" />
+                <span>{technicianName}</span>
+              </span>
+            </div>
+          </div>
+
+          {showDesktopPreview ? (
+            <div style={technicianPreviewPanel}>
+              {evidenceUrl ? (
+                <img
+                  src={evidenceUrl}
+                  alt="Evidencia"
+                  style={technicianEvidenceImg}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : null}
+
+              {showInstructions ? (
+                <div style={technicianInstructionBox}>
+                  <div style={technicianInstructionTitle}>Instrucciones</div>
+                  <div style={technicianInstructionText}>{normalizedInstructions}</div>
+                </div>
+              ) : (
+                <div style={technicianInstructionBox}>
+                  <div style={technicianInstructionTitle}>Instrucciones</div>
+                  <div style={technicianInstructionText}>Sin instrucciones registradas.</div>
+                </div>
+              )}
+
+              {showNotes ? (
+                <div style={technicianInstructionBox}>
+                  <div style={technicianInstructionTitle}>Observación</div>
+                  <div style={technicianInstructionText}>{normalizedNotes}</div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {!showDesktopPreview && showInstructions ? (
+          <div style={technicianInstructionBox}>
+            <div style={technicianInstructionTitle}>Instrucciones</div>
+            <div style={technicianInstructionText}>{normalizedInstructions}</div>
+          </div>
+        ) : null}
+
+        {!showDesktopPreview && showNotes ? (
+          <div style={technicianInstructionBox}>
+            <div style={technicianInstructionTitle}>Observación</div>
+            <div style={technicianInstructionText}>{normalizedNotes}</div>
+          </div>
+        ) : null}
+
+        {!showDesktopPreview && evidenceUrl ? (
+          <img
+            src={evidenceUrl}
+            alt="Evidencia"
+            style={technicianEvidenceImg}
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        ) : null}
+
+        {canComplete ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen();
+            }}
+            style={mobileView ? technicianCompleteBtnMobile : technicianCompleteBtnDesktop}
+            type="button"
+          >
+            <Icon name="checkCircle" size="sm" />
+            <span>Completar</span>
+          </button>
+        ) : canOpenPreview ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen();
+            }}
+            style={mobileView ? technicianCompleteBtnMobile : technicianCompleteBtnDesktop}
+            type="button"
+          >
+            <Icon name="search" size="sm" />
+            <span>{previewActionLabel}</span>
+          </button>
+        ) : activity.computedStatus !== "Completada" ? (
+          <div style={{ ...notReadyBox, width: mobileView ? "100%" : "auto" }}>
+            <Icon name="clock" size="sm" />
+            <span>No disponible</span>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -1827,17 +2064,13 @@ export function ActivityCard({
             </span>
           ) : null}
 
-          <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
-            <Icon name="user" size="sm" />
-            <span>
-              Técnico:{" "}
-              <b style={{ color: "#0f172a" }}>
-                {activity?.technician?.name ||
-                  activity?.technicianName ||
-                  (activity?.technicianId ? `#${activity.technicianId}` : "Sin asignar")}
-              </b>
+            <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
+              <Icon name="user" size="sm" />
+              <span>
+                Técnico:{" "}
+                <b style={{ color: "#0f172a" }}>{technicianName}</b>
+              </span>
             </span>
-          </span>
 
           {activity.hasEvidence ? (
             <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
@@ -1877,7 +2110,7 @@ export function ActivityCard({
           </div>
         ) : null}
 
-        {activity.evidenceImage ? (
+        {evidenceUrl ? (
           <div style={{ marginTop: 10 }}>
             <div style={evidenceTitle}>
               <Icon name="camera" size="sm" />
@@ -1904,7 +2137,7 @@ export function ActivityCard({
               onChange={(e) => onAssignTech(activity.id, e.target.value)}
               disabled={assigningId === activity.id}
               style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
-              title="Asignar técnico"
+              title="Asignar Técnico"
             >
               <option value="">Sin asignar</option>
               {techs.map((t) => (
@@ -1979,7 +2212,6 @@ export function ActivityCard({
     </div>
   );
 }
-
 /* =========================
    ESTILOS
 ========================= */
@@ -2389,6 +2621,208 @@ const card = {
   overflow: "hidden",
   boxShadow: "0 18px 34px rgba(2,6,23,0.06)",
   transition: "transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease",
+};
+
+const technicianCardDesktop = {
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.96)",
+  padding: 16,
+  display: "grid",
+  gap: 12,
+  width: "100%",
+  boxSizing: "border-box",
+  overflow: "hidden",
+  boxShadow: "0 14px 28px rgba(2,6,23,0.06)",
+  transition: "transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease",
+};
+
+const technicianCardMobile = {
+  ...technicianCardDesktop,
+  padding: 12,
+  gap: 10,
+};
+
+const technicianHeaderRow = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 8,
+  flexWrap: "wrap",
+};
+
+const technicianStatusPill = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "7px 12px",
+  borderRadius: 999,
+  border: "1px solid transparent",
+  fontSize: 12,
+  fontWeight: 980,
+  letterSpacing: 0.2,
+};
+
+const technicianTaskTitleDesktop = {
+  fontSize: 26,
+  lineHeight: 1.02,
+  fontWeight: 1000,
+  color: "#0f172a",
+  letterSpacing: -0.6,
+};
+
+const technicianTaskTitleMobile = {
+  fontSize: 20,
+  lineHeight: 1.05,
+  fontWeight: 1000,
+  color: "#0f172a",
+  letterSpacing: -0.4,
+};
+
+const technicianMainFacts = {
+  display: "grid",
+  gap: 8,
+};
+
+const technicianFactLine = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 10,
+};
+
+const technicianFactIcon = {
+  width: 30,
+  height: 30,
+  borderRadius: 10,
+  background: "rgba(15,23,42,0.06)",
+  color: "#475569",
+  display: "grid",
+  placeItems: "center",
+  flexShrink: 0,
+};
+
+const technicianFactText = {
+  fontSize: 16,
+  lineHeight: 1.3,
+  fontWeight: 900,
+  color: "#0f172a",
+};
+
+const technicianMetaRow = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  alignItems: "center",
+};
+
+const technicianMetaChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "7px 10px",
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.88)",
+  border: "1px solid rgba(226,232,240,0.96)",
+  color: "#475569",
+  fontSize: 12,
+  fontWeight: 900,
+};
+
+const technicianDesktopBody = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1.25fr) minmax(260px, 0.75fr)",
+  gap: 18,
+  alignItems: "start",
+};
+
+const technicianDesktopMain = {
+  display: "grid",
+  gap: 12,
+  minWidth: 0,
+};
+
+const technicianPreviewPanel = {
+  display: "grid",
+  gap: 12,
+  minWidth: 0,
+  alignSelf: "stretch",
+};
+
+const technicianPointsBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "4px 8px",
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.12)",
+  border: "1px solid rgba(249,115,22,0.28)",
+  color: "#9a3412",
+  fontSize: 11,
+  fontWeight: 950,
+  lineHeight: 1,
+};
+
+const technicianInstructionBox = {
+  padding: "10px 12px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.74)",
+  border: "1px solid rgba(251,146,60,0.28)",
+};
+
+const technicianInstructionTitle = {
+  fontSize: 11,
+  fontWeight: 950,
+  letterSpacing: 0.6,
+  textTransform: "uppercase",
+  color: "#9a3412",
+  marginBottom: 6,
+};
+
+const technicianInstructionText = {
+  fontSize: 13,
+  lineHeight: 1.45,
+  color: "#334155",
+  fontWeight: 800,
+  whiteSpace: "pre-wrap",
+};
+
+const technicianEvidenceImg = {
+  width: "100%",
+  maxWidth: 280,
+  borderRadius: 14,
+  border: "1px solid rgba(226,232,240,0.96)",
+  boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
+};
+
+const technicianCompleteBtnDesktop = {
+  width: "fit-content",
+  minWidth: 180,
+  maxWidth: 240,
+  alignSelf: "flex-start",
+  minHeight: 52,
+  border: "1px solid rgba(34,197,94,0.58)",
+  background: "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.98))",
+  color: "#fff",
+  borderRadius: 16,
+  padding: "14px 16px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 10,
+  fontSize: 17,
+  fontWeight: 1000,
+  cursor: "pointer",
+  boxShadow: "0 16px 28px rgba(34,197,94,0.20)",
+};
+
+const technicianCompleteBtnMobile = {
+  ...technicianCompleteBtnDesktop,
+  width: "100%",
+  minWidth: 0,
+  maxWidth: "none",
+  alignSelf: "stretch",
+  minHeight: 50,
+  padding: "13px 14px",
+  fontSize: 16,
 };
 
 const meta = {
@@ -2843,6 +3277,11 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
+
+
+
+
 
 
 
