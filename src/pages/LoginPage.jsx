@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (reason === "expired") {
-      setErr("Tu sesiÃ³n expirÃ³ por inactividad. Vuelve a iniciar sesiÃ³n.");
+      setErr("Tu sesión expiró por inactividad. Vuelve a iniciar sesión.");
     }
   }, [reason]);
 
@@ -42,7 +42,7 @@ export default function LoginPage() {
     const cleanPassword = String(password || "");
 
     if (!cleanEmail || !cleanPassword) {
-      setErr("Ingresa tu correo y contraseÃ±a.");
+      setErr("Ingresa tu correo y contraseña.");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
       await login(cleanEmail, cleanPassword);
       nav(from, { replace: true });
     } catch (e) {
-      setErr(e?.message || "No se pudo iniciar sesiÃ³n.");
+      setErr(e?.message || "No se pudo iniciar sesión.");
     } finally {
       setLoading(false);
     }
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 color: "#e2e8f0",
               }}
             >
-              OperaciÃ³n segura
+              Operación segura
             </div>
 
             <div
@@ -173,14 +173,14 @@ export default function LoginPage() {
                 fontWeight: 600,
               }}
             >
-              Entra a tu operaciÃ³n diaria, revisa alertas crÃ­ticas, coordina actividades y mantÃ©n la planta bajo control desde un solo lugar.
+              Entra a tu operación diaria, revisa alertas críticas, coordina actividades y mantén la planta bajo control desde un solo lugar.
             </div>
           </div>
 
           <div style={{ display: "grid", gap: 14 }}>
             {[
               "Dashboard por rol con foco operativo inmediato.",
-              "Contexto multi-planta con continuidad de sesiÃ³n.",
+              "Contexto multi-planta con continuidad de sesión.",
               "Alertas, actividades y reportes conectados en el mismo flujo.",
             ].map((item) => (
               <div
@@ -237,7 +237,7 @@ export default function LoginPage() {
                 color: "#0f172a",
               }}
             >
-              Iniciar sesiÃ³n
+              Iniciar sesión
             </h1>
 
             <div
@@ -270,12 +270,12 @@ export default function LoginPage() {
 
               <div style={{ display: "grid", gap: 7 }}>
                 <label htmlFor="password" style={{ fontSize: 13, fontWeight: 900, color: "#334155" }}>
-                  ContraseÃ±a
+                  Contraseña
                 </label>
                 <div style={{ position: "relative" }}>
                   <input
                     id="password"
-                    placeholder="Ingresa tu contraseÃ±a"
+                    placeholder="Ingresa tu contraseña"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -356,7 +356,7 @@ export default function LoginPage() {
                 fontWeight: 700,
               }}
             >
-              Si tu acceso falla, valida primero que tu usuario siga activo y que estÃ©s entrando con el correo correcto.
+              Si tu acceso falla, valida primero que tu usuario siga activo y que estés entrando con el correo correcto.
             </div>
           </div>
         </section>
@@ -364,6 +364,8 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
 
 
 
