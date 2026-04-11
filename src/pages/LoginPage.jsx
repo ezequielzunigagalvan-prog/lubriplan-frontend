@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import lubriPlanMark from "../assets/lubriplan-menu-icon.png";
+import lubriPlanMark from "../assets/lubriplan-app-icon.png";
 
 const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -117,17 +117,17 @@ export default function LoginPage() {
           <div>
             <div
               style={{
-                width: 96,
-                height: 96,
-                borderRadius: 26,
+                width: 88,
+                height: 88,
+                borderRadius: 0,
                 display: "grid",
                 placeItems: "center",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.24)",
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
               }}
             >
-              <img src={lubriPlanMark} alt="LubriPlan" style={{ width: 84, height: 84, objectFit: "contain", display: "block" }} />
+              <img src={lubriPlanMark} alt="LubriPlan" style={{ width: 88, height: 88, objectFit: "contain", display: "block" }} />
             </div>
 
             <div
@@ -139,7 +139,7 @@ export default function LoginPage() {
                 padding: "10px 14px",
                 borderRadius: 999,
                 background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.12)",
+                border: "none",
                 fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: 0.8,
@@ -191,7 +191,7 @@ export default function LoginPage() {
                   alignItems: "flex-start",
                   padding: "14px 16px",
                   borderRadius: 18,
-                  background: "rgba(255,255,255,0.06)",
+                  background: "transparent",
                   border: "1px solid rgba(255,255,255,0.08)",
                 }}
               >
@@ -364,4 +364,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
 
