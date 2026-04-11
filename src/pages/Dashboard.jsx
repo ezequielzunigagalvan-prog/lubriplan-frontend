@@ -1742,6 +1742,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
                     canAssignTech={false}
                     canCompleteActivities={false}
                     showPreviewAction
+                    compactPreviewMode
                     previewActionLabel="Abrir"
                   />
                 </div>
@@ -3872,6 +3873,7 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     condition: ex?.condition ?? null,
     notes: ex?.notes ?? ex?.observations ?? "",
     evidenceImage: ex?.evidenceImage ?? null,
+    previewImage: ex?.evidenceImage ?? route?.imageUrl ?? ex?.route?.imageUrl ?? null,
     dateISO,
     dateLabel,
     isFuture,
@@ -3898,6 +3900,7 @@ function normalizeExecutionToActivity(ex, todayYMD) {
       !isManual && route?.quantity != null
         ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""} por punto`
         : "—",
+    pointsCount: !isManual && route?.points != null ? Number(route.points) : null,
     method: !isManual ? route?.method || "—" : "—",
     instructions: String(instructionsTxt || ""),
     technicianId: ex?.technicianId ?? ex?.technician?.id ?? null,
@@ -4261,15 +4264,86 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
       ? activity.method
       : "No definido";
 
+  const previewImage =
+    activity?.previewImage || activity?.evidenceImage || activity?.route?.imageUrl || null;
+
+  const previewUrl = (() => {
+    if (!previewImage) return "";
+    const s = String(previewImage);
+    if (s.startsWith("http://") || s.startsWith("https://")) return s;
+    if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
+    return `${API_ASSETS_URL}/${s}`;
+  })();
+
+  const instructions = String(activity?.instructions || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const quantityCompact = String(quantity || "No definida").replace(/\s+por punto/gi, "/punto");
+  const pointsCount = Number(activity?.pointsCount);
+  const hasPointsCount = Number.isFinite(pointsCount) && pointsCount > 0;
+  const statusText =
+    activity?.computedStatus === "Atrasada" && Number(activity?.overdueDays || 0) > 0
+      ? `Atrasada · ${activity.overdueDays} día${Number(activity.overdueDays) === 1 ? "" : "s"}`
+      : activity?.isToday
+      ? "Hoy"
+      : activity?.computedStatus || "Pendiente";
+  const statusTone =
+    activity?.computedStatus === "Atrasada"
+      ? {
+          accent: "#dc2626",
+          badgeBg: "rgba(239,68,68,0.14)",
+          badgeColor: "#991b1b",
+          badgeBorder: "rgba(239,68,68,0.34)",
+          bg: "linear-gradient(180deg, rgba(254,242,242,0.96), rgba(255,255,255,0.98))",
+        }
+      : activity?.isToday
+      ? {
+          accent: "#d97706",
+          badgeBg: "rgba(245,158,11,0.16)",
+          badgeColor: "#92400e",
+          badgeBorder: "rgba(245,158,11,0.34)",
+          bg: "linear-gradient(180deg, rgba(255,251,235,0.96), rgba(255,255,255,0.98))",
+        }
+      : {
+          accent: "#16a34a",
+          badgeBg: "rgba(34,197,94,0.14)",
+          badgeColor: "#166534",
+          badgeBorder: "rgba(34,197,94,0.32)",
+          bg: "linear-gradient(180deg, rgba(240,253,244,0.96), rgba(255,255,255,0.98))",
+        };
+  const showDesktopPreview = !isMobile && Boolean(previewUrl || instructions);
+  const compactDesktopLayout = showDesktopPreview && !isMobile;
+
   return (
-    <div style={dashboardUpcomingMetaGridStyle(isMobile)}>
-      <div style={dashboardUpcomingCardTop}>
-        <div style={{ minWidth: 0 }}>
-          <div style={dashboardUpcomingTitle}>{title}</div>
-          <div style={dashboardUpcomingDate}>
-            <b>Programada:</b> {activity?.scheduledAt ? fmtDateTimeLocal(activity.scheduledAt) : "—"}
-          </div>
-        </div>
+    <div
+      style={{
+        borderRadius: 20,
+        border: `1px solid ${statusTone.badgeBorder}`,
+        borderLeft: `6px solid ${statusTone.accent}`,
+        background: statusTone.bg,
+        boxShadow: "0 12px 28px rgba(15,23,42,0.06)",
+        padding: isMobile ? "14px 14px 16px" : "18px",
+        display: "grid",
+        gap: 14,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 999,
+            padding: "8px 12px",
+            fontSize: 13,
+            fontWeight: 950,
+            background: statusTone.badgeBg,
+            color: statusTone.badgeColor,
+            border: `1px solid ${statusTone.badgeBorder}`,
+          }}
+        >
+          {statusText}
+        </span>
 
         <button
           type="button"
@@ -4286,31 +4360,107 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
         </button>
       </div>
 
-      <div style={dashboardUpcomingMetaGridStyle(isMobile)}>
-        <div style={dashboardUpcomingMetaBox}>
-          <div style={dashboardMetaLabel}>Equipo</div>
-          <div style={dashboardMetaValue}>{equipment}</div>
+      <div
+        style={
+          showDesktopPreview
+            ? {
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) 220px",
+                gap: 16,
+                alignItems: "start",
+              }
+            : { display: "grid", gap: 12 }
+        }
+      >
+        <div
+          style={
+            compactDesktopLayout
+              ? {
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) minmax(220px, 0.72fr)",
+                  gap: 14,
+                  alignItems: "start",
+                  minWidth: 0,
+                }
+              : { display: "grid", gap: 12, minWidth: 0 }
+          }
+        >
+          <div style={{ display: "grid", gap: 12, minWidth: 0, ...(compactDesktopLayout ? { gridColumn: "1 / -1" } : null) }}>
+            <div style={{ fontSize: isMobile ? 26 : 28, lineHeight: 1.02, fontWeight: 1000, color: "#0f172a", letterSpacing: "-0.04em" }}>
+              {title}
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
+            <div style={dashboardCompactFactLine}>
+              <span style={dashboardCompactFactIcon}>
+                <Icon name="equipment" size="sm" />
+              </span>
+              <span style={dashboardCompactFactText}>{equipment}</span>
+            </div>
+
+            <div style={dashboardCompactFactLine}>
+              <span style={dashboardCompactFactIcon}>
+                <Icon name="drop" size="sm" />
+              </span>
+              <span style={dashboardCompactFactText}>{lubricant}</span>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 10, minWidth: 0, alignContent: "start" }}>
+            <div style={dashboardCompactFactLine}>
+              <span style={dashboardCompactFactIcon}>
+                <Icon name="quantity" size="sm" />
+              </span>
+              <span style={dashboardCompactFactText}>{quantityCompact}</span>
+              {hasPointsCount ? (
+                <span style={dashboardCompactPointsBadge}>
+                  {pointsCount} punto{pointsCount === 1 ? "" : "s"}
+                </span>
+              ) : null}
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span style={dashboardCompactChip}>
+                <Icon name="calendar" size="sm" />
+                <span>{activity?.scheduledAt ? fmtDateTimeLocal(activity.scheduledAt) : "—"}</span>
+              </span>
+              <span style={dashboardCompactChip}>
+                <Icon name="tool" size="sm" />
+                <span>{method}</span>
+              </span>
+              <span style={dashboardCompactChip}>
+                <Icon name="user" size="sm" />
+                <span>{technician}</span>
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div style={dashboardUpcomingMetaBox}>
-          <div style={dashboardMetaLabel}>Técnico</div>
-          <div style={dashboardMetaValue}>{technician}</div>
-        </div>
+        {showDesktopPreview ? (
+          <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
+            {previewUrl ? (
+              <div style={dashboardCompactPreviewFrameSlim}>
+                <img
+                  src={previewUrl}
+                  alt="Referencia"
+                  style={dashboardCompactPreviewImg}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.parentElement.style.display = "none";
+                  }}
+                />
+              </div>
+            ) : null}
 
-        <div style={dashboardUpcomingMetaBox}>
-          <div style={dashboardMetaLabel}>Lubricante</div>
-          <div style={dashboardMetaValue}>{lubricant}</div>
-        </div>
-
-        <div style={dashboardUpcomingMetaBox}>
-          <div style={dashboardMetaLabel}>Cantidad</div>
-          <div style={dashboardMetaValue}>{quantity}</div>
-        </div>
-
-        <div style={dashboardUpcomingMetaBoxFull}>
-          <div style={dashboardMetaLabel}>Método</div>
-          <div style={dashboardMetaValue}>{method}</div>
-        </div>
+            {instructions ? (
+              <div style={dashboardCompactInstructionBoxSlim}>
+                <div style={dashboardCompactInstructionTitle}>Instrucciones</div>
+                <div style={dashboardCompactInstructionText}>{instructions}</div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -5399,6 +5549,100 @@ const dashboardMetaValue = {
   wordBreak: "break-word",
 };
 
+const dashboardCompactFactLine = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  minWidth: 0,
+};
+
+const dashboardCompactFactIcon = {
+  width: 38,
+  height: 38,
+  borderRadius: 12,
+  background: "rgba(15,23,42,0.06)",
+  color: "#475569",
+  display: "grid",
+  placeItems: "center",
+  flexShrink: 0,
+};
+
+const dashboardCompactFactText = {
+  minWidth: 0,
+  fontSize: 16,
+  lineHeight: 1.3,
+  color: "#0f172a",
+  fontWeight: 950,
+};
+
+const dashboardCompactChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 12px",
+  borderRadius: 999,
+  border: "1px solid rgba(148,163,184,0.28)",
+  background: "rgba(255,255,255,0.88)",
+  fontSize: 13,
+  fontWeight: 900,
+  color: "#475569",
+};
+
+const dashboardCompactPointsBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "4px 8px",
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.12)",
+  border: "1px solid rgba(249,115,22,0.28)",
+  color: "#9a3412",
+  fontSize: 11,
+  fontWeight: 950,
+  lineHeight: 1,
+};
+
+const dashboardCompactPreviewFrame = {
+  width: "100%",
+  height: 136,
+  borderRadius: 14,
+  overflow: "hidden",
+  border: "1px solid rgba(226,232,240,0.96)",
+  boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
+  background: "rgba(248,250,252,0.9)",
+};
+
+const dashboardCompactPreviewImg = {
+  width: "100%",
+  height: "100%",
+  display: "block",
+  objectFit: "cover",
+};
+
+const dashboardCompactInstructionBox = {
+  padding: "10px 12px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.74)",
+  border: "1px solid rgba(251,146,60,0.28)",
+};
+
+const dashboardCompactInstructionTitle = {
+  fontSize: 11,
+  fontWeight: 950,
+  letterSpacing: 0.6,
+  textTransform: "uppercase",
+  color: "#9a3412",
+  marginBottom: 6,
+};
+
+const dashboardCompactInstructionText = {
+  fontSize: 13,
+  lineHeight: 1.45,
+  color: "#334155",
+  fontWeight: 800,
+  whiteSpace: "pre-wrap",
+};
+
   const perfBar = {
     height: "100%",
     borderRadius: 999,
@@ -5500,6 +5744,9 @@ const dashboardMetaValue = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
+
+
 
 
 

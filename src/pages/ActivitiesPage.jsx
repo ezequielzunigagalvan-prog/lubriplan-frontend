@@ -226,10 +226,10 @@ export default function ActivitiesPage() {
 
   const myTechId = user?.technicianId != null ? Number(user.technicianId) : null;
 
-  // âœ… filtro por Técnico (solo ADMIN/SUP)
+  // filtro por técnico (solo ADMIN/SUP)
   const [techFilterId, setTechFilterId] = useState(""); // "" = todos
 
-  // âœ… Reglas nuevas por rol
+  // reglas nuevas por rol
   const canCompleteActivities = isTech;
   const canAssignTech = role === "SUPERVISOR" || role === "ADMIN";
   const canSchedule = role === "SUPERVISOR" || role === "ADMIN";
@@ -265,16 +265,16 @@ export default function ActivitiesPage() {
   const [executions, setExecutions] = useState([]);
   const [err, setErr] = useState("");
 
-  // âœ… modal state
+  // estado del modal
   const [completeOpen, setCompleteOpen] = useState(false);
   const [selectedExecutionId, setSelectedExecutionId] = useState(null);
   const [showEmergency, setShowEmergency] = useState(false);
   const [openReportCondition, setOpenReportCondition] = useState(false);
 
-  // âœ… animaciÃ³n al completar
+  // animación al completar
   const [completePulse, setCompletePulse] = useState(false);
 
-  // âœ… Programar actividad (manual)
+  // programar actividad manual
   const [openSchedule, setOpenSchedule] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [scheduleErr, setScheduleErr] = useState("");
@@ -396,7 +396,7 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, completedRange, month, currentPlantId, techFilterId]);
 
- // âœ… inicial + deep-links
+ // inicial + deep-links
 useEffect(() => {
   if (deep.filter === "overdue") setFilter("Atrasada");
   if (deep.filter === "unassigned") setUnassignedOnly(true);
@@ -407,7 +407,7 @@ useEffect(() => {
   if (deep.q) setQ(deep.q);
   if (deep.unassigned) setUnassignedOnly(true);
 
-  // âœ… si viene Desde notificación, limpia filtros para no ocultar la actividad
+  // si viene desde notificación, limpia filtros para no ocultar la actividad
   if (highlightExecutionId || highlightActivityId || highlightReportId) {
     setFilter("Todas");
     setQ("");
@@ -421,7 +421,7 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
-  // âœ… abrir modal emergente desde state
+  // abrir modal emergente desde state
   useEffect(() => {
     if (location.state?.openEmergency) {
       setShowEmergency(true);
@@ -430,7 +430,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  // âœ… cargar Técnicos (Supervisor / Admin cuando aplique)
+  // cargar técnicos (Supervisor / Admin cuando aplique)
   useEffect(() => {
     if (!(canAssignTech || canSchedule) || !currentPlantId) {
       setTechs([]);
@@ -453,7 +453,7 @@ useEffect(() => {
     })();
   }, [canAssignTech, canSchedule, currentPlantId]);
 
-  // âœ… cargar equipos (solo si puede programar)
+  // cargar equipos (solo si puede programar)
   useEffect(() => {
     if (!canSchedule || !currentPlantId) {
       setEquipments([]);
@@ -526,7 +526,7 @@ useEffect(() => {
     }
   };
 
-  // âœ… programar actividad
+  // programar actividad
   const openScheduleModal = () => {
     setScheduleErr("");
     setScheduleForm({
@@ -560,7 +560,7 @@ useEffect(() => {
 
       const scheduledAt = String(scheduleForm.scheduledAt || "").trim();
       if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledAt)) {
-      return setScheduleErr("Fecha inv?lida (YYYY-MM-DD).");
+      return setScheduleErr("Fecha inválida (YYYY-MM-DD).");
       }
 
       const technicianId =
@@ -569,7 +569,7 @@ useEffect(() => {
           : Number(scheduleForm.technicianId);
 
       if (technicianId !== null && !Number.isFinite(technicianId)) {
-        return setScheduleErr("Técnico invÃ¡lido.");
+        return setScheduleErr("Técnico inválido.");
       }
 
       setSavingSchedule(true);
@@ -794,7 +794,7 @@ useEffect(() => {
     });
   }, [sorted, completedFromTo, futureFromTo]);
 
-  // âœ… TECH ve: sin asignar + asignadas a su technicianId
+  // técnico ve: sin asignar + asignadas a su technicianId
   const techScoped = useMemo(() => {
     if (!isTech) return scoped;
 
@@ -1302,7 +1302,7 @@ useEffect(() => {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                gap: 12,
+                gap: 10,
                 flexWrap: "wrap",
                 alignItems: "flex-start",
               }}
@@ -1351,7 +1351,7 @@ useEffect(() => {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                gap: 12,
+                gap: 10,
                 flexWrap: "wrap",
                 alignItems: "flex-start",
               }}
@@ -1362,7 +1362,7 @@ useEffect(() => {
                     <Icon name="warn" style={{ width: 18, height: 18, color: "#0b1220" }} />
                   </span>
                   <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                    condición mala / crÃ­tica
+                    Condición mala / crítica
                   </div>
                 </div>
 
@@ -1372,7 +1372,7 @@ useEffect(() => {
                     <b>CRITICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendación:</b> revisa observaciÃ³n/evidencia y prioriza inspecciÃ³n.
+                    <b>Recomendación:</b> revisa observación, evidencia y prioriza la inspección.
                   </div>
                 </div>
               </div>
@@ -1529,6 +1529,9 @@ useEffect(() => {
   assigningId={assigningId}
   canAssignTech={canAssignTech}
   canCompleteActivities={canCompleteActivities}
+  showPreviewAction={!isMobile && !canCompleteActivities}
+  previewActionLabel="Abrir"
+  compactPreviewMode={!isMobile}
   highlighted={isHighlighted}
   isMobile={isMobile}
 />
@@ -1586,6 +1589,7 @@ export function ActivityCard({
   isMobile = false,
   showPreviewAction = false,
   previewActionLabel = "Abrir",
+  compactPreviewMode = false,
 }) {
   const mobileView =
     isMobile || (typeof window !== "undefined" && Number(window.innerWidth || 0) <= 820);
@@ -1702,6 +1706,7 @@ export function ActivityCard({
 
   const quantityCompact = String(quantityText || "?").replace(/\s+por punto/gi, "/punto");
   const showDesktopPreview = !mobileView;
+  const compactDesktopCard = compactPreviewMode && !mobileView;
 
   if (technicianMode) {
     return (
@@ -1726,6 +1731,7 @@ export function ActivityCard({
           <span
             style={{
               ...technicianStatusPill,
+              ...(compactDesktopCard ? technicianStatusPillCompact : null),
               background: statusTone.badgeBg,
               color: statusTone.badgeColor,
               borderColor: statusTone.badgeBorder,
@@ -1741,13 +1747,23 @@ export function ActivityCard({
           ) : null}
         </div>
 
-        <div style={showDesktopPreview ? technicianDesktopBody : null}>
-          <div style={showDesktopPreview ? technicianDesktopMain : null}>
-            <div style={mobileView ? technicianTaskTitleMobile : technicianTaskTitleDesktop}>
+        <div style={showDesktopPreview ? { ...technicianDesktopBody, ...(compactDesktopCard ? technicianDesktopBodyCompact : null) } : null}>
+          <div style={showDesktopPreview ? { ...technicianDesktopMain, ...(compactDesktopCard ? technicianDesktopMainCompact : null) } : null}>
+            <div
+              style={{
+                ...(mobileView ? technicianTaskTitleMobile : technicianTaskTitleDesktop),
+                ...(compactDesktopCard ? technicianTaskTitleCompact : null),
+              }}
+            >
               {activity.activityName}
             </div>
 
-            <div style={technicianMainFacts}>
+            <div
+              style={{
+                ...technicianMainFacts,
+                ...(compactDesktopCard ? technicianMainFactsCompact : null),
+              }}
+            >
               <div style={technicianFactLine}>
                 <span style={technicianFactIcon}>
                   <Icon name="equipment" size="sm" />
@@ -1778,7 +1794,12 @@ export function ActivityCard({
               </div>
             </div>
 
-            <div style={technicianMetaRow}>
+            <div
+              style={{
+                ...technicianMetaRow,
+                ...(compactDesktopCard ? technicianMetaRowCompact : null),
+              }}
+            >
               {safeDateLabel ? (
                 <span style={technicianMetaChip}>
                   <Icon name="calendar" size="sm" />
@@ -1799,33 +1820,35 @@ export function ActivityCard({
           </div>
 
           {showDesktopPreview ? (
-            <div style={technicianPreviewPanel}>
+            <div style={{ ...technicianPreviewPanel, ...(compactDesktopCard ? technicianPreviewPanelCompact : null) }}>
               {evidenceUrl ? (
-                <img
-                  src={evidenceUrl}
-                  alt="Evidencia"
-                  style={technicianEvidenceImg}
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
+                <div style={{ ...technicianEvidenceFrame, ...(compactDesktopCard ? technicianEvidenceFrameCompact : null) }}>
+                  <img
+                    src={evidenceUrl}
+                    alt="Evidencia"
+                    style={technicianEvidenceImg}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.parentElement.style.display = "none";
+                    }}
+                  />
+                </div>
               ) : null}
 
               {showInstructions ? (
-                <div style={technicianInstructionBox}>
+                <div style={{ ...technicianInstructionBox, ...(compactDesktopCard ? technicianInstructionBoxCompact : null) }}>
                   <div style={technicianInstructionTitle}>Instrucciones</div>
                   <div style={technicianInstructionText}>{normalizedInstructions}</div>
                 </div>
               ) : (
-                <div style={technicianInstructionBox}>
+                <div style={{ ...technicianInstructionBox, ...(compactDesktopCard ? technicianInstructionBoxCompact : null) }}>
                   <div style={technicianInstructionTitle}>Instrucciones</div>
                   <div style={technicianInstructionText}>Sin instrucciones registradas.</div>
                 </div>
               )}
 
               {showNotes ? (
-                <div style={technicianInstructionBox}>
+                <div style={{ ...technicianInstructionBox, ...(compactDesktopCard ? technicianInstructionBoxCompact : null) }}>
                   <div style={technicianInstructionTitle}>Observación</div>
                   <div style={technicianInstructionText}>{normalizedNotes}</div>
                 </div>
@@ -1834,31 +1857,6 @@ export function ActivityCard({
           ) : null}
         </div>
 
-        {!showDesktopPreview && showInstructions ? (
-          <div style={technicianInstructionBox}>
-            <div style={technicianInstructionTitle}>Instrucciones</div>
-            <div style={technicianInstructionText}>{normalizedInstructions}</div>
-          </div>
-        ) : null}
-
-        {!showDesktopPreview && showNotes ? (
-          <div style={technicianInstructionBox}>
-            <div style={technicianInstructionTitle}>Observación</div>
-            <div style={technicianInstructionText}>{normalizedNotes}</div>
-          </div>
-        ) : null}
-
-        {!showDesktopPreview && evidenceUrl ? (
-          <img
-            src={evidenceUrl}
-            alt="Evidencia"
-            style={technicianEvidenceImg}
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        ) : null}
 
         {canComplete ? (
           <button
@@ -1890,6 +1888,268 @@ export function ActivityCard({
             <span>No disponible</span>
           </div>
         ) : null}
+      </div>
+    );
+  }
+
+  if (canAssignTech || showPreviewAction) {
+    const supervisorStatusText =
+      activity.computedStatus === "Atrasada" && activity.overdueDays > 0
+        ? `Atrasada · ${activity.overdueDays} día${activity.overdueDays === 1 ? "" : "s"}`
+        : activity.isToday
+        ? "Hoy"
+        : activity.computedStatus || "Pendiente";
+
+    const showDesktopSupervisorPreview =
+      !mobileView && Boolean(evidenceUrl || showInstructions || showNotes);
+    const compactDesktopSupervisor = compactPreviewMode && !mobileView;
+
+    return (
+      <div
+        style={{
+          ...(mobileView ? technicianCardMobile : technicianCardDesktop),
+          ...(!mobileView && compactDesktopSupervisor ? technicianCardDesktopCompact : null),
+          background: statusTone.bg,
+          border: highlighted
+            ? "2px solid rgba(249,115,22,0.65)"
+            : `2px solid ${cardBorder}`,
+          borderLeft: `8px solid ${highlighted ? "#f97316" : leftColor}`,
+          cursor: canOpenPreview ? "pointer" : "default",
+          opacity: activity.computedStatus === "Completada" ? 0.82 : 1,
+          boxShadow: highlighted
+            ? "0 18px 40px rgba(249,115,22,0.18)"
+            : "0 12px 30px rgba(2,6,23,0.06)",
+        }}
+        onMouseEnter={(e) => {
+          if (!canOpenPreview || mobileView) return;
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 18px 38px rgba(2,6,23,0.12)";
+        }}
+        onMouseLeave={(e) => {
+          if (mobileView) return;
+          e.currentTarget.style.transform = "translateY(0px)";
+          e.currentTarget.style.boxShadow = highlighted
+            ? "0 18px 40px rgba(249,115,22,0.18)"
+            : "0 12px 30px rgba(2,6,23,0.06)";
+        }}
+        onClick={() => {
+          if (canOpenPreview) onOpen();
+        }}
+        title={
+          !canOpenPreview && activity.computedStatus !== "Completada"
+            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
+            : ""
+        }
+      >
+        <div style={technicianHeaderRow}>
+          <span
+            style={{
+              ...technicianStatusPill,
+              ...(compactDesktopSupervisor ? technicianStatusPillCompact : null),
+              background: statusTone.badgeBg,
+              color: statusTone.badgeColor,
+              borderColor: statusTone.badgeBorder,
+            }}
+          >
+            {supervisorStatusText}
+          </span>
+
+          <div style={{ ...technicianMetaRow, ...(compactDesktopSupervisor ? technicianMetaRowCompact : null) }}>
+            {highlighted ? (
+              <span style={technicianMetaChip}>
+                <Icon name="bell" size="sm" />
+                <span>Desde notificación</span>
+              </span>
+            ) : null}
+            {activity.isManual ? (
+              <span style={technicianMetaChip}>
+                <Icon name="tool" size="sm" />
+                <span>Programada</span>
+              </span>
+            ) : null}
+            {isCriticalEq ? (
+              <span style={technicianMetaChip}>
+                <Icon name="alert" size="sm" />
+                <span>Equipo crítico</span>
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div style={showDesktopSupervisorPreview ? { ...technicianDesktopBody, ...(compactDesktopSupervisor ? technicianDesktopBodyCompact : null) } : null}>
+          <div style={showDesktopSupervisorPreview ? { ...technicianDesktopMain, ...(compactDesktopSupervisor ? technicianDesktopMainCompact : null) } : null}>
+            <div
+              style={{
+                ...(mobileView ? technicianTaskTitleMobile : technicianTaskTitleDesktop),
+                ...(compactDesktopSupervisor ? technicianTaskTitleCompact : null),
+              }}
+            >
+              {activity.activityName}
+            </div>
+
+            <div
+              style={{
+                ...technicianMainFacts,
+                ...(compactDesktopSupervisor ? technicianMainFactsCompact : null),
+              }}
+            >
+              <div style={technicianFactLine}>
+                <span style={technicianFactIcon}>
+                  <Icon name="equipment" size="sm" />
+                </span>
+                <span style={technicianFactText}>
+                  {activity.equipmentName}
+                  {activity.equipmentCode ? ` (${activity.equipmentCode})` : ""}
+                </span>
+              </div>
+
+              <div style={technicianFactLine}>
+                <span style={technicianFactIcon}>
+                  <Icon name="drop" size="sm" />
+                </span>
+                <span style={technicianFactText}>{plannedLubricant}</span>
+              </div>
+
+              <div style={technicianFactLine}>
+                <span style={technicianFactIcon}>
+                  <Icon name="quantity" size="sm" />
+                </span>
+                <span style={technicianFactText}>{quantityCompact}</span>
+                {hasPointsCount ? (
+                  <span style={technicianPointsBadge}>
+                    {pointsCount} punto{pointsCount === 1 ? "" : "s"}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...technicianMetaRow,
+                ...(compactDesktopSupervisor ? technicianMetaRowCompact : null),
+              }}
+            >
+              {safeDateLabel ? (
+                <span style={technicianMetaChip}>
+                  <Icon name="calendar" size="sm" />
+                  <span>{safeDateLabel}</span>
+                </span>
+              ) : null}
+
+              <span style={technicianMetaChip}>
+                <Icon name="tool" size="sm" />
+                <span>{methodText}</span>
+              </span>
+
+              <span style={technicianMetaChip}>
+                <Icon name="user" size="sm" />
+                <span>{technicianName}</span>
+              </span>
+
+              {activity.computedStatus === "Completada" && activity.outOfRange ? (
+                <span style={technicianMetaChip}>
+                  <Icon name="alert" size="sm" />
+                  <span>Fuera de rango</span>
+                </span>
+              ) : null}
+            </div>
+
+            {canAssignTech && activity.computedStatus !== "Completada" ? (
+              <div
+                style={{
+                  ...techRow,
+                  ...(mobileView ? techRowMobile : null),
+                  ...(compactDesktopSupervisor ? techRowCompact : null),
+                }}
+              >
+                <select
+                  value={activity.technicianId ?? ""}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => onAssignTech(activity.id, e.target.value)}
+                  disabled={assigningId === activity.id}
+                  style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
+                  title="Asignar técnico"
+                >
+                  <option value="">Sin asignar</option>
+                  {techs.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} {t.code ? `${t.code}` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {assigningId === activity.id ? (
+                  <span style={assigningTxt}>Asignando...</span>
+                ) : null}
+              </div>
+            ) : null}
+
+            {!activity.hasEvidence && !showInstructions && !showNotes && activity.isFuture ? (
+              <div style={{ ...futureNote, ...(compactDesktopSupervisor ? futureNoteCompact : null) }}>
+                <Icon name="clock" size="sm" />
+                <span>Programada para esa fecha (no disponible aún)</span>
+              </div>
+            ) : null}
+
+            <div
+              style={{
+                ...supervisorActionRow,
+                ...(compactDesktopSupervisor ? supervisorActionRowCompact : null),
+              }}
+            >
+              {canOpenPreview ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpen();
+                  }}
+                  style={supervisorOpenBtn}
+                  type="button"
+                >
+                  <Icon name="search" size="sm" />
+                  <span>{previewActionLabel}</span>
+                </button>
+              ) : (
+                <div style={{ ...futureNote, marginTop: 0 }}>
+                  <Icon name="clock" size="sm" />
+                  <span>No disponible</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {showDesktopSupervisorPreview ? (
+            <div style={{ ...technicianPreviewPanel, ...(compactDesktopSupervisor ? technicianPreviewPanelCompact : null) }}>
+              {evidenceUrl ? (
+                <div style={{ ...technicianEvidenceFrame, ...(compactDesktopSupervisor ? technicianEvidenceFrameCompact : null) }}>
+                  <img
+                    src={evidenceUrl}
+                    alt="Evidencia"
+                    style={technicianEvidenceImg}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.parentElement.style.display = "none";
+                    }}
+                  />
+                </div>
+              ) : null}
+
+              {showInstructions ? (
+                <div style={{ ...technicianInstructionBox, ...(compactDesktopSupervisor ? technicianInstructionBoxCompact : null) }}>
+                  <div style={technicianInstructionTitle}>Instrucciones</div>
+                  <div style={technicianInstructionText}>{normalizedInstructions}</div>
+                </div>
+              ) : null}
+
+              {showNotes ? (
+                <div style={{ ...technicianInstructionBox, ...(compactDesktopSupervisor ? technicianInstructionBoxCompact : null) }}>
+                  <div style={technicianInstructionTitle}>Observación</div>
+                  <div style={technicianInstructionText}>{normalizedNotes}</div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
     );
   }
@@ -2248,7 +2508,7 @@ const topBar = {
   display: "flex",
   alignItems: "flex-end",
   justifyContent: "space-between",
-  gap: 12,
+  gap: 10,
   flexWrap: "wrap",
   marginBottom: 14,
   padding: "14px 16px",
@@ -2398,7 +2658,7 @@ const kpiBody = {
   padding: "18px 14px 14px",
   display: "flex",
   alignItems: "center",
-  gap: 12,
+  gap: 10,
 };
 
 const kpiIconWrap = {
@@ -2601,8 +2861,16 @@ const badgeMobile = {
 const list = {
   display: "flex",
   flexDirection: "column",
-  gap: 12,
+  gap: 10,
   marginTop: 14,
+};
+
+const supervisorActivitiesListDesktop = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: 14,
+  marginTop: 14,
+  alignItems: "stretch",
 };
 
 const card = {
@@ -2614,7 +2882,7 @@ const card = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
-  gap: 12,
+  gap: 10,
   width: "100%",
   maxWidth: "100%",
   boxSizing: "border-box",
@@ -2628,12 +2896,17 @@ const technicianCardDesktop = {
   border: "1px solid rgba(226,232,240,0.96)",
   padding: 16,
   display: "grid",
-  gap: 12,
+  gap: 10,
   width: "100%",
   boxSizing: "border-box",
   overflow: "hidden",
   boxShadow: "0 14px 28px rgba(2,6,23,0.06)",
   transition: "transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease",
+};
+
+const technicianCardDesktopCompact = {
+  padding: 14,
+  gap: 10,
 };
 
 const technicianCardMobile = {
@@ -2662,6 +2935,12 @@ const technicianStatusPill = {
   letterSpacing: 0.2,
 };
 
+const technicianStatusPillCompact = {
+  padding: "10px 16px",
+  fontSize: 15,
+  fontWeight: 1000,
+};
+
 const technicianTaskTitleDesktop = {
   fontSize: 26,
   lineHeight: 1.02,
@@ -2681,6 +2960,12 @@ const technicianTaskTitleMobile = {
 const technicianMainFacts = {
   display: "grid",
   gap: 8,
+};
+
+const technicianMainFactsCompact = {
+  gridArea: "facts",
+  gap: 10,
+  alignContent: "center",
 };
 
 const technicianFactLine = {
@@ -2714,6 +2999,11 @@ const technicianMetaRow = {
   alignItems: "center",
 };
 
+const technicianMetaRowCompact = {
+  gridArea: "meta",
+  alignSelf: "center",
+};
+
 const technicianMetaChip = {
   display: "inline-flex",
   alignItems: "center",
@@ -2729,22 +3019,40 @@ const technicianMetaChip = {
 
 const technicianDesktopBody = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1.25fr) minmax(260px, 0.75fr)",
+  gridTemplateColumns: "minmax(0, 1.25fr) 280px",
   gap: 18,
-  alignItems: "start",
+  alignItems: "stretch",
+};
+
+const technicianDesktopBodyCompact = {
+  gridTemplateColumns: "minmax(0, 1fr) 240px",
+  gap: 12,
+  alignItems: "center",
 };
 
 const technicianDesktopMain = {
   display: "grid",
-  gap: 12,
+  gap: 10,
   minWidth: 0,
+};
+
+const technicianDesktopMainCompact = {
+  gridTemplateColumns: "minmax(280px, 1fr) minmax(240px, 0.82fr)",
+  gridTemplateAreas: "\"title facts\" \"meta action\"",
+  gap: 12,
+  alignItems: "center",
 };
 
 const technicianPreviewPanel = {
   display: "grid",
-  gap: 12,
+  gap: 10,
   minWidth: 0,
   alignSelf: "stretch",
+};
+
+const technicianPreviewPanelCompact = {
+  gap: 8,
+  alignContent: "center",
 };
 
 const technicianPointsBadge = {
@@ -2768,6 +3076,11 @@ const technicianInstructionBox = {
   border: "1px solid rgba(251,146,60,0.28)",
 };
 
+const technicianInstructionBoxCompact = {
+  minHeight: 74,
+  padding: "10px 12px",
+};
+
 const technicianInstructionTitle = {
   fontSize: 11,
   fontWeight: 950,
@@ -2785,12 +3098,30 @@ const technicianInstructionText = {
   whiteSpace: "pre-wrap",
 };
 
-const technicianEvidenceImg = {
+const technicianEvidenceFrame = {
   width: "100%",
-  maxWidth: 280,
+  height: 140,
   borderRadius: 14,
+  overflow: "hidden",
   border: "1px solid rgba(226,232,240,0.96)",
   boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
+  background: "rgba(248,250,252,0.9)",
+};
+
+const technicianEvidenceFrameCompact = {
+  height: 92,
+};
+
+const technicianEvidenceFrameMobile = {
+  ...technicianEvidenceFrame,
+  height: 132,
+};
+
+const technicianEvidenceImg = {
+  width: "100%",
+  height: "100%",
+  display: "block",
+  objectFit: "cover",
 };
 
 const technicianCompleteBtnDesktop = {
@@ -2812,6 +3143,57 @@ const technicianCompleteBtnDesktop = {
   fontWeight: 1000,
   cursor: "pointer",
   boxShadow: "0 16px 28px rgba(34,197,94,0.20)",
+};
+
+const supervisorActionRow = {
+  marginTop: 6,
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+  alignItems: "center",
+};
+
+const supervisorActionRowCompact = {
+  gridArea: "action",
+  alignSelf: "center",
+  justifyContent: "flex-start",
+  marginTop: 0,
+};
+
+const technicianTaskTitleCompact = {
+  gridArea: "title",
+  fontSize: 34,
+  lineHeight: 1,
+  alignSelf: "center",
+};
+
+const techRowCompact = {
+  gridColumn: "2",
+  alignSelf: "start",
+};
+
+const futureNoteCompact = {
+  gridColumn: "2",
+  marginTop: 0,
+};
+
+const supervisorOpenBtn = {
+  width: "fit-content",
+  minWidth: 150,
+  maxWidth: 220,
+  minHeight: 48,
+  border: "1px solid rgba(148,163,184,0.30)",
+  background: "rgba(255,255,255,0.92)",
+  color: "#0f172a",
+  borderRadius: 16,
+  padding: "12px 16px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 10,
+  fontSize: 16,
+  fontWeight: 950,
+  cursor: "pointer",
 };
 
 const technicianCompleteBtnMobile = {
@@ -2933,7 +3315,7 @@ const cardTopRow = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
-  gap: 12,
+  gap: 10,
   flexWrap: "wrap",
 };
 
@@ -3044,7 +3426,7 @@ const cardAside = {
   flexDirection: "column",
   alignItems: "flex-end",
   justifyContent: "space-between",
-  gap: 12,
+  gap: 10,
   minWidth: 150,
 };
 
@@ -3277,6 +3659,18 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

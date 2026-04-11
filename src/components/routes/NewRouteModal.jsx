@@ -1,4 +1,4 @@
-// src/components/routes/NewRouteModal.jsx
+﻿// src/components/routes/NewRouteModal.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createRoute,
@@ -10,6 +10,7 @@ import { getLubricants } from "../../services/lubricantsService";
 import { getTechnicians } from "../../services/techniciansService";
 import { Icon } from "../ui/lpIcons";
 import { usePlant } from "../../context/PlantContext";
+import { API_ASSETS_URL } from "../../services/api";
 
 /* ================== HELPERS ================== */
 const WEEK_DAYS = [
@@ -684,7 +685,7 @@ useEffect(() => {
       "Grasa alta temperatura",
       "Grasa grado alimenticio",
       "Grasa multipropósito",
-      "Grasa para motores electrónicos",
+      "Grasa para motores eléctricos",
       "Grasa para altas velocidades",
       "Otro",
     ],
@@ -2067,5 +2068,8 @@ const weekDayBtnActive = {
   color: "#9a3412",
   boxShadow: "0 8px 18px rgba(249,115,22,0.12)",
 };
+
+
+
 
 

@@ -7,7 +7,7 @@ import useNotifications from "../hooks/useNotifications";
 import useRealtimeAlerts from "../hooks/useRealtimeAlerts";
 import { Icon } from "../components/ui/lpIcons";
 import PlantSwitcher from "../components/plants/PlantSwitcher";
-import lubriPlanMark from "../assets/lubriplan-logo.png.png";
+import lubriPlanMark from "../assets/lubriplan-menu-icon.png";
 import { usePlant } from "../context/PlantContext";
 import useInstallPrompt from "../hooks/useInstallPrompt";
 
@@ -833,14 +833,14 @@ const brand = {
 };
 
 const brandLogo = {
-  width: 38,
-  height: 38,
+  width: 56,
+  height: 56,
   borderRadius: 12,
 };
 
 const brandLogoImg = {
-  width: 56,
-  height: 56,
+  width: 72,
+  height: 72,
   display: "block",
   objectFit: "contain",
 };
@@ -1254,6 +1254,7 @@ const seeAll = {
   fontWeight: 950,
   color: "#0f172a",
 };
+
 
 
 
