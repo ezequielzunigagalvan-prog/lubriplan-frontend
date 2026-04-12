@@ -1,4 +1,4 @@
-Ôªø// src/pages/Dashboard.jsx
+// src/pages/Dashboard.jsx
 import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
@@ -36,8 +36,8 @@ import ScheduleActivityModal from "../components/activities/ScheduleActivityModa
 import EmergencyActivityModal from "../components/activities/EmergencyActivityModal";
 import ReportConditionModal from "../components/activities/ReportConditionModal";
 
-// √Ø¬ø¬ΩS& si t√∫ ya usas btnPrimary / btnGhost en otros lados, d√©jalo.
-// (Aqu√≠ mantenemos btnPrimary/btnGhost para compatibilidad con tu DashTop/otros)
+// ÔøΩS& si t˙ ya usas btnPrimary / btnGhost en otros lados, dÈjalo.
+// (AquÌ mantenemos btnPrimary/btnGhost para compatibilidad con tu DashTop/otros)
 import { btnPrimary, btnGhost } from "../components/ui/styles";
 
 /* ================= HELPERS ================= */
@@ -62,17 +62,17 @@ function priorityTypeLabel(type) {
     OVERDUE: "Actividad vencida",
     OVERDUE_ACTIVITY: "Actividad vencida",
     EXEC_OVERDUE: "Actividad vencida",
-    UNASSIGNED_PENDING: "Actividad sin t√©cnico",
-    EXEC_UNASSIGNED: "Actividad sin t√©cnico",
+    UNASSIGNED_PENDING: "Actividad sin tÈcnico",
+    EXEC_UNASSIGNED: "Actividad sin tÈcnico",
     RISK_LATE: "Riesgo de atraso",
-    CRITICAL_RISK_OVERDUE: "Cr√≠tica vencida",
+    CRITICAL_RISK_OVERDUE: "CrÌtica vencida",
     REPEATED_FAILURES: "Reincidencia",
-    CONDITION_REPORTS_OPEN: "Condici√≥n anormal",
-    CONDITION_REPORT_OPEN: "Condici√≥n anormal",
-    COND_REPORT: "Condici√≥n reportada",
+    CONDITION_REPORTS_OPEN: "CondiciÛn anormal",
+    CONDITION_REPORT_OPEN: "CondiciÛn anormal",
+    COND_REPORT: "CondiciÛn reportada",
     LOW_STOCK: "Bajo stock",
     DAYS_TO_EMPTY: "Inventario en riesgo",
-    CONSUMPTION_ANOMALY: "Consumo fuera de patr√≥n",
+    CONSUMPTION_ANOMALY: "Consumo fuera de patrÛn",
     EQUIPMENT_WITHOUT_ROUTES: "Sin rutas",
     TECHNICIAN_OVERLOAD: "Sobrecarga",
   };
@@ -81,7 +81,7 @@ function priorityTypeLabel(type) {
 
 function prioritySeverityLabel(severity) {
   const s = String(severity || "").toUpperCase();
-  if (s === "CRITICAL") return "Atenci√≥n inmediata";
+  if (s === "CRITICAL") return "AtenciÛn inmediata";
   if (s === "HIGH") return "Alta prioridad";
   if (s === "MED") return "Atender hoy";
   return "Seguimiento";
@@ -91,7 +91,7 @@ function priorityOwnerLabel(owner) {
   const o = String(owner || "").toUpperCase();
   if (o === "ADMIN") return "Administrador";
   if (o === "SUPERVISOR") return "Supervisor";
-  if (o === "TECHNICIAN") return "T√©cnico";
+  if (o === "TECHNICIAN") return "TÈcnico";
   return "Equipo";
 }
 
@@ -106,30 +106,30 @@ function parsePriorityPresentation(item) {
   const rawReason = String(item?.reason || "Sin detalle adicional.");
 
   if (type === "CONSUMPTION_ANOMALY" || type === "ANOMALIES") {
-    const match = rawReason.match(/^(.*?)\s*¬∑\s*Ratio:\s*([\d.]+)\s*¬∑\s*Base:\s*([\d.]+)\s*¬∑\s*√ölt\.?14:\s*([\d.]+)/i);
+    const match = rawReason.match(/^(.*?)\s*∑\s*Ratio:\s*([\d.]+)\s*∑\s*Base:\s*([\d.]+)\s*∑\s*⁄lt\.?14:\s*([\d.]+)/i);
     if (match) {
       const equipment = String(match[1] || "Equipo").trim();
       const baseline = match[3];
       const recent = match[4];
       return {
-        title: "Consumo fuera de patr√≥n",
-        reason: `${equipment}: el consumo reciente est√° por encima de lo normal y requiere revisi√≥n prioritaria.`,
+        title: "Consumo fuera de patrÛn",
+        reason: `${equipment}: el consumo reciente est· por encima de lo normal y requiere revisiÛn prioritaria.`,
         metaBadges: [`Consumo reciente: ${recent}`, `Consumo habitual: ${baseline}`],
       };
     }
     return {
-      title: "Consumo fuera de patr√≥n",
-      reason: "El consumo reciente del equipo se sali√≥ del comportamiento habitual.",
+      title: "Consumo fuera de patrÛn",
+      reason: "El consumo reciente del equipo se saliÛ del comportamiento habitual.",
       metaBadges: [],
     };
   }
 
   if (type === "REPEATED_FAILURES") {
     return {
-      title: "Falla repetida en condici√≥n cr√≠tica",
+      title: "Falla repetida en condiciÛn crÌtica",
       reason: rawReason
         .replace(/^Eventos:/i, "Eventos repetidos:")
-        .replace(/CR√çTICOS:/i, "casos cr√≠ticos:")
+        .replace(/CRÕTICOS:/i, "casos crÌticos:")
         .replace(/REPEATED_FAILURE/gi, "Reincidencia")
         .trim(),
       metaBadges: [],
@@ -139,7 +139,7 @@ function parsePriorityPresentation(item) {
   if (type === "DAYS_TO_EMPTY" || type === "PREDICTIVE_DTE") {
     return {
       title: "Inventario en riesgo",
-      reason: rawReason.replace(/DTE:/i, "D√≠as estimados restantes:").trim(),
+      reason: rawReason.replace(/DTE:/i, "DÌas estimados restantes:").trim(),
       metaBadges: [],
     };
   }
@@ -302,7 +302,7 @@ function statusLabelFromExecution(e) {
 }
 
 function fmtQty(q) {
-  if (q == null) return "‚Äî";
+  if (q == null) return "ó";
   if (typeof q === "number") return String(q);
   return String(q);
 }
@@ -311,7 +311,7 @@ function roleLabel(role) {
   const r = String(role || "").toUpperCase();
   if (r === "ADMIN") return "Administrador";
   if (r === "SUPERVISOR") return "Supervisor";
-  if (r === "TECHNICIAN") return "T√©cnico";
+  if (r === "TECHNICIAN") return "TÈcnico";
   return "Usuario";
 }
 
@@ -416,13 +416,13 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
   const executiveText = String(summary?.executiveSummary || "").trim();
   const executiveCompact = executiveText
     ? executiveText.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ")
-    : "Sin diagn√≥stico disponible para este periodo.";
+    : "Sin diagnÛstico disponible para este periodo.";
   const statusLine = loading
-    ? "Generando lectura ejecutiva‚Ä¶"
+    ? "Generando lectura ejecutivaÖ"
     : err
     ? "No se pudo generar el resumen IA."
     : summary
-    ? "IA lista ¬∑ " + (cached ? "cache" : "nuevo") + (model ? " ¬∑ " + model : "") + (generatedAt ? " ¬∑ " + generatedAt : "")
+    ? "IA lista ∑ " + (cached ? "cache" : "nuevo") + (model ? " ∑ " + model : "") + (generatedAt ? " ∑ " + generatedAt : "")
     : "Listo para generar una lectura ejecutiva de riesgos y prioridades.";
 
   return (
@@ -456,7 +456,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
             onClick={onGenerate}
             title="Generar o refrescar resumen"
           >
-            {loading ? "Generando‚Ä¶" : summary ? "Actualizar ‚Üí" : "Generar ‚Üí"}
+            {loading ? "GenerandoÖ" : summary ? "Actualizar ?" : "Generar ?"}
           </button>
 
           {canForceRefreshAi ? (
@@ -465,7 +465,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
               style={{ ...btnAdminGhost, padding: "10px 12px" }}
               disabled={loading}
               onClick={onRefresh}
-              title="Forzar regeneraci√≥n"
+              title="Forzar regeneraciÛn"
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Icon name="refresh" size="sm" />
@@ -478,12 +478,12 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
 
       <div style={aiBody}>
         {loading ? (
-          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Preparando lectura para {month}‚Ä¶</div>
+          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Preparando lectura para {month}Ö</div>
         ) : err ? (
           <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>
             {err}
             <div style={{ marginTop: 8, fontWeight: 800, color: "#64748b" }}>
-              Tip: revisa la conexi√≥n con OpenAI, la cuota del proyecto y la configuraci√≥n del backend.
+              Tip: revisa la conexiÛn con OpenAI, la cuota del proyecto y la configuraciÛn del backend.
             </div>
           </div>
         ) : summary ? (
@@ -517,7 +517,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
               letterSpacing: 1,
             }}
           >
-            Diagn√≥stico ejecutivo
+            DiagnÛstico ejecutivo
           </div>
           <div style={{ marginTop: 6, fontSize: 12, fontWeight: 850, color: "#94a3b8" }}>
             {summary.title || "Lectura ejecutiva del periodo"}
@@ -708,9 +708,9 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.4 }}>
-                  <div>{r.message || "Sin descripci√≥n disponible."}</div>
+                  <div>{r.message || "Sin descripciÛn disponible."}</div>
                   <div style={{ marginTop: 6, fontSize: 12, color: "#475569" }}>
-                    Acci√≥n: <b style={{ color: "#0f172a" }}>{r.action || "Sin acci√≥n sugerida."}</b>
+                    AcciÛn: <b style={{ color: "#0f172a" }}>{r.action || "Sin acciÛn sugerida."}</b>
                   </div>
                 </div>
 
@@ -733,7 +733,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
   </div>
         ) : (
           <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-            No hay resumen a√∫n. Presiona <b>Generar</b>.
+            No hay resumen a˙n. Presiona <b>Generar</b>.
           </div>
         )}
       </div>
@@ -927,7 +927,7 @@ function AdminPanel({
       setEffItems(list);
     } catch (e) {
       setEffItems([]);
-      setEffError(e?.message || "Error cargando desempe√±o por t√©cnico");
+      setEffError(e?.message || "Error cargando desempeÒo por tÈcnico");
     } finally {
       setEffLoading(false);
     }
@@ -1054,7 +1054,7 @@ function AdminPanel({
     {
       title: "Atrasadas",
       value: String(currentMonthTotals.overdue || 0),
-      sub: operationalBuckets.maxOverdueDays > 0 ? `${operationalBuckets.maxOverdueDays} d√≠a(s) de retraso` : "Mes seleccionado",
+      sub: operationalBuckets.maxOverdueDays > 0 ? `${operationalBuckets.maxOverdueDays} dÌa(s) de retraso` : "Mes seleccionado",
       tone: "red",
       iconName: "clock",
     },
@@ -1160,7 +1160,7 @@ function AdminPanel({
     const equipment = equipmentLabel;
     const dateText = activity?.relativeText || activity?.dateText || activity?.dateLabel || "Fecha no definida";
     const quantity = activity?.quantityLabel || activity?.quantity || "Cantidad no definida";
-    const technician = activity?.technicianName || activity?.technician?.name || (activity?.isUnassigned ? "Sin t√©cnico" : "No asignado");
+    const technician = activity?.technicianName || activity?.technician?.name || (activity?.isUnassigned ? "Sin tÈcnico" : "No asignado");
     const accent = tone === "red" ? "#ef4444" : tone === "green" ? "#22c55e" : "#f59e0b";
     const soft = tone === "red" ? "rgba(254,242,242,0.96)" : tone === "green" ? "rgba(240,253,244,0.96)" : "rgba(255,247,237,0.96)";
 
@@ -1186,7 +1186,7 @@ function AdminPanel({
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "start" }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 10, fontWeight: 900, color: "#64748b", textTransform: "uppercase", letterSpacing: ".12em", fontFamily: EXEC_TEXT_FONT }}>
-              {activity?.computedStatus === "Atrasada" ? "Atenci√≥n inmediata" : activity?.computedStatus || "Programada"}
+              {activity?.computedStatus === "Atrasada" ? "AtenciÛn inmediata" : activity?.computedStatus || "Programada"}
             </div>
             <div style={{ marginTop: 4, fontSize: 20, lineHeight: 1.02, fontWeight: 700, color: "#0f172a", fontFamily: EXEC_DISPLAY_FONT, letterSpacing: "-.03em" }}>{title}</div>
           </div>
@@ -1242,7 +1242,7 @@ function AdminPanel({
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <span style={chipAdminCompact}>{dateText}</span>
           <span style={chipAdminCompact}>{quantity}</span>
-          <span style={chipAdminCompact}>T√©cnico: {technician}</span>
+          <span style={chipAdminCompact}>TÈcnico: {technician}</span>
         </div>
       </button>
     );
@@ -1257,8 +1257,8 @@ function AdminPanel({
       </div>
 
       <PanelCard
-        title="Actividades cr√≠ticas"
-        subtitle="Lo urgente del mes antes de entrar al an√°lisis"
+        title="Actividades crÌticas"
+        subtitle="Lo urgente del mes antes de entrar al an·lisis"
         right={
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
             <Icon name="alert" size="sm" />
@@ -1282,16 +1282,16 @@ function AdminPanel({
                     <Icon name="clock" size="sm" />
                     Atrasadas ({operationalBuckets.overdue.length})
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Lo que ya se sali√≥ de fecha y requiere acci√≥n inmediata.</div>
+                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Lo que ya se saliÛ de fecha y requiere acciÛn inmediata.</div>
                 </div>
                 {operationalBuckets.overdue.length > 3 ? (
                   <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)}>
-                    Ver m√°s ‚Üí
+                    Ver m·s ?
                   </button>
                 ) : null}
               </div>
               {operationalLoading ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando actividades cr√≠ticas‚Ä¶</div>
+                <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando actividades crÌticasÖ</div>
               ) : operationalBuckets.overdue.length === 0 ? (
                 <div style={{ fontWeight: 850, color: "#64748b" }}>Sin atrasadas en este momento.</div>
               ) : (
@@ -1306,11 +1306,11 @@ function AdminPanel({
                     <Icon name="alert" size="sm" />
                     Pendientes hoy ({operationalBuckets.today.length})
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Solo rutas de equipos cr√≠ticos y actividades nacidas de reportes de condici√≥n que deben resolverse hoy.</div>
+                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Solo rutas de equipos crÌticos y actividades nacidas de reportes de condiciÛn que deben resolverse hoy.</div>
                 </div>
                 {operationalBuckets.today.length > 3 ? (
                   <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}&filter=admin-priority`)}>
-                    Ver m√°s ‚Üí
+                    Ver m·s ?
                   </button>
                 ) : null}
               </div>
@@ -1326,18 +1326,18 @@ function AdminPanel({
                 <div>
                   <div style={{ fontWeight: 1000, color: "#166534", display: "inline-flex", alignItems: "center", gap: 8 }}>
                     <Icon name="calendar" size="sm" />
-                    Pr√≥ximas ({operationalBuckets.upcoming.length})
+                    PrÛximas ({operationalBuckets.upcoming.length})
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Lo cr√≠tico y correctivo que viene en los pr√≥ximos d√≠as para anticiparte sin perder foco operativo.</div>
+                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Lo crÌtico y correctivo que viene en los prÛximos dÌas para anticiparte sin perder foco operativo.</div>
                 </div>
                 {operationalBuckets.upcoming.length > 3 ? (
                   <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}&status=PENDING&futureWindow=MONTH&filter=admin-priority`)}>
-                    Ver m√°s ‚Üí
+                    Ver m·s ?
                   </button>
                 ) : null}
               </div>
               {operationalLoading ? null : operationalBuckets.upcoming.length === 0 ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Sin pr√≥ximas actividades relevantes por ahora.</div>
+                <div style={{ fontWeight: 850, color: "#64748b" }}>Sin prÛximas actividades relevantes por ahora.</div>
               ) : (
                 <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.upcoming.slice(0, 3).map((a) => renderAdminActivityCard(a, "upcoming", "green"))}</div>
               )}
@@ -1346,8 +1346,8 @@ function AdminPanel({
 
           <div style={{ display: "grid", gap: 12 }}>
             <PanelCard
-              title="Distribuci√≥n del mes"
-              subtitle="Pendientes ¬∑ Vencidas ¬∑ Completadas"
+              title="DistribuciÛn del mes"
+              subtitle="Pendientes ∑ Vencidas ∑ Completadas"
               right={
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
                   <Icon name="calendar" size="sm" />
@@ -1356,7 +1356,7 @@ function AdminPanel({
               }
             >
               {donutLoading ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando‚Ä¶</div>
+                <div style={{ fontWeight: 850, color: "#64748b" }}>CargandoÖ</div>
               ) : (
                 <ActivitiesDonut
                   completed={Number(currentMonthTotals.completed || 0)}
@@ -1368,7 +1368,7 @@ function AdminPanel({
                 />
               )}
               <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "#475569", lineHeight: 1.45 }}>
-                Ataca primero las atrasadas, luego saca las de hoy y usa las pr√≥ximas como colch√≥n operativo.
+                Ataca primero las atrasadas, luego saca las de hoy y usa las prÛximas como colchÛn operativo.
               </div>
             </PanelCard>
 
@@ -1376,22 +1376,22 @@ function AdminPanel({
               <div>
                 <div style={{ fontWeight: 1000, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="tool" size="sm" />
-                  Acciones r√°pidas
+                  Acciones r·pidas
                 </div>
                 <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Atajos cortos para resolver sin salir del bloque operativo.</div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8 }}>
                 <button style={btnAdminPrimary} onClick={() => navigate("/analysis")}>
-                  <span style={btnRow}><Icon name="search" size="sm" />An√°lisis ‚Üí</span>
+                  <span style={btnRow}><Icon name="search" size="sm" />An·lisis ?</span>
                 </button>
                 <button style={btnAdminGhost} onClick={() => onOpenScheduleActivity?.()}>
-                  <span style={btnRow}><Icon name="plus" size="sm" />Programar ‚Üí</span>
+                  <span style={btnRow}><Icon name="plus" size="sm" />Programar ?</span>
                 </button>
                 <button style={btnAdminGhost} onClick={() => navigate("/condition-reports?status=OPEN")}>
-                  <span style={btnRow}><Icon name="warn" size="sm" />Condici√≥n ‚Üí</span>
+                  <span style={btnRow}><Icon name="warn" size="sm" />CondiciÛn ?</span>
                 </button>
                 <button style={btnAdminGhost} onClick={() => navigate("/inventory")}>
-                  <span style={btnRow}><Icon name="drop" size="sm" />Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null} ‚Üí</span>
+                  <span style={btnRow}><Icon name="drop" size="sm" />Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null} ?</span>
                 </button>
               </div>
             </div>
@@ -1401,7 +1401,7 @@ function AdminPanel({
 
       <PanelCard
         title="Centro de alertas"
-        subtitle="IA + operaci√≥n + predictivas + prioridades"
+        subtitle="IA + operaciÛn + predictivas + prioridades"
         right={
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
             <Icon name="alert" size="sm" />
@@ -1431,14 +1431,14 @@ function AdminPanel({
                     <Icon name="tool" size="sm" />
                     Alertas operativas
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Atajos directos para lo urgente del d√≠a</div>
+                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Atajos directos para lo urgente del dÌa</div>
                 </div>
               </div>
               <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!operationalOverdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(operationalOverdueCount || 0)}</span></button>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin t√©cnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
+                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin tÈcnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
                 <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(lowStockCount ? chipAmberMini : chipOffMini) }} onClick={() => navigate(`/inventory?filter=low&month=${encodeURIComponent(month)}`)} disabled={!lowStockCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="drop" size="sm" />Bajo stock</span><span style={chipCountMini}>{Number(lowStockCount || 0)}</span></button>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalCriticalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad cr√≠tica ya venci√≥ y requiere atenci√≥n inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Cr√≠ticas vencidas</span><span style={chipCountMini}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
+                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalCriticalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad crÌtica ya venciÛ y requiere atenciÛn inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />CrÌticas vencidas</span><span style={chipCountMini}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
               </div>
             </div>
 
@@ -1450,7 +1450,7 @@ function AdminPanel({
                       <Icon name="alert" size="sm" />
                       Alertas predictivas
                     </div>
-                    <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>{predLoading ? "Calculando..." : predTotal > 0 ? "Riesgos detectados para anticiparse" : "Sin se√±ales predictivas por ahora"}</div>
+                    <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>{predLoading ? "Calculando..." : predTotal > 0 ? "Riesgos detectados para anticiparse" : "Sin seÒales predictivas por ahora"}</div>
                   </div>
                   <button type="button" onClick={handleRefreshPredictive} style={btnAdminGhost} disabled={predLoading} title="Actualizar predictivas"><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="refresh" size="sm" />{predLoading ? "..." : "Actualizar"}</span></button>
                 </div>
@@ -1461,18 +1461,18 @@ function AdminPanel({
                   return (
                     <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse."><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(operationalCriticalOverdueCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad cr√≠tica ya venci√≥ y requiere atenci√≥n inmediata."><Icon name="alert" size="sm" />Cr√≠ticas vencidas <span style={chipCount}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(repeatedFailuresTopCurrentMonth.length ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresTopCurrentMonth.length} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patr√≥n recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(repeatedFailuresTopCurrentMonth.length || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto seg√∫n consumo e inventario disponible."><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del t√©cnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga t√©cnica <span style={chipCount}>{overloadHotCount}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y adem√°s hay muestra suficiente."><Icon name="alert" size="sm" />Consumo fuera de patr√≥n <span style={chipCount}>{anomaliesCount}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(operationalCriticalOverdueCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad crÌtica ya venciÛ y requiere atenciÛn inmediata."><Icon name="alert" size="sm" />CrÌticas vencidas <span style={chipCount}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(repeatedFailuresTopCurrentMonth.length ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresTopCurrentMonth.length} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patrÛn recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(repeatedFailuresTopCurrentMonth.length || 0)}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto seg˙n consumo e inventario disponible."><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del tÈcnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga tÈcnica <span style={chipCount}>{overloadHotCount}</span></button>
+                      <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y adem·s hay muestra suficiente."><Icon name="alert" size="sm" />Consumo fuera de patrÛn <span style={chipCount}>{anomaliesCount}</span></button>
                     </div>
                   );
                 })()}
               </div>
             ) : (
               <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)", fontWeight: 850, color: "#64748b" }}>
-                Sin se√±ales predictivas por ahora.
+                Sin seÒales predictivas por ahora.
               </div>
             )}
           </div>
@@ -1492,7 +1492,7 @@ function AdminPanel({
       >
         <MiniBars
           title="Actividades por mes"
-          subtitle="√öltimos 6 meses"
+          subtitle="⁄ltimos 6 meses"
           data={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), value: 0 })) : activityByMonth}
         />
 
@@ -1511,7 +1511,7 @@ function AdminPanel({
 
       <MiniLines
         title="Eficiencia operacional"
-        subtitle="% completadas vs programadas ¬∑ √∫ltimos 6 meses"
+        subtitle="% completadas vs programadas ∑ ˙ltimos 6 meses"
         series={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), valuePct: 0 })) : efficiencyByMonth}
       />
 
@@ -1637,7 +1637,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
   return (
     <PanelCard
       title={title}
-      subtitle="Lo que toca atender primero, con filtro por periodo y t√©cnico"
+      subtitle="Lo que toca atender primero, con filtro por periodo y tÈcnico"
       right={
         <span
           style={{
@@ -1650,7 +1650,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
           }}
         >
           <Icon name="tool" size="sm" />
-          Operaci√≥n
+          OperaciÛn
         </span>
       }
     >
@@ -1673,7 +1673,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
             }}
             style={{ ...segBtn, ...(includeUnassigned ? segOn : segOff) }}
           >
-            {includeUnassigned ? "Sin t√©cnico" : "Filtrar sin t√©cnico"}
+            {includeUnassigned ? "Sin tÈcnico" : "Filtrar sin tÈcnico"}
           </button>
         </div>
 
@@ -1686,7 +1686,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
             flexWrap: "wrap",
           }}
         >
-          <span style={{ fontSize: 12, fontWeight: 900, color: "#64748b" }}>T√©cnico</span>
+          <span style={{ fontSize: 12, fontWeight: 900, color: "#64748b" }}>TÈcnico</span>
 
           <select
             value={tech}
@@ -1712,7 +1712,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="search" size="sm" />
-              Ir a actividades ‚Üí
+              Ir a actividades ?
             </span>
           </button>
         </div>
@@ -1720,7 +1720,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
 
       <div style={{ marginTop: 12 }}>
         {loading || feedLoading ? (
-          <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando‚Ä¶</div>
+          <div style={{ fontWeight: 850, color: "#64748b" }}>CargandoÖ</div>
         ) : items.length === 0 ? (
           <div style={{ fontWeight: 850, color: "#64748b" }}>
             No hay actividades para este filtro.
@@ -1809,7 +1809,7 @@ function SupervisorDistributionAlertsPanel({
 
   return (
     <PanelCard
-      title="Distribuci√≥n y alertas"
+      title="DistribuciÛn y alertas"
       subtitle="Lo que el supervisor necesita ver al entrar"
       right={
         <span
@@ -1823,14 +1823,14 @@ function SupervisorDistributionAlertsPanel({
           }}
         >
           <Icon name="alert" size="sm" />
-          Operaci√≥n
+          OperaciÛn
         </span>
       }
     >
       <div style={{ display: "grid", gap: 12 }}>
         <div style={{ display: "grid", justifyItems: "center", paddingBottom: 4 }}>
           {donutLoading ? (
-            <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando‚Ä¶</div>
+            <div style={{ fontWeight: 850, color: "#64748b" }}>CargandoÖ</div>
           ) : (
             <ActivitiesDonut
               completed={Number(currentMonthTotals.completed || 0)}
@@ -1861,7 +1861,7 @@ function SupervisorDistributionAlertsPanel({
               </button>
               <button type="button" style={{ ...chipBtn, ...(unassignedPending ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}>
                 <Icon name="user" size="sm" />
-                Sin t√©cnico <span style={chipCount}>{Number(unassignedPending || 0)}</span>
+                Sin tÈcnico <span style={chipCount}>{Number(unassignedPending || 0)}</span>
               </button>
               <button type="button" style={{ ...chipBtn, ...(lowStockCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=low&month=${encodeURIComponent(month)}`)} disabled={!lowStockCount}>
                 <Icon name="drop" size="sm" />
@@ -1878,36 +1878,36 @@ function SupervisorDistributionAlertsPanel({
                   Alertas predictivas
                 </div>
                 <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
-                  {predLoading ? "Calculando‚Ä¶" : predTotal > 0 ? "Riesgos detectados para anticiparse" : "Sin se√±ales predictivas por ahora"}
+                  {predLoading ? "CalculandoÖ" : predTotal > 0 ? "Riesgos detectados para anticiparse" : "Sin seÒales predictivas por ahora"}
                 </div>
               </div>
               <button type="button" onClick={handleRefreshPredictive} style={btnAdminGhost} disabled={predLoading || !predictiveEnabled}>Actualizar</button>
             </div>
             {predError ? <div style={miniError}>{predError}</div> : null}
             <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad cr√≠tica ya venci√≥ y requiere atenci√≥n inmediata.">
+              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crÌtica ya venciÛ y requiere atenciÛn inmediata.">
                 <Icon name="clock" size="sm" />
                 Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span>
               </button>
               <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patr?n recurrente.">
                 <Icon name="warn" size="sm" />
-                Cr√≠ticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
+                CrÌticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
               </button>
               <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount}>
                 <Icon name="warn" size="sm" />
                 Reincidencia <span style={chipCount}>{repeatedFailuresCount}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto seg√∫n consumo e inventario disponible.">
+              <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto seg˙n consumo e inventario disponible.">
                 <Icon name="drop" size="sm" />
                 Inventario en riesgo <span style={chipCount}>{dteCount}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del t√©cnico supera la capacidad configurada para el periodo.">
+              <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del tÈcnico supera la capacidad configurada para el periodo.">
                 <Icon name="user" size="sm" />
-                Sobrecarga t√©cnica <span style={chipCount}>{overloadHotCount}</span>
+                Sobrecarga tÈcnica <span style={chipCount}>{overloadHotCount}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y adem√°s hay muestra suficiente.">
+              <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y adem·s hay muestra suficiente.">
                 <Icon name="alert" size="sm" />
-                Consumo fuera de patr√≥n <span style={chipCount}>{anomaliesCount}</span>
+                Consumo fuera de patrÛn <span style={chipCount}>{anomaliesCount}</span>
               </button>
             </div>
           </div>
@@ -1926,7 +1926,7 @@ function SupervisorPriorityTodayPanel({ month, navigate, canSeePriorityQueue, pq
   return (
     <PanelCard
       title="Prioridad de hoy"
-      subtitle={pqLoading ? "Ordenando prioridades‚Ä¶" : pqTotal > 0 ? `Mostrando ${priorityItems.length} de ${pqTotal} caso(s) priorizados.` : "No hay prioridades abiertas ahora."}
+      subtitle={pqLoading ? "Ordenando prioridadesÖ" : pqTotal > 0 ? `Mostrando ${priorityItems.length} de ${pqTotal} caso(s) priorizados.` : "No hay prioridades abiertas ahora."}
       right={canSeePriorityQueue ? <button type="button" style={btnAdminGhost} onClick={refreshPQ} disabled={pqLoading}>Actualizar</button> : null}
     >
       {pqError ? <div style={miniError}>{pqError}</div> : null}
@@ -1967,7 +1967,7 @@ function SupervisorPriorityTodayPanel({ month, navigate, canSeePriorityQueue, pq
                     <span style={{ ...pqBadge, ...pqBadgeInfo }}>Responsable: {x.ownerLabel || "Equipo"}</span>
                   </div>
                 </div>
-                <button type="button" style={btnAdminGhost} onClick={() => navigate(x.link)}>Abrir ‚Üí</button>
+                <button type="button" style={btnAdminGhost} onClick={() => navigate(x.link)}>Abrir ?</button>
               </div>
             </div>
           ))}
@@ -1978,7 +1978,7 @@ function SupervisorPriorityTodayPanel({ month, navigate, canSeePriorityQueue, pq
 }
 
 /* =========================
-  SUP: Desempe√±o por t√©cnico
+  SUP: DesempeÒo por tÈcnico
 ========================= */
 
 function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
@@ -2009,7 +2009,7 @@ function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
         setItems(list);
       } catch (e) {
         if (!alive) return;
-        setErr(e?.message || "Error cargando desempe√±o por t√©cnico");
+        setErr(e?.message || "Error cargando desempeÒo por tÈcnico");
         setItems([]);
       } finally {
         if (alive) setLoading(false);
@@ -2027,7 +2027,7 @@ function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
 
   return (
     <PanelCard
-      title="Desempe√±o por t√©cnico"
+      title="DesempeÒo por tÈcnico"
       subtitle="Score del mes (a tiempo vs tarde vs vencidas)"
       right={
         <span
@@ -2046,11 +2046,11 @@ function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
       }
     >
       {loading ? (
-        <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando‚Ä¶</div>
+        <div style={{ fontWeight: 850, color: "#64748b" }}>CargandoÖ</div>
       ) : err ? (
         <div style={miniError}>{err}</div>
       ) : items.length === 0 ? (
-        <div style={{ fontWeight: 850, color: "#64748b" }}>Sin datos de desempe√±o.</div>
+        <div style={{ fontWeight: 850, color: "#64748b" }}>Sin datos de desempeÒo.</div>
       ) : (
         <>
           <div style={supervisorFocusBox}>
@@ -2067,7 +2067,7 @@ function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
                   <div key={t.id || idx} style={perfRowCompact}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                        {t.name || `T√©cnico ${idx + 1}`}
+                        {t.name || `TÈcnico ${idx + 1}`}
                       </div>
 
                       <div
@@ -2079,7 +2079,7 @@ function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
                           lineHeight: 1.35,
                         }}
                       >
-                        Total: <b>{total}</b> ¬∑ A tiempo: <b>{ontime}</b> ¬∑ Tarde: <b>{late}</b> ¬∑
+                        Total: <b>{total}</b> ∑ A tiempo: <b>{ontime}</b> ∑ Tarde: <b>{late}</b> ∑
                         Vencidas: <b>{overdue}</b>
                       </div>
                     </div>
@@ -2105,7 +2105,7 @@ function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
                       style={
                         score >= 85 ? chipOkMini : score >= 70 ? chipWarnMini : chipCritMini
                       }
-                      title="Ver actividades del t√©cnico"
+                      title="Ver actividades del tÈcnico"
                     >
                       {score}%
                     </button>
@@ -2121,7 +2121,7 @@ function SupervisorTechniciansEfficiencyCard({ month, navigate }) {
           </div>
 
           <div style={{ marginTop: 12, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
-            F√≥rmula: A tiempo=100% ¬∑ Tarde=60% ¬∑ Vencidas=20% (ponderado sobre total del mes).
+            FÛrmula: A tiempo=100% ∑ Tarde=60% ∑ Vencidas=20% (ponderado sobre total del mes).
           </div>
         </>
       )}
@@ -2224,7 +2224,7 @@ function TechnicianPerfectPanel(props) {
 >
         <PanelCard
           title="Mi avance del mes"
-          subtitle={`Cumplimiento: ${cumplimiento}% ¬∑ Mes seleccionado`}
+          subtitle={`Cumplimiento: ${cumplimiento}% ∑ Mes seleccionado`}
           right={
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
               <Icon name="calendar" size="sm" />
@@ -2254,7 +2254,7 @@ function TechnicianPerfectPanel(props) {
         <div style={{ display: "grid", gap: 12, gridTemplateRows: isMobile ? "auto auto" : "1fr 1fr" }}>
           <PanelCard
             title="Alertas operativas"
-            subtitle="Lo m√°s importante del t√©cnico"
+            subtitle="Lo m·s importante del tÈcnico"
             right={
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
                 <Icon name="alert" size="sm" />
@@ -2283,7 +2283,7 @@ function TechnicianPerfectPanel(props) {
               >
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="user" size="sm" />
-                  Sin t√©cnico <span style={chipCountMini}>{unassignedPending}</span>
+                  Sin tÈcnico <span style={chipCountMini}>{unassignedPending}</span>
                 </span>
               </button>
 
@@ -2295,25 +2295,25 @@ function TechnicianPerfectPanel(props) {
               >
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="warn" size="sm" />
-                  Condici√≥n anormal <span style={chipCountMini}>{conditionReportsOpen}</span>
+                  CondiciÛn anormal <span style={chipCountMini}>{conditionReportsOpen}</span>
                 </span>
               </button>
             </div>
           </PanelCard>
 
           <PanelCard
-            title="Acciones r√°pidas"
+            title="Acciones r·pidas"
             subtitle="Atajos directos desde el dashboard"
             right={
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
                 <Icon name="tool" size="sm" />
-                Operaci√≥n
+                OperaciÛn
               </span>
             }
           >
             <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
               <button type="button" style={{ ...btnAdminPrimary, minHeight: 52 }} onClick={() => onOpenReportCondition?.()}>
-                <span style={btnRow}><Icon name="warn" size="sm" />Reportar condici√≥n</span>
+                <span style={btnRow}><Icon name="warn" size="sm" />Reportar condiciÛn</span>
               </button>
               <button type="button" style={{ ...btnAdminGhost, minHeight: 52 }} onClick={() => onOpenEmergencyActivity?.()}>
                 <span style={btnRow}><Icon name="alert" size="sm" />Actividad emergente</span>
@@ -2442,11 +2442,11 @@ function TechnicianActivitiesFocusCard({
   return (
     <PanelCard
       title={title}
-      subtitle="Primero ves lo urgente: atrasadas, pendientes y pr√≥ximas"
+      subtitle="Primero ves lo urgente: atrasadas, pendientes y prÛximas"
       right={
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
           <Icon name="tool" size="sm" />
-          Operaci√≥n
+          OperaciÛn
         </span>
       }
     >
@@ -2468,7 +2468,7 @@ function TechnicianActivitiesFocusCard({
           onClick={() => setIncludeUnassigned((v) => !v)}
           style={{ ...segBtn, ...(includeUnassigned ? segOn : segOff) }}
         >
-          {includeUnassigned ? "Mis + Sin t√©cnico" : "Solo mis actividades"}
+          {includeUnassigned ? "Mis + Sin tÈcnico" : "Solo mis actividades"}
         </button>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -2479,7 +2479,7 @@ function TechnicianActivitiesFocusCard({
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="user" size="sm" />
-              Sin t√©cnico ‚Üí
+              Sin tÈcnico ?
             </span>
           </button>
         </div>
@@ -2506,14 +2506,14 @@ function TechnicianActivitiesFocusCard({
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 10 }}>
           <MiniStatCard label="Atrasadas" value={stats.overdue} valueColor="#991b1b" />
           <MiniStatCard label="Pendientes" value={stats.pending} valueColor="#b45309" />
-          <MiniStatCard label="Pr√≥ximas" value={stats.upcoming} valueColor="#1d4ed8" />
+          <MiniStatCard label="PrÛximas" value={stats.upcoming} valueColor="#1d4ed8" />
           <MiniStatCard label="Total" value={stats.total} valueColor="#0f172a" />
         </div>
       </div>
 
       <div style={{ marginTop: 14, display: "grid", gap: 14 }}>
         {loading ? (
-          <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando‚Ä¶</div>
+          <div style={{ fontWeight: 850, color: "#64748b" }}>CargandoÖ</div>
         ) : stats.total === 0 ? (
           <div style={{ fontWeight: 850, color: "#64748b" }}>No hay actividades para este filtro.</div>
         ) : (
@@ -2541,14 +2541,14 @@ function TechnicianActivitiesFocusCard({
             />
 
             <ActivitiesSection
-              title="Pr√≥ximas"
+              title="PrÛximas"
               tone="blue"
               items={grouped.upcoming}
               month={month}
               navigate={navigate}
               openExecutionModal={openExecutionModal}
               isMobile={isMobile}
-              emptyText="No tienes actividades pr√≥ximas."
+              emptyText="No tienes actividades prÛximas."
             />
           </>
         )}
@@ -2805,7 +2805,7 @@ export default function Dashboard() {
         } catch (e) {
           const msg =
             e?.status === 429 || String(e?.message || "").includes("429")
-              ? "Se alcanz√≥ el l√≠mite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
+              ? "Se alcanzÛ el lÌmite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
               : e?.response?.data?.error ||
                 e?.message ||
                 "Error cargando resumen IA";
@@ -2848,7 +2848,7 @@ export default function Dashboard() {
       } catch (e) {
         const msg =
           e?.status === 429 || String(e?.message || "").includes("429")
-            ? "Se alcanz√≥ el l√≠mite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
+            ? "Se alcanzÛ el lÌmite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
             : e?.response?.data?.error ||
               e?.message ||
               "Error cargando resumen IA";
@@ -2915,7 +2915,7 @@ export default function Dashboard() {
     } catch (e) {
       const msg =
         e?.status === 429 || String(e?.message || "").includes("429")
-          ? "Se alcanz√≥ el l√≠mite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
+          ? "Se alcanzÛ el lÌmite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
           : e?.response?.data?.error ||
             e?.message ||
             "Error regenerando resumen IA";
@@ -3180,8 +3180,8 @@ useEffect(() => {
     const prevOpen = prevRef.current.conditionReportsOpen;
     const prevCrit = prevRef.current.criticalExecutions;
 
-    if (conditionReportsOpen > prevOpen) showToast(`Nuevo reporte de condici√≥n (abiertos: ${conditionReportsOpen})`, "red");
-    if (criticalExecutions > prevCrit) showToast(`Se marc√≥ una ejecuci√≥n como CR√çTICA (total mes: ${criticalExecutions})`, "red");
+    if (conditionReportsOpen > prevOpen) showToast(`Nuevo reporte de condiciÛn (abiertos: ${conditionReportsOpen})`, "red");
+    if (criticalExecutions > prevCrit) showToast(`Se marcÛ una ejecuciÛn como CRÕTICA (total mes: ${criticalExecutions})`, "red");
 
     prevRef.current.conditionReportsOpen = conditionReportsOpen;
     prevRef.current.criticalExecutions = criticalExecutions;
@@ -3218,13 +3218,13 @@ useEffect(() => {
       if (!samePlant) return;
 
       if (eventName === "condition-report.created") {
-        showToast("Nuevo reporte de condici√≥n", "red");
+        showToast("Nuevo reporte de condiciÛn", "red");
         refreshAlerts?.();
         load?.();
       }
 
       if (eventName === "execution.critical") {
-        showToast("Se marc√≥ una ejecuci√≥n como CR√çTICA", "red");
+        showToast("Se marcÛ una ejecuciÛn como CRÕTICA", "red");
         refreshAlerts?.();
         refreshPred?.();
         load?.();
@@ -3647,19 +3647,19 @@ function SupervisorExecutivePanel({
         <div style={{ display: "grid", gap: 12 }}>
           <MiniBars
             title="Actividades por mes"
-            subtitle="√öltimos 6 meses"
+            subtitle="⁄ltimos 6 meses"
             data={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), value: 0 })) : activityByMonth}
           />
 
           <MiniLines
             title="Eficiencia operacional"
-            subtitle="% completadas vs programadas ¬∑ √∫ltimos 6 meses"
+            subtitle="% completadas vs programadas ∑ ˙ltimos 6 meses"
             series={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), valuePct: 0 })) : efficiencyByMonth}
           />
 
           <PanelCard
-            title="Acciones r√°pidas"
-            subtitle="Operaci√≥n diaria del supervisor"
+            title="Acciones r·pidas"
+            subtitle="OperaciÛn diaria del supervisor"
             right={
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
                 <Icon name="tool" size="sm" />
@@ -3671,42 +3671,42 @@ function SupervisorExecutivePanel({
               <button style={btnAdminPrimary} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)}>
                 <span style={btnRow}>
                   <Icon name="search" size="sm" />
-                  Ir a actividades ‚Üí
+                  Ir a actividades ?
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => onOpenScheduleActivity?.()}>
                 <span style={btnRow}>
                   <Icon name="plus" size="sm" />
-                  Programar actividad ‚Üí
+                  Programar actividad ?
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => onOpenEmergencyActivity?.()}>
                 <span style={btnRow}>
                   <Icon name="warn" size="sm" />
-                  Registrar emergente ‚Üí
+                  Registrar emergente ?
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => navigate("/condition-reports?status=OPEN")}>
                 <span style={btnRow}>
                   <Icon name="alert" size="sm" />
-                  Ver reportes de condici√≥n ‚Üí
+                  Ver reportes de condiciÛn ?
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => navigate("/inventory")}>
                 <span style={btnRow}>
                   <Icon name="drop" size="sm" />
-                  Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null} ‚Üí
+                  Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null} ?
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => navigate("/analysis")}>
                 <span style={btnRow}>
                   <Icon name="search" size="sm" />
-                  Ir a an√°lisis ‚Üí
+                  Ir a an·lisis ?
                 </span>
               </button>
             </div>
@@ -3756,7 +3756,7 @@ function SupervisorDashboard(props) {
 
   return (
     <>
-      <DashTop {...props} title="Dashboard ¬∑ Supervisor" />
+      <DashTop {...props} title="Dashboard ∑ Supervisor" />
 
       <SupervisorExecutivePanel
         {...props}
@@ -3781,7 +3781,7 @@ function TechnicianDashboard(props) {
 
   return (
     <>
-      <DashTop {...props} title="Dashboard ¬∑ T√©cnico" />
+      <DashTop {...props} title="Dashboard ∑ TÈcnico" />
       <TechnicianPerfectPanel
         {...props}
         userId={myTechId}
@@ -3833,8 +3833,8 @@ function normalizeExecutionToActivity(ex, todayYMD) {
   const plannedLabel = !isManual
     ? plannedLub?.name
       ? `${plannedLub.name}${plannedLub.code ? ` (${plannedLub.code})` : ""}`
-      : route?.lubricantType || "‚Äî"
-    : "‚Äî";
+      : route?.lubricantType || "ó"
+    : "ó";
 
   const moves = Array.isArray(ex?.lubricantMovements) ? ex.lubricantMovements : [];
   const usedMove =
@@ -3851,7 +3851,7 @@ function normalizeExecutionToActivity(ex, todayYMD) {
 
   const activityName = isManual
     ? ex?.manualTitle || "Actividad programada"
-    : route?.name || "‚Äî";
+    : route?.name || "ó";
 
   const used = Number(ex?.usedQuantity);
   const expected = Number(route?.quantity);
@@ -3884,10 +3884,10 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     outOfRange,
     ratio,
     activityName,
-    routeName: isManual ? "MANUAL" : route?.name || "‚Äî",
+    routeName: isManual ? "MANUAL" : route?.name || "ó",
     routeUnit: !isManual ? route?.unit || "" : "",
     equipment: equipment || null,
-    equipmentName: equipment?.name || "‚Äî",
+    equipmentName: equipment?.name || "ó",
     equipmentCode: equipment?.code || equipment?.tag || "",
     equipmentLocation: equipment?.location || "",
     equipmentCriticality: equipment?.criticality || null,
@@ -3899,9 +3899,9 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     quantityLabel:
       !isManual && route?.quantity != null
         ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""} por punto`
-        : "‚Äî",
+        : "ó",
     pointsCount: !isManual && route?.points != null ? Number(route.points) : null,
-    method: !isManual ? route?.method || "‚Äî" : "‚Äî",
+    method: !isManual ? route?.method || "ó" : "ó",
     instructions: String(instructionsTxt || ""),
     technicianId: ex?.technicianId ?? ex?.technician?.id ?? null,
     technician: ex?.technician ?? null,
@@ -3931,8 +3931,8 @@ function DashTop({ user, role, summary, month, setMonth, load, loading, connecte
         <div style={h1View}>{title}</div>
 
         <div style={subView}>
-          Bienvenido, <b>{user?.name || "‚Äî"}</b> ¬∑ Rol: <b>{roleLabel(role)}</b> ¬∑ <b>Actualizado:</b> {fmtDateTimeLocal(summary?.updatedAt)}
-          {" ¬∑ "}
+          Bienvenido, <b>{user?.name || "ó"}</b> ∑ Rol: <b>{roleLabel(role)}</b> ∑ <b>Actualizado:</b> {fmtDateTimeLocal(summary?.updatedAt)}
+          {" ∑ "}
           <span style={{ fontWeight: 900, color: connected ? "#166534" : "#b45309", display: "inline-flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 8, height: 8, borderRadius: 999, background: connected ? "#22c55e" : "#f59e0b", display: "inline-block" }} />
             {connected ? "En vivo" : "reconectando"}
@@ -3990,12 +3990,12 @@ function MainGridBase({ canSeeInventory, inventoryLow, loading, navigate, goActi
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ fontWeight: 950, color: "#0f172a" }}>Inventario bajo stock</div>
               <Link to="/inventory" style={seeAll}>
-                Ver ‚Üí
+                Ver ?
               </Link>
             </div>
 
             {loading ? (
-              <div style={mutedTxt}>Cargando‚Ä¶</div>
+              <div style={mutedTxt}>CargandoÖ</div>
             ) : inventoryLow.length === 0 ? (
               <div style={{ ...mutedTxt, marginTop: 8 }}>Sin bajo stock</div>
             ) : (
@@ -4007,7 +4007,7 @@ function MainGridBase({ canSeeInventory, inventoryLow, loading, navigate, goActi
                         {l.name} {l.code ? <span style={miniTag}>({l.code})</span> : null}
                       </div>
                       <div style={miniSub}>
-                        Stock: <b>{toNum(l.stock)}</b> {l.unit} ¬∑ M√≠n: <b>{toNum(l.minStock)}</b> {l.unit}
+                        Stock: <b>{toNum(l.stock)}</b> {l.unit} ∑ MÌn: <b>{toNum(l.minStock)}</b> {l.unit}
                       </div>
                     </div>
                     <Chip tone="amber">Faltan {toNum(l.deficit)}</Chip>
@@ -4021,7 +4021,7 @@ function MainGridBase({ canSeeInventory, inventoryLow, loading, navigate, goActi
         )}
       </div>
 
-      <UpcomingBlock title="Pr√≥ximas actividades" loading={loading} items={upcomingActivities} goActivities={goActivities} navigate={navigate} month={month} showUnassignedButton meta={upcomingMeta} />
+      <UpcomingBlock title="PrÛximas actividades" loading={loading} items={upcomingActivities} goActivities={goActivities} navigate={navigate} month={month} showUnassignedButton meta={upcomingMeta} />
     </div>
   );
 }
@@ -4065,7 +4065,7 @@ function MainGridTech({ loading, month, navigate, goActivities, overdueCount, my
     <div style={grid2}>
       <div style={panel}>
         <div style={panelTitleRow}>
-          <div style={panelTitle}>Acciones r√°pidas</div>
+          <div style={panelTitle}>Acciones r·pidas</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
             <Icon name="tool" size="sm" />
             Atajos
@@ -4075,20 +4075,20 @@ function MainGridTech({ loading, month, navigate, goActivities, overdueCount, my
         <div style={quickBox}>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={() => goActivities("")} style={btnPrimary}>
-              Ver actividades {overdueCount > 0 ? <span style={dotDanger} /> : null} ‚Üí
+              Ver actividades {overdueCount > 0 ? <span style={dotDanger} /> : null} ?
             </button>
 
             <button onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`, { state: { openEmergency: true } })} style={btnGhost} title="Registrar trabajo no programado">
               <span style={btnRow}>
                 <Icon name="warn" size="sm" />
-                Actividad emergente ‚Üí
+                Actividad emergente ?
               </span>
             </button>
 
             <button onClick={() => navigate(`/history?month=${encodeURIComponent(month)}`)} style={btnGhost} title="Ver historial">
               <span style={btnRow}>
                 <Icon name="history" size="sm" />
-                Ver historial ‚Üí
+                Ver historial ?
               </span>
             </button>
           </div>
@@ -4096,7 +4096,7 @@ function MainGridTech({ loading, month, navigate, goActivities, overdueCount, my
       </div>
 
       <UpcomingBlock
-        title="Mis pr√≥ximas actividades"
+        title="Mis prÛximas actividades"
         loading={loading}
         items={myUpcoming}
         goActivities={goActivities}
@@ -4116,7 +4116,7 @@ function MainGridTech({ loading, month, navigate, goActivities, overdueCount, my
                   <div key={a.id}>
                     <ActivityCard activity={a} onOpen={() => goActivities("")} />
                     <div style={miniLine}>
-                      <span style={{ fontWeight: 900 }}>Programada:</span> {a.scheduledAt ? fmtDateTimeLocal(a.scheduledAt) : "‚Äî"}
+                      <span style={{ fontWeight: 900 }}>Programada:</span> {a.scheduledAt ? fmtDateTimeLocal(a.scheduledAt) : "ó"}
                     </div>
                   </div>
                 ))}
@@ -4164,7 +4164,7 @@ function UpcomingBlock({
       </div>
 
       {loading ? (
-        <div style={mutedTxt}>Cargando‚Ä¶</div>
+        <div style={mutedTxt}>CargandoÖ</div>
       ) : (items || []).length === 0 ? (
         <div style={mutedTxt}>
           No hay actividades en esta lista.
@@ -4172,7 +4172,7 @@ function UpcomingBlock({
             <div style={{ marginTop: 10 }}>
               <div style={{ fontSize: 12, fontWeight: 900, color: "#0f172a" }}>
                 Pendientes registradas: <b>{meta.count}</b>{" "}
-                {meta?.unassigned ? `¬∑ Sin t√©cnico: ${meta.unassigned}` : ""}
+                {meta?.unassigned ? `∑ Sin tÈcnico: ${meta.unassigned}` : ""}
               </div>
 
               <button
@@ -4181,7 +4181,7 @@ function UpcomingBlock({
                 }
                 style={{ ...seeAllBtnGhost, marginTop: 8 }}
               >
-                Ver pendientes del mes ‚Üí
+                Ver pendientes del mes ?
               </button>
             </div>
           ) : null}
@@ -4203,7 +4203,7 @@ function UpcomingBlock({
 
           <div style={{ marginTop: 6, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={() => goActivities("")} style={seeAllBtn}>
-              Ir a actividades ‚Üí
+              Ir a actividades ?
             </button>
 
             {showUnassignedButton ? (
@@ -4213,7 +4213,7 @@ function UpcomingBlock({
                 }
                 style={seeAllBtnGhost}
               >
-                Sin t√©cnico ‚Üí
+                Sin tÈcnico ?
               </button>
             ) : null}
           </div>
@@ -4243,24 +4243,24 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
   const technician =
     activity?.technicianName ||
     activity?.technician?.name ||
-    (activity?.isUnassigned ? "Sin t√©cnico" : "No asignado");
+    (activity?.isUnassigned ? "Sin tÈcnico" : "No asignado");
 
   const lubricant =
-    activity?.lubricant && String(activity.lubricant).trim() !== "‚Äî"
+    activity?.lubricant && String(activity.lubricant).trim() !== "ó"
       ? activity.lubricant
-      : activity?.plannedLubricantLabel && String(activity.plannedLubricantLabel).trim() !== "‚Äî"
+      : activity?.plannedLubricantLabel && String(activity.plannedLubricantLabel).trim() !== "ó"
       ? activity.plannedLubricantLabel
       : "No definido";
 
   const quantity =
-    activity?.quantity && String(activity.quantity).trim() !== "‚Äî"
+    activity?.quantity && String(activity.quantity).trim() !== "ó"
       ? activity.quantity
-      : activity?.quantityLabel && String(activity.quantityLabel).trim() !== "‚Äî"
+      : activity?.quantityLabel && String(activity.quantityLabel).trim() !== "ó"
       ? activity.quantityLabel
       : "No definida";
 
   const method =
-    activity?.method && String(activity.method).trim() !== "‚Äî"
+    activity?.method && String(activity.method).trim() !== "ó"
       ? activity.method
       : "No definido";
 
@@ -4283,7 +4283,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
   const hasPointsCount = Number.isFinite(pointsCount) && pointsCount > 0;
   const statusText =
     activity?.computedStatus === "Atrasada" && Number(activity?.overdueDays || 0) > 0
-      ? `Atrasada ¬∑ ${activity.overdueDays} d√≠a${Number(activity.overdueDays) === 1 ? "" : "s"}`
+      ? `Atrasada ∑ ${activity.overdueDays} dÌa${Number(activity.overdueDays) === 1 ? "" : "s"}`
       : activity?.isToday
       ? "Hoy"
       : activity?.computedStatus || "Pendiente";
@@ -4356,7 +4356,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
             )
           }
         >
-          Ver ‚Üí
+          Ver ?
         </button>
       </div>
 
@@ -4423,7 +4423,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <span style={dashboardCompactChip}>
                 <Icon name="calendar" size="sm" />
-                <span>{activity?.scheduledAt ? fmtDateTimeLocal(activity.scheduledAt) : "‚Äî"}</span>
+                <span>{activity?.scheduledAt ? fmtDateTimeLocal(activity.scheduledAt) : "ó"}</span>
               </span>
               <span style={dashboardCompactChip}>
                 <Icon name="tool" size="sm" />
@@ -4480,7 +4480,7 @@ function BottomGrid({ criticalEquipments, topOverdue, loading }) {
     <div style={{ ...grid2, marginTop: 12 }}>
       <div style={panel}>
         <div style={panelTitleRow}>
-          <div style={panelTitle}>Equipos cr√≠ticos</div>
+          <div style={panelTitle}>Equipos crÌticos</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
             <Icon name="equipment" size="sm" />
             Prioridad
@@ -4488,7 +4488,7 @@ function BottomGrid({ criticalEquipments, topOverdue, loading }) {
         </div>
 
         {loading ? (
-          <div style={mutedTxt}>Cargando‚Ä¶</div>
+          <div style={mutedTxt}>CargandoÖ</div>
         ) : (criticalEquipments || []).length === 0 ? (
           <div style={mutedTxt}>No hay equipos con criticidad ALTA/CRITICA.</div>
         ) : (
@@ -4499,12 +4499,12 @@ function BottomGrid({ criticalEquipments, topOverdue, loading }) {
                   <div style={{ fontWeight: 950, color: "#0f172a" }}>
                     {e.name} {e.code ? <span style={miniTag}>({e.code})</span> : null}
                   </div>
-                  <div style={miniSub}>{e.location || "‚Äî"}</div>
+                  <div style={miniSub}>{e.location || "ó"}</div>
                 </div>
                 <Chip tone="red">{e.criticality || "CRITICA"}</Chip>
               </div>
             ))}
-            <div style={note}>Tip: aqu√≠ puedes priorizar inspecciones y rutas.</div>
+            <div style={note}>Tip: aquÌ puedes priorizar inspecciones y rutas.</div>
           </div>
         )}
       </div>
@@ -4519,7 +4519,7 @@ function BottomGrid({ criticalEquipments, topOverdue, loading }) {
         </div>
 
         {loading ? (
-          <div style={mutedTxt}>Cargando‚Ä¶</div>
+          <div style={mutedTxt}>CargandoÖ</div>
         ) : (topOverdue || []).length === 0 ? (
           <div style={mutedTxt}>Sin vencidas por equipo</div>
         ) : (
@@ -4530,9 +4530,9 @@ function BottomGrid({ criticalEquipments, topOverdue, loading }) {
                 <div key={eq.id || idx} style={rankRow}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                      {eq.name || "‚Äî"} {eq.code ? <span style={miniTag}>({eq.code})</span> : null}
+                      {eq.name || "ó"} {eq.code ? <span style={miniTag}>({eq.code})</span> : null}
                     </div>
-                    <div style={miniSub}>{eq.location || "‚Äî"}</div>
+                    <div style={miniSub}>{eq.location || "ó"}</div>
                   </div>
 
                   <div style={rankBarWrap}>
@@ -4543,7 +4543,7 @@ function BottomGrid({ criticalEquipments, topOverdue, loading }) {
                 </div>
               );
             })}
-            <div style={note}>Tip: √∫til para atacar backlog.</div>
+            <div style={note}>Tip: ˙til para atacar backlog.</div>
           </div>
         )}
       </div>
@@ -5744,6 +5744,7 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 
