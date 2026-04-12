@@ -100,10 +100,77 @@ function priorityStripeColor(severity) {
   return s === "CRITICAL" || s === "HIGH" ? "#dc2626" : "#f59e0b";
 }
 
+function cleanUiText(value) {
+  let text = String(value ?? "");
+  if (!text) return "";
+
+  const directFixes = [
+    [/ï¿½S&/g, ""],
+    [/Â·/g, "·"],
+    [/Ã¡/g, "á"],
+    [/Ã©/g, "é"],
+    [/Ã­/g, "í"],
+    [/Ã³/g, "ó"],
+    [/Ãº/g, "ú"],
+    [/Ã/g, "Á"],
+    [/Ã‰/g, "É"],
+    [/Ã/g, "Í"],
+    [/Ã“/g, "Ó"],
+    [/Ãš/g, "Ú"],
+    [/Ã±/g, "ñ"],
+    [/Ã‘/g, "Ñ"]
+  ];
+
+  directFixes.forEach(([pattern, replacement]) => {
+    text = text.replace(pattern, replacement);
+  });
+
+  text = text
+    .replace(/Gesti[�?]n/g, "Gestión")
+    .replace(/gesti[�?]n/g, "gestión")
+    .replace(/ejecuci[�?]n/g, "ejecución")
+    .replace(/asignaci[�?]n/g, "asignación")
+    .replace(/ubicaci[�?]n/g, "ubicación")
+    .replace(/Aplicaci[�?]n/g, "Aplicación")
+    .replace(/aplicaci[�?]n/g, "aplicación")
+    .replace(/M[�?]todo/g, "Método")
+    .replace(/m[�?]todo/g, "método")
+    .replace(/Condici[�?]n/g, "Condición")
+    .replace(/condici[�?]n/g, "condición")
+    .replace(/Operaci[�?]n/g, "Operación")
+    .replace(/operaci[�?]n/g, "operación")
+    .replace(/Acci[�?]n/g, "Acción")
+    .replace(/acci[�?]n/g, "acción")
+    .replace(/Sesi[�?]n/g, "Sesión")
+    .replace(/sesi[�?]n/g, "sesión")
+    .replace(/Contrase[�?]a/g, "Contraseña")
+    .replace(/contrase[�?]a/g, "contraseña")
+    .replace(/T[�?]cnico/g, "Técnico")
+    .replace(/t[�?]cnico/g, "técnico")
+    .replace(/Cr[�?]tica/g, "Crítica")
+    .replace(/cr[�?]tica/g, "crítica")
+    .replace(/Cr[�?]tico/g, "Crítico")
+    .replace(/cr[�?]tico/g, "crítico")
+    .replace(/d[�?]a\(s\)/g, "día(s)")
+    .replace(/d[�?]as/g, "días")
+    .replace(/d[�?]a/g, "día")
+    .replace(/atr[�?]s/g, "atrás")
+    .replace(/a[�?]n/g, "aún")
+    .replace(/inv[�?]lida/g, "inválida")
+    .replace(/inv[�?]lido/g, "inválido")
+    .replace(/Qu[�?] /g, "Qué ")
+    .replace(/qu[�?] /g, "qué ")
+    .replace(/\s+[�?]\s+/g, " · ")
+    .replace(/[�?]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return text;
+}
 function parsePriorityPresentation(item) {
   const type = String(item?.type || "").toUpperCase();
-  const rawTitle = String(item?.title || priorityTypeLabel(type) || "Prioridad");
-  const rawReason = String(item?.reason || "Sin detalle adicional.");
+  const rawTitle = cleanUiText(item?.title || priorityTypeLabel(type) || "Prioridad");
+  const rawReason = cleanUiText(item?.reason || "Sin detalle adicional.");
 
   if (type === "CONSUMPTION_ANOMALY" || type === "ANOMALIES") {
     const match = rawReason.match(/^(.*?)\s*·\s*Ratio:\s*([\d.]+)\s*·\s*Base:\s*([\d.]+)\s*·\s*Últ\.?14:\s*([\d.]+)/i);
@@ -145,8 +212,8 @@ function parsePriorityPresentation(item) {
   }
 
   return {
-    title: rawTitle.replace(/\((HIGH|CRITICAL|MED|LOW)\)/gi, "").trim(),
-    reason: rawReason,
+    title: cleanUiText(rawTitle.replace(/\((HIGH|CRITICAL|MED|LOW)\)/gi, "").trim()),
+    reason: cleanUiText(rawReason),
     metaBadges: [],
   };
 }
@@ -162,13 +229,13 @@ function formatPriorityItem(item, month) {
     severity,
     score,
     link: buildPriorityLink(item, month),
-    categoryLabel: item?.categoryLabel || priorityTypeLabel(type),
-    priorityLabel: item?.priorityLabel || prioritySeverityLabel(severity),
-    ownerLabel: item?.ownerLabel || priorityOwnerLabel(item?.suggestedOwner),
+    categoryLabel: cleanUiText(item?.categoryLabel || priorityTypeLabel(type)),
+    priorityLabel: cleanUiText(item?.priorityLabel || prioritySeverityLabel(severity)),
+    ownerLabel: cleanUiText(item?.ownerLabel || priorityOwnerLabel(item?.suggestedOwner)),
     title: presentation.title,
     reason: presentation.reason,
     metaBadges: presentation.metaBadges,
-    actionLabel: item?.actionLabel || "Revisar y atender.",
+    actionLabel: cleanUiText(item?.actionLabel || "Revisar y atender."),
     stripeColor: priorityStripeColor(severity),
   };
 }
@@ -1142,16 +1209,16 @@ function AdminPanel({
       activity?.equipmentCode ||
       activity?.equipment?.code ||
       "";
-    const title =
+    const title = cleanUiText(
       activity?.routeName ||
       activity?.activityName ||
       activity?.title ||
       equipmentLabel ||
-      "Actividad";
-    const equipment = equipmentLabel;
-    const dateText = activity?.relativeText || activity?.dateText || activity?.dateLabel || "Fecha no definida";
-    const quantity = activity?.quantityLabel || activity?.quantity || "Cantidad no definida";
-    const technician = activity?.technicianName || activity?.technician?.name || (activity?.isUnassigned ? "Sin técnico" : "No asignado");
+      "Actividad");
+    const equipment = cleanUiText(equipmentLabel);
+    const dateText = cleanUiText(activity?.relativeText || activity?.dateText || activity?.dateLabel || "Fecha no definida");
+    const quantity = cleanUiText(activity?.quantityLabel || activity?.quantity || "Cantidad no definida");
+    const technician = cleanUiText(activity?.technicianName || activity?.technician?.name || (activity?.isUnassigned ? "Sin técnico" : "No asignado"));
     const accent = tone === "red" ? "#ef4444" : tone === "green" ? "#22c55e" : "#f59e0b";
     const soft = tone === "red" ? "rgba(254,242,242,0.96)" : tone === "green" ? "rgba(240,253,244,0.96)" : "rgba(255,247,237,0.96)";
 
@@ -1880,7 +1947,7 @@ function SupervisorDistributionAlertsPanel({
                 <Icon name="clock" size="sm" />
                 Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patrón recurrente.">
+              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata.">
                 <Icon name="warn" size="sm" />
                 Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
               </button>
@@ -5736,6 +5803,7 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 

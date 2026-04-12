@@ -1,4 +1,4 @@
-// src/pages/ActivitiesPage.jsx
+﻿// src/pages/ActivitiesPage.jsx
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -94,6 +94,65 @@ const escapeHtml = (value) =>
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#39;");
+
+const cleanUiText = (value) => {
+  let text = String(value ?? "");
+  if (!text) return "";
+
+  const directFixes = [
+    [/Â·/g, "·"],
+    [/Ã¡/g, "á"],
+    [/Ã©/g, "é"],
+    [/Ã­/g, "í"],
+    [/Ã³/g, "ó"],
+    [/Ãº/g, "ú"],
+    [/Ã/g, "Á"],
+    [/Ã‰/g, "É"],
+    [/Ã/g, "Í"],
+    [/Ã“/g, "Ó"],
+    [/Ãš/g, "Ú"],
+    [/Ã±/g, "ñ"],
+    [/Ã‘/g, "Ñ"]
+  ];
+
+  directFixes.forEach(([pattern, replacement]) => {
+    text = text.replace(pattern, replacement);
+  });
+
+  return text
+    .replace(/Gesti[�?]n/g, "Gestión")
+    .replace(/gesti[�?]n/g, "gestión")
+    .replace(/ejecuci[�?]n/g, "ejecución")
+    .replace(/asignaci[�?]n/g, "asignación")
+    .replace(/ubicaci[�?]n/g, "ubicación")
+    .replace(/Aplicaci[�?]n/g, "Aplicación")
+    .replace(/aplicaci[�?]n/g, "aplicación")
+    .replace(/M[�?]todo/g, "Método")
+    .replace(/m[�?]todo/g, "método")
+    .replace(/Condici[�?]n/g, "Condición")
+    .replace(/condici[�?]n/g, "condición")
+    .replace(/Operaci[�?]n/g, "Operación")
+    .replace(/operaci[�?]n/g, "operación")
+    .replace(/Acci[�?]n/g, "Acción")
+    .replace(/acci[�?]n/g, "acción")
+    .replace(/T[�?]cnico/g, "Técnico")
+    .replace(/t[�?]cnico/g, "técnico")
+    .replace(/Cr[�?]tica/g, "Crítica")
+    .replace(/cr[�?]tica/g, "crítica")
+    .replace(/Cr[�?]tico/g, "Crítico")
+    .replace(/cr[�?]tico/g, "crítico")
+    .replace(/d[�?]a\(s\)/g, "día(s)")
+    .replace(/d[�?]as/g, "días")
+    .replace(/d[�?]a/g, "día")
+    .replace(/atr[�?]s/g, "atrás")
+    .replace(/a[�?]n/g, "aún")
+    .replace(/inv[�?]lida/g, "inválida")
+    .replace(/inv[�?]lido/g, "inválido")
+    .replace(/\s+[�?]\s+/g, " · ")
+    .replace(/[�?]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+};
 
 // =========================
 // Query params (Dashboard deep-links)
@@ -226,7 +285,7 @@ export default function ActivitiesPage() {
 
   const myTechId = user?.technicianId != null ? Number(user.technicianId) : null;
 
-  // filtro por t�cnico (solo ADMIN/SUP)
+  // filtro por técnico (solo ADMIN/SUP)
   const [techFilterId, setTechFilterId] = useState(""); // "" = todos
 
   // reglas nuevas por rol
@@ -271,7 +330,7 @@ export default function ActivitiesPage() {
   const [showEmergency, setShowEmergency] = useState(false);
   const [openReportCondition, setOpenReportCondition] = useState(false);
 
-  // animaci�n al completar
+  // animación al completar
   const [completePulse, setCompletePulse] = useState(false);
 
   // programar actividad manual
@@ -298,7 +357,7 @@ const highlightedCardRef = useRef(null);
 
   const todayYMD = useMemo(() => toLocalYMD(new Date()), []);
 
-  // ===== T�cnicos (Supervisor / Admin) =====
+  // ===== Técnicos (Supervisor / Admin) =====
   const [techs, setTechs] = useState([]);
   const [assigningId, setAssigningId] = useState(null);
 
@@ -407,7 +466,7 @@ useEffect(() => {
   if (deep.q) setQ(deep.q);
   if (deep.unassigned) setUnassignedOnly(true);
 
-  // si viene desde notificaci�n, limpia filtros para no ocultar la actividad
+  // si viene desde notificación, limpia filtros para no ocultar la actividad
   if (highlightExecutionId || highlightActivityId || highlightReportId) {
     setFilter("Todas");
     setQ("");
@@ -430,7 +489,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  // cargar t�cnicos (Supervisor / Admin cuando aplique)
+  // cargar técnicos (Supervisor / Admin cuando aplique)
   useEffect(() => {
     if (!(canAssignTech || canSchedule) || !currentPlantId) {
       setTechs([]);
@@ -447,7 +506,7 @@ useEffect(() => {
           : [];
         setTechs(items);
       } catch (e) {
-        console.error("Error cargando T�cnicos:", e);
+        console.error("Error cargando Técnicos:", e);
         setTechs([]);
       }
     })();
@@ -520,7 +579,7 @@ useEffect(() => {
       await load();
     } catch (e) {
       console.error(e);
-      setErr(e?.message || "Error asignando T�cnico");
+      setErr(e?.message || "Error asignando Técnico");
     } finally {
       setAssigningId(null);
     }
@@ -560,7 +619,7 @@ useEffect(() => {
 
       const scheduledAt = String(scheduleForm.scheduledAt || "").trim();
       if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledAt)) {
-      return setScheduleErr("Fecha inv�lida (YYYY-MM-DD).");
+      return setScheduleErr("Fecha inválida (YYYY-MM-DD).");
       }
 
       const technicianId =
@@ -569,7 +628,7 @@ useEffect(() => {
           : Number(scheduleForm.technicianId);
 
       if (technicianId !== null && !Number.isFinite(technicianId)) {
-        return setScheduleErr("T�cnico inv�lido.");
+        return setScheduleErr("Técnico inválido.");
       }
 
       setSavingSchedule(true);
@@ -730,18 +789,18 @@ useEffect(() => {
           outOfRange,
           ratio,
 
-          activityName,
-          routeName: isManual ? "MANUAL" : route?.name || "?",
+          activityName: cleanUiText(activityName),
+          routeName: cleanUiText(isManual ? "MANUAL" : route?.name || "?"),
           routeUnit: !isManual ? route?.unit || "" : "",
 
           equipment: equipment || null,
-          equipmentName: equipment?.name || "?",
+          equipmentName: cleanUiText(equipment?.name || "?"),
           equipmentCode: equipment?.code || equipment?.tag || "",
-          equipmentLocation: equipment?.location || "",
+          equipmentLocation: cleanUiText(equipment?.location || ""),
           equipmentCriticality: equipment?.criticality || null,
 
-          plannedLubricantLabel: plannedLabel,
-          usedLubricantLabel: usedLabel,
+          plannedLubricantLabel: cleanUiText(plannedLabel),
+          usedLubricantLabel: cleanUiText(usedLabel),
           usedLubricantQty: usedMove?.quantity ?? ex?.usedQuantity ?? null,
           usedLubricantUnit: usedLub?.unit || (!isManual ? route?.unit || "" : ""),
 
@@ -751,11 +810,11 @@ useEffect(() => {
               ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""} por punto`
               : "?",
           pointsCount: !isManual && route?.points != null ? Number(route.points) : null,
-          method: !isManual ? route?.method || "?" : "?",
-          instructions: String(instructionsTxt || ""),
+          method: cleanUiText(!isManual ? route?.method || "?" : "?"),
+          instructions: cleanUiText(String(instructionsTxt || "")),
           technicianId: ex?.technicianId ?? ex?.technician?.id ?? null,
           technician: ex?.technician ?? null,
-          technicianName: ex?.technician?.name ?? ex?.technicianName ?? null,
+          technicianName: cleanUiText(ex?.technician?.name ?? ex?.technicianName ?? null),
         };
       });
   }, [executions, todayYMD]);
@@ -794,7 +853,7 @@ useEffect(() => {
     });
   }, [sorted, completedFromTo, futureFromTo]);
 
-  // t�cnico ve: sin asignar + asignadas a su technicianId
+  // técnico ve: sin asignar + asignadas a su technicianId
   const techScoped = useMemo(() => {
     if (!isTech) return scoped;
 
@@ -831,7 +890,7 @@ useEffect(() => {
     if (isAdminPriorityDeepLink) {
       list = list.filter((a) => {
         const crit = String(a?.equipmentCriticality || "").toUpperCase();
-        const isCriticalEq = ["ALTA", "CRITICA", "CR�TICA"].includes(crit);
+        const isCriticalEq = ["ALTA", "CRITICA", "CRÍTICA"].includes(crit);
         const fromConditionReport = a?.conditionReportId != null;
         return isCriticalEq || fromConditionReport;
       });
@@ -954,7 +1013,7 @@ useEffect(() => {
     const popup = window.open("", "_blank", "width=1200,height=800");
     if (!popup) return;
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Impresi�n de actividades</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:24px;color:#0f172a;}h1{margin:0 0 6px;font-size:28px;}p{margin:0 0 4px;color:#475569;font-weight:600;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;}th,td{border:1px solid #cbd5e1;padding:10px 8px;text-align:left;vertical-align:top;}th{background:#e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}tbody tr:nth-child(even){background:#f8fafc;}.meta{display:grid;gap:4px;margin-top:10px;}.count{margin-top:12px;font-weight:800;color:#0f172a;}</style></head><body><h1>LubriPlan</h1><div class="meta"><p>Planta: ${escapeHtml(plantName)}</p><p>Rango: ${escapeHtml(rangeText)}</p><p>Generado: ${escapeHtml(generatedAt)}</p></div><div class="count">Actividades: ${printRows.length}</div><table><thead><tr><th>#</th><th>Fecha</th><th>Equipo</th><th>Actividad</th><th>Lubricante</th><th>Cantidad</th><th>T�cnico</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Impresión de actividades</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:24px;color:#0f172a;}h1{margin:0 0 6px;font-size:28px;}p{margin:0 0 4px;color:#475569;font-weight:600;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;}th,td{border:1px solid #cbd5e1;padding:10px 8px;text-align:left;vertical-align:top;}th{background:#e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}tbody tr:nth-child(even){background:#f8fafc;}.meta{display:grid;gap:4px;margin-top:10px;}.count{margin-top:12px;font-weight:800;color:#0f172a;}</style></head><body><h1>LubriPlan</h1><div class="meta"><p>Planta: ${escapeHtml(plantName)}</p><p>Rango: ${escapeHtml(rangeText)}</p><p>Generado: ${escapeHtml(generatedAt)}</p></div><div class="count">Actividades: ${printRows.length}</div><table><thead><tr><th>#</th><th>Fecha</th><th>Equipo</th><th>Actividad</th><th>Lubricante</th><th>Cantidad</th><th>Técnico</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
 
     popup.document.open();
     popup.document.write(html);
@@ -1053,7 +1112,7 @@ useEffect(() => {
             <div style={kicker}>  </div>
             <h1 style={title}>Actividades</h1>
             <div style={subtitle}>
-              Gesti�n diaria de ejecuci�n, asignaci�n y control
+              Gestión diaria de ejecución, asignación y control
               {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
             </div>
           </div>
@@ -1093,10 +1152,10 @@ useEffect(() => {
                 type="button"
                 onClick={() => setOpenReportCondition(true)}
                 style={btnGhost}
-                title="Reportar condici�n anormal"
+                title="Reportar condición anormal"
               >
                 <Icon name="warn" style={{ width: 16, height: 16 }} />
-                <span>Reportar condici�n</span>
+                <span>Reportar condición</span>
               </button>
             ) : null}
           </div>
@@ -1111,7 +1170,7 @@ useEffect(() => {
               <div style={modalHeader}>
                 <div>
                   <div style={modalKicker}>PROGRAMAR</div>
-                  <div style={modalTitle}>Actividad �nica</div>
+                  <div style={modalTitle}>Actividad única</div>
                 </div>
 
                 <button
@@ -1125,7 +1184,7 @@ useEffect(() => {
               </div>
 
               <div style={modalHint}>
-                Se crea como actividad <b>�nica</b> (no recurrente). <b></b>
+                Se crea como actividad <b>única</b> (no recurrente).
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
@@ -1167,8 +1226,8 @@ useEffect(() => {
                       .map((eq) => (
                         <option key={eq.id} value={eq.id}>
                           {eq.name}
-                          {eq.code ? ` ? ${eq.code}` : eq.tag ? ` ? ${eq.tag}` : ""}
-                          {eq.location ? ` ? ${eq.location}` : ""}
+                          {eq.code ? ` · ${eq.code}` : eq.tag ? ` · ${eq.tag}` : ""}
+                          {eq.location ? ` · ${eq.location}` : ""}
                         </option>
                       ))}
                   </select>
@@ -1212,7 +1271,7 @@ useEffect(() => {
                 </label>
 
                 <label style={lbl}>
-                  T�cnico (opcional)
+                  Técnico (opcional)
                   <select
                     value={scheduleForm.technicianId}
                     onChange={(e) =>
@@ -1322,11 +1381,11 @@ useEffect(() => {
 
                 <div style={infoText}>
                   <div>
-                    <b>Por qu� aparece:</b> vista enfocada en tareas <b>pendientes</b> del mes
+                    <b>Por qué aparece:</b> vista enfocada en tareas <b>pendientes</b> del mes
                     con riesgo <b>MED/HIGH</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendaci�n:</b> prioriza, reasigna si hay sobrecarga y reprograma.
+                    <b>Recomendación:</b> prioriza, reasigna si hay sobrecarga y reprograma.
                   </div>
                 </div>
               </div>
@@ -1362,17 +1421,17 @@ useEffect(() => {
                     <Icon name="warn" style={{ width: 18, height: 18, color: "#0b1220" }} />
                   </span>
                   <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                    Condici�n mala / cr�tica
+                    Condición mala / crítica
                   </div>
                 </div>
 
                 <div style={infoText}>
                   <div>
-                    <b>Por qu� aparece:</b> actividades completadas con condici�n <b>MALO</b> o{" "}
+                    <b>Por qué aparece:</b> actividades completadas con condición <b>MALO</b> o{" "}
                     <b>CRITICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>Recomendaci�n:</b> revisa observaci�n, evidencia y prioriza la inspecci�n.
+                    <b>Recomendación:</b> revisa observación, evidencia y prioriza la inspección.
                   </div>
                 </div>
               </div>
@@ -1434,8 +1493,8 @@ useEffect(() => {
               style={controlSelect}
             >
               <option value="MONTH">Este mes</option>
-              <option value="30D">�ltimos 30 d�as</option>
-              <option value="90D">�ltimos 90 d�as</option>
+              <option value="30D">Últimos 30 días</option>
+              <option value="90D">Últimos 90 días</option>
             </select>
           </div>
         </div>
@@ -1461,9 +1520,9 @@ useEffect(() => {
               value={techFilterId}
               onChange={(e) => setTechFilterId(e.target.value)}
               style={controlSelect}
-              title="Filtrar por T�cnico"
+              title="Filtrar por Técnico"
             >
-              <option value="">Todos los T�cnicos</option>
+              <option value="">Todos los Técnicos</option>
               {techs.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} {t.code ? `(${t.code})` : ""}
@@ -1477,7 +1536,7 @@ useEffect(() => {
             onClick={() => setUnassignedOnly((v) => !v)}
             style={{ ...filterBtn, ...(unassignedOnly ? filterBtnOn : {}) }}
           >
-            {unassignedOnly ? "Sin T�cnico (activo)" : "Sin T�cnico"}
+            {unassignedOnly ? "Sin Técnico (activo)" : "Sin Técnico"}
           </button>
         </div>
 
@@ -1694,12 +1753,12 @@ export function ActivityCard({
           badgeBorder: "rgba(34,197,94,0.32)",
         };
 
-  const technicianStatusText =
+  const technicianStatusText = cleanUiText(
     activity.computedStatus === "Atrasada" && activity.overdueDays > 0
-      ? `Atrasada � ${activity.overdueDays} d�a${activity.overdueDays === 1 ? "" : "s"}`
+      ? `Atrasada · ${activity.overdueDays} día${activity.overdueDays === 1 ? "" : "s"}`
       : activity.isToday
       ? "Hoy"
-      : activity.computedStatus || "Pendiente";
+      : activity.computedStatus || "Pendiente");
 
   const quantityCompact = String(quantityText || "?").replace(/\s+por punto/gi, "/punto");
   const showDesktopPreview = !mobileView;
@@ -1720,7 +1779,7 @@ export function ActivityCard({
         }}
         title={
           !canComplete && activity.computedStatus !== "Completada"
-            ? `Programada para ${safeDateLabel || "?"} (a�n no disponible)`
+            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
             : ""
         }
       >
@@ -1739,7 +1798,7 @@ export function ActivityCard({
           {isCriticalEq ? (
             <span style={technicianMetaChip}>
               <Icon name="alert" size="sm" />
-              <span>Equipo cr�tico</span>
+              <span>Equipo crítico</span>
             </span>
           ) : null}
         </div>
@@ -1752,7 +1811,7 @@ export function ActivityCard({
                 ...(compactDesktopCard ? technicianTaskTitleCompact : null),
               }}
             >
-              {activity.activityName}
+              {cleanUiText(activity.activityName)}
             </div>
 
             <div
@@ -1766,7 +1825,7 @@ export function ActivityCard({
                   <Icon name="equipment" size="sm" />
                 </span>
                 <span style={technicianFactText}>
-                  {activity.equipmentName}
+                  {cleanUiText(activity.equipmentName)}
                   {activity.equipmentCode ? ` (${activity.equipmentCode})` : ""}
                 </span>
               </div>
@@ -1775,7 +1834,7 @@ export function ActivityCard({
                 <span style={technicianFactIcon}>
                   <Icon name="drop" size="sm" />
                 </span>
-                <span style={technicianFactText}>{plannedLubricant}</span>
+                <span style={technicianFactText}>{cleanUiText(plannedLubricant)}</span>
               </div>
 
               <div style={technicianFactLine}>
@@ -1806,12 +1865,12 @@ export function ActivityCard({
 
               <span style={technicianMetaChip}>
                 <Icon name="tool" size="sm" />
-                <span>{methodText}</span>
+                <span>{cleanUiText(methodText)}</span>
               </span>
 
               <span style={technicianMetaChip}>
                 <Icon name="user" size="sm" />
-                <span>{technicianName}</span>
+                <span>{cleanUiText(technicianName)}</span>
               </span>
             </div>
           </div>
@@ -1835,7 +1894,7 @@ export function ActivityCard({
               {showInstructions ? (
                 <div style={{ ...technicianInstructionBox, ...(compactDesktopCard ? technicianInstructionBoxCompact : null) }}>
                   <div style={technicianInstructionTitle}>Instrucciones</div>
-                  <div style={technicianInstructionText}>{normalizedInstructions}</div>
+                  <div style={technicianInstructionText}>{cleanUiText(normalizedInstructions)}</div>
                 </div>
               ) : (
                 <div style={{ ...technicianInstructionBox, ...(compactDesktopCard ? technicianInstructionBoxCompact : null) }}>
@@ -1846,8 +1905,8 @@ export function ActivityCard({
 
               {showNotes ? (
                 <div style={{ ...technicianInstructionBox, ...(compactDesktopCard ? technicianInstructionBoxCompact : null) }}>
-                  <div style={technicianInstructionTitle}>Observaci�n</div>
-                  <div style={technicianInstructionText}>{normalizedNotes}</div>
+                  <div style={technicianInstructionTitle}>Observación</div>
+                  <div style={technicianInstructionText}>{cleanUiText(normalizedNotes)}</div>
                 </div>
               ) : null}
             </div>
@@ -1877,7 +1936,7 @@ export function ActivityCard({
             type="button"
           >
             <Icon name="search" size="sm" />
-            <span>{previewActionLabel}</span>
+            <span>{cleanUiText(previewActionLabel)}</span>
           </button>
         ) : activity.computedStatus !== "Completada" ? (
           <div style={{ ...notReadyBox, width: mobileView ? "100%" : "auto" }}>
@@ -1890,12 +1949,12 @@ export function ActivityCard({
   }
 
   if (canAssignTech || showPreviewAction) {
-    const supervisorStatusText =
+    const supervisorStatusText = cleanUiText(
       activity.computedStatus === "Atrasada" && activity.overdueDays > 0
-        ? `Atrasada � ${activity.overdueDays} d�a${activity.overdueDays === 1 ? "" : "s"}`
+        ? `Atrasada · ${activity.overdueDays} día${activity.overdueDays === 1 ? "" : "s"}`
         : activity.isToday
         ? "Hoy"
-        : activity.computedStatus || "Pendiente";
+        : activity.computedStatus || "Pendiente");
 
     const showDesktopSupervisorPreview =
       !mobileView && Boolean(evidenceUrl || showInstructions || showNotes);
@@ -1934,7 +1993,7 @@ export function ActivityCard({
         }}
         title={
           !canOpenPreview && activity.computedStatus !== "Completada"
-            ? `Programada para ${safeDateLabel || "?"} (a�n no disponible)`
+            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
             : ""
         }
       >
@@ -1955,7 +2014,7 @@ export function ActivityCard({
             {highlighted ? (
               <span style={technicianMetaChip}>
                 <Icon name="bell" size="sm" />
-                <span>Desde notificaci�n</span>
+                <span>Desde notificación</span>
               </span>
             ) : null}
             {activity.isManual ? (
@@ -1967,7 +2026,7 @@ export function ActivityCard({
             {isCriticalEq ? (
               <span style={technicianMetaChip}>
                 <Icon name="alert" size="sm" />
-                <span>Equipo cr�tico</span>
+                <span>Equipo crítico</span>
               </span>
             ) : null}
           </div>
@@ -1981,7 +2040,7 @@ export function ActivityCard({
                 ...(compactDesktopSupervisor ? technicianTaskTitleCompact : null),
               }}
             >
-              {activity.activityName}
+              {cleanUiText(activity.activityName)}
             </div>
 
             <div
@@ -1995,7 +2054,7 @@ export function ActivityCard({
                   <Icon name="equipment" size="sm" />
                 </span>
                 <span style={technicianFactText}>
-                  {activity.equipmentName}
+                  {cleanUiText(activity.equipmentName)}
                   {activity.equipmentCode ? ` (${activity.equipmentCode})` : ""}
                 </span>
               </div>
@@ -2004,7 +2063,7 @@ export function ActivityCard({
                 <span style={technicianFactIcon}>
                   <Icon name="drop" size="sm" />
                 </span>
-                <span style={technicianFactText}>{plannedLubricant}</span>
+                <span style={technicianFactText}>{cleanUiText(plannedLubricant)}</span>
               </div>
 
               <div style={technicianFactLine}>
@@ -2035,12 +2094,12 @@ export function ActivityCard({
 
               <span style={technicianMetaChip}>
                 <Icon name="tool" size="sm" />
-                <span>{methodText}</span>
+                <span>{cleanUiText(methodText)}</span>
               </span>
 
               <span style={technicianMetaChip}>
                 <Icon name="user" size="sm" />
-                <span>{technicianName}</span>
+                <span>{cleanUiText(technicianName)}</span>
               </span>
 
               {activity.computedStatus === "Completada" && activity.outOfRange ? (
@@ -2065,7 +2124,7 @@ export function ActivityCard({
                   onChange={(e) => onAssignTech(activity.id, e.target.value)}
                   disabled={assigningId === activity.id}
                   style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
-                  title="Asignar t�cnico"
+                  title="Asignar técnico"
                 >
                   <option value="">Sin asignar</option>
                   {techs.map((t) => (
@@ -2084,7 +2143,7 @@ export function ActivityCard({
             {!activity.hasEvidence && !showInstructions && !showNotes && activity.isFuture ? (
               <div style={{ ...futureNote, ...(compactDesktopSupervisor ? futureNoteCompact : null) }}>
                 <Icon name="clock" size="sm" />
-                <span>Programada para esa fecha (no disponible a�n)</span>
+                <span>Programada para esa fecha (no disponible aún)</span>
               </div>
             ) : null}
 
@@ -2104,7 +2163,7 @@ export function ActivityCard({
                   type="button"
                 >
                   <Icon name="search" size="sm" />
-                  <span>{previewActionLabel}</span>
+                  <span>{cleanUiText(previewActionLabel)}</span>
                 </button>
               ) : (
                 <div style={{ ...futureNote, marginTop: 0 }}>
@@ -2134,14 +2193,14 @@ export function ActivityCard({
               {showInstructions ? (
                 <div style={{ ...technicianInstructionBox, ...(compactDesktopSupervisor ? technicianInstructionBoxCompact : null) }}>
                   <div style={technicianInstructionTitle}>Instrucciones</div>
-                  <div style={technicianInstructionText}>{normalizedInstructions}</div>
+                  <div style={technicianInstructionText}>{cleanUiText(normalizedInstructions)}</div>
                 </div>
               ) : null}
 
               {showNotes ? (
                 <div style={{ ...technicianInstructionBox, ...(compactDesktopSupervisor ? technicianInstructionBoxCompact : null) }}>
-                  <div style={technicianInstructionTitle}>Observaci�n</div>
-                  <div style={technicianInstructionText}>{normalizedNotes}</div>
+                  <div style={technicianInstructionTitle}>Observación</div>
+                  <div style={technicianInstructionText}>{cleanUiText(normalizedNotes)}</div>
                 </div>
               ) : null}
             </div>
@@ -2183,16 +2242,16 @@ export function ActivityCard({
       }}
       title={
         !canComplete && activity.computedStatus !== "Completada"
-          ? `Programada para ${safeDateLabel || "?"} (a�n no disponible)`
+          ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
           : ""
       }
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={cardTopRow}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={cardTaskLabel}>QU� VOY A HACER</div>
+            <div style={cardTaskLabel}>QUÉ VOY A HACER</div>
             <div style={{ ...cardTaskTitle, ...(mobileView ? cardTaskTitleMobile : null) }}>
-              {activity.activityName}
+              {cleanUiText(activity.activityName)}
             </div>
           </div>
 
@@ -2217,7 +2276,7 @@ export function ActivityCard({
                   "rgba(249,115,22,0.40)"
                 )}
               >
-                Desde notificaci�n
+                Desde notificación
               </span>
             ) : null}
 
@@ -2229,7 +2288,7 @@ export function ActivityCard({
                   "rgba(239,68,68,0.40)"
                 )}
               >
-                {activity.overdueDays} d�a{activity.overdueDays === 1 ? "" : "s"} tarde
+                {activity.overdueDays} día{activity.overdueDays === 1 ? "" : "s"} tarde
               </span>
             ) : null}
 
@@ -2241,7 +2300,7 @@ export function ActivityCard({
 
             {isCriticalEq ? (
               <span style={miniPill("rgba(239,68,68,0.12)", "#7f1d1d")}>
-                Equipo cr�tico
+                Equipo crítico
               </span>
             ) : null}
           </div>
@@ -2254,7 +2313,7 @@ export function ActivityCard({
               <span>Equipo</span>
             </div>
             <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
-              {activity.equipmentName}
+              {cleanUiText(activity.equipmentName)}
             </div>
             <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null) }}>
               {activity.equipmentCode ? (
@@ -2263,7 +2322,7 @@ export function ActivityCard({
               {activity.equipmentLocation ? (
                 <span>{activity.equipmentLocation}</span>
               ) : (
-                <span>Sin ubicaci�n</span>
+                <span>Sin ubicación</span>
               )}
             </div>
           </div>
@@ -2274,7 +2333,7 @@ export function ActivityCard({
               <span>Lubricante</span>
             </div>
             <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
-              {plannedLubricant}
+              {cleanUiText(plannedLubricant)}
             </div>
             <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null) }}>
               Producto planeado
@@ -2302,13 +2361,13 @@ export function ActivityCard({
           <div style={{ ...summaryCard, ...(mobileView ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="tool" size="sm" />
-              <span>M�todo</span>
+              <span>Método</span>
             </div>
             <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
-              {methodText}
+              {cleanUiText(methodText)}
             </div>
             <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null) }}>
-              Aplicaci�n
+              Aplicación
             </div>
           </div>
         </div>
@@ -2324,8 +2383,8 @@ export function ActivityCard({
             <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
               <Icon name="user" size="sm" />
               <span>
-                T�cnico:{" "}
-                <b style={{ color: "#0f172a" }}>{technicianName}</b>
+                Técnico:{" "}
+                <b style={{ color: "#0f172a" }}>{cleanUiText(technicianName)}</b>
               </span>
             </span>
 
@@ -2350,7 +2409,7 @@ export function ActivityCard({
               <span>Instrucciones</span>
             </div>
             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.35 }}>
-              {normalizedInstructions}
+              {cleanUiText(normalizedInstructions)}
             </div>
           </div>
         ) : null}
@@ -2359,10 +2418,10 @@ export function ActivityCard({
           <div style={noteBox}>
             <div style={noteTitle}>
               <Icon name="doc" size="sm" />
-              <span>Observaci�n</span>
+              <span>Observación</span>
             </div>
             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.35 }}>
-              {normalizedNotes}
+              {cleanUiText(normalizedNotes)}
             </div>
           </div>
         ) : null}
@@ -2394,7 +2453,7 @@ export function ActivityCard({
               onChange={(e) => onAssignTech(activity.id, e.target.value)}
               disabled={assigningId === activity.id}
               style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
-              title="Asignar T�cnico"
+              title="Asignar Técnico"
             >
               <option value="">Sin asignar</option>
               {techs.map((t) => (
@@ -2413,7 +2472,7 @@ export function ActivityCard({
         {!canComplete && activity.isFuture ? (
           <div style={futureNote}>
             <Icon name="clock" size="sm" />
-            <span>Programada para esa fecha (no disponible a�n)</span>
+            <span>Programada para esa fecha (no disponible aún)</span>
           </div>
         ) : null}
       </div>
@@ -2425,7 +2484,7 @@ export function ActivityCard({
             ...(mobileView ? badgeMobile : null),
           }}
         >
-          {activity.computedStatus}
+          {cleanUiText(activity.computedStatus)}
         </span>
 
         {canComplete ? (
@@ -2457,7 +2516,7 @@ export function ActivityCard({
             type="button"
           >
             <Icon name="search" size="sm" />
-            <span>{previewActionLabel}</span>
+            <span>{cleanUiText(previewActionLabel)}</span>
           </button>
         ) : activity.computedStatus !== "Completada" ? (
           <div style={{ ...notReadyBox, ...(mobileView ? notReadyBoxMobile : null) }}>
@@ -3656,6 +3715,7 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
 
 
 

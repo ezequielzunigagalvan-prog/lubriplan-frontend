@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../ui/lpIcons";
 import { createManualExecution } from "../../services/executionsService";
 import { getEquipment } from "../../services/equipmentService";
