@@ -1,4 +1,4 @@
-ï»¿// src/pages/ActivitiesPage.jsx
+// src/pages/ActivitiesPage.jsx
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -226,7 +226,7 @@ export default function ActivitiesPage() {
 
   const myTechId = user?.technicianId != null ? Number(user.technicianId) : null;
 
-  // filtro por tÃ©cnico (solo ADMIN/SUP)
+  // filtro por técnico (solo ADMIN/SUP)
   const [techFilterId, setTechFilterId] = useState(""); // "" = todos
 
   // reglas nuevas por rol
@@ -271,7 +271,7 @@ export default function ActivitiesPage() {
   const [showEmergency, setShowEmergency] = useState(false);
   const [openReportCondition, setOpenReportCondition] = useState(false);
 
-  // animaciÃ³n al completar
+  // animación al completar
   const [completePulse, setCompletePulse] = useState(false);
 
   // programar actividad manual
@@ -298,7 +298,7 @@ const highlightedCardRef = useRef(null);
 
   const todayYMD = useMemo(() => toLocalYMD(new Date()), []);
 
-  // ===== TÃ©cnicos (Supervisor / Admin) =====
+  // ===== Técnicos (Supervisor / Admin) =====
   const [techs, setTechs] = useState([]);
   const [assigningId, setAssigningId] = useState(null);
 
@@ -407,7 +407,7 @@ useEffect(() => {
   if (deep.q) setQ(deep.q);
   if (deep.unassigned) setUnassignedOnly(true);
 
-  // si viene desde notificaciÃ³n, limpia filtros para no ocultar la actividad
+  // si viene desde notificación, limpia filtros para no ocultar la actividad
   if (highlightExecutionId || highlightActivityId || highlightReportId) {
     setFilter("Todas");
     setQ("");
@@ -430,7 +430,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  // cargar tÃ©cnicos (Supervisor / Admin cuando aplique)
+  // cargar técnicos (Supervisor / Admin cuando aplique)
   useEffect(() => {
     if (!(canAssignTech || canSchedule) || !currentPlantId) {
       setTechs([]);
@@ -447,7 +447,7 @@ useEffect(() => {
           : [];
         setTechs(items);
       } catch (e) {
-        console.error("Error cargando TÃ©cnicos:", e);
+        console.error("Error cargando Técnicos:", e);
         setTechs([]);
       }
     })();
@@ -520,7 +520,7 @@ useEffect(() => {
       await load();
     } catch (e) {
       console.error(e);
-      setErr(e?.message || "Error asignando TÃ©cnico");
+      setErr(e?.message || "Error asignando Técnico");
     } finally {
       setAssigningId(null);
     }
@@ -560,7 +560,7 @@ useEffect(() => {
 
       const scheduledAt = String(scheduleForm.scheduledAt || "").trim();
       if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledAt)) {
-      return setScheduleErr("Fecha invÃ¡lida (YYYY-MM-DD).");
+      return setScheduleErr("Fecha inválida (YYYY-MM-DD).");
       }
 
       const technicianId =
@@ -569,7 +569,7 @@ useEffect(() => {
           : Number(scheduleForm.technicianId);
 
       if (technicianId !== null && !Number.isFinite(technicianId)) {
-        return setScheduleErr("TÃ©cnico invÃ¡lido.");
+        return setScheduleErr("Técnico inválido.");
       }
 
       setSavingSchedule(true);
@@ -794,7 +794,7 @@ useEffect(() => {
     });
   }, [sorted, completedFromTo, futureFromTo]);
 
-  // tÃ©cnico ve: sin asignar + asignadas a su technicianId
+  // técnico ve: sin asignar + asignadas a su technicianId
   const techScoped = useMemo(() => {
     if (!isTech) return scoped;
 
@@ -831,7 +831,7 @@ useEffect(() => {
     if (isAdminPriorityDeepLink) {
       list = list.filter((a) => {
         const crit = String(a?.equipmentCriticality || "").toUpperCase();
-        const isCriticalEq = ["ALTA", "CRITICA", "CRÃTICA"].includes(crit);
+        const isCriticalEq = ["ALTA", "CRITICA", "CRÍTICA"].includes(crit);
         const fromConditionReport = a?.conditionReportId != null;
         return isCriticalEq || fromConditionReport;
       });
@@ -954,7 +954,7 @@ useEffect(() => {
     const popup = window.open("", "_blank", "width=1200,height=800");
     if (!popup) return;
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8" /><title>ImpresiÃ³n de actividades</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:24px;color:#0f172a;}h1{margin:0 0 6px;font-size:28px;}p{margin:0 0 4px;color:#475569;font-weight:600;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;}th,td{border:1px solid #cbd5e1;padding:10px 8px;text-align:left;vertical-align:top;}th{background:#e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}tbody tr:nth-child(even){background:#f8fafc;}.meta{display:grid;gap:4px;margin-top:10px;}.count{margin-top:12px;font-weight:800;color:#0f172a;}</style></head><body><h1>LubriPlan</h1><div class="meta"><p>Planta: ${escapeHtml(plantName)}</p><p>Rango: ${escapeHtml(rangeText)}</p><p>Generado: ${escapeHtml(generatedAt)}</p></div><div class="count">Actividades: ${printRows.length}</div><table><thead><tr><th>#</th><th>Fecha</th><th>Equipo</th><th>Actividad</th><th>Lubricante</th><th>Cantidad</th><th>TÃ©cnico</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Impresión de actividades</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:24px;color:#0f172a;}h1{margin:0 0 6px;font-size:28px;}p{margin:0 0 4px;color:#475569;font-weight:600;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;}th,td{border:1px solid #cbd5e1;padding:10px 8px;text-align:left;vertical-align:top;}th{background:#e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}tbody tr:nth-child(even){background:#f8fafc;}.meta{display:grid;gap:4px;margin-top:10px;}.count{margin-top:12px;font-weight:800;color:#0f172a;}</style></head><body><h1>LubriPlan</h1><div class="meta"><p>Planta: ${escapeHtml(plantName)}</p><p>Rango: ${escapeHtml(rangeText)}</p><p>Generado: ${escapeHtml(generatedAt)}</p></div><div class="count">Actividades: ${printRows.length}</div><table><thead><tr><th>#</th><th>Fecha</th><th>Equipo</th><th>Actividad</th><th>Lubricante</th><th>Cantidad</th><th>Técnico</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
 
     popup.document.open();
     popup.document.write(html);
@@ -1053,7 +1053,7 @@ useEffect(() => {
             <div style={kicker}>  </div>
             <h1 style={title}>Actividades</h1>
             <div style={subtitle}>
-              GestiÃ³n diaria de ejecuciÃ³n, asignaciÃ³n y control
+              Gestión diaria de ejecución, asignación y control
               {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
             </div>
           </div>
@@ -1093,10 +1093,10 @@ useEffect(() => {
                 type="button"
                 onClick={() => setOpenReportCondition(true)}
                 style={btnGhost}
-                title="Reportar condiciÃ³n anormal"
+                title="Reportar condición anormal"
               >
                 <Icon name="warn" style={{ width: 16, height: 16 }} />
-                <span>Reportar condiciÃ³n</span>
+                <span>Reportar condición</span>
               </button>
             ) : null}
           </div>
@@ -1111,7 +1111,7 @@ useEffect(() => {
               <div style={modalHeader}>
                 <div>
                   <div style={modalKicker}>PROGRAMAR</div>
-                  <div style={modalTitle}>Actividad Ãºnica</div>
+                  <div style={modalTitle}>Actividad única</div>
                 </div>
 
                 <button
@@ -1125,7 +1125,7 @@ useEffect(() => {
               </div>
 
               <div style={modalHint}>
-                Se crea como actividad <b>Ãºnica</b> (no recurrente). <b></b>
+                Se crea como actividad <b>única</b> (no recurrente). <b></b>
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
@@ -1212,7 +1212,7 @@ useEffect(() => {
                 </label>
 
                 <label style={lbl}>
-                  TÃ©cnico (opcional)
+                  Técnico (opcional)
                   <select
                     value={scheduleForm.technicianId}
                     onChange={(e) =>
@@ -1322,11 +1322,11 @@ useEffect(() => {
 
                 <div style={infoText}>
                   <div>
-                    <b>Por quÃ© aparece:</b> vista enfocada en tareas <b>pendientes</b> del mes
+                    <b>Por qué aparece:</b> vista enfocada en tareas <b>pendientes</b> del mes
                     con riesgo <b>MED/HIGH</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>RecomendaciÃ³n:</b> prioriza, reasigna si hay sobrecarga y reprograma.
+                    <b>Recomendación:</b> prioriza, reasigna si hay sobrecarga y reprograma.
                   </div>
                 </div>
               </div>
@@ -1362,17 +1362,17 @@ useEffect(() => {
                     <Icon name="warn" style={{ width: 18, height: 18, color: "#0b1220" }} />
                   </span>
                   <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                    CondiciÃ³n mala / crÃ­tica
+                    Condición mala / crítica
                   </div>
                 </div>
 
                 <div style={infoText}>
                   <div>
-                    <b>Por quÃ© aparece:</b> actividades completadas con condiciÃ³n <b>MALO</b> o{" "}
+                    <b>Por qué aparece:</b> actividades completadas con condición <b>MALO</b> o{" "}
                     <b>CRITICO</b>.
                   </div>
                   <div style={{ marginTop: 6 }}>
-                    <b>RecomendaciÃ³n:</b> revisa observaciÃ³n, evidencia y prioriza la inspecciÃ³n.
+                    <b>Recomendación:</b> revisa observación, evidencia y prioriza la inspección.
                   </div>
                 </div>
               </div>
@@ -1434,8 +1434,8 @@ useEffect(() => {
               style={controlSelect}
             >
               <option value="MONTH">Este mes</option>
-              <option value="30D">Ãšltimos 30 dÃ­as</option>
-              <option value="90D">Ãšltimos 90 dÃ­as</option>
+              <option value="30D">Últimos 30 días</option>
+              <option value="90D">Últimos 90 días</option>
             </select>
           </div>
         </div>
@@ -1461,9 +1461,9 @@ useEffect(() => {
               value={techFilterId}
               onChange={(e) => setTechFilterId(e.target.value)}
               style={controlSelect}
-              title="Filtrar por TÃ©cnico"
+              title="Filtrar por Técnico"
             >
-              <option value="">Todos los TÃ©cnicos</option>
+              <option value="">Todos los Técnicos</option>
               {techs.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} {t.code ? `(${t.code})` : ""}
@@ -1477,7 +1477,7 @@ useEffect(() => {
             onClick={() => setUnassignedOnly((v) => !v)}
             style={{ ...filterBtn, ...(unassignedOnly ? filterBtnOn : {}) }}
           >
-            {unassignedOnly ? "Sin TÃ©cnico (activo)" : "Sin TÃ©cnico"}
+            {unassignedOnly ? "Sin Técnico (activo)" : "Sin Técnico"}
           </button>
         </div>
 
@@ -1529,9 +1529,6 @@ useEffect(() => {
   assigningId={assigningId}
   canAssignTech={canAssignTech}
   canCompleteActivities={canCompleteActivities}
-  showPreviewAction={!isMobile && !canCompleteActivities}
-  previewActionLabel="Abrir"
-  compactPreviewMode={!isMobile}
   highlighted={isHighlighted}
   isMobile={isMobile}
 />
@@ -1699,7 +1696,7 @@ export function ActivityCard({
 
   const technicianStatusText =
     activity.computedStatus === "Atrasada" && activity.overdueDays > 0
-      ? `Atrasada Â· ${activity.overdueDays} dÃ­a${activity.overdueDays === 1 ? "" : "s"}`
+      ? `Atrasada · ${activity.overdueDays} día${activity.overdueDays === 1 ? "" : "s"}`
       : activity.isToday
       ? "Hoy"
       : activity.computedStatus || "Pendiente";
@@ -1723,7 +1720,7 @@ export function ActivityCard({
         }}
         title={
           !canComplete && activity.computedStatus !== "Completada"
-            ? `Programada para ${safeDateLabel || "?"} (aÃºn no disponible)`
+            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
             : ""
         }
       >
@@ -1742,7 +1739,7 @@ export function ActivityCard({
           {isCriticalEq ? (
             <span style={technicianMetaChip}>
               <Icon name="alert" size="sm" />
-              <span>Equipo crÃ­tico</span>
+              <span>Equipo crítico</span>
             </span>
           ) : null}
         </div>
@@ -1849,7 +1846,7 @@ export function ActivityCard({
 
               {showNotes ? (
                 <div style={{ ...technicianInstructionBox, ...(compactDesktopCard ? technicianInstructionBoxCompact : null) }}>
-                  <div style={technicianInstructionTitle}>ObservaciÃ³n</div>
+                  <div style={technicianInstructionTitle}>Observación</div>
                   <div style={technicianInstructionText}>{normalizedNotes}</div>
                 </div>
               ) : null}
@@ -1895,7 +1892,7 @@ export function ActivityCard({
   if (canAssignTech || showPreviewAction) {
     const supervisorStatusText =
       activity.computedStatus === "Atrasada" && activity.overdueDays > 0
-        ? `Atrasada Â· ${activity.overdueDays} dÃ­a${activity.overdueDays === 1 ? "" : "s"}`
+        ? `Atrasada · ${activity.overdueDays} día${activity.overdueDays === 1 ? "" : "s"}`
         : activity.isToday
         ? "Hoy"
         : activity.computedStatus || "Pendiente";
@@ -1937,7 +1934,7 @@ export function ActivityCard({
         }}
         title={
           !canOpenPreview && activity.computedStatus !== "Completada"
-            ? `Programada para ${safeDateLabel || "?"} (aÃºn no disponible)`
+            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
             : ""
         }
       >
@@ -1958,7 +1955,7 @@ export function ActivityCard({
             {highlighted ? (
               <span style={technicianMetaChip}>
                 <Icon name="bell" size="sm" />
-                <span>Desde notificaciÃ³n</span>
+                <span>Desde notificación</span>
               </span>
             ) : null}
             {activity.isManual ? (
@@ -1970,7 +1967,7 @@ export function ActivityCard({
             {isCriticalEq ? (
               <span style={technicianMetaChip}>
                 <Icon name="alert" size="sm" />
-                <span>Equipo crÃ­tico</span>
+                <span>Equipo crítico</span>
               </span>
             ) : null}
           </div>
@@ -2068,7 +2065,7 @@ export function ActivityCard({
                   onChange={(e) => onAssignTech(activity.id, e.target.value)}
                   disabled={assigningId === activity.id}
                   style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
-                  title="Asignar tÃ©cnico"
+                  title="Asignar técnico"
                 >
                   <option value="">Sin asignar</option>
                   {techs.map((t) => (
@@ -2087,7 +2084,7 @@ export function ActivityCard({
             {!activity.hasEvidence && !showInstructions && !showNotes && activity.isFuture ? (
               <div style={{ ...futureNote, ...(compactDesktopSupervisor ? futureNoteCompact : null) }}>
                 <Icon name="clock" size="sm" />
-                <span>Programada para esa fecha (no disponible aÃºn)</span>
+                <span>Programada para esa fecha (no disponible aún)</span>
               </div>
             ) : null}
 
@@ -2143,7 +2140,7 @@ export function ActivityCard({
 
               {showNotes ? (
                 <div style={{ ...technicianInstructionBox, ...(compactDesktopSupervisor ? technicianInstructionBoxCompact : null) }}>
-                  <div style={technicianInstructionTitle}>ObservaciÃ³n</div>
+                  <div style={technicianInstructionTitle}>Observación</div>
                   <div style={technicianInstructionText}>{normalizedNotes}</div>
                 </div>
               ) : null}
@@ -2186,14 +2183,14 @@ export function ActivityCard({
       }}
       title={
         !canComplete && activity.computedStatus !== "Completada"
-          ? `Programada para ${safeDateLabel || "?"} (aÃºn no disponible)`
+          ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
           : ""
       }
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={cardTopRow}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={cardTaskLabel}>QUÃ‰ VOY A HACER</div>
+            <div style={cardTaskLabel}>QUÉ VOY A HACER</div>
             <div style={{ ...cardTaskTitle, ...(mobileView ? cardTaskTitleMobile : null) }}>
               {activity.activityName}
             </div>
@@ -2220,7 +2217,7 @@ export function ActivityCard({
                   "rgba(249,115,22,0.40)"
                 )}
               >
-                Desde notificaciÃ³n
+                Desde notificación
               </span>
             ) : null}
 
@@ -2232,7 +2229,7 @@ export function ActivityCard({
                   "rgba(239,68,68,0.40)"
                 )}
               >
-                {activity.overdueDays} dÃ­a{activity.overdueDays === 1 ? "" : "s"} tarde
+                {activity.overdueDays} día{activity.overdueDays === 1 ? "" : "s"} tarde
               </span>
             ) : null}
 
@@ -2244,7 +2241,7 @@ export function ActivityCard({
 
             {isCriticalEq ? (
               <span style={miniPill("rgba(239,68,68,0.12)", "#7f1d1d")}>
-                Equipo crÃ­tico
+                Equipo crítico
               </span>
             ) : null}
           </div>
@@ -2266,7 +2263,7 @@ export function ActivityCard({
               {activity.equipmentLocation ? (
                 <span>{activity.equipmentLocation}</span>
               ) : (
-                <span>Sin ubicaciÃ³n</span>
+                <span>Sin ubicación</span>
               )}
             </div>
           </div>
@@ -2305,13 +2302,13 @@ export function ActivityCard({
           <div style={{ ...summaryCard, ...(mobileView ? summaryCardMobile : null) }}>
             <div style={summaryLabel}>
               <Icon name="tool" size="sm" />
-              <span>MÃ©todo</span>
+              <span>Método</span>
             </div>
             <div style={{ ...summaryValue, ...(mobileView ? summaryValueMobile : null) }}>
               {methodText}
             </div>
             <div style={{ ...summarySub, ...(mobileView ? summarySubMobile : null) }}>
-              AplicaciÃ³n
+              Aplicación
             </div>
           </div>
         </div>
@@ -2327,7 +2324,7 @@ export function ActivityCard({
             <span style={{ ...infoChip, ...(mobileView ? infoChipMobile : null) }}>
               <Icon name="user" size="sm" />
               <span>
-                TÃ©cnico:{" "}
+                Técnico:{" "}
                 <b style={{ color: "#0f172a" }}>{technicianName}</b>
               </span>
             </span>
@@ -2362,7 +2359,7 @@ export function ActivityCard({
           <div style={noteBox}>
             <div style={noteTitle}>
               <Icon name="doc" size="sm" />
-              <span>ObservaciÃ³n</span>
+              <span>Observación</span>
             </div>
             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.35 }}>
               {normalizedNotes}
@@ -2397,7 +2394,7 @@ export function ActivityCard({
               onChange={(e) => onAssignTech(activity.id, e.target.value)}
               disabled={assigningId === activity.id}
               style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
-              title="Asignar TÃ©cnico"
+              title="Asignar Técnico"
             >
               <option value="">Sin asignar</option>
               {techs.map((t) => (
@@ -2416,7 +2413,7 @@ export function ActivityCard({
         {!canComplete && activity.isFuture ? (
           <div style={futureNote}>
             <Icon name="clock" size="sm" />
-            <span>Programada para esa fecha (no disponible aÃºn)</span>
+            <span>Programada para esa fecha (no disponible aún)</span>
           </div>
         ) : null}
       </div>
@@ -3659,6 +3656,7 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
 
 
 

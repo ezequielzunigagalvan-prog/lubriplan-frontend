@@ -456,7 +456,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
             onClick={onGenerate}
             title="Generar o refrescar resumen"
           >
-            {loading ? "Generando…" : summary ? "Actualizar ?" : "Generar ?"}
+            {loading ? "Generando…" : summary ? "Actualizar" : "Generar"}
           </button>
 
           {canForceRefreshAi ? (
@@ -1091,20 +1091,9 @@ function AdminPanel({
   const adminPriorityQueueItems = useMemo(() => {
     const source = Array.isArray(pqItems) ? pqItems : [];
     const targetMonth = String(month || "");
-    return source.filter((item) => {
+
+    const filtered = source.filter((item) => {
       const type = String(item?.type || "").toUpperCase();
-      const crit = String(
-        item?.equipment?.criticality ||
-          item?.entity?.equipment?.criticality ||
-          item?.criticality ||
-          ""
-      ).toUpperCase();
-      const isCriticalEq = ["ALTA", "CRITICA", "CRITICA"].includes(crit);
-      const isConditionDerived =
-        type.includes("CONDITION_REPORT") ||
-        type === "COND_REPORT" ||
-        type === "BAD_CONDITION" ||
-        type === "REPEATED_FAILURES";
       if (type === "REPEATED_FAILURES") {
         const monthKey = String(toLocalYMD(item?.lastBadAt || "")).slice(0, 7);
         if (!monthKey || monthKey !== targetMonth) return false;
@@ -1113,8 +1102,10 @@ function AdminPanel({
         const scheduledKey = String(toLocalYMD(item?.scheduledAt || item?.entity?.scheduledAt || ""));
         if (scheduledKey && scheduledKey >= todayYMD) return false;
       }
-      return isCriticalEq || isConditionDerived;
+      return true;
     });
+
+    return filtered.length ? filtered : source;
   }, [pqItems, month, todayYMD]);
 
   const adminPriorityQueueViewItems = adminPriorityQueueItems;
@@ -1286,7 +1277,7 @@ function AdminPanel({
                 </div>
                 {operationalBuckets.overdue.length > 3 ? (
                   <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)}>
-                    Ver más ?
+                    Ver más
                   </button>
                 ) : null}
               </div>
@@ -1310,7 +1301,7 @@ function AdminPanel({
                 </div>
                 {operationalBuckets.today.length > 3 ? (
                   <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}&filter=admin-priority`)}>
-                    Ver más ?
+                    Ver más
                   </button>
                 ) : null}
               </div>
@@ -1332,7 +1323,7 @@ function AdminPanel({
                 </div>
                 {operationalBuckets.upcoming.length > 3 ? (
                   <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}&status=PENDING&futureWindow=MONTH&filter=admin-priority`)}>
-                    Ver más ?
+                    Ver más
                   </button>
                 ) : null}
               </div>
@@ -1382,16 +1373,16 @@ function AdminPanel({
               </div>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8 }}>
                 <button style={btnAdminPrimary} onClick={() => navigate("/analysis")}>
-                  <span style={btnRow}><Icon name="search" size="sm" />Análisis ?</span>
+                  <span style={btnRow}><Icon name="search" size="sm" />Análisis</span>
                 </button>
                 <button style={btnAdminGhost} onClick={() => onOpenScheduleActivity?.()}>
-                  <span style={btnRow}><Icon name="plus" size="sm" />Programar ?</span>
+                  <span style={btnRow}><Icon name="plus" size="sm" />Programar</span>
                 </button>
                 <button style={btnAdminGhost} onClick={() => navigate("/condition-reports?status=OPEN")}>
-                  <span style={btnRow}><Icon name="warn" size="sm" />Condición ?</span>
+                  <span style={btnRow}><Icon name="warn" size="sm" />Condición</span>
                 </button>
                 <button style={btnAdminGhost} onClick={() => navigate("/inventory")}>
-                  <span style={btnRow}><Icon name="drop" size="sm" />Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null} ?</span>
+                  <span style={btnRow}><Icon name="drop" size="sm" />Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null}</span>
                 </button>
               </div>
             </div>
@@ -1712,7 +1703,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="search" size="sm" />
-              Ir a actividades ?
+              Ir a actividades
             </span>
           </button>
         </div>
@@ -1889,7 +1880,7 @@ function SupervisorDistributionAlertsPanel({
                 <Icon name="clock" size="sm" />
                 Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span>
               </button>
-              <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patr?n recurrente.">
+              <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patrón recurrente.">
                 <Icon name="warn" size="sm" />
                 Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
               </button>
@@ -1967,7 +1958,7 @@ function SupervisorPriorityTodayPanel({ month, navigate, canSeePriorityQueue, pq
                     <span style={{ ...pqBadge, ...pqBadgeInfo }}>Responsable: {x.ownerLabel || "Equipo"}</span>
                   </div>
                 </div>
-                <button type="button" style={btnAdminGhost} onClick={() => navigate(x.link)}>Abrir ?</button>
+                <button type="button" style={btnAdminGhost} onClick={() => navigate(x.link)}>Abrir</button>
               </div>
             </div>
           ))}
@@ -2479,7 +2470,7 @@ function TechnicianActivitiesFocusCard({
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="user" size="sm" />
-              Sin técnico ?
+              Sin técnico
             </span>
           </button>
         </div>
@@ -3672,7 +3663,7 @@ function SupervisorExecutivePanel({
               <button style={btnAdminPrimary} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)}>
                 <span style={btnRow}>
                   <Icon name="search" size="sm" />
-                  Ir a actividades ?
+                  Ir a actividades
                 </span>
               </button>
 
@@ -3693,21 +3684,21 @@ function SupervisorExecutivePanel({
               <button style={btnAdminGhost} onClick={() => navigate("/condition-reports?status=OPEN")}>
                 <span style={btnRow}>
                   <Icon name="alert" size="sm" />
-                  Ver reportes de condición ?
+                  Ver reportes de condición
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => navigate("/inventory")}>
                 <span style={btnRow}>
                   <Icon name="drop" size="sm" />
-                  Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null} ?
+                  Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null}
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => navigate("/analysis")}>
                 <span style={btnRow}>
                   <Icon name="search" size="sm" />
-                  Ir a análisis ?
+                  Ir a análisis
                 </span>
               </button>
             </div>
@@ -3991,7 +3982,7 @@ function MainGridBase({ canSeeInventory, inventoryLow, loading, navigate, goActi
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ fontWeight: 950, color: "#0f172a" }}>Inventario bajo stock</div>
               <Link to="/inventory" style={seeAll}>
-                Ver ?
+                Ver
               </Link>
             </div>
 
@@ -4076,20 +4067,20 @@ function MainGridTech({ loading, month, navigate, goActivities, overdueCount, my
         <div style={quickBox}>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={() => goActivities("")} style={btnPrimary}>
-              Ver actividades {overdueCount > 0 ? <span style={dotDanger} /> : null} ?
+              Ver actividades {overdueCount > 0 ? <span style={dotDanger} /> : null}
             </button>
 
             <button onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`, { state: { openEmergency: true } })} style={btnGhost} title="Registrar trabajo no programado">
               <span style={btnRow}>
                 <Icon name="warn" size="sm" />
-                Actividad emergente ?
+                Actividad emergente
               </span>
             </button>
 
             <button onClick={() => navigate(`/history?month=${encodeURIComponent(month)}`)} style={btnGhost} title="Ver historial">
               <span style={btnRow}>
                 <Icon name="history" size="sm" />
-                Ver historial ?
+                Ver historial
               </span>
             </button>
           </div>
@@ -4182,7 +4173,7 @@ function UpcomingBlock({
                 }
                 style={{ ...seeAllBtnGhost, marginTop: 8 }}
               >
-                Ver pendientes del mes ?
+                Ver pendientes del mes
               </button>
             </div>
           ) : null}
@@ -4204,7 +4195,7 @@ function UpcomingBlock({
 
           <div style={{ marginTop: 6, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={() => goActivities("")} style={seeAllBtn}>
-              Ir a actividades ?
+              Ir a actividades
             </button>
 
             {showUnassignedButton ? (
@@ -4214,7 +4205,7 @@ function UpcomingBlock({
                 }
                 style={seeAllBtnGhost}
               >
-                Sin técnico ?
+                Sin técnico
               </button>
             ) : null}
           </div>
@@ -4357,7 +4348,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
             )
           }
         >
-          Ver ?
+          Ver
         </button>
       </div>
 
@@ -5745,7 +5736,6 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
-
 
 
 
