@@ -2403,7 +2403,9 @@ function TechnicianActivitiesFocusCard({
   isMobile = false,
   offlineInfo = null,
   onSyncNow = null,
+  onPrepareOffline = null,
   syncingOffline = false,
+  preparingOffline = false,
 }) {
   const [range, setRange] = useState("TODAY");
   const [includeUnassigned, setIncludeUnassigned] = useState(true);
