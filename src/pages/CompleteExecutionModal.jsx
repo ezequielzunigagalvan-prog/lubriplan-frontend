@@ -39,6 +39,41 @@ const num = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 
+const loadImageFromFile = (file) =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("No se pudo procesar la imagen"));
+    };
+    img.src = url;
+  });
+
+const compressImageToDataUrl = async (file) => {
+  const img = await loadImageFromFile(file);
+  const maxSide = 1600;
+  const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+  const width = Math.max(1, Math.round(img.width * scale));
+  const height = Math.max(1, Math.round(img.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("No se pudo preparar la imagen");
+
+  ctx.drawImage(img, 0, 0, width, height);
+
+  const mimeType = "image/jpeg";
+  return canvas.toDataURL(mimeType, 0.82);
+};
+
 export default function CompleteExecutionModal({ open, executionId, onClose, onSaved }) {
   const [execution, setExecution] = useState(null);
   const [techs, setTechs] = useState([]);
@@ -330,14 +365,6 @@ setForm((prev) => ({
     if (name === "technicianId") setErr("");
   };
 
-  const readFileAsDataURL = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.readAsDataURL(file);
-    });
-
   const onPickEvidence = async (file) => {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) {
@@ -347,7 +374,7 @@ setForm((prev) => ({
 
     try {
       setErr("");
-      const dataUrl = await readFileAsDataURL(file);
+      const dataUrl = await compressImageToDataUrl(file);
       setForm((p) => ({ ...p, evidenceImage: dataUrl }));
     } catch (e) {
       console.error(e);
@@ -646,7 +673,7 @@ setForm((prev) => ({
                       }}
                       disabled={saving || isCompleted}
                     >
-                      {usedLubricant ? "Sí­, se utilizá lubricante" : "No / No aplica"}
+                      {usedLubricant ? "Sí, se utiliza lubricante" : "No / No aplica"}
                     </button>
 
                     <div style={hintMini}>
@@ -756,7 +783,7 @@ setForm((prev) => ({
                     <option value="BUENO">Bueno</option>
                     <option value="REGULAR">Regular</option>
                     <option value="MALO">Malo</option>
-                    <option value="CRITICO">Crí­tico</option>
+                    <option value="CRITICO">Crítico</option>
                   </select>
                 </Field>
 
@@ -803,7 +830,7 @@ setForm((prev) => ({
                   </div>
 
                   <div style={dropTitle}>
-                    Arrastra una imagen aquí­ o usa una de las opciones de abajo
+                    Arrastra una imagen aquí o usa una de las opciones de abajo
                   </div>
 
                   <div style={dropHint}>

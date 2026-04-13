@@ -7,7 +7,7 @@ import ActivitiesDonut from "../components/dashboard/ActivitiesDonut";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
-import { getExecutions } from "../services/executionsService";
+import { getExecutions, getExecutionOfflineStatus, syncOfflineExecutionQueue, OFFLINE_SYNC_EVENT } from "../services/executionsService";
 import { getSettings } from "../services/settingsService";
 
 
@@ -104,68 +104,71 @@ function cleanUiText(value) {
   let text = String(value ?? "");
   if (!text) return "";
 
-  const directFixes = [
-    [/ï¿½S&/g, ""],
-    [/Â·/g, "·"],
-    [/Ã¡/g, "á"],
-    [/Ã©/g, "é"],
-    [/Ã­/g, "í"],
-    [/Ã³/g, "ó"],
-    [/Ãº/g, "ú"],
-    [/Ã/g, "Á"],
-    [/Ã‰/g, "É"],
-    [/Ã/g, "Í"],
-    [/Ã“/g, "Ó"],
-    [/Ãš/g, "Ú"],
-    [/Ã±/g, "ñ"],
-    [/Ã‘/g, "Ñ"]
-  ];
+  if (/[ÃÂâï]/.test(text)) {
+    try {
+      text = decodeURIComponent(escape(text));
+    } catch {
+      // Mantener texto original si no puede decodificarse.
+    }
+  }
 
-  directFixes.forEach(([pattern, replacement]) => {
-    text = text.replace(pattern, replacement);
-  });
-
-  text = text
-    .replace(/Gesti[�?]n/g, "Gestión")
-    .replace(/gesti[�?]n/g, "gestión")
-    .replace(/ejecuci[�?]n/g, "ejecución")
-    .replace(/asignaci[�?]n/g, "asignación")
-    .replace(/ubicaci[�?]n/g, "ubicación")
-    .replace(/Aplicaci[�?]n/g, "Aplicación")
-    .replace(/aplicaci[�?]n/g, "aplicación")
-    .replace(/M[�?]todo/g, "Método")
-    .replace(/m[�?]todo/g, "método")
-    .replace(/Condici[�?]n/g, "Condición")
-    .replace(/condici[�?]n/g, "condición")
-    .replace(/Operaci[�?]n/g, "Operación")
-    .replace(/operaci[�?]n/g, "operación")
-    .replace(/Acci[�?]n/g, "Acción")
-    .replace(/acci[�?]n/g, "acción")
-    .replace(/Sesi[�?]n/g, "Sesión")
-    .replace(/sesi[�?]n/g, "sesión")
-    .replace(/Contrase[�?]a/g, "Contraseña")
-    .replace(/contrase[�?]a/g, "contraseña")
-    .replace(/T[�?]cnico/g, "Técnico")
-    .replace(/t[�?]cnico/g, "técnico")
-    .replace(/Cr[�?]tica/g, "Crítica")
-    .replace(/cr[�?]tica/g, "crítica")
-    .replace(/Cr[�?]tico/g, "Crítico")
-    .replace(/cr[�?]tico/g, "crítico")
-    .replace(/d[�?]a\(s\)/g, "día(s)")
-    .replace(/d[�?]as/g, "días")
-    .replace(/d[�?]a/g, "día")
-    .replace(/atr[�?]s/g, "atrás")
-    .replace(/a[�?]n/g, "aún")
-    .replace(/inv[�?]lida/g, "inválida")
-    .replace(/inv[�?]lido/g, "inválido")
-    .replace(/Qu[�?] /g, "Qué ")
-    .replace(/qu[�?] /g, "qué ")
-    .replace(/\s+[�?]\s+/g, " · ")
-    .replace(/[�?]/g, "")
+  return text
+    .replace(/ï¿½S&/g, "")
+    .replace(/Â·/g, "·")
+    .replace(/â€¦/g, "...")
+    .replace(/â€”/g, "-")
+    .replace(/â€¢/g, "·")
+    .replace(/Ã¡/g, "á")
+    .replace(/Ã©/g, "é")
+    .replace(/Ã­/g, "í")
+    .replace(/Ã³/g, "ó")
+    .replace(/Ãº/g, "ú")
+    .replace(/Ã/g, "Á")
+    .replace(/Ã‰/g, "É")
+    .replace(/Ã/g, "Í")
+    .replace(/Ã“/g, "Ó")
+    .replace(/Ãš/g, "Ú")
+    .replace(/Ã±/g, "ñ")
+    .replace(/Ã‘/g, "Ñ")
+    .replace(/Gesti\uFFFDn/g, "Gestión")
+    .replace(/gesti\uFFFDn/g, "gestión")
+    .replace(/ejecuci\uFFFDn/g, "ejecución")
+    .replace(/asignaci\uFFFDn/g, "asignación")
+    .replace(/ubicaci\uFFFDn/g, "ubicación")
+    .replace(/Aplicaci\uFFFDn/g, "Aplicación")
+    .replace(/aplicaci\uFFFDn/g, "aplicación")
+    .replace(/M\uFFFDtodo/g, "Método")
+    .replace(/m\uFFFDtodo/g, "método")
+    .replace(/Condici\uFFFDn/g, "Condición")
+    .replace(/condici\uFFFDn/g, "condición")
+    .replace(/Operaci\uFFFDn/g, "Operación")
+    .replace(/operaci\uFFFDn/g, "operación")
+    .replace(/Acci\uFFFDn/g, "Acción")
+    .replace(/acci\uFFFDn/g, "acción")
+    .replace(/Sesi\uFFFDn/g, "Sesión")
+    .replace(/sesi\uFFFDn/g, "sesión")
+    .replace(/Contrase\uFFFDa/g, "Contraseña")
+    .replace(/contrase\uFFFDa/g, "contraseña")
+    .replace(/T\uFFFDcnico/g, "Técnico")
+    .replace(/t\uFFFDcnico/g, "técnico")
+    .replace(/Cr\uFFFDtica/g, "Crítica")
+    .replace(/cr\uFFFDtica/g, "crítica")
+    .replace(/Cr\uFFFDtico/g, "Crítico")
+    .replace(/cr\uFFFDtico/g, "crítico")
+    .replace(/d\uFFFDa\(s\)/g, "día(s)")
+    .replace(/d\uFFFDas/g, "días")
+    .replace(/d\uFFFDa/g, "día")
+    .replace(/atr\uFFFDs/g, "atrás")
+    .replace(/a\uFFFDn/g, "aún")
+    .replace(/inv\uFFFDlida/g, "inválida")
+    .replace(/inv\uFFFDlido/g, "inválido")
+    .replace(/Qu\uFFFD /g, "Qué ")
+    .replace(/qu\uFFFD /g, "qué ")
+    .replace(/CRITICO/g, "CRÍTICO")
+    .replace(/\s+\uFFFD\s+/g, " · ")
+    .replace(/[�]/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
-
-  return text;
 }
 function parsePriorityPresentation(item) {
   const type = String(item?.type || "").toUpperCase();
@@ -1519,7 +1522,6 @@ function AdminPanel({
                   return (
                     <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse."><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(operationalCriticalOverdueCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><Icon name="alert" size="sm" />Críticas vencidas <span style={chipCount}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(repeatedFailuresTopCurrentMonth.length ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresTopCurrentMonth.length} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patrón recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(repeatedFailuresTopCurrentMonth.length || 0)}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto según consumo e inventario disponible."><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span></button>
@@ -1943,13 +1945,9 @@ function SupervisorDistributionAlertsPanel({
             </div>
             {predError ? <div style={miniError}>{predError}</div> : null}
             <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata.">
+              <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse.">
                 <Icon name="clock" size="sm" />
                 Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(criticalRiskOverdue ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!criticalRiskOverdue} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata.">
-                <Icon name="warn" size="sm" />
-                Críticas vencidas <span style={chipCount}>{Number(criticalRiskOverdue || 0)}</span>
               </button>
               <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount}>
                 <Icon name="warn" size="sm" />
@@ -2207,6 +2205,9 @@ function TechnicianPerfectPanel(props) {
     onOpenEmergencyActivity,
     onOpenReportCondition,
     activities = [],
+    techOfflineInfo,
+    handleTechOfflineSyncNow,
+    syncingTechOffline,
   } = props;
 
   const currentMonthTotals = donutTotals || { pending: 0, overdue: 0, completed: 0 };
@@ -2251,6 +2252,9 @@ function TechnicianPerfectPanel(props) {
         userId={userId}
         openExecutionModal={openExecutionModal}
         isMobile={isMobile}
+        offlineInfo={techOfflineInfo}
+        onSyncNow={handleTechOfflineSyncNow}
+        syncingOffline={syncingTechOffline}
       />
 
       <div
@@ -2395,6 +2399,9 @@ function TechnicianActivitiesFocusCard({
   userId,
   openExecutionModal,
   isMobile = false,
+  offlineInfo = null,
+  onSyncNow = null,
+  syncingOffline = false,
 }) {
   const [range, setRange] = useState("TODAY");
   const [includeUnassigned, setIncludeUnassigned] = useState(true);
@@ -2502,12 +2509,52 @@ function TechnicianActivitiesFocusCard({
       title={title}
       subtitle="Primero ves lo urgente: atrasadas, pendientes y próximas"
       right={
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-          <Icon name="tool" size="sm" />
-          Operación
-        </span>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
+            <Icon name="tool" size="sm" />
+            Operación
+          </span>
+          {offlineInfo?.enabled ? (
+            <button
+              type="button"
+              style={{ ...btnAdminGhost, minHeight: 42, padding: "10px 14px" }}
+              onClick={onSyncNow}
+              disabled={syncingOffline || !offlineInfo.isOnline}
+              title="Sincronizar pendientes"
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <Icon name="refresh" size="sm" />
+                {syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}
+              </span>
+            </button>
+          ) : null}
+        </div>
       }
     >
+      {offlineInfo?.enabled ? (
+        <div
+          style={{
+            marginBottom: 12,
+            display: "grid",
+            gap: 4,
+            padding: "12px 14px",
+            borderRadius: 16,
+            border: "1px solid rgba(226,232,240,0.95)",
+            background: "linear-gradient(180deg, rgba(248,250,252,0.96), rgba(255,255,255,0.94))",
+          }}
+        >
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 900, color: offlineInfo.isOnline ? "#166534" : "#9a3412" }}>
+            <span style={{ width: 10, height: 10, borderRadius: 999, background: offlineInfo.isOnline ? "#22c55e" : "#f97316", display: "inline-block" }} />
+            {offlineInfo.isOnline ? "En línea" : "Sin conexión"}
+          </div>
+          <div style={{ fontWeight: 800, color: "#475569", fontSize: 13 }}>
+            Pendientes por sincronizar: <b style={{ color: "#0f172a" }}>{Number(offlineInfo.pendingCount || 0)}</b>
+            {offlineInfo.failedCount ? ` · Con error: ${Number(offlineInfo.failedCount || 0)}` : ""}
+            {offlineInfo.lastSyncAt ? ` · Última sincronización: ${fmtDateTimeLocal(offlineInfo.lastSyncAt)}` : ""}
+          </div>
+        </div>
+      ) : null}
+
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button type="button" onClick={() => setRange("TODAY")} style={{ ...segBtn, ...(range === "TODAY" ? segOn : segOff) }}>
@@ -2743,6 +2790,15 @@ export default function Dashboard() {
 
   const [techDashboardActivities, setTechDashboardActivities] = useState([]);
   const [techDashboardLoading, setTechDashboardLoading] = useState(false);
+  const [techOfflineInfo, setTechOfflineInfo] = useState({
+    enabled: false,
+    isOnline: true,
+    pendingCount: 0,
+    failedCount: 0,
+    syncingCount: 0,
+    lastSyncAt: null,
+  });
+  const [syncingTechOffline, setSyncingTechOffline] = useState(false);
 
   const [appSettings, setAppSettings] = useState(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -2951,12 +3007,67 @@ export default function Dashboard() {
         .filter((item) => item.computedStatus !== "Completada");
 
       setTechDashboardActivities(normalized);
+      if (isTech) {
+        try {
+          setTechOfflineInfo(res?.sync || (await getExecutionOfflineStatus()));
+        } catch {
+          // noop
+        }
+      }
     } catch (e) {
       setTechDashboardActivities([]);
+      if (isTech) {
+        try {
+          setTechOfflineInfo(await getExecutionOfflineStatus());
+        } catch {
+          // noop
+        }
+      }
     } finally {
       setTechDashboardLoading(false);
     }
   }, [isTech, currentPlantId, month]);
+
+  const refreshTechOfflineInfo = useCallback(async () => {
+    if (!isTech) return;
+    try {
+      setTechOfflineInfo(await getExecutionOfflineStatus());
+    } catch {
+      // noop
+    }
+  }, [isTech]);
+
+  const handleTechOfflineSyncNow = useCallback(async () => {
+    if (!isTech) return;
+    try {
+      setSyncingTechOffline(true);
+      await syncOfflineExecutionQueue();
+      await loadTechDashboardActivities();
+    } finally {
+      setSyncingTechOffline(false);
+      refreshTechOfflineInfo();
+    }
+  }, [isTech, loadTechDashboardActivities, refreshTechOfflineInfo]);
+
+  useEffect(() => {
+    if (!isTech) return;
+
+    refreshTechOfflineInfo();
+
+    const handleConnectionChange = () => {
+      refreshTechOfflineInfo();
+    };
+
+    window.addEventListener("online", handleConnectionChange);
+    window.addEventListener("offline", handleConnectionChange);
+    window.addEventListener(OFFLINE_SYNC_EVENT, handleConnectionChange);
+
+    return () => {
+      window.removeEventListener("online", handleConnectionChange);
+      window.removeEventListener("offline", handleConnectionChange);
+      window.removeEventListener(OFFLINE_SYNC_EVENT, handleConnectionChange);
+    };
+  }, [isTech, refreshTechOfflineInfo]);
   const forceRefreshAi = useCallback(async () => {
     if (!currentPlantId || !canForceRefreshAi) return;
 
@@ -3355,6 +3466,9 @@ useEffect(() => {
     techDashboardActivities,
 techDashboardLoading,
 loadTechDashboardActivities,
+    techOfflineInfo,
+    syncingTechOffline,
+    handleTechOfflineSyncNow,
 
     canSeePredictive,
     predAlerts,
@@ -3968,6 +4082,8 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     isUnassigned: !(ex?.technicianId ?? ex?.technician?.id ?? null),
     scheduledAt: ex?.scheduledAt || null,
     executionId: ex?.id ?? null,
+    localSyncStatus: ex?.localSyncStatus || "synced",
+    localSyncError: cleanUiText(ex?.localSyncError || ""),
   };
 }
 
@@ -5803,6 +5919,16 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
+
+
+
+
+
+
+
+
+
 
 
 

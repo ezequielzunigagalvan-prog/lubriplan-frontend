@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../ui/lpIcons";
 import { getEquipment } from "../../services/equipmentService";
-import { createConditionReport } from "../../services/conditionReportsService";
+import { createConditionReport, getOfflineConditionEquipments } from "../../services/conditionReportsService";
 
 const toYMD = (d) => {
   const dt = d instanceof Date ? d : new Date(d);
@@ -62,7 +62,12 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
         setEquipments(items);
       } catch (e) {
         console.error("Error cargando equipos:", e);
-        setEquipments([]);
+        try {
+          const offlineItems = await getOfflineConditionEquipments();
+          setEquipments(Array.isArray(offlineItems) ? offlineItems : []);
+        } catch {
+          setEquipments([]);
+        }
       } finally {
         setLoadingEq(false);
       }

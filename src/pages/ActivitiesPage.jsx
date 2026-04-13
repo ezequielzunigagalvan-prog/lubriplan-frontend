@@ -7,6 +7,9 @@ import {
   checkOverdue,
   assignExecutionTechnician,
   createManualExecution,
+  getExecutionOfflineStatus,
+  syncOfflineExecutionQueue,
+  OFFLINE_SYNC_EVENT,
 } from "../services/executionsService";
 import { getTechnicians } from "../services/techniciansService";
 import { getEquipment } from "../services/equipmentService";
@@ -99,57 +102,62 @@ const cleanUiText = (value) => {
   let text = String(value ?? "");
   if (!text) return "";
 
-  const directFixes = [
-    [/Â·/g, "·"],
-    [/Ã¡/g, "á"],
-    [/Ã©/g, "é"],
-    [/Ã­/g, "í"],
-    [/Ã³/g, "ó"],
-    [/Ãº/g, "ú"],
-    [/Ã/g, "Á"],
-    [/Ã‰/g, "É"],
-    [/Ã/g, "Í"],
-    [/Ã“/g, "Ó"],
-    [/Ãš/g, "Ú"],
-    [/Ã±/g, "ñ"],
-    [/Ã‘/g, "Ñ"]
-  ];
-
-  directFixes.forEach(([pattern, replacement]) => {
-    text = text.replace(pattern, replacement);
-  });
+  if (/[ÃÂâï]/.test(text)) {
+    try {
+      text = decodeURIComponent(escape(text));
+    } catch {
+      // Mantener texto original si no puede decodificarse.
+    }
+  }
 
   return text
-    .replace(/Gesti[�?]n/g, "Gestión")
-    .replace(/gesti[�?]n/g, "gestión")
-    .replace(/ejecuci[�?]n/g, "ejecución")
-    .replace(/asignaci[�?]n/g, "asignación")
-    .replace(/ubicaci[�?]n/g, "ubicación")
-    .replace(/Aplicaci[�?]n/g, "Aplicación")
-    .replace(/aplicaci[�?]n/g, "aplicación")
-    .replace(/M[�?]todo/g, "Método")
-    .replace(/m[�?]todo/g, "método")
-    .replace(/Condici[�?]n/g, "Condición")
-    .replace(/condici[�?]n/g, "condición")
-    .replace(/Operaci[�?]n/g, "Operación")
-    .replace(/operaci[�?]n/g, "operación")
-    .replace(/Acci[�?]n/g, "Acción")
-    .replace(/acci[�?]n/g, "acción")
-    .replace(/T[�?]cnico/g, "Técnico")
-    .replace(/t[�?]cnico/g, "técnico")
-    .replace(/Cr[�?]tica/g, "Crítica")
-    .replace(/cr[�?]tica/g, "crítica")
-    .replace(/Cr[�?]tico/g, "Crítico")
-    .replace(/cr[�?]tico/g, "crítico")
-    .replace(/d[�?]a\(s\)/g, "día(s)")
-    .replace(/d[�?]as/g, "días")
-    .replace(/d[�?]a/g, "día")
-    .replace(/atr[�?]s/g, "atrás")
-    .replace(/a[�?]n/g, "aún")
-    .replace(/inv[�?]lida/g, "inválida")
-    .replace(/inv[�?]lido/g, "inválido")
-    .replace(/\s+[�?]\s+/g, " · ")
-    .replace(/[�?]/g, "")
+    .replace(/Â·/g, "·")
+    .replace(/â€¦/g, "...")
+    .replace(/â€”/g, "-")
+    .replace(/â€¢/g, "·")
+    .replace(/Ã¡/g, "á")
+    .replace(/Ã©/g, "é")
+    .replace(/Ã­/g, "í")
+    .replace(/Ã³/g, "ó")
+    .replace(/Ãº/g, "ú")
+    .replace(/Ã/g, "Á")
+    .replace(/Ã‰/g, "É")
+    .replace(/Ã/g, "Í")
+    .replace(/Ã“/g, "Ó")
+    .replace(/Ãš/g, "Ú")
+    .replace(/Ã±/g, "ñ")
+    .replace(/Ã‘/g, "Ñ")
+    .replace(/Gesti\uFFFDn/g, "Gestión")
+    .replace(/gesti\uFFFDn/g, "gestión")
+    .replace(/ejecuci\uFFFDn/g, "ejecución")
+    .replace(/asignaci\uFFFDn/g, "asignación")
+    .replace(/ubicaci\uFFFDn/g, "ubicación")
+    .replace(/Aplicaci\uFFFDn/g, "Aplicación")
+    .replace(/aplicaci\uFFFDn/g, "aplicación")
+    .replace(/M\uFFFDtodo/g, "Método")
+    .replace(/m\uFFFDtodo/g, "método")
+    .replace(/Condici\uFFFDn/g, "Condición")
+    .replace(/condici\uFFFDn/g, "condición")
+    .replace(/Operaci\uFFFDn/g, "Operación")
+    .replace(/operaci\uFFFDn/g, "operación")
+    .replace(/Acci\uFFFDn/g, "Acción")
+    .replace(/acci\uFFFDn/g, "acción")
+    .replace(/T\uFFFDcnico/g, "Técnico")
+    .replace(/t\uFFFDcnico/g, "técnico")
+    .replace(/Cr\uFFFDtica/g, "Crítica")
+    .replace(/cr\uFFFDtica/g, "crítica")
+    .replace(/Cr\uFFFDtico/g, "Crítico")
+    .replace(/cr\uFFFDtico/g, "crítico")
+    .replace(/d\uFFFDa\(s\)/g, "día(s)")
+    .replace(/d\uFFFDas/g, "días")
+    .replace(/d\uFFFDa/g, "día")
+    .replace(/atr\uFFFDs/g, "atrás")
+    .replace(/a\uFFFDn/g, "aún")
+    .replace(/inv\uFFFDlida/g, "inválida")
+    .replace(/inv\uFFFDlido/g, "inválido")
+    .replace(/CRITICO/g, "CRÍTICO")
+    .replace(/\s+\uFFFD\s+/g, " · ")
+    .replace(/[�]/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 };
@@ -354,6 +362,15 @@ export default function ActivitiesPage() {
   const reqIdRef = useRef(0);
 const highlightedCardRef = useRef(null);
   const [meta, setMeta] = useState(null);
+  const [offlineInfo, setOfflineInfo] = useState({
+    enabled: false,
+    isOnline: true,
+    pendingCount: 0,
+    failedCount: 0,
+    syncingCount: 0,
+    lastSyncAt: null,
+  });
+  const [syncingOffline, setSyncingOffline] = useState(false);
 
   const todayYMD = useMemo(() => toLocalYMD(new Date()), []);
 
@@ -435,10 +452,24 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
 
       setExecutions(Array.isArray(data?.items) ? data.items : []);
       setMeta(data?.meta || null);
+      if (isTech) {
+        try {
+          setOfflineInfo(data?.sync || (await getExecutionOfflineStatus()));
+        } catch {
+          // noop
+        }
+      }
     } catch (e) {
       console.error(e);
       if (reqId !== reqIdRef.current) return;
       setErr(e?.message || "Error cargando actividades");
+      if (isTech) {
+        try {
+          setOfflineInfo(await getExecutionOfflineStatus());
+        } catch {
+          // noop
+        }
+      }
     } finally {
       if (reqId === reqIdRef.current) setLoading(false);
     }
@@ -454,6 +485,47 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, completedRange, month, currentPlantId, techFilterId]);
+
+  const refreshOfflineInfo = useCallback(async () => {
+    if (!isTech) return;
+    try {
+      setOfflineInfo(await getExecutionOfflineStatus());
+    } catch {
+      // noop
+    }
+  }, [isTech]);
+
+  const handleSyncOfflineNow = useCallback(async () => {
+    if (!isTech) return;
+    try {
+      setSyncingOffline(true);
+      await syncOfflineExecutionQueue();
+      await load();
+    } finally {
+      setSyncingOffline(false);
+      refreshOfflineInfo();
+    }
+  }, [isTech, refreshOfflineInfo]);
+
+  useEffect(() => {
+    if (!isTech) return;
+
+    refreshOfflineInfo();
+
+    const handleConnectionChange = () => {
+      refreshOfflineInfo();
+    };
+
+    window.addEventListener("online", handleConnectionChange);
+    window.addEventListener("offline", handleConnectionChange);
+    window.addEventListener(OFFLINE_SYNC_EVENT, handleConnectionChange);
+
+    return () => {
+      window.removeEventListener("online", handleConnectionChange);
+      window.removeEventListener("offline", handleConnectionChange);
+      window.removeEventListener(OFFLINE_SYNC_EVENT, handleConnectionChange);
+    };
+  }, [isTech, refreshOfflineInfo]);
 
  // inicial + deep-links
 useEffect(() => {
@@ -815,6 +887,8 @@ useEffect(() => {
           technicianId: ex?.technicianId ?? ex?.technician?.id ?? null,
           technician: ex?.technician ?? null,
           technicianName: cleanUiText(ex?.technician?.name ?? ex?.technicianName ?? null),
+          localSyncStatus: ex?.localSyncStatus || "synced",
+          localSyncError: cleanUiText(ex?.localSyncError || ""),
         };
       });
   }, [executions, todayYMD]);
@@ -1112,7 +1186,7 @@ useEffect(() => {
             <div style={kicker}>  </div>
             <h1 style={title}>Actividades</h1>
             <div style={subtitle}>
-              Gestión diaria de ejecución, asignación y control
+              {cleanUiText("Gestión diaria de ejecución, asignación y control")}
               {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
             </div>
           </div>
@@ -1126,14 +1200,27 @@ useEffect(() => {
                 title="Programar actividad"
               >
                 <Icon name="plus" style={{ width: 16, height: 16 }} />
-                <span>Programar actividad</span>
+                <span>{cleanUiText("Programar actividad")}</span>
               </button>
             ) : null}
 
             <button onClick={load} style={btnGhost} disabled={loading} type="button">
               <Icon name="refresh" style={{ width: 16, height: 16 }} />
-              <span>{loading ? "Actualizando..." : "Actualizar"}</span>
+              <span>{cleanUiText(loading ? "Actualizando..." : "Actualizar")}</span>
             </button>
+
+            {isTech && offlineInfo.enabled ? (
+              <button
+                type="button"
+                style={btnGhost}
+                onClick={handleSyncOfflineNow}
+                disabled={syncingOffline || !offlineInfo.isOnline}
+                title="Sincronizar pendientes"
+              >
+                <Icon name="refresh" style={{ width: 16, height: 16 }} />
+                <span>{syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}</span>
+              </button>
+            ) : null}
 
             {canCreateEmergency ? (
               <button
@@ -1143,7 +1230,7 @@ useEffect(() => {
                 title="Crear actividad emergente"
               >
                 <Icon name="bolt" style={{ width: 16, height: 16 }} />
-                <span>Actividad emergente</span>
+                <span>{cleanUiText("Actividad emergente")}</span>
               </button>
             ) : null}
 
@@ -1155,11 +1242,31 @@ useEffect(() => {
                 title="Reportar condición anormal"
               >
                 <Icon name="warn" style={{ width: 16, height: 16 }} />
-                <span>Reportar condición</span>
+                <span>{cleanUiText("Reportar condición")}</span>
               </button>
             ) : null}
           </div>
         </div>
+
+        {isTech && offlineInfo.enabled ? (
+          <div style={offlineBanner}>
+            <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 950, color: offlineInfo.isOnline ? "#166534" : "#9a3412" }}>
+                <span style={{ width: 10, height: 10, borderRadius: 999, background: offlineInfo.isOnline ? "#22c55e" : "#f97316", display: "inline-block" }} />
+                {offlineInfo.isOnline ? "En línea" : "Sin conexión"}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#475569" }}>
+                Pendientes por sincronizar: <b style={{ color: "#0f172a" }}>{Number(offlineInfo.pendingCount || 0)}</b>
+                {offlineInfo.failedCount ? ` · Con error: ${Number(offlineInfo.failedCount || 0)}` : ""}
+                {offlineInfo.lastSyncAt ? ` · Última sincronización: ${toLocalDateTimeTextSafe(offlineInfo.lastSyncAt)}` : ""}
+              </div>
+            </div>
+
+            {!offlineInfo.isOnline ? (
+              <div style={offlineBannerPill}>Se guardará local y se sincronizará al volver la conexión.</div>
+            ) : null}
+          </div>
+        ) : null}
 
         {openSchedule ? (
           <div
@@ -1459,7 +1566,7 @@ useEffect(() => {
         <div style={controlsRow}>
           {canPrintActivities ? (
             <div style={{ ...controlBlock, display: "grid", gap: 8, alignItems: "start" }}>
-              <span style={controlLabel}>Imprimir actividades:</span>
+              <span style={controlLabel}>{cleanUiText("Imprimir actividades:")}</span>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 <input type="date" value={printFrom} onChange={(e) => setPrintFrom(e.target.value)} style={controlInput} />
                 <span style={{ color: "#64748b", fontWeight: 900 }}>a</span>
@@ -1472,7 +1579,7 @@ useEffect(() => {
             </div>
           ) : null}
           <div style={controlBlock}>
-            <span style={controlLabel}>Mes base:</span>
+            <span style={controlLabel}>{cleanUiText("Mes base:")}</span>
             <input
               type="month"
               value={month}
@@ -1486,7 +1593,7 @@ useEffect(() => {
           </div>
 
           <div style={controlBlock}>
-            <span style={controlLabel}>Completadas:</span>
+            <span style={controlLabel}>{cleanUiText("Completadas:")}</span>
             <select
               value={completedRange}
               onChange={(e) => setCompletedRange(e.target.value)}
@@ -1505,7 +1612,7 @@ useEffect(() => {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar actividad, equipo, TAG o lubricante..."
+              placeholder={cleanUiText("Buscar actividad, equipo, TAG o lubricante...")}
               style={searchInput}
             />
             {q ? (
@@ -1522,7 +1629,7 @@ useEffect(() => {
               style={controlSelect}
               title="Filtrar por Técnico"
             >
-              <option value="">Todos los Técnicos</option>
+              <option value="">{cleanUiText("Todos los Técnicos")}</option>
               {techs.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} {t.code ? `(${t.code})` : ""}
@@ -1536,7 +1643,7 @@ useEffect(() => {
             onClick={() => setUnassignedOnly((v) => !v)}
             style={{ ...filterBtn, ...(unassignedOnly ? filterBtnOn : {}) }}
           >
-            {unassignedOnly ? "Sin Técnico (activo)" : "Sin Técnico"}
+            {cleanUiText(unassignedOnly ? "Sin Técnico (activo)" : "Sin Técnico")}
           </button>
         </div>
 
@@ -1552,7 +1659,7 @@ useEffect(() => {
                   ...(filter === f ? filterBtnOn : {}),
                 }}
               >
-                {f}
+                {cleanUiText(f)}
               </button>
             ))}
           </div>
@@ -1560,13 +1667,13 @@ useEffect(() => {
 
         {loading ? (
           <p style={{ marginTop: 14, fontWeight: 900, color: "#475569" }}>
-            Cargando actividades...
+            {cleanUiText("Cargando actividades...")}
           </p>
         ) : null}
 
         {!loading && filtered.length === 0 ? (
           <p style={{ marginTop: 14, fontWeight: 900, color: "#475569" }}>
-            No hay actividades.
+            {cleanUiText("No hay actividades.")}
           </p>
         ) : null}
 
@@ -1795,6 +1902,18 @@ export function ActivityCard({
           >
             {technicianStatusText}
           </span>
+          {activity?.localSyncStatus === "pending" ? (
+            <span style={technicianMetaChip}>
+              <Icon name="refresh" size="sm" />
+              <span>Pendiente de sincronizar</span>
+            </span>
+          ) : null}
+          {activity?.localSyncStatus === "failed" ? (
+            <span style={technicianMetaChip}>
+              <Icon name="warn" size="sm" />
+              <span>Error de sincronización</span>
+            </span>
+          ) : null}
           {isCriticalEq ? (
             <span style={technicianMetaChip}>
               <Icon name="alert" size="sm" />
@@ -3693,6 +3812,30 @@ const centerOverlay = {
   padding: 16,
 };
 
+const offlineBanner = {
+  marginTop: 12,
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 16,
+  alignItems: "center",
+  flexWrap: "wrap",
+  padding: "16px 18px",
+  borderRadius: 18,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.92)",
+  boxShadow: "0 12px 30px rgba(2,6,23,0.06)",
+};
+
+const offlineBannerPill = {
+  padding: "10px 12px",
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.12)",
+  color: "#9a3412",
+  fontWeight: 900,
+  fontSize: 12,
+  border: "1px solid rgba(249,115,22,0.24)",
+};
+
 const centerCard = {
   width: "min(340px, 90vw)",
   borderRadius: 18,
@@ -3715,6 +3858,16 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
+
+
+
+
+
+
+
+
+
 
 
 

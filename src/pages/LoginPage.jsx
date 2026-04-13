@@ -6,6 +6,53 @@ import lubriPlanMark from "../assets/lubriplan-app-icon.png";
 const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
+function cleanLoginText(value) {
+  let text = String(value ?? "");
+  if (!text) return "";
+
+  if (/[ÃÂâï]/.test(text)) {
+    try {
+      text = decodeURIComponent(escape(text));
+    } catch {
+      // Mantener texto original si no puede decodificarse.
+    }
+  }
+
+  return text
+    .replace(/ï¿½S&/g, "")
+    .replace(/Â·/g, "·")
+    .replace(/â€¦/g, "...")
+    .replace(/â€”/g, "-")
+    .replace(/â€¢/g, "·")
+    .replace(/Ã¡/g, "á")
+    .replace(/Ã©/g, "é")
+    .replace(/Ã­/g, "í")
+    .replace(/Ã³/g, "ó")
+    .replace(/Ãº/g, "ú")
+    .replace(/Ã/g, "Á")
+    .replace(/Ã‰/g, "É")
+    .replace(/Ã/g, "Í")
+    .replace(/Ã“/g, "Ó")
+    .replace(/Ãš/g, "Ú")
+    .replace(/Ã±/g, "ñ")
+    .replace(/Ã‘/g, "Ñ")
+    .replace(/sesi\uFFFDn/g, "sesión")
+    .replace(/Sesi\uFFFDn/g, "Sesión")
+    .replace(/operaci\uFFFDn/g, "operación")
+    .replace(/Operaci\uFFFDn/g, "Operación")
+    .replace(/contrase\uFFFDa/g, "contraseña")
+    .replace(/Contrase\uFFFDa/g, "Contraseña")
+    .replace(/cr\uFFFDticas/g, "críticas")
+    .replace(/Cr\uFFFDticas/g, "Críticas")
+    .replace(/mant\uFFFDn/g, "mantén")
+    .replace(/est\uFFFDs/g, "estás")
+    .replace(/acci\uFFFDn/g, "acción")
+    .replace(/Acci\uFFFDn/g, "Acción")
+    .replace(/[�]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const nav = useNavigate();
@@ -30,7 +77,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (reason === "expired") {
-      setErr("Tu sesión expiró por inactividad. Vuelve a iniciar sesión.");
+      setErr(cleanLoginText("Tu sesión expiró por inactividad. Vuelve a iniciar sesión."));
     }
   }, [reason]);
 
@@ -42,7 +89,7 @@ export default function LoginPage() {
     const cleanPassword = String(password || "");
 
     if (!cleanEmail || !cleanPassword) {
-      setErr("Ingresa tu correo y contraseña.");
+      setErr(cleanLoginText("Ingresa tu correo y contraseña."));
       return;
     }
 
@@ -53,7 +100,7 @@ export default function LoginPage() {
       await login(cleanEmail, cleanPassword);
       nav(from, { replace: true });
     } catch (e) {
-      setErr(e?.message || "No se pudo iniciar sesión.");
+      setErr(cleanLoginText(e?.message || "No se pudo iniciar sesión."));
     } finally {
       setLoading(false);
     }
@@ -147,7 +194,7 @@ export default function LoginPage() {
                 color: "#e2e8f0",
               }}
             >
-              Operación segura
+              {cleanLoginText("Operación segura")}
             </div>
 
             <div
@@ -173,15 +220,15 @@ export default function LoginPage() {
                 fontWeight: 600,
               }}
             >
-              Entra a tu operación diaria, revisa alertas críticas, coordina actividades y mantén la planta bajo control desde un solo lugar.
+              {cleanLoginText("Entra a tu operación diaria, revisa alertas críticas, coordina actividades y mantén la planta bajo control desde un solo lugar.")}
             </div>
           </div>
 
           <div style={{ display: "grid", gap: 14 }}>
             {[
-              "Dashboard por rol con foco operativo inmediato.",
-              "Contexto multi-planta con continuidad de sesión.",
-              "Alertas, actividades y reportes conectados en el mismo flujo.",
+              cleanLoginText("Dashboard por rol con foco operativo inmediato."),
+              cleanLoginText("Contexto multi-planta con continuidad de sesión."),
+              cleanLoginText("Alertas, actividades y reportes conectados en el mismo flujo."),
             ].map((item) => (
               <div
                 key={item}
@@ -224,7 +271,7 @@ export default function LoginPage() {
         >
           <div style={{ maxWidth: 380, width: "100%", margin: "0 auto" }}>
             <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", color: "#f97316" }}>
-              Acceso seguro
+              {cleanLoginText("Acceso seguro")}
             </div>
 
             <h1
@@ -237,7 +284,7 @@ export default function LoginPage() {
                 color: "#0f172a",
               }}
             >
-              Iniciar sesión
+              {cleanLoginText("Iniciar sesión")}
             </h1>
 
             <div
@@ -249,13 +296,13 @@ export default function LoginPage() {
                 fontWeight: 700,
               }}
             >
-              Usa tu correo corporativo para entrar y continuar exactamente donde te quedaste.
+              {cleanLoginText("Usa tu correo corporativo para entrar y continuar exactamente donde te quedaste.")}
             </div>
 
             <form onSubmit={onSubmit} style={{ display: "grid", gap: 14, marginTop: 24 }}>
               <div style={{ display: "grid", gap: 7 }}>
                 <label htmlFor="email" style={{ fontSize: 13, fontWeight: 900, color: "#334155" }}>
-                  Correo
+                  {cleanLoginText("Correo")}
                 </label>
                 <input
                   id="email"
@@ -270,12 +317,12 @@ export default function LoginPage() {
 
               <div style={{ display: "grid", gap: 7 }}>
                 <label htmlFor="password" style={{ fontSize: 13, fontWeight: 900, color: "#334155" }}>
-                  Contraseña
+                  {cleanLoginText("Contraseña")}
                 </label>
                 <div style={{ position: "relative" }}>
                   <input
                     id="password"
-                    placeholder="Ingresa tu contraseña"
+                    placeholder={cleanLoginText("Ingresa tu contraseña")}
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -303,7 +350,7 @@ export default function LoginPage() {
                       fontFamily: EXEC_TEXT_FONT,
                     }}
                   >
-                    {showPassword ? "Ocultar" : "Mostrar"}
+                    {cleanLoginText(showPassword ? "Ocultar" : "Mostrar")}
                   </button>
                 </div>
               </div>
@@ -321,7 +368,7 @@ export default function LoginPage() {
                     padding: "11px 13px",
                   }}
                 >
-                  {err}
+                  {cleanLoginText(err)}
                 </div>
               ) : null}
 
@@ -341,7 +388,7 @@ export default function LoginPage() {
                   fontFamily: EXEC_TEXT_FONT,
                 }}
               >
-                {loading ? "Entrando..." : "Entrar a LubriPlan"}
+                {cleanLoginText(loading ? "Entrando..." : "Entrar a LubriPlan")}
               </button>
             </form>
 
@@ -356,7 +403,7 @@ export default function LoginPage() {
                 fontWeight: 700,
               }}
             >
-              Si tu acceso falla, valida primero que tu usuario siga activo y que estés entrando con el correo correcto.
+              {cleanLoginText("Si tu acceso falla, valida primero que tu usuario siga activo y que estés entrando con el correo correcto.")}
             </div>
           </div>
         </section>
