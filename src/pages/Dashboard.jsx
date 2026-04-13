@@ -2525,7 +2525,7 @@ function TechnicianActivitiesFocusCard({
                 style={{ ...btnAdminGhost, minHeight: 42, padding: "10px 14px" }}
                 onClick={onPrepareOffline}
                 disabled={preparingOffline || !offlineInfo.isOnline}
-                title="Guardar actividades para trabajar sin conexi?n"
+                title="Guardar actividades para trabajar sin conexión"
               >
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="download" size="sm" />
@@ -3075,11 +3075,12 @@ export default function Dashboard() {
       setPreparingTechOffline(true);
       await prepareTechnicianOffline({ futureDays: 7, limit: 200 });
       await loadTechDashboardActivities();
+      triggerCompletePulse("Modo offline listo", "Tus actividades quedaron guardadas para trabajar sin conexión.");
     } finally {
       setPreparingTechOffline(false);
       refreshTechOfflineInfo();
     }
-  }, [isTech, loadTechDashboardActivities, refreshTechOfflineInfo]);
+  }, [isTech, loadTechDashboardActivities, refreshTechOfflineInfo, triggerCompletePulse]);
 
 
   useEffect(() => {
@@ -5954,6 +5955,7 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 

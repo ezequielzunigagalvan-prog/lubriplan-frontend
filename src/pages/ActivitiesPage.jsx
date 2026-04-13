@@ -510,17 +510,25 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     }
   }, [isTech, refreshOfflineInfo]);
 
+  const triggerCompletePulse = useCallback((title, subtitle = "Cambios guardados correctamente") => {
+    setCompletePulseText({ title, subtitle });
+    setCompletePulse(true);
+    window.clearTimeout(triggerCompletePulse._t);
+    triggerCompletePulse._t = window.setTimeout(() => setCompletePulse(false), 1200);
+  }, []);
+
   const handlePrepareOfflineNow = useCallback(async () => {
     if (!isTech) return;
     try {
       setPreparingOffline(true);
       await prepareTechnicianOffline({ futureDays: 7, limit: 200 });
       await load();
+      triggerCompletePulse("Modo offline listo", "Tus actividades quedaron guardadas para trabajar sin conexión.");
     } finally {
       setPreparingOffline(false);
       refreshOfflineInfo();
     }
-  }, [isTech, refreshOfflineInfo]);
+  }, [isTech, refreshOfflineInfo, triggerCompletePulse]);
 
 
   useEffect(() => {
@@ -1177,8 +1185,7 @@ useEffect(() => {
         onClose={() => setCompleteOpen(false)}
         onSaved={async () => {
           await load();
-          setCompletePulse(true);
-          window.setTimeout(() => setCompletePulse(false), 1200);
+          triggerCompletePulse("Actividad completada");
         }}
       />
 
@@ -1188,9 +1195,9 @@ useEffect(() => {
             <div style={centerIconWrap}>
               <Icon name="check" style={{ width: 26, height: 26, color: "#0b1220" }} />
             </div>
-            <div style={{ fontWeight: 980, color: "#0f172a" }}>Actividad completada</div>
-            <div style={{ marginTop: 6, fontWeight: 850, color: "#475569", fontSize: 12 }}>
-              Cambios guardados correctamente
+            <div style={{ fontWeight: 980, color: "#0f172a", fontSize: 18, lineHeight: 1.15 }}>{completePulseText.title}</div>
+            <div style={{ marginTop: 6, fontWeight: 850, color: "#475569", fontSize: 12, lineHeight: 1.35 }}>
+              {completePulseText.subtitle}
             </div>
           </div>
         </div>
@@ -1232,7 +1239,7 @@ useEffect(() => {
                   style={btnGhost}
                   onClick={handlePrepareOfflineNow}
                   disabled={preparingOffline || !offlineInfo.isOnline}
-                  title="Guardar actividades para trabajar sin conexi?n"
+                  title="Guardar actividades para trabajar sin conexión"
                 >
                   <Icon name="download" style={{ width: 16, height: 16 }} />
                   <span>{preparingOffline ? "Preparando..." : "Preparar modo offline"}</span>
@@ -3886,6 +3893,7 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
 
 
 
