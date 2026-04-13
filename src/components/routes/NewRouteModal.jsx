@@ -901,7 +901,7 @@ useEffect(() => {
       let finalImageUrl = form.imageUrl || null;
       if (imageFile) {
         const uploaded = await uploadRouteImage(imageFile);
-        finalImageUrl = uploaded?.url || null;
+        finalImageUrl = uploaded?.imageUrl || uploaded?.url || null;
       }
 
      const backendWeeklyDays =

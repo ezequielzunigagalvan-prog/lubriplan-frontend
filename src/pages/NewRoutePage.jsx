@@ -178,7 +178,7 @@ export default function NewRoutePage() {
 
       if (imageFile) {
         const uploaded = await uploadRouteImage(imageFile);
-        finalImageUrl = uploaded?.url || null;
+        finalImageUrl = uploaded?.imageUrl || uploaded?.url || null;
       }
 
       await createRoute({
