@@ -7,7 +7,7 @@ import ActivitiesDonut from "../components/dashboard/ActivitiesDonut";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
-import { getExecutions, getExecutionOfflineStatus, syncOfflineExecutionQueue, OFFLINE_SYNC_EVENT } from "../services/executionsService";
+import { getExecutions, getExecutionOfflineStatus, syncOfflineExecutionQueue, prepareTechnicianOffline, OFFLINE_SYNC_EVENT } from "../services/executionsService";
 import { getSettings } from "../services/settingsService";
 
 
@@ -2207,7 +2207,9 @@ function TechnicianPerfectPanel(props) {
     activities = [],
     techOfflineInfo,
     handleTechOfflineSyncNow,
+    handleTechPrepareOfflineNow,
     syncingTechOffline,
+    preparingTechOffline,
   } = props;
 
   const currentMonthTotals = donutTotals || { pending: 0, overdue: 0, completed: 0 };
@@ -2515,18 +2517,32 @@ function TechnicianActivitiesFocusCard({
             Operación
           </span>
           {offlineInfo?.enabled ? (
-            <button
-              type="button"
-              style={{ ...btnAdminGhost, minHeight: 42, padding: "10px 14px" }}
-              onClick={onSyncNow}
-              disabled={syncingOffline || !offlineInfo.isOnline}
-              title="Sincronizar pendientes"
-            >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="refresh" size="sm" />
-                {syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}
-              </span>
-            </button>
+            <>
+              <button
+                type="button"
+                style={{ ...btnAdminGhost, minHeight: 42, padding: "10px 14px" }}
+                onClick={onPrepareOffline}
+                disabled={preparingOffline || !offlineInfo.isOnline}
+                title="Guardar actividades para trabajar sin conexi?n"
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <Icon name="download" size="sm" />
+                  {preparingOffline ? "Preparando..." : "Preparar modo offline"}
+                </span>
+              </button>
+              <button
+                type="button"
+                style={{ ...btnAdminGhost, minHeight: 42, padding: "10px 14px" }}
+                onClick={onSyncNow}
+                disabled={syncingOffline || !offlineInfo.isOnline}
+                title="Sincronizar pendientes"
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <Icon name="refresh" size="sm" />
+                  {syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}
+                </span>
+              </button>
+            </>
           ) : null}
         </div>
       }
@@ -2797,8 +2813,10 @@ export default function Dashboard() {
     failedCount: 0,
     syncingCount: 0,
     lastSyncAt: null,
+    lastPreparedAt: null,
   });
   const [syncingTechOffline, setSyncingTechOffline] = useState(false);
+  const [preparingTechOffline, setPreparingTechOffline] = useState(false);
 
   const [appSettings, setAppSettings] = useState(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -3048,6 +3066,19 @@ export default function Dashboard() {
       refreshTechOfflineInfo();
     }
   }, [isTech, loadTechDashboardActivities, refreshTechOfflineInfo]);
+
+  const handleTechPrepareOfflineNow = useCallback(async () => {
+    if (!isTech) return;
+    try {
+      setPreparingTechOffline(true);
+      await prepareTechnicianOffline({ futureDays: 7, limit: 200 });
+      await loadTechDashboardActivities();
+    } finally {
+      setPreparingTechOffline(false);
+      refreshTechOfflineInfo();
+    }
+  }, [isTech, loadTechDashboardActivities, refreshTechOfflineInfo]);
+
 
   useEffect(() => {
     if (!isTech) return;
@@ -3468,7 +3499,9 @@ techDashboardLoading,
 loadTechDashboardActivities,
     techOfflineInfo,
     syncingTechOffline,
+    preparingTechOffline,
     handleTechOfflineSyncNow,
+    handleTechPrepareOfflineNow,
 
     canSeePredictive,
     predAlerts,

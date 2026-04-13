@@ -9,6 +9,7 @@ import {
   createManualExecution,
   getExecutionOfflineStatus,
   syncOfflineExecutionQueue,
+  prepareTechnicianOffline,
   OFFLINE_SYNC_EVENT,
 } from "../services/executionsService";
 import { getTechnicians } from "../services/techniciansService";
@@ -369,8 +370,10 @@ const highlightedCardRef = useRef(null);
     failedCount: 0,
     syncingCount: 0,
     lastSyncAt: null,
+    lastPreparedAt: null,
   });
   const [syncingOffline, setSyncingOffline] = useState(false);
+  const [preparingOffline, setPreparingOffline] = useState(false);
 
   const todayYMD = useMemo(() => toLocalYMD(new Date()), []);
 
@@ -506,6 +509,19 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
       refreshOfflineInfo();
     }
   }, [isTech, refreshOfflineInfo]);
+
+  const handlePrepareOfflineNow = useCallback(async () => {
+    if (!isTech) return;
+    try {
+      setPreparingOffline(true);
+      await prepareTechnicianOffline({ futureDays: 7, limit: 200 });
+      await load();
+    } finally {
+      setPreparingOffline(false);
+      refreshOfflineInfo();
+    }
+  }, [isTech, refreshOfflineInfo]);
+
 
   useEffect(() => {
     if (!isTech) return;
@@ -1210,16 +1226,28 @@ useEffect(() => {
             </button>
 
             {isTech && offlineInfo.enabled ? (
-              <button
-                type="button"
-                style={btnGhost}
-                onClick={handleSyncOfflineNow}
-                disabled={syncingOffline || !offlineInfo.isOnline}
-                title="Sincronizar pendientes"
-              >
-                <Icon name="refresh" style={{ width: 16, height: 16 }} />
-                <span>{syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  style={btnGhost}
+                  onClick={handlePrepareOfflineNow}
+                  disabled={preparingOffline || !offlineInfo.isOnline}
+                  title="Guardar actividades para trabajar sin conexi?n"
+                >
+                  <Icon name="download" style={{ width: 16, height: 16 }} />
+                  <span>{preparingOffline ? "Preparando..." : "Preparar modo offline"}</span>
+                </button>
+                <button
+                  type="button"
+                  style={btnGhost}
+                  onClick={handleSyncOfflineNow}
+                  disabled={syncingOffline || !offlineInfo.isOnline}
+                  title="Sincronizar pendientes"
+                >
+                  <Icon name="refresh" style={{ width: 16, height: 16 }} />
+                  <span>{syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}</span>
+                </button>
+              </>
             ) : null}
 
             {canCreateEmergency ? (

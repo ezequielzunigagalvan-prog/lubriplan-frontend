@@ -477,11 +477,13 @@ export async function getExecutionOfflineStatus() {
       failedCount: 0,
       syncingCount: 0,
       lastSyncAt: null,
+      lastPreparedAt: null,
     };
   }
 
   const queueItems = await getQueueItemsForScope(context.scopeKey);
   const lastSyncAt = await getMetaValue(`offline:lastSyncAt:${context.scopeKey}`);
+  const lastPreparedAt = await getMetaValue(`offline:lastPreparedAt:${context.scopeKey}`);
 
   return {
     enabled: true,
@@ -490,6 +492,7 @@ export async function getExecutionOfflineStatus() {
     failedCount: queueItems.filter((item) => item.status === "failed").length,
     syncingCount: queueItems.filter((item) => item.status === "syncing").length,
     lastSyncAt: lastSyncAt || null,
+    lastPreparedAt: lastPreparedAt || null,
   };
 }
 
@@ -608,6 +611,48 @@ export async function syncOfflineExecutionQueue() {
 
 export function isTechnicianOfflineEnabled() {
   return Boolean(getOfflineContext());
+}
+
+
+export async function prepareTechnicianOffline({ futureDays = 7, limit = 200 } = {}) {
+  const context = getOfflineContext();
+  if (!context) {
+    return { ok: false, skipped: true, message: "Modo offline disponible solo para t?cnico." };
+  }
+
+  if (!isBrowserOnline()) {
+    throw new Error("Necesitas conexi?n para preparar el modo offline.");
+  }
+
+  await syncOfflineExecutionQueue().catch(() => null);
+
+  const data = await fetchExecutionsOnline({ futureDays, limit });
+  const onlineItems = Array.isArray(data?.items) ? data.items : [];
+
+  const detailedItems = [];
+  for (const item of onlineItems) {
+    const itemId = Number(item?.id);
+    if (!Number.isFinite(itemId)) continue;
+    try {
+      const detail = await fetchExecutionDetailOnline(itemId);
+      detailedItems.push(detail || item);
+    } catch {
+      detailedItems.push(item);
+    }
+  }
+
+  const mergedItems = await mergeQueuedState(context.scopeKey, detailedItems);
+  await cacheOnlineExecutions(context.scopeKey, mergedItems);
+  await setMetaValue(`offline:lastPreparedAt:${context.scopeKey}`, new Date().toISOString());
+  emitOfflineChange();
+
+  return {
+    ok: true,
+    skipped: false,
+    cachedCount: mergedItems.length,
+    futureDays,
+    lastPreparedAt: new Date().toISOString(),
+  };
 }
 
 export function assignExecutionTechnician(executionId, technicianId) {
