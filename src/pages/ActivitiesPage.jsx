@@ -498,18 +498,6 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     }
   }, [isTech]);
 
-  const handleSyncOfflineNow = useCallback(async () => {
-    if (!isTech) return;
-    try {
-      setSyncingOffline(true);
-      await syncOfflineExecutionQueue();
-      await load();
-    } finally {
-      setSyncingOffline(false);
-      refreshOfflineInfo();
-    }
-  }, [isTech, refreshOfflineInfo]);
-
   const triggerCompletePulse = useCallback((title, subtitle = "Cambios guardados correctamente") => {
     setCompletePulseText({ title, subtitle });
     setCompletePulse(true);
@@ -517,13 +505,38 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     triggerCompletePulse._t = window.setTimeout(() => setCompletePulse(false), 1200);
   }, []);
 
+  const handleSyncOfflineNow = useCallback(async () => {
+    if (!isTech) return;
+    try {
+      setErr("");
+      setSyncingOffline(true);
+      const result = await syncOfflineExecutionQueue();
+      await load();
+      const syncedCount = Number(result?.synced || 0);
+      triggerCompletePulse(
+        syncedCount > 0 ? "Sincronización completada" : "Sin cambios por sincronizar",
+        syncedCount > 0
+          ? `Se sincronizaron ${syncedCount} actividad${syncedCount === 1 ? "" : "es"} pendientes.`
+          : "No había actividades pendientes en este momento."
+      );
+    } catch (error) {
+      setErr(error?.message || "No se pudo sincronizar.");
+    } finally {
+      setSyncingOffline(false);
+      refreshOfflineInfo();
+    }
+  }, [isTech, refreshOfflineInfo, triggerCompletePulse]);
+
   const handlePrepareOfflineNow = useCallback(async () => {
     if (!isTech) return;
     try {
+      setErr("");
       setPreparingOffline(true);
       await prepareTechnicianOffline({ futureDays: 7, limit: 200 });
       await load();
       triggerCompletePulse("Modo offline listo", "Tus actividades quedaron guardadas para trabajar sin conexión.");
+    } catch (error) {
+      setErr(error?.message || "No se pudo preparar el modo offline.");
     } finally {
       setPreparingOffline(false);
       refreshOfflineInfo();
@@ -1792,7 +1805,14 @@ export function ActivityCard({
   const mobileView =
     isMobile || (typeof window !== "undefined" && Number(window.innerWidth || 0) <= 820);
   const technicianMode = canCompleteActivities && !canAssignTech && !showPreviewAction;
-  const evidenceUrl = buildImgUrl(activity?.previewImage || activity?.evidenceImage || activity?.routeImage || activity?.imageUrl);
+  const rawPreviewImage =
+    activity?.previewImage || activity?.evidenceImage || activity?.routeImage || activity?.imageUrl;
+  const browserOnline = typeof navigator === "undefined" ? true : navigator.onLine !== false;
+  const localPreview =
+    typeof rawPreviewImage === "string" &&
+    /^(data:image\/|blob:|https?:\/\/)/i.test(String(rawPreviewImage).trim());
+  const evidenceUrl =
+    !browserOnline && !localPreview ? "" : buildImgUrl(rawPreviewImage);
 
   const safeDateLabel = (() => {
     const raw =

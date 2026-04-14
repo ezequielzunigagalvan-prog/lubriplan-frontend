@@ -1,4 +1,4 @@
-// src/pages/InventoryPage.jsx
+﻿// src/pages/InventoryPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import InventoryDrawer from "../components/inventory/InventoryDrawer";
@@ -13,7 +13,6 @@ import {
 } from "../services/lubricantsService";
 
 import { useAuth } from "../context/AuthContext";
-
 import {
   Package,
   XCircle,
@@ -99,7 +98,7 @@ function propertyToText(p) {
 }
 
 /* =========================
-   Toast (confirmación animada)
+Toast (confirmacion animada)
 ========================= */
 function Toast({ toast, onClose }) {
   useEffect(() => {
@@ -216,9 +215,9 @@ if (changed) writeBaselines(currentPlantId, map);
   };
 
   useEffect(() => {
-  if (!currentPlantId) return;
-  load();
-}, [currentPlantId]);
+    if (!currentPlantId) return;
+    load();
+  }, [currentPlantId]);
 
   // ===== Helpers =====
   const getStock = (it) => {
@@ -352,7 +351,7 @@ if (changed) writeBaselines(currentPlantId, map);
   };
 
   const handleDelete = async (id) => {
-    const ok = confirm("¿Eliminar este lubricante del inventario?");
+    const ok = confirm("?Eliminar este lubricante del inventario?");
     if (!ok) return;
 
     await deleteLubricant(id);
@@ -362,7 +361,7 @@ if (changed) writeBaselines(currentPlantId, map);
 
   return (
     <MainLayout>
-      {/* Animación del toast */}
+      {/* Animacion del toast */}
       <style>{`
         @keyframes lp_toast_in {
           from { transform: translateY(12px); opacity: 0; }
@@ -379,7 +378,7 @@ if (changed) writeBaselines(currentPlantId, map);
             <h1 style={title}>Inventario</h1>
            <div style={subtitle}>
   Controla tus lubricantes, stock y movimientos
-  {currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
+            {currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
 </div>
           </div>
 
@@ -387,7 +386,7 @@ if (changed) writeBaselines(currentPlantId, map);
             <div style={searchBox}>
               <Search size={16} strokeWidth={2.2} />
               <input
-                placeholder="Buscar por nombre, código, marca, proveedor…"
+              placeholder="Buscar por nombre, código, marca, proveedor..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 style={searchInput}
@@ -420,7 +419,7 @@ if (changed) writeBaselines(currentPlantId, map);
             <div style={summaryMetrics4}>
               <KpiCard icon={<Package size={18} />} value={stats.total} label="Productos" />
               <KpiCard icon={<XCircle size={18} />} value={stats.out} label="Sin stock" />
-              <KpiCard icon={<AlertTriangle size={18} />} value={stats.low} label="Bajo mínimo" />
+            <KpiCard icon={<AlertTriangle size={18} />} value={stats.low} label="Bajo m?nimo" />
               <KpiCard
                 icon={<DollarSign size={18} />}
                 value={formatCurrency(stats.value)}
@@ -439,7 +438,7 @@ if (changed) writeBaselines(currentPlantId, map);
               <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)} style={input}>
                 <option value="ALL">Todos</option>
                 <option value="OUT">Solo sin stock</option>
-                <option value="LOW">Solo bajo mínimo</option>
+                <option value="LOW">Solo bajo m?nimo</option>
               </select>
             </div>
 
@@ -454,21 +453,21 @@ if (changed) writeBaselines(currentPlantId, map);
             </div>
 
             <div style={field}>
-              <label style={label}>Dirección</label>
+                <label style={label}>Direcci?n</label>
               <button
                 type="button"
                 style={btnDir}
                 onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
                 title="Cambiar orden"
               >
-                {sortDir === "asc" ? "↑ Asc" : "↓ Desc"}
+                  {sortDir === "asc" ? "? Asc" : "? Desc"}
               </button>
             </div>
           </div>
         </div>
 
         {/* GRID */}
-        {loading && <p style={{ marginTop: 14 }}>Cargando inventario…</p>}
+          {loading && <p style={{ marginTop: 14 }}>Cargando inventario...</p>}
         {!loading && sorted.length === 0 && <p style={{ marginTop: 14 }}>No hay productos para mostrar.</p>}
 
         <div style={grid}>
@@ -525,13 +524,13 @@ const propText = propertyToText(propObj);
                   <div style={{ minWidth: 0 }}>
                     <div style={nameRow}>
                       <h3 style={cardTitle} title={item?.name || ""}>
-                        {item?.name || "—"}
+                          {item?.name || "-"}
                       </h3>
 
                       {out ? (
-                        <span style={pill("#fee2e2", "#991b1b")}>⛔ Sin stock</span>
+                            <span style={pill("#fee2e2", "#991b1b")}>Sin stock</span>
                       ) : low ? (
-                        <span style={pill("#ffedd5", "#9a3412")}>⚠ Bajo mínimo</span>
+                            <span style={pill("#ffedd5", "#9a3412")}>Bajo m?nimo</span>
                       ) : (
                         <span style={pill("#dcfce7", "#166534")}>OK</span>
                       )}
@@ -651,8 +650,8 @@ const propText = propertyToText(propObj);
                   </div>
 
                   <div style={{ textAlign: "right" }}>
-                    <div style={stockLabel}>Mínimo</div>
-                    <div style={stockValue}>{min == null ? "—" : `${min} ${item.unit || ""}`}</div>
+                          <div style={stockLabel}>M?nimo</div>
+                          <div style={stockValue}>{min == null ? "-" : `${min} ${item.unit || ""}`}</div>
                   </div>
                 </div>
 
@@ -870,7 +869,7 @@ const kpiCard = {
   borderRadius: 16,
   padding: 12,
   boxShadow: "0 10px 18px rgba(2,6,23,0.06)",
-  overflow: "hidden", // ✅ importante para respetar la curva
+  overflow: "hidden", // importante para respetar la curva
 };
 
 const kpiAccent = {
@@ -880,8 +879,8 @@ const kpiAccent = {
   right: 0,
   height: 10,
   background: "linear-gradient(180deg, #374151 0%, #1f2937 100%)",
-  borderTopLeftRadius: 16,   // ✅ curva
-  borderTopRightRadius: 16,  // ✅ curva
+  borderTopLeftRadius: 16,   // curva
+  borderTopRightRadius: 16,  // curva
 };
 
 const kpiInner = {
@@ -1148,3 +1147,4 @@ const typeBadge = {
   border: "1px solid rgba(249,115,22,0.28)",
   color: "#7c2d12",
 };
+

@@ -32,23 +32,23 @@ const endOfMonthLocal = (d = new Date()) =>
 
 const safeDateLabel = (iso) => {
   try {
-    if (!iso) return "â€”";
+    if (!iso) return "-";
     const dt = new Date(iso);
-    if (Number.isNaN(dt.getTime())) return "â€”";
+    if (Number.isNaN(dt.getTime())) return "-";
     return dt.toLocaleDateString();
   } catch {
-    return "â€”";
+    return "-";
   }
 };
 
 const safeDateTimeLabel = (iso) => {
   try {
-    if (!iso) return "â€”";
+    if (!iso) return "-";
     const dt = new Date(iso);
-    if (Number.isNaN(dt.getTime())) return "â€”";
+    if (Number.isNaN(dt.getTime())) return "-";
     return dt.toLocaleString();
   } catch {
-    return "â€”";
+    return "-";
   }
 };
 
@@ -69,7 +69,7 @@ const conditionChip = (conditionRaw) => {
   if (c === "MALO") return { bg: "#fef3c7", bd: "#fde68a", fg: "#92400e", label: "Malo", icon: "warn" };
   if (c === "CRITICO" || c === "CRITICO")
     return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Crí­tico", icon: "alert" };
-  return { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: conditionRaw || "â€”", icon: "dot" };
+  return { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: conditionRaw || "-", icon: "dot" };
 };
 
 const normMoveType = (raw) => {
@@ -87,7 +87,7 @@ const moveBadge = (t) => {
     OUT: { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Salida", icon: "arrowDown" },
     ADJUST: { bg: "#e0e7ff", bd: "#c7d2fe", fg: "#3730a3", label: "Ajuste", icon: "settings" },
   };
-  return map[type] || { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: type || "â€”", icon: "dot" };
+  return map[type] || { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: type || "-", icon: "dot" };
 };
 
 const monthToFromTo = (monthStr) => {
@@ -140,7 +140,7 @@ export default function HistoryPage() {
   const [condition, setCondition] = useState("ALL"); // ALL | BUENO | REGULAR | MALO | CRITICO
   const [q, setQ] = useState("");
 
-  // paginaciÃ³n actividades
+  // paginacion actividades
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -150,7 +150,7 @@ export default function HistoryPage() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
 
-  // drawer detalle ejecuciÃ³n
+  // drawer detalle ejecucion
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -165,7 +165,7 @@ export default function HistoryPage() {
   const [mvType, setMvType] = useState("ALL");
   const [mvPage, setMvPage] = useState(1);
   const [mvPageSize, setMvPageSize] = useState(10);
-  const [mvLubQ, setMvLubQ] = useState(""); // filtro por nombre/cÃ³digo (client-side)
+  const [mvLubQ, setMvLubQ] = useState(""); // filtro por nombre/codigo (client-side)
 
   /* =========================
      LOADERS
@@ -193,7 +193,7 @@ export default function HistoryPage() {
 
         const raw = Array.isArray(resp?.items) ? resp.items : [];
 
-        // Scope tÃ©cnico: solo lo suyo
+        // Scope tecnico: solo lo suyo
         const scopedRaw = isTech
           ? raw.filter((x) => {
               const techId = x?.technicianId ?? x?.technician?.id ?? null;
@@ -246,7 +246,7 @@ export default function HistoryPage() {
         const resp = await getHistoryLubricantMovements(params);
         const all = Array.isArray(resp?.items) ? resp.items : [];
 
-        // Scope tÃ©cnico: ocultar manuales; solo movimientos ligados a sus ejecuciones
+        // Scope tecnico: ocultar manuales; solo movimientos ligados a sus ejecuciones
         const scoped = isTech
           ? all.filter((m) => {
               const ex = m?.execution;
@@ -299,6 +299,7 @@ export default function HistoryPage() {
     loadMovements({ page: 1 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to, mvType, mvPageSize]);
+
 
   // deep links
   useEffect(() => {
@@ -416,7 +417,7 @@ export default function HistoryPage() {
         >
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             <Icon name="reset" />
-            {loading || mvLoading ? "Actualizandoâ€¦" : "Actualizar"}
+                  {loading || mvLoading ? "Actualizando..." : "Actualizar"}
           </span>
         </button>
       </div>
@@ -474,7 +475,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {meta ? `Página ${meta.page} de ${meta.pages} â€¢ ${meta.total} registros` : ""}
+                {meta ? `P?gina ${meta.page} de ${meta.pages} ? ${meta.total} registros` : ""}
           </div>
         </div>
 
@@ -510,7 +511,7 @@ export default function HistoryPage() {
             />
           </div>
 
-          {/* âœ… Buscar en gris ghost */}
+              {/* Buscar en gris ghost */}
         <button
   className="lpPress"
   onClick={() => {
@@ -557,7 +558,7 @@ export default function HistoryPage() {
         ))}
       </div>
 
-      {/* PAGINACIÃ“N EJECUCIONES */}
+            {/* PAGINACION EJECUCIONES */}
       {meta && meta.pages > 1 && (
         <div style={pager}>
           <button
@@ -596,7 +597,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {mvMeta ? `Página ${mvMeta.page} de ${mvMeta.pages} â€¢ ${mvMeta.total} movimientos` : ""}
+                {mvMeta ? `P?gina ${mvMeta.page} de ${mvMeta.pages} ? ${mvMeta.total} movimientos` : ""}
           </div>
         </div>
 
@@ -639,7 +640,7 @@ export default function HistoryPage() {
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="reset" />
-              {mvLoading ? "Actualizandoâ€¦" : "Actualizar"}
+                  {mvLoading ? "Actualizando..." : "Actualizar"}
             </span>
           </button>
         </div>
@@ -805,7 +806,7 @@ function HistoryCard({ ex, onOpen }) {
 
           <div style={metaRow}>
             <span style={metaItem}>
-              <Icon name="pin" /> {eq?.name || "â€”"}
+                          <Icon name="pin" /> {eq?.name || "-"}
               {eq?.code ? ` · ${eq.code}` : eq?.tag ? ` · ${eq.tag}` : ""}
             </span>
 
@@ -1046,7 +1047,7 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
               <div style={sectionTitle}>Observaciones</div>
               <div style={{ ...noteBox, marginTop: 8 }}>
                 <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap" }}>
-                  {ex?.observations || "â€”"}
+                    {ex?.observations || "-"}
                 </div>
               </div>
             </div>
@@ -1169,7 +1170,7 @@ const kpiTopBandDarkThin = {
   left: 0,
   right: 0,
   top: 0,
-  height: 6, // âœ… mÃ¡s delgada (como Equipos)
+  height: 6, // m?s delgada (como Equipos)
   background: "#334155",
   borderTopLeftRadius: 14,
   borderTopRightRadius: 14,
@@ -1179,11 +1180,11 @@ const kpiIconBox = {
   width: 44,
   height: 44,
   borderRadius: 14,
-  background: "#f97316", // âœ… naranja
+  background: "#f97316", // naranja
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#0f172a", // âœ… icono negro
+  color: "#0f172a", // icono negro
   border: "1px solid rgba(2,6,23,0.10)",
   boxShadow: "0 10px 20px rgba(249,115,22,0.18)",
 };
@@ -1520,6 +1521,7 @@ const btnKpiGray = {
   boxShadow: "0 8px 18px rgba(2,6,23,0.18)",
   transition: "all 160ms ease",
 };
+
 
 
 

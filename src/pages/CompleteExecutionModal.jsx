@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { getExecutionById, completeExecution } from "../services/executionsService";
+import { getExecutionById, completeExecution, getOfflineExecutionCatalog } from "../services/executionsService";
 import { getTechnicians } from "../services/techniciansService";
 import { getExecutionLubricants } from "../services/lubricantsService";
 import { API_ASSETS_URL } from "../services/api";
@@ -151,14 +151,47 @@ const loggedTechId = user?.technicianId != null ? Number(user.technicianId) : nu
         setLoading(true);
         setLubeLoading(false);
 
-        const [ex, technicians] = await Promise.all([
-          getExecutionById(Number(executionId)),
-          getTechnicians(),
-        ]);
+        const ex = await getExecutionById(Number(executionId));
 
         if (!aliveRef.current) return;
 
         setExecution(ex);
+
+        const offlineCatalog = await getOfflineExecutionCatalog().catch(() => ({
+          technicians: [],
+          lubricants: [],
+        }));
+
+        let technicians = [];
+        try {
+          technicians = await getTechnicians();
+        } catch {
+          const fallbackTechId =
+            isTechUser && Number.isFinite(loggedTechId)
+              ? loggedTechId
+              : ex?.technicianId ?? ex?.technician?.id ?? null;
+          const fallbackTech =
+            Number.isFinite(Number(fallbackTechId))
+              ? [
+                  {
+                    id: Number(fallbackTechId),
+                    name:
+                      String(ex?.technician?.name || "").trim() ||
+                      String(user?.technician?.name || "").trim() ||
+                      String(user?.name || "").trim() ||
+                      "Técnico asignado",
+                    code:
+                      String(ex?.technician?.code || "").trim() ||
+                      String(user?.technician?.code || "").trim(),
+                    status: "ACTIVO",
+                  },
+                ]
+              : [];
+          technicians =
+            Array.isArray(offlineCatalog?.technicians) && offlineCatalog.technicians.length
+              ? offlineCatalog.technicians
+              : fallbackTech;
+        }
 
         const techList = Array.isArray(technicians?.items)
           ? technicians.items
@@ -190,7 +223,10 @@ const loggedTechId = user?.technicianId != null ? Number(user.technicianId) : nu
               : [];
           } catch (e) {
             console.error("Error cargando lubricantes:", e);
-            lubItems = [];
+            lubItems =
+              Array.isArray(offlineCatalog?.lubricants) && offlineCatalog.lubricants.length
+                ? offlineCatalog.lubricants
+                : [];
           } finally {
             if (aliveRef.current) setLubeLoading(false);
           }

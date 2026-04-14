@@ -2255,7 +2255,9 @@ function TechnicianPerfectPanel(props) {
         openExecutionModal={openExecutionModal}
         isMobile={isMobile}
         offlineInfo={techOfflineInfo}
+        onPrepareOffline={handleTechPrepareOfflineNow}
         onSyncNow={handleTechOfflineSyncNow}
+        preparingOffline={preparingTechOffline}
         syncingOffline={syncingTechOffline}
       />
 
@@ -3060,22 +3062,35 @@ export default function Dashboard() {
   const handleTechOfflineSyncNow = useCallback(async () => {
     if (!isTech) return;
     try {
+      setErr("");
       setSyncingTechOffline(true);
-      await syncOfflineExecutionQueue();
+      const result = await syncOfflineExecutionQueue();
       await loadTechDashboardActivities();
+      const syncedCount = Number(result?.synced || 0);
+      triggerCompletePulse(
+        syncedCount > 0 ? "Sincronización completada" : "Sin cambios por sincronizar",
+        syncedCount > 0
+          ? `Se sincronizaron ${syncedCount} actividad${syncedCount === 1 ? "" : "es"} pendientes.`
+          : "No había actividades pendientes en este momento."
+      );
+    } catch (error) {
+      setErr(error?.message || "No se pudo sincronizar.");
     } finally {
       setSyncingTechOffline(false);
       refreshTechOfflineInfo();
     }
-  }, [isTech, loadTechDashboardActivities, refreshTechOfflineInfo]);
+  }, [isTech, loadTechDashboardActivities, refreshTechOfflineInfo, triggerCompletePulse]);
 
   const handleTechPrepareOfflineNow = useCallback(async () => {
     if (!isTech) return;
     try {
+      setErr("");
       setPreparingTechOffline(true);
       await prepareTechnicianOffline({ futureDays: 7, limit: 200 });
       await loadTechDashboardActivities();
       triggerCompletePulse("Modo offline listo", "Tus actividades quedaron guardadas para trabajar sin conexión.");
+    } catch (error) {
+      setErr(error?.message || "No se pudo preparar el modo offline.");
     } finally {
       setPreparingTechOffline(false);
       refreshTechOfflineInfo();
@@ -4477,10 +4492,12 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
 
   const previewImage =
     activity?.previewImage || activity?.evidenceImage || activity?.route?.imageUrl || null;
+  const browserOnline = typeof navigator === "undefined" ? true : navigator.onLine !== false;
 
   const previewUrl = (() => {
     if (!previewImage) return "";
     const s = String(previewImage);
+    if (!browserOnline && !s.startsWith("data:image/") && !s.startsWith("blob:")) return "";
     if (s.startsWith("http://") || s.startsWith("https://")) return s;
     if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
     return `${API_ASSETS_URL}/${s}`;

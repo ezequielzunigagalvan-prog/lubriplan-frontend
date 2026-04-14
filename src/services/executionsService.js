@@ -323,6 +323,10 @@ async function fetchExecutionDetailOnline(id) {
   return httpGet(`/executions/${id}`);
 }
 
+async function fetchExecutionLubricantsOnline() {
+  return httpGet("/lubricants/available-for-execution");
+}
+
 async function completeExecutionOnline(id, payload) {
   return httpPatch(`/executions/${id}/complete`, payload ?? {});
 }
@@ -556,7 +560,7 @@ export async function syncOfflineExecutionQueue() {
         }
         synced += 1;
       } else {
-        throw new Error("Tipo de sincronizaci?n no soportado");
+        throw new Error("Tipo de sincronización no soportado");
       }
     } catch (error) {
       const message = String(error?.message || "");
@@ -617,17 +621,28 @@ export function isTechnicianOfflineEnabled() {
 export async function prepareTechnicianOffline({ futureDays = 7, limit = 200 } = {}) {
   const context = getOfflineContext();
   if (!context) {
-    return { ok: false, skipped: true, message: "Modo offline disponible solo para t?cnico." };
+    return { ok: false, skipped: true, message: "Modo offline disponible solo para técnico." };
   }
 
   if (!isBrowserOnline()) {
-    throw new Error("Necesitas conexi?n para preparar el modo offline.");
+    throw new Error("Necesitas conexión para preparar el modo offline.");
   }
 
   await syncOfflineExecutionQueue().catch(() => null);
 
-  const data = await fetchExecutionsOnline({ futureDays, limit });
-  const onlineItems = Array.isArray(data?.items) ? data.items : [];
+  const month = toLocalYmd(new Date()).slice(0, 7);
+  let data = await fetchExecutionsOnline({
+    completedRange: "MONTH",
+    month,
+    futureWindow: "MONTH",
+    limit,
+  });
+
+  let onlineItems = Array.isArray(data?.items) ? data.items : [];
+  if (!onlineItems.length) {
+    data = await fetchExecutionsOnline({ futureDays, limit });
+    onlineItems = Array.isArray(data?.items) ? data.items : [];
+  }
 
   const detailedItems = [];
   for (const item of onlineItems) {
@@ -643,6 +658,28 @@ export async function prepareTechnicianOffline({ futureDays = 7, limit = 200 } =
 
   const mergedItems = await mergeQueuedState(context.scopeKey, detailedItems);
   await cacheOnlineExecutions(context.scopeKey, mergedItems);
+  try {
+    const lubricantData = await fetchExecutionLubricantsOnline();
+    const lubricantItems = Array.isArray(lubricantData?.items)
+      ? lubricantData.items
+      : Array.isArray(lubricantData)
+      ? lubricantData
+      : [];
+    await setMetaValue(`offline:catalog:lubricants:${context.scopeKey}`, lubricantItems);
+  } catch {
+    // noop
+  }
+  await setMetaValue(`offline:catalog:technicians:${context.scopeKey}`, [
+    {
+      id: context.technicianId,
+      name:
+        String(getUser()?.technician?.name || "").trim() ||
+        String(getUser()?.name || "").trim() ||
+        "Técnico asignado",
+      code: String(getUser()?.technician?.code || "").trim(),
+      status: "ACTIVO",
+    },
+  ]);
   await setMetaValue(`offline:lastPreparedAt:${context.scopeKey}`, new Date().toISOString());
   emitOfflineChange();
 
@@ -657,6 +694,23 @@ export async function prepareTechnicianOffline({ futureDays = 7, limit = 200 } =
 
 export function assignExecutionTechnician(executionId, technicianId) {
   return httpPatch(`/executions/${executionId}/assign`, { technicianId });
+}
+
+export async function getOfflineExecutionCatalog() {
+  const context = getOfflineContext();
+  if (!context) {
+    return { technicians: [], lubricants: [] };
+  }
+
+  const [technicians, lubricants] = await Promise.all([
+    getMetaValue(`offline:catalog:technicians:${context.scopeKey}`),
+    getMetaValue(`offline:catalog:lubricants:${context.scopeKey}`),
+  ]);
+
+  return {
+    technicians: Array.isArray(technicians) ? technicians : [],
+    lubricants: Array.isArray(lubricants) ? lubricants : [],
+  };
 }
 
 export async function getExecutions(params = {}) {
@@ -748,4 +802,5 @@ export async function getExecutionById(id) {
 export async function createManualExecution(payload) {
   return httpPost("/executions", payload ?? {});
 }
+
 

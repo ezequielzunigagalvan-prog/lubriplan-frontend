@@ -20,7 +20,6 @@ import {
 
 import { Icon } from "../components/ui/lpIcons";
 import useDashboardPredictiveAlerts from "../hooks/useDashboardPredictiveAlerts";
-
 /* ===================== helpers ===================== */
 const toNum = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
@@ -1715,5 +1714,6 @@ const tagBase = {
 };
 
 const tagWrapFix = { display: "inline-flex", alignItems: "center" };
+
 
 
