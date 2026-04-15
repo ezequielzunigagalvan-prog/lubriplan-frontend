@@ -229,7 +229,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
               </span>
 
               {equipmentCode ? (
-                <span style={pillMuted} title="C?digo / TAG">
+                <span style={pillMuted} title="Código / TAG">
                   <Icon name="tag" style={{ width: 14, height: 14 }} />
                   <span>{equipmentCode}</span>
                 </span>

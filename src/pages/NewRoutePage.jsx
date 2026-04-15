@@ -1,4 +1,4 @@
-// src/pages/NewRoutePage.jsx
+﻿// src/pages/NewRoutePage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
@@ -9,6 +9,13 @@ import { API_ASSETS_URL } from "../services/api";
 
 /* ================== HELPERS ================== */
 const norm = (v) => String(v ?? "").toLowerCase().trim();
+const buildImgUrl = (raw) => {
+  if (!raw) return "";
+  const s = String(raw);
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
+  return `${API_ASSETS_URL}/${s}`;
+};
 
 export default function NewRoutePage() {
   const navigate = useNavigate();
@@ -128,7 +135,7 @@ export default function NewRoutePage() {
   const clearImage = () => {
     setImageFile(null);
     setImagePreview("");
-    setForm((prev) => ({ ...prev, imageUrl: "" }));
+    setForm((prev) => ({ ...prev, imageUrl: "", imagePublicId: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -186,7 +193,7 @@ export default function NewRoutePage() {
         imageUrl: finalImageUrl,
       });
 
-      alert("Ruta creada ✅");
+      alert("Ruta creada");
       navigate("/routes");
     } catch (err) {
       console.error("Error creando ruta:", err);
@@ -348,7 +355,7 @@ export default function NewRoutePage() {
                     />
                   ) : form.imageUrl ? (
                     <img
-                      src={`${API_ASSETS_URL}${form.imageUrl}`}
+                      src={buildImgUrl(form.imageUrl)}
                       alt="Imagen"
                       style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }}
                     />
@@ -496,3 +503,6 @@ const btnGhost = {
   fontWeight: 950,
   color: "#0f172a",
 };
+
+
+

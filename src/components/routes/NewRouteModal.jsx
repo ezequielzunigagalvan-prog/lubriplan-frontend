@@ -822,7 +822,7 @@ useEffect(() => {
     }
     setImageFile(null);
     setImagePreview("");
-    setForm((prev) => ({ ...prev, imageUrl: "" }));
+    setForm((prev) => ({ ...prev, imageUrl: "", imagePublicId: "" }));
   };
 
   const handleSave = async () => {
@@ -2068,6 +2068,7 @@ const weekDayBtnActive = {
   color: "#9a3412",
   boxShadow: "0 8px 18px rgba(249,115,22,0.12)",
 };
+
 
 
 
