@@ -2,9 +2,11 @@
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
-import lubriPlanLogo from "../assets/lubriplan-app-icon.png";
+import lubriPlanLogo from "../assets/lubriplan-logo.png.png";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const DEMO_URL = "https://www.hidrolub.com/lubriplan";
+const CONTACT_EMAIL = "lubriplan@hidrolub.com";
 
 export default function LubriPlanLanding() {
   const { isAuthenticated } = useAuth();
@@ -61,6 +63,42 @@ export default function LubriPlanLanding() {
         title: "Decisión con contexto",
         text: "Supervisión y jefatura reciben alertas, lectura ejecutiva e historial útil para priorizar mejor.",
       },
+    ],
+    []
+  );
+
+  const modules = useMemo(
+    () => [
+      "Equipos",
+      "Técnicos",
+      "Inventario",
+      "Rutas",
+      "Actividades automáticas",
+      "Actividades manuales",
+      "Actividades emergentes",
+      "Condición anormal",
+      "Historial",
+      "Análisis",
+      "Alertas",
+      "Reportes IA",
+      "PDF",
+      "Multiplanta",
+      "Modo offline",
+      "Importar y exportar",
+    ],
+    []
+  );
+
+  const audiences = useMemo(
+    () => [
+      "Jefes de mantenimiento",
+      "Supervisores",
+      "Responsables de lubricación",
+      "Técnicos de campo",
+      "Manufactura",
+      "Automotriz",
+      "Metalmecánica",
+      "Plantas industriales",
     ],
     []
   );
@@ -157,8 +195,9 @@ export default function LubriPlanLanding() {
               Diseñado para jefes de mantenimiento, supervisores y responsables de lubricación en planta.
             </div>
             <div style={actions}>
-              <a href="https://www.hidrolub.com/lubriplan" target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
-              <Link to="/login" style={btnGhost}>Entrar a plataforma</Link>
+              <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
+              <a href="#como-funciona" style={btnGhost}>Ver cómo funciona</a>
+              <Link to="/login" style={btnGhostSoft}>Entrar a plataforma</Link>
             </div>
             <div style={statsRow}>
               <Tag icon="checkCircle" text="Trazabilidad por actividad" />
@@ -289,6 +328,34 @@ export default function LubriPlanLanding() {
         <div style={journeyGrid}>{journey.map(([n, title, text]) => <JourneyCard key={n} n={n} title={title} text={text} />)}</div>
       </section>
 
+      <section style={section}>
+        <div style={sectionHead}>
+          <div style={sectionKicker}>ALCANCE ACTUAL</div>
+          <h2 style={sectionTitle}>Módulos y capacidades ya integradas en LubriPlan</h2>
+        </div>
+        <div style={industryWrap}>
+          {modules.map((item) => (
+            <span key={item} style={industryPill}>
+              {item}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section style={sectionAlt}>
+        <div style={sectionHead}>
+          <div style={sectionKicker}>PARA QUIÉN ES</div>
+          <h2 style={sectionTitle}>Pensado para equipos que necesitan orden, visibilidad y trazabilidad</h2>
+        </div>
+        <div style={industryWrap}>
+          {audiences.map((item) => (
+            <span key={item} style={industryPill}>
+              {item}
+            </span>
+          ))}
+        </div>
+      </section>
+
       <section id="contacto" style={ctaSection}>
         <div style={ctaBox}>
           <div style={sectionKicker}>LISTO PARA DEMOSTRARSE EN PLANTA</div>
@@ -298,8 +365,8 @@ export default function LubriPlanLanding() {
             LubriPlan puede convertirse en la base operativa para ejecutar mejor, ver antes los riesgos y tomar decisiones con contexto real.
           </p>
           <div style={actions}>
-            <a href="https://www.hidrolub.com/lubriplan" target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
-            <Link to="/login" style={btnGhost}>Entrar a plataforma</Link>
+            <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
+            <a href={`mailto:${CONTACT_EMAIL}`} style={btnGhost}>Contactar por correo</a>
           </div>
         </div>
       </section>
@@ -425,6 +492,7 @@ const heroRoleLine = { marginTop: 14, color: "#fdba74", fontSize: 14, lineHeight
 const actions = { marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" };
 const btnPrimary = { display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", background: "linear-gradient(135deg, #fb923c 0%, #f97316 100%)", color: "#0f172a", padding: "15px 20px", borderRadius: 16, fontWeight: 950, border: "1px solid rgba(251,146,60,0.9)", boxShadow: "0 18px 34px rgba(249,115,22,0.24)" };
 const btnGhost = { display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", background: "rgba(255,255,255,0.05)", color: "#fff", padding: "15px 20px", borderRadius: 16, fontWeight: 900, border: "1px solid rgba(255,255,255,0.12)" };
+const btnGhostSoft = { display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", background: "rgba(255,255,255,0.03)", color: "#e2e8f0", padding: "15px 20px", borderRadius: 16, fontWeight: 900, border: "1px solid rgba(255,255,255,0.08)" };
 const statsRow = { marginTop: 22, display: "flex", gap: 10, flexWrap: "wrap" };
 const tag = { display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "#e2e8f0", fontSize: 12, fontWeight: 900 };
 const tagIcon = { display: "grid", placeItems: "center", color: "#fb923c" };
@@ -489,6 +557,15 @@ const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 72px"
 const ctaBox = { position: "relative", overflow: "hidden", padding: "30px 24px", borderRadius: 30, background: "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)", border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 24px 70px rgba(2,6,23,0.28)" };
 const ctaTitle = { position: "relative", zIndex: 1, margin: 0, fontSize: "clamp(2rem, 4vw, 3.1rem)", lineHeight: 1, letterSpacing: -1.1 };
 const ctaText = { position: "relative", zIndex: 1, marginTop: 12, maxWidth: 760, color: "#e2e8f0", fontSize: 16, lineHeight: 1.65, fontWeight: 600 };
+const contactNote = { position: "relative", zIndex: 1, marginTop: 14, color: "#cbd5e1", fontSize: 14, fontWeight: 700 };
+const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
+
+
+
+
+
+
+
 
 
 
