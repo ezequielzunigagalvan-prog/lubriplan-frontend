@@ -366,7 +366,7 @@ export default function LubriPlanLanding() {
           </p>
           <div style={actions}>
             <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
-            <a href={`mailto:${CONTACT_EMAIL}`} style={btnGhost}>Contactar por correo</a>
+            <span style={contactMailText}>Correo de contacto: <span style={contactMailStrong}>{CONTACT_EMAIL}</span></span>
           </div>
         </div>
       </section>
@@ -558,7 +558,11 @@ const ctaBox = { position: "relative", overflow: "hidden", padding: "30px 24px",
 const ctaTitle = { position: "relative", zIndex: 1, margin: 0, fontSize: "clamp(2rem, 4vw, 3.1rem)", lineHeight: 1, letterSpacing: -1.1 };
 const ctaText = { position: "relative", zIndex: 1, marginTop: 12, maxWidth: 760, color: "#e2e8f0", fontSize: 16, lineHeight: 1.65, fontWeight: 600 };
 const contactNote = { position: "relative", zIndex: 1, marginTop: 14, color: "#cbd5e1", fontSize: 14, fontWeight: 700 };
+const contactMailText = { display: "inline-flex", alignItems: "center", padding: "15px 20px", borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#e2e8f0", fontWeight: 800 };
+const contactMailStrong = { color: "#fdba74", fontWeight: 900 };
 const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
+
+
 
 
 
