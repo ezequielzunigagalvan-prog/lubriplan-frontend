@@ -407,6 +407,169 @@ function PanelCard({ title, subtitle, right = null, children, executive = false 
   );
 }
 
+function AdminInventoryInsightCard({ lowStockCount, dteCount, navigate, aiEnabled }) {
+  const hasProjectedRisk = Number(dteCount || 0) > 0;
+  const hasLowStock = Number(lowStockCount || 0) > 0;
+  const tone = hasProjectedRisk ? "red" : hasLowStock ? "amber" : "green";
+  const accent = tone === "red" ? "#dc2626" : tone === "amber" ? "#d97706" : "#16a34a";
+  const badgeBg = tone === "red" ? "rgba(239,68,68,0.12)" : tone === "amber" ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)";
+  const badgeBorder = tone === "red" ? "rgba(239,68,68,0.24)" : tone === "amber" ? "rgba(245,158,11,0.28)" : "rgba(34,197,94,0.24)";
+  const badgeColor = tone === "red" ? "#991b1b" : tone === "amber" ? "#92400e" : "#166534";
+  const statusLabel = hasProjectedRisk ? "Riesgo de desabasto" : hasLowStock ? "Atención operativa" : "Cobertura estable";
+  const title = hasProjectedRisk
+    ? "Inventario crítico"
+    : hasLowStock
+    ? "Inventario en seguimiento"
+    : "Inventario controlado";
+  const summary = hasProjectedRisk
+    ? `Hay ${dteCount} lubricante${dteCount === 1 ? "" : "s"} con probabilidad de agotarse pronto y ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} ya operan por debajo del mínimo.`
+    : hasLowStock
+    ? `Se detectan ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} por debajo del nivel recomendado, pero sin señal inmediata de desabasto.`
+    : "El inventario no muestra señales de bajo stock ni alertas de agotamiento próximo para este periodo.";
+  const recommendation = hasProjectedRisk
+    ? "Prioriza compra, valida consumo reciente y revisa si conviene reprogramar rutas de alta demanda."
+    : hasLowStock
+    ? "Conviene adelantar reposición y revisar consumos recientes para evitar presión al cierre del mes."
+    : "Mantén la revisión semanal y usa análisis para anticipar cambios de consumo antes de que escalen.";
+
+  return (
+    <div
+      style={{
+        borderRadius: 18,
+        padding: 16,
+        display: "grid",
+        gap: 12,
+        border: `2px solid ${badgeBorder}`,
+        background:
+          tone === "red"
+            ? "linear-gradient(180deg, rgba(255,251,235,0.98), rgba(255,255,255,0.94))"
+            : tone === "amber"
+            ? "linear-gradient(180deg, rgba(255,251,235,0.98), rgba(255,255,255,0.94))"
+            : "linear-gradient(180deg, rgba(240,253,244,0.96), rgba(255,255,255,0.94))",
+        boxShadow:
+          tone === "red"
+            ? "0 16px 30px rgba(220,38,38,0.10), inset 0 1px 0 rgba(255,255,255,0.8)"
+            : tone === "amber"
+            ? "0 16px 30px rgba(217,119,6,0.10), inset 0 1px 0 rgba(255,255,255,0.8)"
+            : "0 16px 30px rgba(34,197,94,0.10), inset 0 1px 0 rgba(255,255,255,0.8)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: "0 auto 0 0",
+          width: 6,
+          background: accent,
+          opacity: 0.95,
+        }}
+      />
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "start", minWidth: 0 }}>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 16,
+              background: badgeBg,
+              color: accent,
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+              border: `1px solid ${badgeBorder}`,
+            }}
+          >
+            <Icon name="drop" size="sm" />
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 1000, color: "#0f172a", fontSize: 18, lineHeight: 1.1 }}>{title}</div>
+            <div style={{ marginTop: 5, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 999,
+                  padding: "6px 10px",
+                  fontSize: 12,
+                  fontWeight: 950,
+                  background: badgeBg,
+                  color: badgeColor,
+                  border: `1px solid ${badgeBorder}`,
+                }}
+              >
+                {statusLabel}
+              </span>
+              {aiEnabled ? (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 999,
+                    padding: "6px 10px",
+                    fontSize: 12,
+                    fontWeight: 950,
+                    background: "rgba(59,130,246,0.10)",
+                    color: "#1d4ed8",
+                    border: "1px solid rgba(59,130,246,0.22)",
+                  }}
+                >
+                  IA conectada
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate(hasProjectedRisk ? "/inventory?filter=predictive-dte" : "/inventory?filter=low")}
+          style={btnAdminGhostMini}
+        >
+          Ver detalle
+        </button>
+      </div>
+
+      <div style={{ color: "#334155", fontSize: 15, lineHeight: 1.55, fontWeight: 800 }}>{summary}</div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 10,
+        }}
+      >
+        <div style={adminInventoryMiniStat}>
+          <div style={adminInventoryMiniLabel}>Bajo stock</div>
+          <div style={adminInventoryMiniValue}>{Number(lowStockCount || 0)}</div>
+        </div>
+        <div style={adminInventoryMiniStat}>
+          <div style={adminInventoryMiniLabel}>Riesgo próximo</div>
+          <div style={adminInventoryMiniValue}>{Number(dteCount || 0)}</div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          borderRadius: 14,
+          border: "1px solid rgba(226,232,240,0.95)",
+          background: "rgba(248,250,252,0.9)",
+          padding: "10px 12px",
+          color: "#475569",
+          fontSize: 13,
+          lineHeight: 1.5,
+          fontWeight: 800,
+        }}
+      >
+        Recomendación: {recommendation}
+      </div>
+    </div>
+  );
+}
+
 function KpiCard({ title, value, sub, tone = "blue", iconName = "alert", executive = false }) {
   const toneMap = {
     blue: { bg: "rgba(239,246,255,0.95)", bd: "rgba(191,219,254,0.95)", fg: "#1d4ed8" },
@@ -1105,6 +1268,7 @@ function AdminPanel({
       return risk !== "LOW" && monthKey === targetMonth;
     });
   }, [predAlerts, month]);
+  const dteCount = Number(predAlerts?.lubricantDaysToEmptyCount || 0);
 
   const kpis = [
     {
@@ -1456,6 +1620,13 @@ function AdminPanel({
                 </button>
               </div>
             </div>
+
+            <AdminInventoryInsightCard
+              lowStockCount={Number(lowStockCount || 0)}
+              dteCount={dteCount}
+              navigate={navigate}
+              aiEnabled={aiEnabled}
+            />
           </div>
         </div>
       </PanelCard>
@@ -1495,13 +1666,12 @@ function AdminPanel({
                   <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Atajos directos para lo urgente del día</div>
                 </div>
               </div>
-              <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!operationalOverdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(operationalOverdueCount || 0)}</span></button>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin técnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(lowStockCount ? chipAmberMini : chipOffMini) }} onClick={() => navigate(`/inventory?filter=low&month=${encodeURIComponent(month)}`)} disabled={!lowStockCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="drop" size="sm" />Bajo stock</span><span style={chipCountMini}>{Number(lowStockCount || 0)}</span></button>
-                <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalCriticalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Críticas vencidas</span><span style={chipCountMini}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
+                <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
+                  <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!operationalOverdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(operationalOverdueCount || 0)}</span></button>
+                  <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin técnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
+                  <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalCriticalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Críticas vencidas</span><span style={chipCountMini}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
+                </div>
               </div>
-            </div>
 
             {(predLoading || predError || predTotal > 0 || predAlerts) ? (
               <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)" }}>
@@ -1517,13 +1687,11 @@ function AdminPanel({
                 </div>
                 {predError ? <div style={miniError}>{predError}</div> : null}
                 {(() => {
-                  const dteCount = Number(predAlerts?.lubricantDaysToEmptyCount || 0);
                   const anomaliesCount = Number(predAlerts?.equipmentConsumptionAnomaliesCount || 0);
                   return (
                     <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse."><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(repeatedFailuresTopCurrentMonth.length ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresTopCurrentMonth.length} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patrón recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(repeatedFailuresTopCurrentMonth.length || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto según consumo e inventario disponible."><Icon name="drop" size="sm" />Inventario en riesgo <span style={chipCount}>{dteCount}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span></button>
                       <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y además hay muestra suficiente."><Icon name="alert" size="sm" />Consumo fuera de patrón <span style={chipCount}>{anomaliesCount}</span></button>
                     </div>
@@ -5027,6 +5195,28 @@ const btnAdminGhostMini = {
   fontSize: 12,
   whiteSpace: "nowrap",
   alignSelf: "start",
+};
+
+const adminInventoryMiniStat = {
+  borderRadius: 14,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.92)",
+  padding: "10px 12px",
+  display: "grid",
+  gap: 4,
+};
+
+const adminInventoryMiniLabel = {
+  fontSize: 12,
+  fontWeight: 900,
+  color: "#64748b",
+};
+
+const adminInventoryMiniValue = {
+  fontSize: 24,
+  lineHeight: 1,
+  fontWeight: 1000,
+  color: "#0f172a",
 };
 
 const perfRowCompact = {
