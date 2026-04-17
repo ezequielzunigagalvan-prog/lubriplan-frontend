@@ -4186,7 +4186,7 @@ function DashTop({ user, role, summary, month, setMonth, load, loading, connecte
 /* ================= GRIDS POR ROL ================= */
 
 function AdminMainGrid(props) {
-  return <MainGridBase {...props} />;
+  return null;
 }
 
 function SupervisorMainGrid() {
@@ -4215,9 +4215,6 @@ function MainGridBase({ canSeeInventory, inventoryLow, loading, navigate, goActi
           <div style={{ marginTop: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ fontWeight: 950, color: "#0f172a" }}>Inventario bajo stock</div>
-              <Link to="/inventory" style={seeAll}>
-                Ver
-              </Link>
             </div>
 
             {loading ? (
@@ -4392,26 +4389,7 @@ function UpcomingBlock({
       {loading ? (
         <div style={mutedTxt}>Cargando…</div>
       ) : (items || []).length === 0 ? (
-        <div style={mutedTxt}>
-          No hay actividades en esta lista.
-          {meta?.count > 0 ? (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "#0f172a" }}>
-                Pendientes registradas: <b>{meta.count}</b>{" "}
-                {meta?.unassigned ? `· Sin técnico: ${meta.unassigned}` : ""}
-              </div>
-
-              <button
-                onClick={() =>
-                  navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}`)
-                }
-                style={{ ...seeAllBtnGhost, marginTop: 8 }}
-              >
-                Ver pendientes del mes
-              </button>
-            </div>
-          ) : null}
-        </div>
+        <div style={mutedTxt}>No hay actividades en esta lista.</div>
       ) : (
         <div style={{ marginTop: 10, display: "grid", gap: 10, gridTemplateColumns: typeof window !== "undefined" && window.innerWidth >= 1600 ? "repeat(2, minmax(0, 1fr))" : "1fr" }}>
           <div style={dashboardUpcomingList}>
@@ -4695,12 +4673,10 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
 }
 
 function AdminBottomGrid({ isTech, criticalEquipments, topOverdue, loading }) {
-  if (isTech) return null;
-  return <BottomGrid criticalEquipments={criticalEquipments} topOverdue={topOverdue} loading={loading} />;
+  return null;
 }
 function SupervisorBottomGrid({ isTech, criticalEquipments, topOverdue, loading }) {
-  if (isTech) return null;
-  return <BottomGrid criticalEquipments={criticalEquipments} topOverdue={topOverdue} loading={loading} />;
+  return null;
 }
 
 function BottomGrid({ criticalEquipments, topOverdue, loading }) {
@@ -5972,6 +5948,8 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
+
 
 
 
