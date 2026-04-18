@@ -31,6 +31,7 @@ import NewRoutePage from "./pages/NewRoutePage";
 import NotificationsPage from "./pages/NotificationsPage";
 import MonthlyIntelligentReport from "./pages/reports/MonthlyIntelligentReport";
 import SettingsPage from "./pages/SettingsPage";
+import AdminOnboardingPage from "./pages/AdminOnboardingPage";
 
 function NotFoundRedirect() {
   const { isAuthenticated } = useAuth();
@@ -58,6 +59,15 @@ export default function App() {
         element={
           <ProtectedRoute roles={["ADMIN"]}>
             <AdminTechLinksPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/onboarding"
+        element={
+          <ProtectedRoute roles={["ADMIN"]}>
+            <AdminOnboardingPage />
           </ProtectedRoute>
         }
       />
@@ -244,6 +254,3 @@ export default function App() {
     </Routes>
   );
 }
-
-
-

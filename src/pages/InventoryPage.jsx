@@ -419,7 +419,7 @@ if (changed) writeBaselines(currentPlantId, map);
             <div style={summaryMetrics4}>
               <KpiCard icon={<Package size={18} />} value={stats.total} label="Productos" />
               <KpiCard icon={<XCircle size={18} />} value={stats.out} label="Sin stock" />
-            <KpiCard icon={<AlertTriangle size={18} />} value={stats.low} label="Bajo m?nimo" />
+            <KpiCard icon={<AlertTriangle size={18} />} value={stats.low} label="Bajo mínimo" />
               <KpiCard
                 icon={<DollarSign size={18} />}
                 value={formatCurrency(stats.value)}
@@ -438,7 +438,7 @@ if (changed) writeBaselines(currentPlantId, map);
               <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)} style={input}>
                 <option value="ALL">Todos</option>
                 <option value="OUT">Solo sin stock</option>
-                <option value="LOW">Solo bajo m?nimo</option>
+                <option value="LOW">Solo bajo mínimo</option>
               </select>
             </div>
 
@@ -530,7 +530,7 @@ const propText = propertyToText(propObj);
                       {out ? (
                             <span style={pill("#fee2e2", "#991b1b")}>Sin stock</span>
                       ) : low ? (
-                            <span style={pill("#ffedd5", "#9a3412")}>Bajo m?nimo</span>
+                            <span style={pill("#ffedd5", "#9a3412")}>Bajo mínimo</span>
                       ) : (
                         <span style={pill("#dcfce7", "#166534")}>OK</span>
                       )}
@@ -650,7 +650,7 @@ const propText = propertyToText(propObj);
                   </div>
 
                   <div style={{ textAlign: "right" }}>
-                          <div style={stockLabel}>M?nimo</div>
+                          <div style={stockLabel}>Mínimo</div>
                           <div style={stockValue}>{min == null ? "-" : `${min} ${item.unit || ""}`}</div>
                   </div>
                 </div>

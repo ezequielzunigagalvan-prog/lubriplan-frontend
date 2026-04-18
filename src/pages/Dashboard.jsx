@@ -469,7 +469,14 @@ function PanelCard({ title, subtitle, right = null, children, executive = false,
   );
 }
 
-function AdminInventoryInsightCard({ lowStockCount, dteCount, navigate, aiEnabled }) {
+function AdminInventoryInsightCard({
+  lowStockCount,
+  dteCount,
+  navigate,
+  aiEnabled,
+  lowStockItems = [],
+  dteItems = [],
+}) {
   const hasProjectedRisk = Number(dteCount || 0) > 0;
   const hasLowStock = Number(lowStockCount || 0) > 0;
   const tone = hasProjectedRisk ? "red" : hasLowStock ? "amber" : "green";
@@ -483,16 +490,118 @@ function AdminInventoryInsightCard({ lowStockCount, dteCount, navigate, aiEnable
     : hasLowStock
     ? "Inventario en seguimiento"
     : "Inventario controlado";
+
+  const lowList = Array.isArray(lowStockItems) ? lowStockItems.filter(Boolean) : [];
+  const dteList = Array.isArray(dteItems) ? dteItems.filter(Boolean) : [];
+  const pickFocusItem = (list) =>
+    (Array.isArray(list) ? list : []).find((item) => {
+      const candidate = [
+        item?.commercialName,
+        item?.lubricantName,
+        item?.name,
+        [item?.brand, item?.type].filter(Boolean).join(" "),
+        item?.code,
+      ]
+        .map((value) => String(value || "").trim())
+        .find(Boolean);
+      return Boolean(candidate);
+    }) || null;
+
+  const focusLow = pickFocusItem(lowList);
+  const focusProjected = pickFocusItem(dteList);
+  const focus = hasProjectedRisk ? focusProjected || focusLow : focusLow || focusProjected;
+
+  const focusName =
+    String(
+      focus?.commercialName ||
+        focus?.lubricantName ||
+        focus?.name ||
+        [focus?.brand, focus?.type].filter(Boolean).join(" ") ||
+        ""
+    ).trim() || "Referencia no identificada";
+  const focusCode = String(focus?.code || focus?.lubricantCode || "").trim();
+  const focusUnit = String(focus?.unit || "").trim();
+  const focusStock = focus?.stock != null ? Number(focus.stock) : null;
+  const focusMin = focus?.minStock != null ? Number(focus.minStock) : null;
+  const focusGap =
+    Number.isFinite(focusMin) && Number.isFinite(focusStock)
+      ? Number((focusMin - focusStock).toFixed(2))
+      : null;
+  const focusDays =
+    focus?.daysToEmpty != null && Number.isFinite(Number(focus.daysToEmpty))
+      ? Number(focus.daysToEmpty)
+      : focus?.dte != null && Number.isFinite(Number(focus.dte))
+      ? Number(focus.dte)
+      : null;
+  const focusDailyOut =
+    focus?.avgDailyOut != null && Number.isFinite(Number(focus.avgDailyOut))
+      ? Number(focus.avgDailyOut)
+      : null;
+
+  const fmtNum = (value, decimals = 2) => {
+    if (!Number.isFinite(Number(value))) return "-";
+    return Number(value).toLocaleString("es-MX", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    });
+  };
+
+  const stockText = Number.isFinite(focusStock) ? `${fmtNum(focusStock)} ${focusUnit || ""}`.trim() : "Sin dato";
+  const minText = Number.isFinite(focusMin) ? `${fmtNum(focusMin)} ${focusUnit || ""}`.trim() : "Sin dato";
+  const gapText = Number.isFinite(focusGap) ? `${fmtNum(Math.max(focusGap, 0))} ${focusUnit || ""}`.trim() : "Sin dato";
+  const focusReference = `${focusName}${focusCode ? ` (${focusCode})` : ""}`;
+
   const summary = hasProjectedRisk
-    ? `Hay ${dteCount} lubricante${dteCount === 1 ? "" : "s"} con probabilidad de agotarse pronto y ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} ya operan por debajo del mínimo.`
+    ? focus
+      ? `${focusReference}: stock ${stockText}, mínimo ${minText} y cobertura estimada de ${fmtNum(focusDays, 1)} día(s).${focusDailyOut != null ? ` Salida media ${fmtNum(focusDailyOut)} ${(focusUnit || "").trim()}/día.` : ""}`
+      : `Hay ${dteCount} lubricante${dteCount === 1 ? "" : "s"} con riesgo de agotamiento próximo y ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} por debajo del mínimo operativo.`
     : hasLowStock
-    ? `Se detectan ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} por debajo del nivel recomendado, pero sin señal inmediata de desabasto.`
-    : "El inventario no muestra señales de bajo stock ni alertas de agotamiento próximo para este periodo.";
+    ? focus
+      ? `${focusReference}: stock ${stockText}, mínimo ${minText} y brecha técnica de ${gapText}.`
+      : `Se detectan ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} por debajo del nivel recomendado, sin señal inmediata de agotamiento.`
+    : "El inventario no presenta referencias por debajo del mínimo ni alertas de agotamiento próximo para el periodo seleccionado.";
+
+  const technicalNote = hasProjectedRisk
+    ? focus
+      ? `${focusReference}: validar existencia física, revisar consumos por ruta y confirmar si el mínimo operativo sigue alineado con la demanda actual.`
+      : "Validar existencias físicas y revisar consumos recientes antes de que la cobertura pierda margen de seguridad."
+    : hasLowStock
+    ? focus
+      ? `${focusReference}: anticipar reposición y revisar mínimos operativos para recuperar cobertura segura.`
+      : "Anticipar reposición y revisar mínimos operativos para recuperar cobertura segura."
+    : "Mantener seguimiento semanal de cobertura y consumo para anticipar desvíos antes del siguiente ciclo.";
+
   const recommendation = hasProjectedRisk
-    ? "Prioriza compra, valida consumo reciente y revisa si conviene reprogramar rutas de alta demanda."
+    ? "Reponer de inmediato, confirmar stock físico y revisar la tasa de salida antes del siguiente ciclo operativo."
     : hasLowStock
-    ? "Conviene adelantar reposición y revisar consumos recientes para evitar presión al cierre del mes."
-    : "Mantén la revisión semanal y usa análisis para anticipar cambios de consumo antes de que escalen.";
+    ? "Programar reposición y restablecer el mínimo operativo antes del siguiente frente de trabajo."
+    : "Mantener revisión semanal de cobertura y mínimos operativos.";
+
+  const detailCards = focus
+    ? [
+        {
+          label: "Lubricante foco",
+          value: focusName,
+          sub: focusCode ? `Código ${focusCode}` : "Sin código visible",
+        },
+        {
+          label: "Stock actual",
+          value: stockText,
+          sub: Number.isFinite(focusMin) ? `Mínimo ${minText}` : "Mínimo no definido",
+        },
+        hasProjectedRisk
+          ? {
+              label: "Horizonte estimado",
+              value: focusDays != null ? `${fmtNum(focusDays, 1)} día(s)` : "Sin dato",
+              sub: focusDailyOut != null ? `Salida media ${fmtNum(focusDailyOut)} ${focusUnit || ""}/día`.trim() : "Sin consumo medio calculado",
+            }
+          : {
+              label: "Brecha técnica",
+              value: gapText,
+              sub: "Reposición recomendada en corto plazo",
+            },
+      ]
+    : [];
 
   return (
     <div
@@ -595,7 +704,24 @@ function AdminInventoryInsightCard({ lowStockCount, dteCount, navigate, aiEnable
         </button>
       </div>
 
-      <div style={{ color: "#334155", fontSize: 15, lineHeight: 1.55, fontWeight: 800 }}>{summary}</div>
+      {focus ? (
+        <div
+          style={{
+            borderRadius: 14,
+            border: "1px solid rgba(226,232,240,0.95)",
+            background: "rgba(255,255,255,0.92)",
+            padding: "10px 12px",
+            color: "#0f172a",
+            fontSize: 14,
+            lineHeight: 1.45,
+            fontWeight: 900,
+          }}
+        >
+          Lubricante foco: {focusReference}
+        </div>
+      ) : null}
+
+      <div style={{ color: "#334155", fontSize: 15, lineHeight: 1.6, fontWeight: 800 }}>{summary}</div>
 
       <div
         style={{
@@ -614,6 +740,51 @@ function AdminInventoryInsightCard({ lowStockCount, dteCount, navigate, aiEnable
         </div>
       </div>
 
+      {detailCards.length > 0 ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+          }}
+        >
+          {detailCards.map((item) => (
+            <div
+              key={item.label}
+              style={{
+                borderRadius: 14,
+                border: "1px solid rgba(226,232,240,0.95)",
+                background: "rgba(255,255,255,0.92)",
+                padding: "12px 14px",
+                display: "grid",
+                gap: 5,
+              }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#64748b" }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 17, lineHeight: 1.25, fontWeight: 1000, color: "#0f172a" }}>{item.value}</div>
+              <div style={{ fontSize: 12, lineHeight: 1.45, fontWeight: 800, color: "#475569" }}>{item.sub}</div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <div
+        style={{
+          borderRadius: 14,
+          border: "1px solid rgba(191,219,254,0.95)",
+          background: "rgba(239,246,255,0.86)",
+          padding: "10px 12px",
+          color: "#1e3a8a",
+          fontSize: 13,
+          lineHeight: 1.55,
+          fontWeight: 800,
+        }}
+      >
+        {technicalNote}
+      </div>
+
       <div
         style={{
           borderRadius: 14,
@@ -622,7 +793,7 @@ function AdminInventoryInsightCard({ lowStockCount, dteCount, navigate, aiEnable
           padding: "10px 12px",
           color: "#475569",
           fontSize: 13,
-          lineHeight: 1.5,
+          lineHeight: 1.55,
           fontWeight: 800,
         }}
       >
@@ -631,7 +802,6 @@ function AdminInventoryInsightCard({ lowStockCount, dteCount, navigate, aiEnable
     </div>
   );
 }
-
 function KpiCard({ title, value, sub, tone = "blue", iconName = "alert", executive = false }) {
   const toneMap = {
     blue: { bg: "rgba(239,246,255,0.95)", bd: "rgba(191,219,254,0.95)", fg: "#1d4ed8" },
@@ -1125,6 +1295,7 @@ function AdminPanel({
   overdueCount,
   unassignedPending,
   lowStockCount,
+  inventoryLow = [],
   totalRoutes,
   totalEquipments,
   loadMonthlyActivities,
@@ -1685,11 +1856,13 @@ function AdminPanel({
               </div>
             </div>
 
-            <AdminInventoryInsightCard
+                        <AdminInventoryInsightCard
               lowStockCount={Number(lowStockCount || 0)}
               dteCount={dteCount}
               navigate={navigate}
               aiEnabled={aiEnabled}
+              lowStockItems={inventoryLow}
+              dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
             />
           </div>
         </div>
@@ -3894,6 +4067,7 @@ function AdminDashboard(props) {
         overdueCount={overdueCount}
         unassignedPending={unassignedPending}
         lowStockCount={lowStockCount}
+        inventoryLow={props.inventoryLow}
         totalRoutes={adminCounts?.routes || 0}
         totalEquipments={adminCounts?.equipments || 0}
         loadMonthlyActivities={loadMonthlyActivities}
@@ -3937,6 +4111,7 @@ function SupervisorExecutivePanel({
   overdueCount,
   unassignedPending,
   lowStockCount,
+  inventoryLow,
   loadMonthlyActivities,
   aiState,
   loadAiSummary,
@@ -4087,11 +4262,13 @@ function SupervisorExecutivePanel({
             </div>
           </PanelCard>
 
-          <AdminInventoryInsightCard
+                    <AdminInventoryInsightCard
             lowStockCount={Number(lowStockCount || 0)}
             dteCount={dteCount}
             navigate={navigate}
             aiEnabled={aiEnabled}
+            lowStockItems={inventoryLow}
+            dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
           />
 
           <PanelCard
@@ -6237,6 +6414,14 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
+
+
+
+
+
+
+
 
 
 
