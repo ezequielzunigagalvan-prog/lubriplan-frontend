@@ -2,7 +2,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
-import { ActivityCard, toLocalYMD, diffDaysLocal } from "./ActivitiesPage";
+import {
+  ActivityCard,
+  toLocalYMD,
+  diffDaysLocal,
+  getActivitySourceBadge,
+} from "./ActivitiesPage";
 import ActivitiesDonut from "../components/dashboard/ActivitiesDonut";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
@@ -77,6 +82,63 @@ function priorityTypeLabel(type) {
     TECHNICIAN_OVERLOAD: "Sobrecarga",
   };
   return map[t] || t || "Prioridad";
+}
+
+const activitySourceToneMap = {
+  scheduled: {
+    background: "rgba(59,130,246,0.10)",
+    color: "#1d4ed8",
+    border: "rgba(59,130,246,0.24)",
+    dot: "#2563eb",
+  },
+  report: {
+    background: "rgba(244,63,94,0.10)",
+    color: "#be123c",
+    border: "rgba(244,63,94,0.24)",
+    dot: "#e11d48",
+  },
+  emergency: {
+    background: "rgba(249,115,22,0.12)",
+    color: "#9a3412",
+    border: "rgba(249,115,22,0.28)",
+    dot: "#ea580c",
+  },
+};
+
+function renderActivitySourceBadge(activity, compact = false) {
+  const badge = getActivitySourceBadge(activity);
+  if (!badge) return null;
+  const palette = activitySourceToneMap[badge.tone] || activitySourceToneMap.scheduled;
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 7,
+        padding: compact ? "7px 10px" : "6px 10px",
+        borderRadius: 999,
+        background: palette.background,
+        border: `1px solid ${palette.border}`,
+        color: palette.color,
+        fontSize: compact ? 11 : 10,
+        fontWeight: 950,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: 999,
+          background: palette.dot,
+          flexShrink: 0,
+        }}
+      />
+      <span>{badge.label}</span>
+    </span>
+  );
 }
 
 function prioritySeverityLabel(severity) {
@@ -390,9 +452,9 @@ function roleLabel(role) {
 const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
-function PanelCard({ title, subtitle, right = null, children, executive = false }) {
+function PanelCard({ title, subtitle, right = null, children, executive = false, cardStyle = null, bodyStyle = null }) {
   return (
-    <div style={panelAdminCard}>
+    <div style={{ ...panelAdminCard, ...(cardStyle || null) }}>
       <div style={panelAdminHeader}>
         <div style={{ minWidth: 0 }}>
           <div style={panelTitleAdminRow}>
@@ -402,7 +464,7 @@ function PanelCard({ title, subtitle, right = null, children, executive = false 
           {subtitle ? <div style={panelSubtitleAdmin}>{subtitle}</div> : null}
         </div>
       </div>
-      <div style={{ padding: 14 }}>{children}</div>
+      <div style={{ padding: 14, ...(bodyStyle || null) }}>{children}</div>
     </div>
   );
 }
@@ -1388,6 +1450,7 @@ function AdminPanel({
     const technician = cleanUiText(activity?.technicianName || activity?.technician?.name || (activity?.isUnassigned ? "Sin técnico" : "No asignado"));
     const accent = tone === "red" ? "#ef4444" : tone === "green" ? "#22c55e" : "#f59e0b";
     const soft = tone === "red" ? "rgba(254,242,242,0.96)" : tone === "green" ? "rgba(240,253,244,0.96)" : "rgba(255,247,237,0.96)";
+    const sourceBadge = renderActivitySourceBadge(activity);
 
     return (
       <button
@@ -1414,6 +1477,7 @@ function AdminPanel({
               {activity?.computedStatus === "Atrasada" ? "Atención inmediata" : activity?.computedStatus || "Programada"}
             </div>
             <div style={{ marginTop: 4, fontSize: 20, lineHeight: 1.02, fontWeight: 700, color: "#0f172a", fontFamily: EXEC_DISPLAY_FONT, letterSpacing: "-.03em" }}>{title}</div>
+            {sourceBadge ? <div style={{ marginTop: 8 }}>{sourceBadge}</div> : null}
           </div>
           <span
             style={{
@@ -1752,7 +1816,7 @@ function AdminPanel({
   SUP: Actividades focus
 ========================= */
 
-function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, loading }) {
+function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, loading, stretch = false }) {
   const { currentPlantId, loadingPlants } = usePlant();
   const [range, setRange] = useState("TODAY");
   const [tech, setTech] = useState("");
@@ -1866,6 +1930,8 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
     <PanelCard
       title={title}
       subtitle="Lo que toca atender primero, con filtro por periodo y técnico"
+      cardStyle={stretch ? { height: "100%", display: "grid", gridTemplateRows: "auto 1fr" } : null}
+      bodyStyle={stretch ? { display: "grid", gridTemplateRows: "auto 1fr", minHeight: 0 } : null}
       right={
         <span
           style={{
@@ -2018,7 +2084,6 @@ function SupervisorDistributionAlertsPanel({
   activitiesNode = null,
   showPriority = true,
 }) {
-  const currentMonthTotals = donutTotals || { pending: 0, overdue: 0, completed: 0 };
   const dteCount = Number(predAlerts?.lubricantDaysToEmptyCount || 0);
   const anomaliesCount = Number(predAlerts?.equipmentConsumptionAnomaliesCount || 0);
   const repeatedFailuresCount = (Array.isArray(predAlerts?.repeatedFailuresTop) ? predAlerts.repeatedFailuresTop : []).filter((item) => {
@@ -2037,8 +2102,8 @@ function SupervisorDistributionAlertsPanel({
 
   return (
     <PanelCard
-      title="Distribución y alertas"
-      subtitle="Lo que el supervisor necesita ver al entrar"
+      title="Centro de alertas"
+      subtitle="Señales operativas y predictivas para anticiparse"
       right={
         <span
           style={{
@@ -2056,25 +2121,6 @@ function SupervisorDistributionAlertsPanel({
       }
     >
       <div style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "grid", justifyItems: "center", paddingBottom: 4 }}>
-          {donutLoading ? (
-            <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando…</div>
-          ) : (
-            <ActivitiesDonut
-              completed={Number(currentMonthTotals.completed || 0)}
-              pending={Number(currentMonthTotals.pending || 0)}
-              overdue={Number(currentMonthTotals.overdue || 0)}
-              onClickSlice={(key) => {
-                if (key === "OVERDUE") navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`);
-                if (key === "PENDING") navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}`);
-                if (key === "COMPLETED") navigate(`/activities?status=COMPLETED&month=${encodeURIComponent(month)}`);
-              }}
-              size={210}
-              stroke={18}
-            />
-          )}
-        </div>
-
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)" }}>
             <div style={{ fontWeight: 1000, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -2090,10 +2136,6 @@ function SupervisorDistributionAlertsPanel({
               <button type="button" style={{ ...chipBtn, ...(unassignedPending ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}>
                 <Icon name="user" size="sm" />
                 Sin técnico <span style={chipCount}>{Number(unassignedPending || 0)}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(lowStockCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=low&month=${encodeURIComponent(month)}`)} disabled={!lowStockCount}>
-                <Icon name="drop" size="sm" />
-                Bajo stock <span style={chipCount}>{Number(lowStockCount || 0)}</span>
               </button>
             </div>
           </div>
@@ -2120,10 +2162,6 @@ function SupervisorDistributionAlertsPanel({
               <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount}>
                 <Icon name="warn" size="sm" />
                 Reincidencia <span style={chipCount}>{repeatedFailuresCount}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(dteCount ? chipAmber : chipOff) }} onClick={() => navigate(`/inventory?filter=predictive-dte&month=${encodeURIComponent(month)}`)} disabled={!dteCount} title="Se activa cuando el stock proyectado puede agotarse pronto según consumo e inventario disponible.">
-                <Icon name="drop" size="sm" />
-                Inventario en riesgo <span style={chipCount}>{dteCount}</span>
               </button>
               <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo.">
                 <Icon name="user" size="sm" />
@@ -3961,6 +3999,7 @@ function SupervisorExecutivePanel({
   }, [months6, loadMonthlyActivities]);
 
   const currentMonthTotals = donutTotals || { pending: 0, overdue: 0, completed: 0 };
+  const dteCount = Number(predAlerts?.lubricantDaysToEmptyCount || 0);
   const totalMonth = Number(currentMonthTotals.pending || 0) + Number(currentMonthTotals.overdue || 0) + Number(currentMonthTotals.completed || 0);
   const cumplimientoGlobal = safePct(currentMonthTotals.completed, totalMonth);
 
@@ -4006,47 +4045,53 @@ function SupervisorExecutivePanel({
         ))}
       </div>
 
-      {activitiesNode}
-
-      {aiEnabled ? (
-        <div
-          style={{
-            border: "1px solid rgba(226,232,240,0.95)",
-            borderRadius: 16,
-            padding: 12,
-            background: "rgba(248,250,252,0.9)",
-          }}
-        >
-          <AiSummaryBox
-            month={month}
-            aiState={aiState}
-            onGenerate={() => loadAiSummary({ force: true })}
-            onRefresh={forceRefreshAi}
-            canForceRefreshAi={canForceRefreshAi} />
-        </div>
-      ) : null}
-
-      {trendError ? <div style={miniError}>{trendError}</div> : null}
-
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.05fr) minmax(340px, 0.95fr)",
+          gridTemplateColumns: isMobile ? "1fr" : "minmax(320px, 0.86fr) minmax(0, 1.14fr)",
           gap: 12,
-          alignItems: "start",
+          alignItems: "stretch",
         }}
       >
-        <div style={{ display: "grid", gap: 12 }}>
-          <MiniBars
-            title="Actividades por mes"
-            subtitle="Últimos 6 meses"
-            data={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), value: 0 })) : activityByMonth}
-          />
+        <div style={{ display: "grid", gap: 12, height: "100%", alignContent: "start" }}>
+          <PanelCard
+            title="Distribución del mes"
+            subtitle="Pendientes · Vencidas · Completadas"
+            right={
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
+                <Icon name="calendar" size="sm" />
+                {month}
+              </span>
+            }
+          >
+            <div style={{ display: "grid", justifyItems: "center", paddingBottom: 4 }}>
+              {donutLoading ? (
+                <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando…</div>
+              ) : (
+                <ActivitiesDonut
+                  completed={Number(currentMonthTotals.completed || 0)}
+                  pending={Number(currentMonthTotals.pending || 0)}
+                  overdue={Number(currentMonthTotals.overdue || 0)}
+                  onClickSlice={(key) => {
+                    if (key === "OVERDUE") navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`);
+                    if (key === "PENDING") navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}`);
+                    if (key === "COMPLETED") navigate(`/activities?status=COMPLETED&month=${encodeURIComponent(month)}`);
+                  }}
+                  size={210}
+                  stroke={18}
+                />
+              )}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 13, fontWeight: 850, color: "#475569", lineHeight: 1.45 }}>
+              Ataca primero las atrasadas, luego organiza las de hoy y deja las próximas como colchón operativo.
+            </div>
+          </PanelCard>
 
-          <MiniLines
-            title="Eficiencia operacional"
-            subtitle="% completadas vs programadas · últimos 6 meses"
-            series={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), valuePct: 0 })) : efficiencyByMonth}
+          <AdminInventoryInsightCard
+            lowStockCount={Number(lowStockCount || 0)}
+            dteCount={dteCount}
+            navigate={navigate}
+            aiEnabled={aiEnabled}
           />
 
           <PanelCard
@@ -4070,14 +4115,14 @@ function SupervisorExecutivePanel({
               <button style={btnAdminGhost} onClick={() => onOpenScheduleActivity?.()}>
                 <span style={btnRow}>
                   <Icon name="plus" size="sm" />
-                  Programar actividad ?
+                  Programar actividad
                 </span>
               </button>
 
               <button style={btnAdminGhost} onClick={() => onOpenEmergencyActivity?.()}>
                 <span style={btnRow}>
                   <Icon name="warn" size="sm" />
-                  Registrar emergente ?
+                  Registrar emergente
                 </span>
               </button>
 
@@ -4105,30 +4150,74 @@ function SupervisorExecutivePanel({
           </PanelCard>
         </div>
 
-        <SupervisorDistributionAlertsPanel
-          month={month}
-          donutTotals={donutTotals}
-          donutLoading={donutLoading}
-          navigate={navigate}
-          overdueCount={overdueCount}
-          unassignedPending={unassignedPending}
-          lowStockCount={lowStockCount}
-          predAlerts={predAlerts}
-          predTotal={predTotal}
-          predLoading={predLoading}
-          predError={predError}
-          refreshPred={refreshPred}
-          predictiveEnabled={predictiveEnabled}
-          criticalRiskOverdue={criticalRiskOverdue}
-          canSeePriorityQueue={canSeePriorityQueue}
-          pqLoading={pqLoading}
-          pqError={pqError}
-          pqItems={pqItems}
-          pqTotal={pqTotal}
-          refreshPQ={refreshPQ}
-          showPriority={false}
+        <div style={{ display: "grid", gap: 12, height: "100%", minHeight: 0 }}>
+          {activitiesNode}
+        </div>
+      </div>
+
+      {aiEnabled ? (
+        <div
+          style={{
+            border: "1px solid rgba(226,232,240,0.95)",
+            borderRadius: 16,
+            padding: 12,
+            background: "rgba(248,250,252,0.9)",
+          }}
+        >
+          <AiSummaryBox
+            month={month}
+            aiState={aiState}
+            onGenerate={() => loadAiSummary({ force: true })}
+            onRefresh={forceRefreshAi}
+            canForceRefreshAi={canForceRefreshAi} />
+        </div>
+      ) : null}
+
+      {trendError ? <div style={miniError}>{trendError}</div> : null}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
+          gap: 12,
+        }}
+      >
+        <MiniBars
+          title="Actividades por mes"
+          subtitle="Últimos 6 meses"
+          data={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), value: 0 })) : activityByMonth}
+        />
+
+        <MiniLines
+          title="Eficiencia operacional"
+          subtitle="% completadas vs programadas · últimos 6 meses"
+          series={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), valuePct: 0 })) : efficiencyByMonth}
         />
       </div>
+
+      <SupervisorDistributionAlertsPanel
+        month={month}
+        donutTotals={donutTotals}
+        donutLoading={donutLoading}
+        navigate={navigate}
+        overdueCount={overdueCount}
+        unassignedPending={unassignedPending}
+        lowStockCount={lowStockCount}
+        predAlerts={predAlerts}
+        predTotal={predTotal}
+        predLoading={predLoading}
+        predError={predError}
+        refreshPred={refreshPred}
+        predictiveEnabled={predictiveEnabled}
+        criticalRiskOverdue={criticalRiskOverdue}
+        canSeePriorityQueue={canSeePriorityQueue}
+        pqLoading={pqLoading}
+        pqError={pqError}
+        pqItems={pqItems}
+        pqTotal={pqTotal}
+        refreshPQ={refreshPQ}
+        showPriority={false}
+      />
 
       <SupervisorPriorityTodayPanel
         month={month}
@@ -4160,6 +4249,7 @@ function SupervisorDashboard(props) {
             navigate={props.navigate}
             upcomingActivities={upcomingActivities}
             loading={loading}
+            stretch
           />
         }
       />
@@ -4266,6 +4356,11 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     notes: ex?.notes ?? ex?.observations ?? "",
     evidenceImage: ex?.evidenceImage ?? null,
     previewImage: ex?.evidenceImage ?? route?.imageUrl ?? ex?.route?.imageUrl ?? null,
+    reportId:
+      ex?.conditionReportId ??
+      ex?.reportId ??
+      ex?.conditionReport?.id ??
+      null,
     dateISO,
     dateLabel,
     isFuture,
@@ -4655,6 +4750,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
   const quantityCompact = String(quantity || "No definida").replace(/\s+por punto/gi, "/punto");
   const pointsCount = Number(activity?.pointsCount);
   const hasPointsCount = Number.isFinite(pointsCount) && pointsCount > 0;
+  const sourceBadge = renderActivitySourceBadge(activity, true);
   const statusText =
     activity?.computedStatus === "Atrasada" && Number(activity?.overdueDays || 0) > 0
       ? `Atrasada · ${activity.overdueDays} día${Number(activity.overdueDays) === 1 ? "" : "s"}`
@@ -4702,22 +4798,25 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 999,
-            padding: "8px 12px",
-            fontSize: 13,
-            fontWeight: 950,
-            background: statusTone.badgeBg,
-            color: statusTone.badgeColor,
-            border: `1px solid ${statusTone.badgeBorder}`,
-          }}
-        >
-          {statusText}
-        </span>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 999,
+              padding: "8px 12px",
+              fontSize: 13,
+              fontWeight: 950,
+              background: statusTone.badgeBg,
+              color: statusTone.badgeColor,
+              border: `1px solid ${statusTone.badgeBorder}`,
+            }}
+          >
+            {statusText}
+          </span>
+          {sourceBadge}
+        </div>
 
         <button
           type="button"
