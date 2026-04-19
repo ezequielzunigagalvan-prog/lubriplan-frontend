@@ -477,8 +477,12 @@ function AdminInventoryInsightCard({
   lowStockItems = [],
   dteItems = [],
 }) {
-  const hasProjectedRisk = Number(dteCount || 0) > 0;
-  const hasLowStock = Number(lowStockCount || 0) > 0;
+  const lowList = Array.isArray(lowStockItems) ? lowStockItems.filter(Boolean) : [];
+  const dteList = Array.isArray(dteItems) ? dteItems.filter(Boolean) : [];
+  const effectiveLowStockCount = lowList.length > 0 ? lowList.length : Number(lowStockCount || 0);
+  const effectiveDteCount = dteList.length > 0 ? dteList.length : Number(dteCount || 0);
+  const hasProjectedRisk = effectiveDteCount > 0;
+  const hasLowStock = effectiveLowStockCount > 0;
   const tone = hasProjectedRisk ? "red" : hasLowStock ? "amber" : "green";
   const accent = tone === "red" ? "#dc2626" : tone === "amber" ? "#d97706" : "#16a34a";
   const badgeBg = tone === "red" ? "rgba(239,68,68,0.12)" : tone === "amber" ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)";
@@ -491,8 +495,6 @@ function AdminInventoryInsightCard({
     ? "Inventario en seguimiento"
     : "Inventario controlado";
 
-  const lowList = Array.isArray(lowStockItems) ? lowStockItems.filter(Boolean) : [];
-  const dteList = Array.isArray(dteItems) ? dteItems.filter(Boolean) : [];
   const pickFocusItem = (list) =>
     (Array.isArray(list) ? list : []).find((item) => {
       const candidate = [
@@ -554,11 +556,11 @@ function AdminInventoryInsightCard({
   const summary = hasProjectedRisk
     ? focus
       ? `${focusReference}: stock ${stockText}, mínimo ${minText} y cobertura estimada de ${fmtNum(focusDays, 1)} día(s).${focusDailyOut != null ? ` Salida media ${fmtNum(focusDailyOut)} ${(focusUnit || "").trim()}/día.` : ""}`
-      : `Hay ${dteCount} lubricante${dteCount === 1 ? "" : "s"} con riesgo de agotamiento próximo y ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} por debajo del mínimo operativo.`
+      : `Hay ${effectiveDteCount} lubricante${effectiveDteCount === 1 ? "" : "s"} con riesgo de agotamiento próximo y ${effectiveLowStockCount} referencia${effectiveLowStockCount === 1 ? "" : "s"} por debajo del mínimo operativo.`
     : hasLowStock
     ? focus
       ? `${focusReference}: stock ${stockText}, mínimo ${minText} y brecha técnica de ${gapText}.`
-      : `Se detectan ${lowStockCount} referencia${lowStockCount === 1 ? "" : "s"} por debajo del nivel recomendado, sin señal inmediata de agotamiento.`
+      : `Se detectan ${effectiveLowStockCount} referencia${effectiveLowStockCount === 1 ? "" : "s"} por debajo del nivel recomendado, sin señal inmediata de agotamiento.`
     : "El inventario no presenta referencias por debajo del mínimo ni alertas de agotamiento próximo para el periodo seleccionado.";
 
   const technicalNote = hasProjectedRisk
@@ -732,11 +734,11 @@ function AdminInventoryInsightCard({
       >
         <div style={adminInventoryMiniStat}>
           <div style={adminInventoryMiniLabel}>Bajo stock</div>
-          <div style={adminInventoryMiniValue}>{Number(lowStockCount || 0)}</div>
+          <div style={adminInventoryMiniValue}>{effectiveLowStockCount}</div>
         </div>
         <div style={adminInventoryMiniStat}>
           <div style={adminInventoryMiniLabel}>Riesgo próximo</div>
-          <div style={adminInventoryMiniValue}>{Number(dteCount || 0)}</div>
+          <div style={adminInventoryMiniValue}>{effectiveDteCount}</div>
         </div>
       </div>
 
