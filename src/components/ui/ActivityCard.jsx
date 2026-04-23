@@ -21,6 +21,11 @@ export default function ActivityCard({ activity, onOpen }) {
 
   const isFuture = !isCompleted && dateStr && dateStr > today;
   const clickable = !isCompleted && !isFuture;
+  const displayRouteName = formatRouteDisplayName(
+    activity?.routeName || activity?.route?.name || activity?.activityName,
+    activity?.route?.routeKind || activity?.routeKind,
+    "Ruta"
+  );
 
   const eqObj =
     activity?.equipment && typeof activity.equipment === "object"
@@ -93,7 +98,7 @@ export default function ActivityCard({ activity, onOpen }) {
               textOverflow: "ellipsis",
             }}
           >
-            {activity?.routeName || activity?.route?.name || activity?.activityName || "Ruta"}
+            {displayRouteName}
           </strong>
 
           <div style={muted}>
@@ -225,3 +230,31 @@ const cameraBtn = {
   justifyContent: "center",
 };
 
+function getRouteKindPrefix(routeKind) {
+  return String(routeKind || "").trim().toUpperCase() === "INSPECTION"
+    ? "Inspección de"
+    : "Lubricación de";
+}
+
+function stripRouteKindPrefix(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^(inspecci[oó]n|lubricaci[oó]n)\s+de\s+/i, "")
+    .trim();
+}
+
+function formatRouteDisplayName(name, routeKind, fallback = "") {
+  const rawName = String(name || "").trim();
+  const normalizedKind = String(routeKind || "").trim().toUpperCase();
+
+  if (!rawName) return fallback;
+
+  if (normalizedKind !== "INSPECTION" && normalizedKind !== "LUBRICATION") {
+    return rawName;
+  }
+
+  const baseName = stripRouteKindPrefix(rawName);
+  if (!baseName) return fallback;
+
+  return `${getRouteKindPrefix(normalizedKind)} ${baseName}`.trim();
+}

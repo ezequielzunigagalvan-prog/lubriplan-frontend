@@ -17,6 +17,7 @@ function mapRouteToModalData(route) {
   return {
     id: route.id,
 
+    routeKind: route.routeKind ?? "LUBRICATION",
     name: route.name ?? "",
 
     equipmentId:
@@ -247,7 +248,8 @@ useEffect(() => {
 
 const handleAssignTechnicianToRoute = async (route, technicianId) => {
   try {
-    const payload = {
+  const payload = {
+  routeKind: route.routeKind ?? "LUBRICATION",
   name: route.name,
   equipmentId: route.equipmentId ?? route.equipment?.id,
   lubricantType: route.lubricantType,

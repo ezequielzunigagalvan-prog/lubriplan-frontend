@@ -20,6 +20,7 @@ import ReportConditionModal from "../components/activities/ReportConditionModal"
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
+import { formatRouteDisplayName } from "../utils/routeNames";
 
 import { API_ASSETS_URL } from "../services/api";
 
@@ -827,6 +828,8 @@ useEffect(() => {
 
         const route = ex?.route || {};
         const equipment = isManual ? ex?.equipment || null : route?.equipment || null;
+        const isInspectionRoute =
+          !isManual && String(route?.routeKind || "").trim().toUpperCase() === "INSPECTION";
 
         const instructionsTxt = isManual
           ? ex?.manualInstructions ??
@@ -875,7 +878,7 @@ useEffect(() => {
         const plannedLabel = !isManual
           ? plannedLub?.name
             ? `${plannedLub.name}${plannedLub.code ? ` (${plannedLub.code})` : ""}`
-            : route?.lubricantType || "-"
+            : route?.lubricantType || (isInspectionRoute ? "Inspección" : "-")
           : "-";
 
         const moves = Array.isArray(ex?.lubricantMovements) ? ex.lubricantMovements : [];
@@ -891,9 +894,10 @@ useEffect(() => {
           ? `${usedLub.name}${usedLub.code ? ` (${usedLub.code})` : ""}`
           : "";
 
+        const routeDisplayName = formatRouteDisplayName(route?.name, route?.routeKind, "-");
         const activityName = isManual
           ? ex?.manualTitle || "Actividad programada"
-          : route?.name || "-";
+          : routeDisplayName;
 
         return {
           id: ex.id,
@@ -927,7 +931,9 @@ useEffect(() => {
           ratio,
 
           activityName: cleanUiText(activityName),
-          routeName: cleanUiText(isManual ? "MANUAL" : route?.name || "?"),
+          routeName: cleanUiText(isManual ? "MANUAL" : routeDisplayName || "?"),
+          routeKind: !isManual ? route?.routeKind || null : null,
+          route: !isManual ? route || null : null,
           routeUnit: !isManual ? route?.unit || "" : "",
 
           equipment: equipment || null,
@@ -944,7 +950,9 @@ useEffect(() => {
           lubricant: plannedLabel,
           quantityLabel:
             !isManual && route?.quantity != null
-              ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""} por punto`
+              ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""}${isInspectionRoute ? " opcional" : " por punto"}`
+              : isInspectionRoute
+              ? "Consumo opcional"
               : "?",
           pointsCount: !isManual && route?.points != null ? Number(route.points) : null,
           method: cleanUiText(!isManual ? route?.method || "?" : "?"),
@@ -1830,6 +1838,15 @@ export function ActivityCard({
   previewActionLabel = "Abrir",
   compactPreviewMode = false,
 }) {
+  const displayActivityTitle = activity?.isManual
+    ? cleanUiText(activity?.activityName || "Actividad programada")
+    : cleanUiText(
+        formatRouteDisplayName(
+          activity?.activityName || activity?.routeName || activity?.route?.name || "",
+          activity?.routeKind || activity?.route?.routeKind,
+          activity?.activityName || activity?.routeName || "Ruta"
+        )
+      );
   const mobileView =
     isMobile || (typeof window !== "undefined" && Number(window.innerWidth || 0) <= 820);
   const technicianMode = canCompleteActivities && !canAssignTech && !showPreviewAction;
@@ -2027,7 +2044,7 @@ export function ActivityCard({
                 ...(compactDesktopCard ? technicianTaskTitleCompact : null),
               }}
             >
-              {cleanUiText(activity.activityName)}
+              {displayActivityTitle}
             </div>
 
             <div
@@ -2287,7 +2304,7 @@ export function ActivityCard({
                   : null),
               }}
             >
-              {cleanUiText(activity.activityName)}
+              {displayActivityTitle}
             </div>
 
             <div
@@ -2607,7 +2624,7 @@ export function ActivityCard({
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={cardTaskLabel}>QUÉ VOY A HACER</div>
             <div style={{ ...cardTaskTitle, ...(mobileView ? cardTaskTitleMobile : null) }}>
-              {cleanUiText(activity.activityName)}
+              {displayActivityTitle}
             </div>
           </div>
 
@@ -4235,6 +4252,7 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
 
 
 

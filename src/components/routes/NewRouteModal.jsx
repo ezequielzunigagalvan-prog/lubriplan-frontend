@@ -11,6 +11,7 @@ import { getTechnicians } from "../../services/techniciansService";
 import { Icon } from "../ui/lpIcons";
 import { usePlant } from "../../context/PlantContext";
 import { API_ASSETS_URL } from "../../services/api";
+import { getRouteKindPrefix, stripRouteKindPrefix } from "../../utils/routeNames";
 
 /* ================== HELPERS ================== */
 const WEEK_DAYS = [
@@ -272,6 +273,7 @@ export default function NewRouteModal({ open, onClose, onSave, initialData }) {
   const { currentPlantId, currentPlant } = usePlant();
 
   const initialState = {
+    routeKind: "LUBRICATION",
     name: "",
     equipmentId: "",
     equipmentName: "",
@@ -327,6 +329,9 @@ export default function NewRouteModal({ open, onClose, onSave, initialData }) {
   };
 
   const isBombazos = String(form.unit || "").toUpperCase() === "BOMBAZOS";
+  const isInspectionRoute =
+    String(form.routeKind || "LUBRICATION").trim().toUpperCase() === "INSPECTION";
+  const routeKindPrefix = getRouteKindPrefix(form.routeKind);
 
   /* ===== abrir / editar ===== */
 useEffect(() => {
@@ -350,7 +355,8 @@ useEffect(() => {
       : "Mensual";
 
   setForm({
-    name: data.name ?? "",
+    routeKind: data.routeKind ?? "LUBRICATION",
+    name: stripRouteKindPrefix(data.name ?? ""),
     equipmentId: data.equipmentId != null ? String(data.equipmentId) : "",
     equipmentName: data.equipmentName ?? "",
     equipmentCode: data.equipmentCode ?? "",
@@ -744,7 +750,10 @@ useEffect(() => {
     const { name, value } = e.target;
 
     setForm((prev) => {
-      const next = { ...prev, [name]: value };
+      const next = {
+        ...prev,
+        [name]: name === "name" ? stripRouteKindPrefix(value) : value,
+      };
 
       if (name === "unit") {
         if (String(value).toUpperCase() === "BOMBAZOS") {
@@ -869,7 +878,8 @@ useEffect(() => {
 
       const name = String(form.name || "").trim();
       const equipmentId = Number(form.equipmentId);
-      const quantity = Number(String(form.quantity).replace(",", "."));
+      const quantityRaw = String(form.quantity ?? "").trim().replace(",", ".");
+      const quantity = quantityRaw === "" ? null : Number(quantityRaw);
       const pumpStrokeValueNum =
         form.pumpStrokeValue === "" || form.pumpStrokeValue == null
           ? null
@@ -877,9 +887,13 @@ useEffect(() => {
 
       if (!name) throw new Error("Falta: Nombre");
       if (!Number.isFinite(equipmentId) || equipmentId <= 0) throw new Error("Falta: Equipo");
-      if (!form.lubricantType) throw new Error("Falta: Tipo de lubricante");
-      if (!Number.isFinite(quantity)) throw new Error("Cantidad inválida");
-      if (quantity < 0) throw new Error("Cantidad inválida");
+      if (!isInspectionRoute && !form.lubricantType) {
+        throw new Error("Falta: Tipo de lubricante");
+      }
+      if (!isInspectionRoute && !Number.isFinite(quantity)) {
+        throw new Error("Cantidad inválida");
+      }
+      if (quantity != null && quantity < 0) throw new Error("Cantidad inválida");
       if (!frequencyDays) throw new Error("Frecuencia inválida");
 
       if (
@@ -889,7 +903,7 @@ useEffect(() => {
         throw new Error("Debes seleccionar al menos un día de la semana.");
       }
 
-      if (isBombazos) {
+      if (isBombazos && (!isInspectionRoute || quantity != null)) {
         if (!Number.isFinite(pumpStrokeValueNum) || pumpStrokeValueNum <= 0) {
           throw new Error("Debes capturar cuánto equivale 1 bombazo.");
         }
@@ -916,7 +930,8 @@ if (form.frequency === "Varias veces por semana" && backendWeeklyDays.length ===
 const payload = {
   name,
   equipmentId,
-  lubricantType: String(form.lubricantType || ""),
+  routeKind: String(form.routeKind || "LUBRICATION"),
+  lubricantType: String(form.lubricantType || "").trim() || null,
   quantity,
   frequencyDays,
   frequencyType:
@@ -984,7 +999,7 @@ const payload = {
             <div style={kicker}>{initialData?.id ? "EDITAR RUTA" : "NUEVA RUTA"}</div>
             <h2 style={modalTitle}>{initialData?.id ? "Editar Ruta" : "Nueva Ruta"}</h2>
             <div style={modalSub}>
-              Lubricación · programación · operación
+              Clasificación · programación · operación
               {currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
             </div>
           </div>
@@ -998,16 +1013,62 @@ const payload = {
           <div style={section}>
             <div style={sectionTitle}>Datos principales</div>
 
-            <Input
+            <div style={pointsBox}>
+              <div style={pointsTop}>
+                <div>
+                  <div style={miniTitle}>Clasificación de la ruta</div>
+                  <div style={miniSub}>
+                    Define si la actividad base es una lubricación o una inspección.
+                  </div>
+                </div>
+
+                <div style={segmented}>
+                  <button
+                    type="button"
+                    style={form.routeKind === "LUBRICATION" ? segBtnOn : segBtnOff}
+                    onClick={() => setForm((prev) => ({ ...prev, routeKind: "LUBRICATION" }))}
+                  >
+                    Lubricación de
+                  </button>
+                  <button
+                    type="button"
+                    style={form.routeKind === "INSPECTION" ? segBtnOn : segBtnOff}
+                    onClick={() => setForm((prev) => ({ ...prev, routeKind: "INSPECTION" }))}
+                  >
+                    Inspección de
+                  </button>
+                </div>
+              </div>
+
+              <div style={hintStyle}>
+                {isInspectionRoute
+                  ? "En inspección, el consumo base es opcional. Si durante la ejecución sí se aplica lubricante, LubriPlan podrá descontar inventario al completar la actividad."
+                  : "En lubricación, define el lubricante y la dosificación base para programar y controlar la ruta."}
+              </div>
+            </div>
+
+            <FieldShell
               label="Nombre de la ruta *"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Ej: Lubricación Motor Principal"
+              hint={
+                form.name
+                  ? `Se guardará como: ${routeKindPrefix} ${String(form.name || "").trim()}`
+                  : "Escribe solo el nombre base de la ruta."
+              }
               active={activeField === "name"}
-              onFocus={() => setActiveField("name")}
-              onBlur={() => setActiveField("")}
-            />
+            >
+              <div style={prefixedNameRow}>
+                <span style={prefixedNameTag}>{routeKindPrefix}</span>
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder={isInspectionRoute ? "nivel de deposito" : "cadena"}
+                  style={prefixedNameInput}
+                  onFocus={() => setActiveField("name")}
+                  onBlur={() => setActiveField("")}
+                />
+              </div>
+            </FieldShell>
 
             {form.lockEquipment && form.equipmentId ? (
               <div style={prefillEquipmentCard}>
@@ -1071,14 +1132,21 @@ const payload = {
           </div>
 
           <div style={section}>
-            <div style={sectionTitle}>Lubricante</div>
+            <div style={sectionTitle}>
+              {isInspectionRoute ? "Lubricante de referencia" : "Lubricante"}
+            </div>
 
             <Select
-              label="Tipo de lubricante *"
+              label={`Tipo de lubricante${isInspectionRoute ? " (opcional)" : " *"}`}
               name="lubricantType"
               value={form.lubricantType}
               onChange={handleChange}
               options={lubricantTypeOptions}
+              hint={
+                isInspectionRoute
+                  ? "Úsalo solo si la inspección puede derivar en aplicación de lubricante."
+                  : undefined
+              }
               active={activeField === "lubricantType"}
               onFocus={() => setActiveField("lubricantType")}
               onBlur={() => setActiveField("")}
@@ -1087,7 +1155,7 @@ const payload = {
             <div style={row2}>
               <div style={{ flex: 1, minWidth: 280 }}>
                 <Select
-                  label="Producto del inventario (recomendado)"
+                  label={`Producto del inventario${isInspectionRoute ? " (opcional)" : " (recomendado)"}`}
                   name="lubricantId"
                   value={form.lubricantId}
                   onChange={handleChange}
@@ -1108,7 +1176,11 @@ const payload = {
 
               <div style={{ width: 320, minWidth: 280 }}>
                 <Input
-                  label="Nombre del lubricante (si NO está en inventario)"
+                  label={
+                    isInspectionRoute
+                      ? "Nombre del lubricante de referencia"
+                      : "Nombre del lubricante (si NO está en inventario)"
+                  }
                   name="lubricantName"
                   value={form.lubricantName}
                   onChange={handleChange}
@@ -1122,13 +1194,19 @@ const payload = {
           </div>
 
           <div style={section}>
-            <div style={sectionTitle}>Dosificación</div>
+            <div style={sectionTitle}>
+              {isInspectionRoute ? "Consumo base" : "Dosificación"}
+            </div>
 
             <div style={row2}>
               <div style={{ flex: 1, minWidth: 240 }}>
                 <Input
                   label={
-                    isBombazos
+                    isInspectionRoute
+                      ? isBombazos
+                        ? "Consumo estimado (opcional, bombazos)"
+                        : "Consumo estimado (opcional)"
+                      : isBombazos
                       ? "Cantidad * (número de bombazos)"
                       : "Cantidad * (Cantidad por punto en modo simple)"
                   }
@@ -1139,6 +1217,8 @@ const payload = {
                   hint={
                     pointsMode === "advanced"
                       ? "En avanzado, el total se calcula automáticamente por punto."
+                      : isInspectionRoute
+                      ? "Déjalo vacío si la inspección no requiere aplicación de lubricante."
                       : isBombazos
                       ? "Aquí capturas cuántos bombazos se aplican."
                       : null
@@ -1152,7 +1232,7 @@ const payload = {
 
               <div style={{ width: 220, minWidth: 200 }}>
                 <Select
-                  label="Unidad *"
+                  label={isInspectionRoute ? "Unidad" : "Unidad *"}
                   name="unit"
                   value={form.unit || "ml"}
                   onChange={handleChange}
@@ -1164,7 +1244,7 @@ const payload = {
               </div>
             </div>
 
-            {isBombazos ? (
+            {isBombazos && (!isInspectionRoute || String(form.quantity || "").trim() !== "") ? (
               <div style={bombazosBox}>
                 <div style={bombazosTitle}>Equivalencia de bombazo</div>
                 <div style={bombazosSub}>
@@ -1235,9 +1315,13 @@ const payload = {
             <div style={pointsBox}>
               <div style={pointsTop}>
                 <div>
-                  <div style={miniTitle}>Puntos de lubricación</div>
+                  <div style={miniTitle}>
+                    {isInspectionRoute ? "Puntos o zonas de revisión" : "Puntos de lubricación"}
+                  </div>
                   <div style={miniSub}>
-                    Simple: solo número. Avanzado: nombra puntos y asigna cantidades por punto.
+                    {isInspectionRoute
+                      ? "Simple: cantidad de zonas. Avanzado: nombra zonas y, si aplica, registra consumo estimado por zona."
+                      : "Simple: solo número. Avanzado: nombra puntos y asigna cantidades por punto."}
                   </div>
                 </div>
 
@@ -1322,7 +1406,11 @@ const payload = {
           </div>
 
           <div style={section}>
-            <div style={sectionTitle}>Fotografía del punto de lubricación (opcional)</div>
+            <div style={sectionTitle}>
+              {isInspectionRoute
+                ? "Fotografía del punto o condición (opcional)"
+                : "Fotografía del punto de lubricación (opcional)"}
+            </div>
 
             <div style={imgGrid}>
               <div style={{ minWidth: 280 }}>
@@ -1423,7 +1511,7 @@ const payload = {
               value={form.frequency}
               onChange={handleChange}
               options={frequencyOptions}
-              hint="La próxima lubricación se calcula automáticamente con base en la última + frecuencia."
+              hint="La próxima ejecución se calcula automáticamente con base en la última fecha y la frecuencia."
               active={activeField === "frequency"}
               onFocus={() => setActiveField("frequency")}
               onBlur={() => setActiveField("")}
@@ -1433,7 +1521,7 @@ const payload = {
               <div style={weeklyBox}>
                 <div style={miniTitle}>Días programados</div>
                 <div style={miniSub}>
-                  Selecciona los días específicos en los que se ejecutará la lubricación.
+                  Selecciona los días específicos en los que se ejecutará la ruta.
                 </div>
 
                 <div style={weekDaysWrap}>
@@ -1466,7 +1554,7 @@ const payload = {
                 </div>
 
                 <div style={hintStyle}>
-                  Puedes elegir 2, 3 o 4 días por semana según tu plan de lubricación.
+                  Puedes elegir 2, 3 o 4 días por semana según tu plan operativo.
                 </div>
               </div>
             ) : null}
@@ -1475,7 +1563,7 @@ const payload = {
               <div style={{ flex: 1, minWidth: 240 }}>
                 <Input
                   type="date"
-                  label="Última lubricación (opcional)"
+                  label="Última ejecución (opcional)"
                   name="lastDate"
                   value={form.lastDate}
                   onChange={handleChange}
@@ -1488,7 +1576,7 @@ const payload = {
               <div style={{ flex: 1, minWidth: 240 }}>
                 <Input
                   type="date"
-                  label="Próxima lubricación (puedes ajustar)"
+                  label="Próxima ejecución (puedes ajustar)"
                   name="nextDate"
                   value={form.nextDate}
                   onChange={handleChange}
@@ -1861,6 +1949,32 @@ const rowInput = {
   outline: "none",
   background: "rgba(255,255,255,0.98)",
   color: "#0f172a",
+};
+
+const prefixedNameRow = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  width: "100%",
+};
+
+const prefixedNameTag = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 46,
+  padding: "0 12px",
+  borderRadius: 12,
+  background: "rgba(249,115,22,0.10)",
+  border: "1px solid rgba(249,115,22,0.24)",
+  color: "#9a3412",
+  fontSize: 13,
+  fontWeight: 950,
+  whiteSpace: "nowrap",
+};
+
+const prefixedNameInput = {
+  ...rowInput,
 };
 
 const imgGrid = {

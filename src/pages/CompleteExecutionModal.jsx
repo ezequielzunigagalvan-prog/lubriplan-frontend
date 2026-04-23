@@ -5,6 +5,7 @@ import { getExecutionLubricants } from "../services/lubricantsService";
 import { API_ASSETS_URL } from "../services/api";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
+import { formatRouteDisplayName } from "../utils/routeNames";
 
 /* =========================
    HELPERS
@@ -202,11 +203,14 @@ const loggedTechId = user?.technicianId != null ? Number(user.technicianId) : nu
 
         const origin = String(ex?.origin || "ROUTE").toUpperCase();
         const isManualLoad = origin !== "ROUTE";
+        const isInspectionRouteLoad =
+          String(ex?.route?.routeKind || "").trim().toUpperCase() === "INSPECTION";
 
         const routeLubId = ex?.route?.lubricantId ?? null;
         const routeQty = Number(ex?.route?.quantity ?? 0);
         const isCorrectiveLikeLoad = !isManualLoad && (!routeLubId || routeQty <= 0);
-        const usesOptionalConsumptionLoad = isManualLoad || isCorrectiveLikeLoad;
+        const usesOptionalConsumptionLoad =
+          isManualLoad || isInspectionRouteLoad || isCorrectiveLikeLoad;
 
         let lubItems = [];
 
@@ -291,12 +295,14 @@ setForm((prev) => ({
 
   const origin = String(execution?.origin || "ROUTE").toUpperCase();
   const isManual = origin !== "ROUTE";
+  const isInspectionRoute =
+    String(execution?.route?.routeKind || "").trim().toUpperCase() === "INSPECTION";
 
   const routeLubricantId = execution?.route?.lubricantId ?? null;
   const routeQty = Number(execution?.route?.quantity ?? 0);
   const isCorrectiveLike = !isManual && (!routeLubricantId || routeQty <= 0);
 
-  const usesOptionalConsumption = isManual || isCorrectiveLike;
+  const usesOptionalConsumption = isManual || isInspectionRoute || isCorrectiveLike;
 
   const equipment = isManual ? execution?.equipment : execution?.route?.equipment;
   const equipmentName = equipment?.name || "—";
@@ -304,7 +310,11 @@ setForm((prev) => ({
   const equipmentLocation = equipment?.location || "";
 
   const manualTitle = String(execution?.manualTitle || "").trim();
-  const routeName = execution?.route?.name || "—";
+  const routeName = formatRouteDisplayName(
+    execution?.route?.name,
+    execution?.route?.routeKind,
+    "—"
+  );
 
   const instructions = isManual
     ? execution?.manualInstructions || "—"
@@ -316,7 +326,7 @@ setForm((prev) => ({
     execution?.route?.lubricant?.name ||
     execution?.route?.lubricantName ||
     execution?.route?.lubricantType ||
-    "—";
+    (isInspectionRoute ? "Consumo opcional" : "—");
 
   const routeLubricantCode = execution?.route?.lubricant?.code || "";
   const lubricantType = execution?.route?.lubricantType || "—";
@@ -496,7 +506,7 @@ setForm((prev) => ({
               {isManual ? (manualTitle || "Actividad programada") : "Completar actividad"}
             </h2>
 
-            <div style={sub}>
+              <div style={sub}>
               {usesOptionalConsumption
                 ? "Registra ejecución real · consumo opcional"
                 : "Registra ejecución real"}
@@ -505,6 +515,12 @@ setForm((prev) => ({
             {isCorrectiveLike ? (
               <div style={microWarn}>
                 Actividad correctiva · consumo opcional
+              </div>
+            ) : null}
+
+            {isInspectionRoute ? (
+              <div style={microWarn}>
+                Ruta de inspección · consumo opcional
               </div>
             ) : null}
 
@@ -684,7 +700,9 @@ setForm((prev) => ({
                   <div style={miniCardHead}>
                     <div>
                       <div style={miniCardTitle}>Consumo de lubricante</div>
-                      <div style={miniCardSub}>Opcional para actividades manuales o correctivas</div>
+                      <div style={miniCardSub}>
+                        Opcional para inspecciones, actividades manuales o correctivas
+                      </div>
                     </div>
                   </div>
 

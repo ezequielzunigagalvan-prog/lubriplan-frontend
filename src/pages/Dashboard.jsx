@@ -28,6 +28,7 @@ import useDashboardAlerts from "../hooks/useDashboardAlerts";
 import useDashboardPredictiveAlerts from "../hooks/useDashboardPredictiveAlerts";
 import useRealtimeAlerts from "../hooks/useRealtimeAlerts";
 import useDashboardPriorityQueue from "../hooks/useDashboardPriorityQueue.js";
+import { formatRouteDisplayName } from "../utils/routeNames";
 
 import { getTechnicianOverload } from "../services/equipmentService";
 import { getTechniciansEfficiencyMonthly } from "../services/dashboardTechniciansService";
@@ -4460,6 +4461,8 @@ function normalizeExecutionToActivity(ex, todayYMD) {
 
   const route = ex?.route || {};
   const equipment = isManual ? ex?.equipment || null : route?.equipment || null;
+  const isInspectionRoute =
+    !isManual && String(route?.routeKind || "").trim().toUpperCase() === "INSPECTION";
 
   const instructionsTxt = isManual
     ? ex?.manualInstructions ??
@@ -4494,7 +4497,7 @@ function normalizeExecutionToActivity(ex, todayYMD) {
   const plannedLabel = !isManual
     ? plannedLub?.name
       ? `${plannedLub.name}${plannedLub.code ? ` (${plannedLub.code})` : ""}`
-      : route?.lubricantType || "—"
+      : route?.lubricantType || (isInspectionRoute ? "Inspección" : "—")
     : "—";
 
   const moves = Array.isArray(ex?.lubricantMovements) ? ex.lubricantMovements : [];
@@ -4510,9 +4513,10 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     ? `${usedLub.name}${usedLub.code ? ` (${usedLub.code})` : ""}`
     : "";
 
+  const routeDisplayName = formatRouteDisplayName(route?.name, route?.routeKind, "—");
   const activityName = isManual
     ? ex?.manualTitle || "Actividad programada"
-    : route?.name || "—";
+    : routeDisplayName;
 
   const used = Number(ex?.usedQuantity);
   const expected = Number(route?.quantity);
@@ -4550,7 +4554,9 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     outOfRange,
     ratio,
     activityName,
-    routeName: isManual ? "MANUAL" : route?.name || "—",
+    routeName: isManual ? "MANUAL" : routeDisplayName || "—",
+    routeKind: !isManual ? route?.routeKind || null : null,
+    route: !isManual ? route || null : null,
     routeUnit: !isManual ? route?.unit || "" : "",
     equipment: equipment || null,
     equipmentName: equipment?.name || "—",
@@ -4564,7 +4570,9 @@ function normalizeExecutionToActivity(ex, todayYMD) {
     lubricant: plannedLabel,
     quantityLabel:
       !isManual && route?.quantity != null
-        ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""} por punto`
+        ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""}${isInspectionRoute ? " opcional" : " por punto"}`
+        : isInspectionRoute
+        ? "Consumo opcional"
         : "—",
     pointsCount: !isManual && route?.points != null ? Number(route.points) : null,
     method: !isManual ? route?.method || "—" : "—",
@@ -4874,12 +4882,13 @@ function UpcomingBlock({
 }
 
 function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) {
-  const title =
-    activity?.routeName ||
-    activity?.activityName ||
-    activity?.title ||
-    activity?.equipment ||
-    "Actividad";
+  const title = activity?.isManual
+    ? activity?.activityName || activity?.title || "Actividad"
+    : formatRouteDisplayName(
+        activity?.activityName || activity?.routeName || activity?.route?.name || "",
+        activity?.routeKind || activity?.route?.routeKind,
+        activity?.activityName || activity?.routeName || activity?.title || "Actividad"
+      );
 
   const equipment =
     activity?.equipment ||

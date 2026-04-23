@@ -6,6 +6,7 @@ import MainLayout from "../layouts/MainLayout";
 import { createRoute, uploadRouteImage } from "../services/routesService";
 import { getEquipment } from "../services/equipmentService";
 import { API_ASSETS_URL } from "../services/api";
+import { getRouteKindPrefix, stripRouteKindPrefix } from "../utils/routeNames";
 
 /* ================== HELPERS ================== */
 const norm = (v) => String(v ?? "").toLowerCase().trim();
@@ -28,6 +29,7 @@ export default function NewRoutePage() {
   }, [location.search]);
 
   const [form, setForm] = useState({
+    routeKind: "LUBRICATION",
     name: "",
     equipmentId: "",
     lubricantType: "",
@@ -38,6 +40,9 @@ export default function NewRoutePage() {
     frequencyDays: 30,
     imageUrl: "",
   });
+  const isInspectionRoute =
+    String(form.routeKind || "LUBRICATION").trim().toUpperCase() === "INSPECTION";
+  const routeKindPrefix = getRouteKindPrefix(form.routeKind);
 
   const [equipments, setEquipments] = useState([]);
   const [equipmentSearch, setEquipmentSearch] = useState("");
@@ -102,7 +107,10 @@ export default function NewRoutePage() {
     const { name, value } = e.target;
 
     setForm((prev) => {
-      const next = { ...prev, [name]: value };
+      const next = {
+        ...prev,
+        [name]: name === "name" ? stripRouteKindPrefix(value) : value,
+      };
 
       if (name === "unit" && value !== "BOMBAZOS") {
         next.pumpStrokeValue = "";
@@ -145,10 +153,11 @@ export default function NewRoutePage() {
       setSaving(true);
 
       const payload = {
+        routeKind: String(form.routeKind || "LUBRICATION"),
         name: String(form.name || "").trim(),
         equipmentId: Number(form.equipmentId),
-        lubricantType: String(form.lubricantType || ""),
-        quantity: form.quantity === "" ? NaN : Number(form.quantity),
+        lubricantType: String(form.lubricantType || "").trim() || null,
+        quantity: form.quantity === "" ? null : Number(form.quantity),
         unit: String(form.unit || "ml").trim(),
         pumpStrokeValue:
           form.unit === "BOMBAZOS"
@@ -166,12 +175,17 @@ export default function NewRoutePage() {
 
       if (!payload.name) return alert("Falta: Nombre de la ruta");
       if (!Number.isFinite(payload.equipmentId) || payload.equipmentId <= 0) return alert("Falta: Equipo");
-      if (!payload.lubricantType) return alert("Falta: Tipo de lubricante");
-      if (!Number.isFinite(payload.quantity) || payload.quantity <= 0) return alert("Cantidad inválida");
-      if (!payload.unit) return alert("Falta: Unidad");
+      if (!isInspectionRoute && !payload.lubricantType) return alert("Falta: Tipo de lubricante");
+      if (!isInspectionRoute && (!Number.isFinite(payload.quantity) || payload.quantity <= 0)) {
+        return alert("Cantidad inválida");
+      }
+      if (payload.quantity != null && (!Number.isFinite(payload.quantity) || payload.quantity < 0)) {
+        return alert("Cantidad inválida");
+      }
+      if (!payload.unit && !isInspectionRoute) return alert("Falta: Unidad");
       if (!Number.isFinite(payload.frequencyDays) || payload.frequencyDays <= 0) return alert("Frecuencia inválida");
 
-      if (payload.unit === "BOMBAZOS") {
+      if (payload.unit === "BOMBAZOS" && (!isInspectionRoute || payload.quantity != null)) {
         if (!Number.isFinite(payload.pumpStrokeValue) || payload.pumpStrokeValue <= 0) {
           return alert("Debes capturar cuánto equivale 1 bombazo.");
         }
@@ -210,7 +224,7 @@ export default function NewRoutePage() {
           <div>
             <div style={kicker}>LUBRIPLAN · RUTAS</div>
             <h1 style={title}>Nueva ruta</h1>
-            <div style={subtitle}>Crea una nueva ruta de lubricación</div>
+            <div style={subtitle}>Crea una nueva ruta operativa</div>
           </div>
 
           <button style={btnGhost} onClick={() => navigate("/routes")} disabled={saving}>
@@ -219,13 +233,38 @@ export default function NewRoutePage() {
         </div>
 
         <form onSubmit={handleSubmit} style={panel}>
-          <FormField
-            label="Nombre de la ruta *"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Ej. Ruta prensa hidráulica"
-          />
+          <div style={{ marginBottom: 10 }}>
+            <label style={labelStyle}>Clasificación de la ruta</label>
+            <select name="routeKind" value={form.routeKind} onChange={handleChange} style={input}>
+              <option value="LUBRICATION">Lubricación de</option>
+              <option value="INSPECTION">Inspección de</option>
+            </select>
+            <div style={hintStyle}>
+              {isInspectionRoute
+                ? "En inspección, el consumo base es opcional y el inventario solo se descuenta si se registra consumo al ejecutar."
+                : "En lubricación, define el lubricante y el consumo base de la ruta."}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 10 }}>
+            <label style={labelStyle}>Nombre de la ruta *</label>
+            <div style={prefixedNamePageRow}>
+              <span style={prefixedNamePageTag}>{routeKindPrefix}</span>
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder={isInspectionRoute ? "nivel de deposito" : "cadena"}
+                style={input}
+              />
+            </div>
+            <div style={hintStyle}>
+              {form.name
+                ? `Se guardará como: ${routeKindPrefix} ${String(form.name || "").trim()}`
+                : "Escribe solo el nombre base de la ruta."}
+            </div>
+          </div>
 
           <div style={row2}>
             <div style={{ flex: 1 }}>
@@ -253,7 +292,9 @@ export default function NewRoutePage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <label style={labelStyle}>Tipo de lubricante *</label>
+            <label style={labelStyle}>
+              Tipo de lubricante{isInspectionRoute ? " (opcional)" : " *"}
+            </label>
             <select name="lubricantType" value={form.lubricantType} onChange={handleChange} style={input}>
               <option value="">Seleccionar</option>
               {lubricantTypeOptions.map((t) => (
@@ -266,7 +307,7 @@ export default function NewRoutePage() {
 
           <div style={row2}>
             <FormField
-              label="Cantidad *"
+              label={isInspectionRoute ? "Consumo estimado (opcional)" : "Cantidad *"}
               name="quantity"
               type="number"
               value={form.quantity}
@@ -275,7 +316,7 @@ export default function NewRoutePage() {
             />
 
             <div style={{ flex: 1, minWidth: 240, marginTop: 10 }}>
-              <label style={labelStyle}>Unidad *</label>
+              <label style={labelStyle}>{isInspectionRoute ? "Unidad" : "Unidad *"}</label>
               <select name="unit" value={form.unit} onChange={handleChange} style={input}>
                 <option value="ml">ml</option>
                 <option value="l">L</option>
@@ -451,6 +492,27 @@ const input = {
   outline: "none",
   background: "#fff",
   boxShadow: "inset 0 1px 0 rgba(2,6,23,0.04)",
+};
+
+const prefixedNamePageRow = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+};
+
+const prefixedNamePageTag = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 42,
+  padding: "0 12px",
+  borderRadius: 12,
+  background: "#fff7ed",
+  border: "1px solid #fed7aa",
+  color: "#9a3412",
+  fontSize: 13,
+  fontWeight: 900,
+  whiteSpace: "nowrap",
 };
 
 const hintStyle = { marginTop: 6, fontSize: 12, fontWeight: 800, color: "#64748b" };

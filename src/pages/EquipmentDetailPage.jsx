@@ -5,6 +5,7 @@ import { getEquipmentById, assignEquipmentTechnician } from "../services/equipme
 import { getTechnicians } from "../services/techniciansService";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
+import { formatRouteDisplayName } from "../utils/routeNames";
 import {
   Settings,
   MapPin,
@@ -486,7 +487,9 @@ export default function EquipmentDetailPage() {
               <div style={stackList}>
                 {visibleRoutes.map((r) => (
                   <div key={r.id} style={listCard}>
-                    <div style={listTitle}>{r.name || "Ruta"}</div>
+                    <div style={listTitle}>
+                      {formatRouteDisplayName(r?.name, r?.routeKind, r?.name || "Ruta")}
+                    </div>
                     <div style={listMeta}>
                       <span>{r.lubricantType || "—"}</span>
                       <span>·</span>

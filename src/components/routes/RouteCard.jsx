@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/lpIcons";
+import { formatRouteDisplayName } from "../../utils/routeNames";
 
 /* =========================
    COLOR MAP (solo texto)
@@ -34,7 +35,7 @@ const pickMethodLabel = (route) =>
   route?.lubricationMethod ||
   route?.applyMethod ||
   route?.methodName ||
-  "â€”";
+  "-";
 
 const pickNextAtRaw = (route) =>
   route?.nextActivityAt ||
@@ -94,7 +95,7 @@ function buildFrequencyLabel(route) {
   if (frequencyDays === 365) return "Anual";
   if (frequencyDays > 0) return `Cada ${frequencyDays} días`;
 
-  return "â€”";
+  return "-";
 }
 
 function buildWeeklyDaysLabel(route) {
@@ -144,19 +145,28 @@ export default function RouteCard({
   const unitRaw = String(route?.unit || "").trim();
   const unitNorm = unitRaw.toUpperCase();
   const isBombazos = unitNorm === "BOMBAZOS";
+  const isInspectionRoute =
+    String(route?.routeKind || "").trim().toUpperCase() === "INSPECTION";
+  const displayRouteName = useMemo(
+    () => formatRouteDisplayName(route?.name, route?.routeKind, "-"),
+    [route?.name, route?.routeKind]
+  );
 
   const pumpStrokeValue = route?.pumpStrokeValue != null ? Number(route.pumpStrokeValue) : null;
   const pumpStrokeUnit = String(route?.pumpStrokeUnit || "").trim();
 
   const qtyLabel = useMemo(() => {
-    if (route?.quantity == null) return "â€”";
+    if (route?.quantity == null) return isInspectionRoute ? "Consumo opcional" : "-";
     if (isBombazos) {
-      return `${route.quantity} bombazo${Number(route.quantity) === 1 ? "" : "s"}`;
+      return `${route.quantity} bombazo${Number(route.quantity) === 1 ? "" : "s"}${isInspectionRoute ? " opcional" : ""}`;
     }
-    return `${route.quantity}${route.unit ? ` ${route.unit}` : ""}`;
-  }, [route?.quantity, route?.unit, isBombazos]);
+    return `${route.quantity}${route.unit ? ` ${route.unit}` : ""}${isInspectionRoute ? " opcional" : ""}`;
+  }, [route?.quantity, route?.unit, isBombazos, isInspectionRoute]);
 
   const qtySubLabel = useMemo(() => {
+    if (isInspectionRoute) {
+      return "aplica solo si la inspeccion requiere lubricante";
+    }
     if (isBombazos) {
       if (Number.isFinite(pumpStrokeValue) && pumpStrokeValue > 0 && pumpStrokeUnit) {
         return `1 bombazo = ${pumpStrokeValue} ${pumpStrokeUnit}`;
@@ -169,7 +179,7 @@ export default function RouteCard({
       return "por punto";
     }
     return "dosificación";
-  }, [isBombazos, pumpStrokeValue, pumpStrokeUnit, route?.points]);
+  }, [isBombazos, isInspectionRoute, pumpStrokeValue, pumpStrokeUnit, route?.points]);
 
   
   const lubeTheme = useMemo(() => getLubeTheme(route?.lubricantType), [route?.lubricantType]);
@@ -246,7 +256,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
       <div style={head}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={routeName} title={route?.name || ""}>
-            {route?.name || "â€”"}
+            {displayRouteName}
           </div>
 
           <div style={eqRow}>
@@ -323,7 +333,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
             {(technicians || []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
-                {t.code ? ` â€” (${t.code})` : ""}
+                {t.code ? ` - (${t.code})` : ""}
               </option>
             ))}
           </select>
@@ -347,7 +357,7 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
           </div>
 
           <div style={{ ...miniValue, color: lubeTheme.color }} title={route?.lubricantType || ""}>
-            {route?.lubricantType || "â€”"}
+            {route?.lubricantType || (isInspectionRoute ? "Inspección" : "-")}
           </div>
 
           <div style={miniSub} title={lubeName || ""}>
@@ -357,7 +367,9 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
                 <span style={{ color: "#0f172a", fontWeight: 900 }}>{lubeName}</span>
               </>
             ) : (
-              <span style={{ color: "#94a3b8", fontWeight: 850 }}>â€”</span>
+              <span style={{ color: "#94a3b8", fontWeight: 850 }}>
+                {isInspectionRoute ? "Lubricante opcional" : "-"}
+              </span>
             )}
           </div>
         </div>

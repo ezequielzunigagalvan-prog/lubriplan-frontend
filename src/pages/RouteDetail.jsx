@@ -8,6 +8,7 @@ import { getExecutionsByRoute } from "../services/executionsService";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
+import { formatRouteDisplayName } from "../utils/routeNames";
 // Si quieres toast global como en RoutesPage, descomenta:
 // import Toast from "../components/ui/Toast";
 
@@ -161,12 +162,19 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
       ""
     );
   }, [route]);
+  const isInspectionRoute = useMemo(
+    () => String(route?.routeKind || "").trim().toUpperCase() === "INSPECTION",
+    [route]
+  );
+  const routeDisplayName = useMemo(
+    () => formatRouteDisplayName(route?.name, route?.routeKind, "Detalle de ruta"),
+    [route]
+  );
 
   const qtyLabel = useMemo(() => {
-    return route?.quantity != null
-      ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""}`
-      : "?";
-  }, [route]);
+    if (route?.quantity == null) return isInspectionRoute ? "Consumo opcional" : "?";
+    return `${route.quantity}${route.unit ? ` ${route.unit}` : ""}${isInspectionRoute ? " opcional" : ""}`;
+  }, [isInspectionRoute, route]);
 
   const frequencyLabel = useMemo(() => {
     const d = route?.frequencyDays;
@@ -220,7 +228,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
         <div style={topBar}>
           <div style={{ minWidth: 0 }}>
             <div style={kicker}>LUBRIPLAN - RUTAS</div>
-            <h1 style={pageTitle}>{route?.name || "Detalle de ruta"}</h1>
+            <h1 style={pageTitle}>{routeDisplayName}</h1>
 
             <div style={subRow}>
               <span style={pill}>
@@ -295,8 +303,12 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
             <div style={grid}>
               <InfoCard
                 title="Lubricante"
-                value={route.lubricantType || "?"}
-                sub={route.lubricantName || route?.lubricant?.name || ""}
+                value={route.lubricantType || (isInspectionRoute ? "Inspección" : "?")}
+                sub={
+                  route.lubricantName ||
+                  route?.lubricant?.name ||
+                  (isInspectionRoute ? "Lubricante opcional" : "")
+                }
                 icon="drop"
               />
               <InfoCard title="Cantidad" value={qtyLabel} sub={route.points ? `por punto ? ${route.points} punto(s)` : ""} icon="scale" />
