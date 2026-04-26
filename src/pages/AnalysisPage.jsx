@@ -133,7 +133,7 @@ const formatConsumptionSecondary = (row, kind) => {
         ? formatQtyUnit(convQty, convUnit)
         : formatByKind(convQty, kind);
 
-    if (left !== right) return `${left} ? ${right}`;
+    if (left !== right) return `${left} / ${right}`;
   }
 
   return "";
@@ -284,9 +284,54 @@ function SegmentedTabs({ value, onChange, items }) {
 
 function SeverityChip({ level }) {
   if (!level) return <Tag tone="gray">Normal</Tag>;
-  if (level === "HIGH") return <Tag tone="red">Anomalía  Alta</Tag>;
-  if (level === "MED") return <Tag tone="amber">Anomalía  Media</Tag>;
+  if (level === "HIGH") return <Tag tone="red">Anomalia alta</Tag>;
+  if (level === "MED") return <Tag tone="amber">Anomalia media</Tag>;
   return <Tag tone="gray">Normal</Tag>;
+}
+
+function ConditionMetricCard({ title, value, subtitle, tone = "steel", icon }) {
+  const toneMap = {
+    steel: {
+      border: "rgba(148,163,184,0.45)",
+      accent: "#475569",
+      iconBg: "rgba(226,232,240,0.95)",
+      iconFg: "#334155",
+    },
+    blue: {
+      border: "rgba(96,165,250,0.32)",
+      accent: "#2563eb",
+      iconBg: "rgba(219,234,254,0.95)",
+      iconFg: "#1d4ed8",
+    },
+    amber: {
+      border: "rgba(251,191,36,0.34)",
+      accent: "#d97706",
+      iconBg: "rgba(254,243,199,0.95)",
+      iconFg: "#b45309",
+    },
+    green: {
+      border: "rgba(74,222,128,0.32)",
+      accent: "#16a34a",
+      iconBg: "rgba(220,252,231,0.95)",
+      iconFg: "#15803d",
+    },
+  };
+
+  const theme = toneMap[tone] || toneMap.steel;
+
+  return (
+    <div className="lpCard" style={{ ...conditionMetricCard, borderColor: theme.border }}>
+      <div style={{ ...conditionMetricAccent, background: theme.accent }} />
+      <div style={conditionMetricHeader}>
+        <span style={{ ...conditionMetricIcon, background: theme.iconBg, color: theme.iconFg }}>
+          {icon}
+        </span>
+        <div style={conditionMetricTitle}>{title}</div>
+      </div>
+      <div style={conditionMetricValue}>{value}</div>
+      <div style={conditionMetricSubtitle}>{subtitle}</div>
+    </div>
+  );
 }
 
 /* ===================== page ===================== */
@@ -394,7 +439,7 @@ export default function AnalysisPage() {
       } catch (e) {
         if (myReq !== reqIdRef.current) return;
         console.error(e);
-        setErr(e?.message || "Error cargando análisis");
+        setErr(e?.message || "Error cargando analisis");
         setOilSummary(null);
         setGreaseSummary(null);
         setOilTopEq([]);
@@ -422,7 +467,7 @@ export default function AnalysisPage() {
     } catch (e) {
       if (myReq !== crReqIdRef.current) return;
       console.error(e);
-      setCrErr(e?.message || "Error cargando analítica de condición");
+      setCrErr(e?.message || "Error cargando analitica de condicion");
       setCrData(null);
     } finally {
       if (myReq !== crReqIdRef.current) return;
@@ -469,7 +514,7 @@ export default function AnalysisPage() {
     const { delta, deltaPct } = oilSummary.trend;
     const d = toNum(delta);
     const p = deltaPct == null ? null : Number(deltaPct || 0);
-    if (p == null) return `Î” ${formatByKind(d, "ACEITE")} (sin mes previo)`;
+    if (p == null) return `Cambio ${formatByKind(d, "ACEITE")} (sin base previa)`;
     const sign = d >= 0 ? "+" : "";
     return `${sign}${formatByKind(d, "ACEITE")} (${sign}${p.toFixed(1)}%)`;
   }, [oilSummary]);
@@ -479,7 +524,7 @@ export default function AnalysisPage() {
     const { delta, deltaPct } = greaseSummary.trend;
     const d = toNum(delta);
     const p = deltaPct == null ? null : Number(deltaPct || 0);
-    if (p == null) return `Î” ${formatByKind(d, "GRASA")} (sin mes previo)`;
+    if (p == null) return `Cambio ${formatByKind(d, "GRASA")} (sin base previa)`;
     const sign = d >= 0 ? "+" : "";
     return `${sign}${formatByKind(d, "GRASA")} (${sign}${p.toFixed(1)}%)`;
   }, [greaseSummary]);
@@ -544,12 +589,43 @@ export default function AnalysisPage() {
 
   const oilAnomCount = useMemo(() => oilRows.filter((r) => r._level).length, [oilRows]);
   const greaseAnomCount = useMemo(() => greaseRows.filter((r) => r._level).length, [greaseRows]);
+  const conditionActiveTotal = useMemo(
+    () => toNum(crData?.totals?.open) + toNum(crData?.totals?.inProgress),
+    [crData]
+  );
+  const conditionAttendedTotal = useMemo(
+    () => toNum(crData?.totals?.resolved) + toNum(crData?.totals?.dismissed),
+    [crData]
+  );
+  const conditionFocusArea = useMemo(() => {
+    const labels = Array.isArray(crData?.series?.mttrAvgHoursByArea?.labels)
+      ? crData.series.mttrAvgHoursByArea.labels
+      : [];
+    const values = Array.isArray(crData?.series?.mttrAvgHoursByArea?.values)
+      ? crData.series.mttrAvgHoursByArea.values
+      : [];
+
+    if (!labels.length) {
+      return {
+        name: "Sin area",
+        subtitle: "Sin tiempo de atencion registrado",
+      };
+    }
+
+    return {
+      name: labels[0] || "Sin area",
+      subtitle:
+        values.length > 0
+          ? `${toNum(values[0]).toFixed(1)} h promedio`
+          : "Sin tiempo de atencion registrado",
+    };
+  }, [crData]);
 
     const exportLabel = useMemo(() => {
     if (tab === "consumo") return "Exportar consumo";
     if (tab === "actividades") return "Exportar actividades";
     if (tab === "fallas") return "Exportar fallas";
-    if (tab === "condicion") return "Exportar condición";
+    if (tab === "condicion") return "Exportar condicion";
     return "Exportar";
   }, [tab]);
 
@@ -619,8 +695,8 @@ export default function AnalysisPage() {
     return (
       <MainLayout>
         <div style={{ padding: 16 }}>
-          <h1 style={{ margin: 0 }}>Análisis</h1>
-          <div style={errorBox}>Selecciona una planta para visualizar el análisis.</div>
+          <h1 style={{ margin: 0 }}>Analisis</h1>
+          <div style={errorBox}>Selecciona una planta para visualizar el analisis.</div>
         </div>
       </MainLayout>
     );
@@ -659,19 +735,19 @@ export default function AnalysisPage() {
 
       <div style={headerRow}>
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ margin: 0 }}>Análisis</h1>
+          <h1 style={{ margin: 0 }}>Analisis</h1>
           <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 900 }}>
-            Tendencias y estadísticas de lubricación
+            Tendencias y estadisticas de lubricacion
             {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
           </p>
         </div>
 
                   <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Tag tone="steel">Pestaña: {tab}</Tag>
+            <Tag tone="steel">Pestana: {tab}</Tag>
             {currentPlant?.name ? <Tag tone="blue">Planta: {currentPlant.name}</Tag> : null}
-            {tab === "consumo" ? <Tag tone="amber">Rango: {days} días</Tag> : null}
-            {tab === "actividades" ? <Tag tone="amber">Año: {year}</Tag> : null}
-            {tab === "condicion" ? <Tag tone="amber">Rango condición: {crRange}</Tag> : null}
+            {tab === "consumo" ? <Tag tone="amber">Rango: {days} dias</Tag> : null}
+            {tab === "actividades" ? <Tag tone="amber">Ano: {year}</Tag> : null}
+            {tab === "condicion" ? <Tag tone="amber">Rango condicion: {crRange}</Tag> : null}
           </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -726,7 +802,7 @@ export default function AnalysisPage() {
             { value: "consumo", label: "Consumo", icon: <Icon name="drop" /> },
             { value: "actividades", label: "Actividades", icon: <Icon name="route" /> },
             { value: "fallas", label: "Fallas", icon: <Icon name="warn" /> },
-            { value: "condicion", label: "Condición", icon: <Icon name="warn" /> },
+            { value: "condicion", label: "Condicion", icon: <Icon name="warn" /> },
           ]}
         />
       </div>
@@ -737,10 +813,10 @@ export default function AnalysisPage() {
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={miniLbl}>Rango</span>
               <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={selectMini}>
-                <option value={30}>30 días</option>
-                <option value={90}>90 días</option>
-                <option value={180}>180 días</option>
-                <option value={365}>365 días</option>
+                <option value={30}>30 dias</option>
+                <option value={90}>90 dias</option>
+                <option value={180}>180 dias</option>
+                <option value={365}>365 dias</option>
               </select>
             </div>
 
@@ -750,7 +826,7 @@ export default function AnalysisPage() {
                 className="lpInput"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Nombre, código, ubicación"
+                placeholder="Nombre, codigo, ubicacion"
                 style={{ width: 260 }}
               />
             </div>
@@ -761,16 +837,16 @@ export default function AnalysisPage() {
                 checked={onlyAnomalies}
                 onChange={(e) => setOnlyAnomalies(e.target.checked)}
               />
-              <span style={{ fontWeight: 950, color: "#0f172a" }}>Solo anomalías</span>
+              <span style={{ fontWeight: 950, color: "#0f172a" }}>Solo anomalias</span>
             </label>
 
             {softLoading ? <Tag tone="steel">Actualizando...</Tag> : null}
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <Tag tone="blue">Aceites - anomalías: {oilAnomCount}</Tag>
-            <Tag tone="green">Grasas - anomalías: {greaseAnomCount}</Tag>
-            <Tag tone="steel">Rango: {days} días</Tag>
+            <Tag tone="blue">Aceites - anomalias: {oilAnomCount}</Tag>
+            <Tag tone="green">Grasas - anomalias: {greaseAnomCount}</Tag>
+            <Tag tone="steel">Rango: {days} dias</Tag>
           </div>
         </div>
       )}
@@ -778,7 +854,7 @@ export default function AnalysisPage() {
       {err ? <div style={errorBox}>{err}</div> : null}
       {loading ? (
         <p style={{ marginTop: 14, color: "#64748b", fontWeight: 900 }}>
-          Cargando análisis?
+          Cargando analisis...
         </p>
       ) : null}
 
@@ -791,10 +867,10 @@ export default function AnalysisPage() {
                   <div style={accentBarOrange} />
                   <PanelHeader
                     icon={<Icon name="drop" />}
-                    title="Resumen"
+                    title="Consumo y focos operativos"
                     tag="ACEITES"
                     tone="blue"
-                    subtitle="Unidad base de análisis: litros-  (ej. bombazos), se muestra también."
+                    subtitle="Unidad base: litros. Si existe captura operativa original, tambien se muestra."
                     right={
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                         <span style={miniLbl}>Lubricante</span>
@@ -820,7 +896,7 @@ export default function AnalysisPage() {
                   <div style={kpiGrid}>
                     <div className="lpCard" style={kpiCard}>
                       <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Lubricante más usado</div>
+                      <div style={kpiLbl}>Lubricante foco</div>
                       <div style={kpiVal}>{oilSummary?.topLubricant?.name || "?"}</div>
                       <div style={kpiSub}>
                         {oilSummary?.topLubricant
@@ -831,7 +907,7 @@ export default function AnalysisPage() {
 
                     <div className="lpCard" style={kpiCard}>
                       <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Equipo con mayor consumo</div>
+                      <div style={kpiLbl}>Equipo foco</div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
                         <div style={kpiVal}>{oilSummary?.topEquipment?.name || "?"}</div>
@@ -847,7 +923,7 @@ export default function AnalysisPage() {
 
                     <div className="lpCard" style={kpiCard}>
                       <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Tendencia mensual</div>
+                      <div style={kpiLbl}>Cambio mensual</div>
                       <div style={kpiVal}>{oilTrendLabel}</div>
                       <div style={kpiSub}>Comparado vs mes anterior</div>
                     </div>
@@ -858,10 +934,10 @@ export default function AnalysisPage() {
                   <div style={accentBarOrange} />
                   <PanelHeader
                     icon={<Icon name="drop" />}
-                    title="Resumen"
+                    title="Consumo y focos operativos"
                     tag="GRASAS"
                     tone="green"
-                    subtitle="Unidad base de análisis: g / kg. Si el backend envía captura original (ej. bombazos), se muestra también."
+                    subtitle="Unidad base: gramos y kilos. Si existe captura operativa original, tambien se muestra."
                     right={
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                         <span style={miniLbl}>Lubricante</span>
@@ -887,7 +963,7 @@ export default function AnalysisPage() {
                   <div style={kpiGrid}>
                     <div className="lpCard" style={kpiCard}>
                       <div style={kpiTopBarDark} />                     
-                      <div style={kpiLbl}>Lubricante más usado</div>
+                      <div style={kpiLbl}>Lubricante foco</div>
                       <div style={kpiVal}>{greaseSummary?.topLubricant?.name || "?"}</div>
                       <div style={kpiSub}>
                         {greaseSummary?.topLubricant
@@ -898,7 +974,7 @@ export default function AnalysisPage() {
 
                     <div className="lpCard" style={kpiCard}>
                       <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Equipo con mayor consumo</div>
+                      <div style={kpiLbl}>Equipo foco</div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
                         <div style={kpiVal}>{greaseSummary?.topEquipment?.name || "?"}</div>
@@ -914,7 +990,7 @@ export default function AnalysisPage() {
 
                     <div className="lpCard" style={kpiCard}>
                       <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Tendencia mensual</div>
+                      <div style={kpiLbl}>Cambio mensual</div>
                       <div style={kpiVal}>{greaseTrendLabel}</div>
                       <div style={kpiSub}>Comparado vs mes anterior</div>
                     </div>
@@ -925,7 +1001,7 @@ export default function AnalysisPage() {
              <div style={{ ...twoCols, marginTop: 14 }}>
   <div style={{ minWidth: 0 }}>
     <MonthlyConsumptionChartCard
-      title="Consumo"
+      title="Cambio mensual"
       kind="ACEITE"
       days={days}
       lubricantId={oilLubId ? Number(oilLubId) : undefined}
@@ -934,7 +1010,7 @@ export default function AnalysisPage() {
 
   <div style={{ minWidth: 0 }}>
     <MonthlyConsumptionChartCard
-      title="Consumo"
+      title="Cambio mensual"
       kind="GRASA"
       days={days}
       lubricantId={greaseLubId ? Number(greaseLubId) : undefined}
@@ -950,7 +1026,7 @@ export default function AnalysisPage() {
                     title="Top equipos por consumo"
                     tag="ACEITES"
                     tone="blue"
-                    subtitle="Ranking operativo. La comparación se hace con valor convertido real. Si existe, también se muestra la captura original."
+                    subtitle="Ranking operativo. La comparacion se hace con valor convertido real. Si existe, tambien se muestra la captura original."
                     right={
                       oilLubId ? (
                         <Tag tone="amber">{oilLubName || "Lubricante"}</Tag>
@@ -969,10 +1045,10 @@ export default function AnalysisPage() {
                           <tr>
                             <th style={th}>#</th>
                             <th style={th}>Equipo</th>
-                            <th style={th}>Ubicación</th>
-                            <th style={th}>Señal</th>
+                            <th style={th}>Ubicacion</th>
+                            <th style={th}>Senal</th>
                             <th style={{ ...th, textAlign: "right" }}>Consumo</th>
-                            <th style={{ ...th, textAlign: "right" }}>Acción</th>
+                            <th style={{ ...th, textAlign: "right" }}>Accion</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1020,7 +1096,7 @@ export default function AnalysisPage() {
                         </tbody>
                       </table>
                       <div style={footNote}>
-                        *La señal de anomalía ya usa el motor predictivo real por equipo (ventanas 14d/90d y baseline). El ranking sigue siendo operativo por consumo del periodo.
+                        *La senal de anomalia ya usa el motor predictivo real por equipo. El ranking se mantiene operativo por consumo del periodo.
                       </div>
                     </div>
                   )}
@@ -1033,7 +1109,7 @@ export default function AnalysisPage() {
                     title="Top equipos por consumo"
                     tag="GRASAS"
                     tone="green"
-                    subtitle="Ranking operativo. La comparación se hace con valor convertido real. Si existe, también se muestra la captura original."
+                    subtitle="Ranking operativo. La comparacion se hace con valor convertido real. Si existe, tambien se muestra la captura original."
                     right={
                       greaseLubId ? (
                         <Tag tone="amber">{greaseLubName || "Lubricante"}</Tag>
@@ -1052,10 +1128,10 @@ export default function AnalysisPage() {
                           <tr>
                             <th style={th}>#</th>
                             <th style={th}>Equipo</th>
-                            <th style={th}>Ubicación</th>
-                            <th style={th}>Señal</th>
+                            <th style={th}>Ubicacion</th>
+                            <th style={th}>Senal</th>
                             <th style={{ ...th, textAlign: "right" }}>Consumo</th>
-                            <th style={{ ...th, textAlign: "right" }}>Acción</th>
+                            <th style={{ ...th, textAlign: "right" }}>Accion</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1103,7 +1179,7 @@ export default function AnalysisPage() {
                         </tbody>
                       </table>
                       <div style={footNote}>
-                        *La senal de anomalía ya usa el motor predictivo real por equipo (ventanas 14d/90d y baseline). El ranking sigue siendo operativo por consumo del periodo.
+                        *La senal de anomalia ya usa el motor predictivo real por equipo. El ranking se mantiene operativo por consumo del periodo.
                       </div>
                     </div>
                   )}
@@ -1117,12 +1193,12 @@ export default function AnalysisPage() {
               <div style={accentBarOrange} />
               <PanelHeader
                 icon={<Icon name="doc" />}
-                title="Actividades, análisis y tendencias"
-                subtitle="KPIs, cumplimiento y tendencia mensual. Enfocado a supervisión y operación."
+                title="Actividades, analisis y tendencias"
+                subtitle="KPIs, cumplimiento y tendencia mensual. Enfocado a supervision y operacion."
                 right={
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span style={miniLbl}>Año</span>
+                      <span style={miniLbl}>Ano</span>
                       <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={selectMini}>
                         {[currentYear, currentYear - 1, currentYear - 2].map((y) => (
                           <option key={y} value={y}>
@@ -1133,7 +1209,7 @@ export default function AnalysisPage() {
                     </div>
 
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span style={miniLbl}>Técnico</span>
+                      <span style={miniLbl}>Tecnico</span>
                       <select
                         value={techId}
                         onChange={(e) => setTechId(e.target.value)}
@@ -1142,7 +1218,7 @@ export default function AnalysisPage() {
                         <option value="">Todos</option>
                         {techOptions.map((x) => (
                           <option key={x.technicianId} value={String(x.technicianId)}>
-                            {x?.technician?.name || `Técnico #${x.technicianId}`}
+                            {x?.technician?.name || `Tecnico #${x.technicianId}`}
                           </option>
                         ))}
                       </select>
@@ -1173,17 +1249,17 @@ export default function AnalysisPage() {
 
               <PanelHeader
                 icon={<Icon name="warn" />}
-                title="Condición ? reportes y tendencias"
-                subtitle="Backlog, categorías, MTTR promedio y reincidencia. Listo para alimentar predicción."
+                title="Condicion y confiabilidad"
+                subtitle="Backlog, origen del hallazgo, tiempos de atencion y reincidencia operativa."
                 right={
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <span style={miniLbl}>Rango</span>
                       <select value={crRange} onChange={(e) => setCrRange(e.target.value)} style={selectMini}>
-                        <option value="30D">30 días</option>
-                        <option value="90D">90 días</option>
-                        <option value="180D">180 días</option>
-                        <option value="365D">365 días</option>
+                        <option value="30D">30 dias</option>
+                        <option value="90D">90 dias</option>
+                        <option value="180D">180 dias</option>
+                        <option value="365D">365 dias</option>
                         <option value="MONTH">Este mes</option>
                       </select>
                     </div>
@@ -1209,38 +1285,39 @@ export default function AnalysisPage() {
 
               {!!crData && (
                 <>
-                  <div style={kpiGrid}>
-                    <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Reportes (total)</div>
-                      <div style={kpiVal}>{toNum(crData?.totals?.total)}</div>
-                      <div style={kpiSub}>Rango seleccionado</div>
-                    </div>
-
-                    <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Backlog</div>
-                      <div style={kpiVal}>
-                        {toNum(crData?.totals?.open) + toNum(crData?.totals?.inProgress)}
-                      </div>
-                      <div style={kpiSub}>
-                        OPEN {toNum(crData?.totals?.open)} ? IN_PROGRESS {toNum(crData?.totals?.inProgress)}
-                      </div>
-                    </div>
-
-                    <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Resueltos</div>
-                      <div style={kpiVal}>{toNum(crData?.totals?.resolved)}</div>
-                      <div style={kpiSub}>RESOLVED</div>
-                    </div>
-
-                    <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
-                      <div style={kpiLbl}>Descartados</div>
-                      <div style={kpiVal}>{toNum(crData?.totals?.dismissed)}</div>
-                      <div style={kpiSub}>DISMISSED</div>
-                    </div>
+                  <div style={conditionMetricGrid}>
+                    <ConditionMetricCard
+                      title="Reportes"
+                      value={toNum(crData?.totals?.total)}
+                      subtitle="Hallazgos detectados en el rango"
+                      tone="steel"
+                      icon={<Icon name="doc" />}
+                    />
+                    <ConditionMetricCard
+                      title="Activos"
+                      value={conditionActiveTotal}
+                      subtitle={`Open ${toNum(crData?.totals?.open)} / En proceso ${toNum(
+                        crData?.totals?.inProgress
+                      )}`}
+                      tone="amber"
+                      icon={<Icon name="warn" />}
+                    />
+                    <ConditionMetricCard
+                      title="Atendidos"
+                      value={conditionAttendedTotal}
+                      subtitle={`Resueltos ${toNum(crData?.totals?.resolved)} / Descartados ${toNum(
+                        crData?.totals?.dismissed
+                      )}`}
+                      tone="green"
+                      icon={<Icon name="check" />}
+                    />
+                    <ConditionMetricCard
+                      title="Area foco"
+                      value={conditionFocusArea.name}
+                      subtitle={conditionFocusArea.subtitle}
+                      tone="blue"
+                      icon={<Icon name="route" />}
+                    />
                   </div>
 
                   <div style={{ ...twoCols, marginTop: 14 }}>
@@ -1248,8 +1325,8 @@ export default function AnalysisPage() {
                       <div style={accentBarOrange} />
                       <PanelHeader
                         icon={<Icon name="list" />}
-                        title="Distribución por categoría"
-                        subtitle="Qu? est? ocurriendo (origen del problema)."
+                        title="Distribucion por categoria"
+                        subtitle="Que esta ocurriendo y donde nace el hallazgo."
                       />
 
                       <SimpleBars
@@ -1263,8 +1340,8 @@ export default function AnalysisPage() {
                       <div style={accentBarOrange} />
                       <PanelHeader
                         icon={<Icon name="doc" />}
-                        title="MTTR promedio (horas) por Área"
-                        subtitle="Tiempo promedio desde detectado hasta ejecución correctiva completada."
+                        title="Tiempo de atencion por area"
+                        subtitle="Tiempo promedio desde detectado hasta ejecucion correctiva completada."
                       />
 
                       <SimpleBars
@@ -1280,7 +1357,7 @@ export default function AnalysisPage() {
                     <PanelHeader
                       icon={<Icon name="route" />}
                       title="Flujo semanal"
-                      subtitle="Entradas (created) vs salidas (resolved por ejecución). Ideal para ver si el backlog crece."
+                      subtitle="Entradas vs salidas de correctivas. Util para ver si el backlog crece."
                     />
 
                     <div style={tableWrap}>
@@ -1324,8 +1401,8 @@ export default function AnalysisPage() {
                       </table>
 
                       <div style={footNote}>
-                        *"Resueltos" usa la fecha de <b>executedAt</b> de la ejecución correctiva.
-                        "Status por semana" se agrupa por semana de creación.
+                        *"Resueltos" usa la fecha de <b>executedAt</b> de la ejecucion correctiva.
+                        "Status por semana" se agrupa por semana de creacion.
                       </div>
                     </div>
                   </div>
@@ -1336,7 +1413,7 @@ export default function AnalysisPage() {
                       <PanelHeader
                         icon={<Icon name="warn" />}
                         title="Reincidencia"
-                        subtitle="Equipos con 2+ reportes en el rango. Prioriza causa raíz."
+                        subtitle="Equipos con dos o mas reportes en el rango."
                       />
                       <SimpleTopList items={crData?.series?.recurrence || []} onGo={goEquipment} />
                     </div>
@@ -1345,8 +1422,8 @@ export default function AnalysisPage() {
                       <div style={accentBarOrange} />
                       <PanelHeader
                         icon={<Icon name="list" />}
-                        title="Top equipos con más reportes"
-                        subtitle="Visión de dónde se concentra el riesgo."
+                        title="Equipos foco"
+                        subtitle="Donde se concentra la carga de reportes."
                       />
                       <SimpleTopList items={crData?.series?.topEquipments || []} onGo={goEquipment} />
                     </div>
@@ -1362,7 +1439,7 @@ export default function AnalysisPage() {
               <PanelHeader
                 icon={<Icon name="warn" />}
                 title="Fallas"
-          subtitle="Top fallas por equipo. Útil para priorizar causa raíz y lubricación correctiva."
+          subtitle="Top fallas por equipo. Util para priorizar causa raiz y lubricacion correctiva."
               />
               <FailuresByEquipment />
             </div>
@@ -1427,7 +1504,7 @@ function SimpleTopList({ items, onGo }) {
             <th style={th}>#</th>
             <th style={th}>Equipo</th>
             <th style={{ ...th, textAlign: "right" }}>Reportes</th>
-            <th style={{ ...th, textAlign: "right" }}>Acción</th>
+            <th style={{ ...th, textAlign: "right" }}>Accion</th>
           </tr>
         </thead>
         <tbody>
@@ -1620,6 +1697,79 @@ const kpiLbl = {
 };
 const kpiVal = { marginTop: 6, fontSize: 18, fontWeight: 980, color: "#0f172a" };
 const kpiSub = { marginTop: 6, fontSize: 12, color: "#475569", fontWeight: 850 };
+
+const conditionMetricGrid = {
+  marginTop: 12,
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 12,
+};
+
+const conditionMetricCard = {
+  position: "relative",
+  minWidth: 0,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "rgba(148,163,184,0.45)",
+  borderRadius: 16,
+  padding: 16,
+  paddingTop: 18,
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
+  overflow: "hidden",
+};
+
+const conditionMetricAccent = {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  bottom: 0,
+  width: 6,
+  borderTopLeftRadius: 16,
+  borderBottomLeftRadius: 16,
+};
+
+const conditionMetricHeader = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+};
+
+const conditionMetricIcon = {
+  width: 38,
+  height: 38,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 12,
+  border: "1px solid rgba(226,232,240,0.95)",
+  flex: "0 0 auto",
+};
+
+const conditionMetricTitle = {
+  fontSize: 12,
+  fontWeight: 950,
+  color: "#64748b",
+  textTransform: "uppercase",
+  letterSpacing: 0.2,
+};
+
+const conditionMetricValue = {
+  marginTop: 14,
+  fontSize: 24,
+  fontWeight: 1000,
+  color: "#0f172a",
+  lineHeight: 1.05,
+};
+
+const conditionMetricSubtitle = {
+  marginTop: 10,
+  fontSize: 12,
+  color: "#475569",
+  fontWeight: 850,
+  lineHeight: 1.5,
+};
 
 const tableWrap = {
   overflowX: "auto",

@@ -1,4 +1,4 @@
-﻿// src/pages/reports/MonthlyIntelligentReport.jsx
+// src/pages/reports/MonthlyIntelligentReport.jsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
@@ -8,13 +8,11 @@ import { getSettings } from "../../services/settingsService";
 
 
 import { getDashboardSummary } from "../../services/dashboardService";
-import useDashboardPredictiveAlerts from "../../hooks/useDashboardPredictiveAlerts";
-import useDashboardPriorityQueue from "../../hooks/useDashboardPriorityQueue";
 
 import { getAiSummary, refreshAiSummary } from "../../services/aiService";
 import { Icon } from "../../components/ui/lpIcons";
 
-// âœ… Recharts
+// Recharts
 import {
   ResponsiveContainer,
   PieChart,
@@ -31,7 +29,7 @@ import {
   Line,
 } from "recharts";
 
-// âœ… Export PDF
+// Export PDF
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -97,7 +95,7 @@ function riskTone(level) {
 
 function pqSeverityLabel(severity) {
   const s = String(severity || "").toUpperCase();
-  if (s === "CRITICAL") return "Atención inmediata";
+  if (s === "CRITICAL") return "Atencion inmediata";
   if (s === "HIGH") return "Alta prioridad";
   if (s === "MED") return "Atender hoy";
   return "Seguimiento";
@@ -106,10 +104,10 @@ function pqSeverityLabel(severity) {
 function pqTypeLabel(type) {
   const t = String(type || "").toUpperCase();
   if (t === "EXEC_OVERDUE") return "Actividad vencida";
-  if (t === "EXEC_UNASSIGNED") return "Actividad sin técnico";
-  if (t === "COND_REPORT") return "Condición reportada";
+  if (t === "EXEC_UNASSIGNED") return "Actividad sin tecnico";
+  if (t === "COND_REPORT") return "Condicion reportada";
   if (t === "DAYS_TO_EMPTY") return "Inventario en riesgo";
-  if (t === "CONSUMPTION_ANOMALY") return "Consumo fuera de patrón";
+  if (t === "CONSUMPTION_ANOMALY") return "Consumo fuera de patron";
   return "Prioridad";
 }
 
@@ -117,7 +115,7 @@ function pqOwnerLabel(owner) {
   const o = String(owner || "").toUpperCase();
   if (o === "ADMIN") return "Administrador";
   if (o === "SUPERVISOR") return "Supervisor";
-  if (o === "TECHNICIAN") return "Técnico";
+  if (o === "TECHNICIAN") return "Tecnico";
   return "Equipo";
 }
 
@@ -138,11 +136,20 @@ function formatPriorityQueueItem(item) {
 function safeFilename(str) {
   return String(str || "")
     .trim()
-    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/[\/:*?"<>|]+/g, "-")
     .replace(/\s+/g, " ")
     .slice(0, 120);
 }
 
+function normalizeAiText(text) {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/* =========================
+   UI
+========================= */
 /* =========================
    UI
 ========================= */
@@ -288,389 +295,6 @@ function KPI({ label, value, hint, tone = "dark" }) {
   );
 }
 
-/* =========================
-   AI SUMMARY BOX
-========================= */
-
-function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefresh = false }) {
-  const loading = !!aiState?.loading;
-  const err = aiState?.error;
-  const data = aiState?.data;
-  const summary = data?.summary;
-
-  const cached = !!data?.cached;
-  const model = data?.model;
-  const generatedAt = data?.generatedAt ? fmtDateTimeLocal(data.generatedAt) : null;
-  const isFallback = String(summary?.title || "").toLowerCase().includes("fallback");
-
-  const highlights = Array.isArray(summary?.highlights) ? summary.highlights.slice(0, 4) : [];
-  const recommendations = Array.isArray(summary?.recommendations)
-    ? summary.recommendations.slice(0, 4)
-    : [];
-  const risks = Array.isArray(summary?.risks) ? summary.risks.slice(0, 4) : [];
-
-  return (
-    <div className="ai-summary-box" style={aiSummaryRoot}>
-      <style>{`
-        @keyframes lpAiSummaryReveal {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media print {
-          @page {
-            size: A4;
-            margin: 14mm;
-          }
-
-          .ai-summary-box {
-            background: #ffffff !important;
-            border: 1px solid #dbe2ea !important;
-            box-shadow: none !important;
-            border-radius: 14px !important;
-            overflow: visible !important;
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          .ai-summary-toolbar {
-            display: none !important;
-          }
-
-          .ai-summary-status {
-            color: #475569 !important;
-          }
-
-          .ai-summary-screen-hero {
-            background: #ffffff !important;
-            border: 1px solid #dbe2ea !important;
-            box-shadow: none !important;
-            color: #0f172a !important;
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          .ai-summary-screen-hero * {
-            color: #0f172a !important;
-          }
-
-          .ai-summary-screen-chip {
-            background: #f8fafc !important;
-            border: 1px solid #dbe2ea !important;
-            color: #0f172a !important;
-          }
-
-          .ai-summary-print-title {
-            display: block !important;
-          }
-
-          .ai-summary-screen-title {
-            font-family: Georgia, serif !important;
-            font-size: 22px !important;
-            line-height: 1.25 !important;
-            color: #0f172a !important;
-            max-width: 100% !important;
-          }
-
-          .ai-summary-grid {
-            display: block !important;
-          }
-
-          .ai-summary-card {
-            background: #ffffff !important;
-            border: 1px solid #dbe2ea !important;
-            box-shadow: none !important;
-            break-inside: avoid;
-            page-break-inside: avoid;
-            margin-top: 12px !important;
-          }
-
-          .ai-summary-dark-card {
-            background: #ffffff !important;
-            border: 1px solid #dbe2ea !important;
-            box-shadow: none !important;
-          }
-
-          .ai-summary-dark-card * {
-            color: #0f172a !important;
-          }
-
-          .ai-summary-risk-card {
-            background: #ffffff !important;
-            border: 1px solid #dbe2ea !important;
-            box-shadow: none !important;
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          .ai-summary-risk-card * {
-            color: #0f172a !important;
-          }
-
-          .ai-summary-risk-card .risk-level-badge {
-            background: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #0f172a !important;
-          }
-
-          .ai-summary-section-title {
-            color: #9a3412 !important;
-          }
-
-          .ai-summary-subtle {
-            color: #475569 !important;
-          }
-        }
-      `}</style>
-
-      <div
-        className="ai-summary-toolbar"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 10,
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div
-            style={{
-              fontWeight: 1000,
-              color: "#0f172a",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <Icon name="search" size="sm" />
-            Resumen inteligente
-          </div>
-
-          <div
-            className="ai-summary-status"
-            style={{ marginTop: 4, fontSize: 12, fontWeight: 850, color: "#64748b" }}
-          >
-            {loading
-              ? "Generando resumen"
-              : err
-              ? "No se pudo generar el resumen IA."
-              : summary
-              ? `IA lista · ${cached ? "cache" : "nuevo"}${model ? ` · ${model}` : ""}${
-                  generatedAt ? ` · ${generatedAt}` : ""
-                }`
-              : "Genera un resumen ejecutivo del mes."}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={onGenerate}
-            disabled={loading}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 12,
-              fontWeight: 950,
-              border: "1px solid rgba(0,0,0,0.08)",
-              background: "#0f172a",
-              color: "#fff",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            {loading ? "Generando" : "Generar"}
-          </button>
-
-          {canForceRefresh ? (
-            <button
-              type="button"
-              onClick={onRefresh}
-              disabled={loading}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                fontWeight: 950,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#fff",
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-              title="Forzar regeneración"
-            >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="refresh" size="sm" />
-                Regenerar
-              </span>
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        {loading ? (
-          <div style={aiLoadingBox}>Preparando resumen para {month}...</div>
-        ) : err ? (
-          <div style={aiErrorBox}>{err}</div>
-        ) : summary ? (
-          <div
-            style={{
-              display: "grid",
-              gap: 16,
-              animation: "lpAiSummaryReveal 420ms ease",
-            }}
-          >
-            <div className="ai-summary-print-title" style={printTitleBox}>
-              <div style={printTitleMain}>Resumen inteligente del periodo</div>
-              <div style={printTitleSub}>
-                {summary.title || "Resumen ejecutivo"} · {month}
-              </div>
-            </div>
-
-            <div className="ai-summary-screen-hero" style={heroBox}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <div style={heroKicker}>Resumen inteligente del periodo</div>
-                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, color: "#94a3b8" }}>
-                    {summary.title || "Resumen ejecutivo"}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span className="ai-summary-screen-chip" style={heroChip(isFallback)}>
-                    {isFallback ? "Fallback seguro" : "IA activa"}
-                  </span>
-
-                  {model ? (
-                    <span className="ai-summary-screen-chip" style={heroModelChip}>
-                      {model}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              <div style={heroInner}>
-                <div style={heroDiagnosisKicker}>Diagnóstico ejecutivo</div>
-                <div className="ai-summary-screen-title" style={heroTitle}>
-                  {summary.executiveSummary || "Sin diagnóstico disponible para este periodo."}
-                </div>
-              </div>
-            </div>
-
-            <div className="ai-summary-grid" style={screenGrid}>
-              {highlights.length > 0 ? (
-                <div className="ai-summary-card" style={sectionCard}>
-                  <div className="ai-summary-section-title" style={sectionTitle}>
-                    Hallazgos clave
-                  </div>
-
-                  <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                    {highlights.map((item, i) => (
-                      <div className="ai-summary-dark-card" key={i} style={darkItemCard}>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              {recommendations.length > 0 ? (
-                <div className="ai-summary-card" style={sectionCard}>
-                  <div className="ai-summary-section-title" style={sectionTitle}>
-                    Acciones recomendadas
-                  </div>
-
-                  <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                    {recommendations.map((item, i) => (
-                      <div className="ai-summary-dark-card" key={i} style={darkItemCard}>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            {risks.length > 0 ? (
-              <div className="ai-summary-card" style={sectionCard}>
-                <div className="ai-summary-section-title" style={sectionTitle}>
-                  Riesgos detectados
-                </div>
-
-                <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-                  {risks.map((r, i) => {
-                    const lvl = String(r.level || "LOW").toUpperCase();
-                    return (
-                      <div key={i} className="ai-summary-risk-card" style={riskCard(lvl)}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 12,
-                            alignItems: "flex-start",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div style={{ maxWidth: 980 }}>
-                            <div
-                              style={{
-                                color: "#f8fafc",
-                                fontSize: 16,
-                                fontWeight: 950,
-                                lineHeight: 1.3,
-                              }}
-                            >
-                              {r.message || "Sin descripción disponible."}
-                            </div>
-
-                            <div
-                              className="ai-summary-subtle"
-                              style={{
-                                marginTop: 10,
-                                color: "#cbd5e1",
-                                fontSize: 13,
-                                fontWeight: 800,
-                                lineHeight: 1.45,
-                              }}
-                            >
-                              Acción sugerida:{" "}
-                              <b style={{ color: "#f8fafc" }}>
-                                {r.action || "Sin acción sugerida."}
-                              </b>
-                            </div>
-                          </div>
-
-                          <span className="risk-level-badge" style={riskBadge(lvl)}>
-                            {lvl}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          <div style={aiLoadingBox}>
-            No hay resumen todavía. Presiona <b style={{ color: "#fff" }}>Generar</b>.
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* =========================
-   CHARTS
-========================= */
 
 function ChartBox({ title, subtitle, right, children }) {
   return (
@@ -711,15 +335,7 @@ function ChartBox({ title, subtitle, right, children }) {
         {right ? <div style={{ flexShrink: 0 }}>{right}</div> : null}
       </div>
 
-      <div
-        style={{
-          marginTop: 10,
-          width: "100%",
-          minWidth: 0,
-        }}
-      >
-        {children}
-      </div>
+      <div style={{ marginTop: 10, width: "100%", minWidth: 0 }}>{children}</div>
     </div>
   );
 }
@@ -755,17 +371,12 @@ function StableChart({ height = 260, children }) {
       const rect = el.getBoundingClientRect();
       const w = Math.max(0, Math.floor(rect.width));
       const h = Math.max(0, Math.floor(rect.height || height));
-
       setBox({ width: w, height: h });
       setReady(w > 0 && h > 0);
     };
 
     updateSize();
-
-    const ro = new ResizeObserver(() => {
-      updateSize();
-    });
-
+    const ro = new ResizeObserver(updateSize);
     ro.observe(el);
     window.addEventListener("resize", updateSize);
 
@@ -776,26 +387,215 @@ function StableChart({ height = 260, children }) {
   }, [height]);
 
   return (
-    <div
-      ref={wrapRef}
-      style={{
-        width: "100%",
-        height,
-        minWidth: 0,
-        minHeight: height,
-      }}
-    >
+    <div ref={wrapRef} style={{ width: "100%", height, minWidth: 0, minHeight: height }}>
       {ready ? children(box) : null}
     </div>
   );
 }
-
 /* =========================
-   PDF EXPORT HELPERS
+   AI SUMMARY BOX
 ========================= */
 
+function AiSummaryBox({
+  month,
+  aiState,
+  enabled,
+  onGenerate,
+  onRefresh,
+  canForceRefresh = false,
+  signals = [],
+}) {
+  const loading = !!aiState?.loading;
+  const err = aiState?.error;
+  const data = aiState?.data;
+  const summary = data?.summary;
+
+  const cached = !!data?.cached;
+  const model = data?.model;
+  const generatedAt = data?.generatedAt ? fmtDateTimeLocal(data.generatedAt) : null;
+  const isFallback = String(summary?.title || "").toLowerCase().includes("fallback");
+
+  const executiveSummary = normalizeAiText(
+    summary?.executiveSummary || "Sin diagnostico disponible para este periodo."
+  );
+  const summaryTitle = normalizeAiText(summary?.title || "Lectura ejecutiva operativa");
+  const highlights = Array.isArray(summary?.highlights)
+    ? summary.highlights.map((item) => normalizeAiText(item)).filter(Boolean).slice(0, 2)
+    : [];
+  const recommendations = Array.isArray(summary?.recommendations)
+    ? summary.recommendations.map((item) => normalizeAiText(item)).filter(Boolean).slice(0, 2)
+    : [];
+  const summarySignals = Array.isArray(signals) ? signals.filter(Boolean).slice(0, 3) : [];
+
+  return (
+    <div className="ai-summary-box" style={aiSummaryRoot}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 10,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div
+            style={{
+              fontWeight: 1000,
+              color: "#0f172a",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Icon name="search" size="sm" />
+            Resumen inteligente
+          </div>
+
+          <div style={{ marginTop: 4, fontSize: 12, fontWeight: 850, color: "#64748b" }}>
+            {!enabled
+              ? "IA desactivada para esta planta."
+              : loading
+              ? "Generando lectura ejecutiva"
+              : err
+              ? "No se pudo generar el resumen IA."
+              : summary
+              ? `IA lista | ${cached ? "cache" : "nuevo"}${model ? ` | ${model}` : ""}${
+                  generatedAt ? ` | ${generatedAt}` : ""
+                }`
+              : "Genera un resumen ejecutivo corto del periodo."}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={summary ? onRefresh : onGenerate}
+            disabled={loading || !enabled}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 12,
+              fontWeight: 950,
+              border: "1px solid rgba(0,0,0,0.08)",
+              background: "#0f172a",
+              color: "#fff",
+              cursor: loading || !enabled ? "not-allowed" : "pointer",
+              opacity: loading || !enabled ? 0.6 : 1,
+            }}
+          >
+            {loading ? "Actualizando" : summary ? "Actualizar" : "Generar"}
+          </button>
+
+          {canForceRefresh && summary ? (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={loading || !enabled}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 12,
+                fontWeight: 950,
+                border: "1px solid rgba(0,0,0,0.08)",
+                background: "#fff",
+                cursor: loading || !enabled ? "not-allowed" : "pointer",
+              }}
+              title="Forzar regeneracion"
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <Icon name="refresh" size="sm" />
+                Regenerar
+              </span>
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        {!enabled ? (
+          <div style={aiLoadingBox}>La IA esta desactivada para esta planta.</div>
+        ) : loading ? (
+          <div style={aiLoadingBox}>Preparando lectura ejecutiva para {month}...</div>
+        ) : err ? (
+          <div style={aiErrorBox}>{err}</div>
+        ) : summary ? (
+          <div style={{ display: "grid", gap: 12 }}>
+            <div style={heroBox}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div style={heroKicker}>Diagnostico ejecutivo</div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, color: "#94a3b8" }}>
+                    {summaryTitle}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <span style={heroChip(isFallback)}>{isFallback ? "Fallback seguro" : "IA activa"}</span>
+                  {model ? <span style={heroModelChip}>{model}</span> : null}
+                </div>
+              </div>
+
+              <div style={heroSummary}>{executiveSummary}</div>
+
+              {summarySignals.length ? (
+                <div style={signalRow}>
+                  {summarySignals.map((signal) => (
+                    <div key={signal.label} style={signalCard}>
+                      <div style={signalValue}>{signal.value}</div>
+                      <div style={signalLabel}>{signal.label}</div>
+                      {signal.note ? <div style={signalNote}>{signal.note}</div> : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={sectionCard}>
+                <div style={sectionTitle}>Hallazgos clave</div>
+                <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
+                  {(highlights.length ? highlights : ["Sin hallazgos relevantes para este periodo."]).map((item, i) => (
+                    <div key={`highlight-${i}`} style={compactRow}>
+                      <div style={compactIndexOrange}>{i + 1}</div>
+                      <div style={compactText}>{item}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={sectionCard}>
+                <div style={sectionTitle}>Acciones recomendadas</div>
+                <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
+                  {(recommendations.length
+                    ? recommendations
+                    : ["Mantener disciplina de cierre y seguimiento del periodo."]).map((item, i) => (
+                    <div key={`recommendation-${i}`} style={compactRow}>
+                      <div style={compactIndexGreen}>{i + 1}</div>
+                      <div style={compactText}>{item}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={aiLoadingBox}>
+            No hay resumen todavia. Presiona <b style={{ color: "#fff" }}>Generar</b>.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 async function captureSectionToCanvas(el, { scale = 2 } = {}) {
-  if (!el) throw new Error("No se encontró la sección para exportar.");
+  if (!el) throw new Error("No se encontro la seccion para exportar.");
   const canvas = await html2canvas(el, {
     scale,
     backgroundColor: "#ffffff",
@@ -806,9 +606,7 @@ async function captureSectionToCanvas(el, { scale = 2 } = {}) {
   return canvas;
 }
 
-function addCanvasToPdf(pdf, canvas, { margin = 10 } = {}) {
-  const imgData = canvas.toDataURL("image/png", 1.0);
-
+function addCanvasToPdf(pdf, canvas, state, { margin = 10, gap = 6 } = {}) {
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
@@ -817,33 +615,49 @@ function addCanvasToPdf(pdf, canvas, { margin = 10 } = {}) {
 
   const imgWidth = usableWidth;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  const currentY = Number(state?.y ?? margin);
+  const availableHeight = pageHeight - currentY - margin;
 
   if (imgHeight <= usableHeight) {
-    pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight, undefined, "FAST");
+    if (imgHeight > availableHeight && currentY > margin) {
+      pdf.addPage();
+      state.y = margin;
+    }
+
+    const y = Number(state?.y ?? margin);
+    const imgData = canvas.toDataURL("image/png", 1.0);
+    pdf.addImage(imgData, "PNG", margin, y, imgWidth, imgHeight, undefined, "FAST");
+    state.y = y + imgHeight + gap;
     return;
   }
 
-  let y = 0;
-  let page = 0;
+  if (currentY > margin) {
+    pdf.addPage();
+    state.y = margin;
+  }
 
+  let offsetY = 0;
+  let page = 0;
   const pxPerMm = canvas.width / imgWidth;
   const pageHeightPx = usableHeight * pxPerMm;
 
-  while (y < canvas.height) {
-    if (page > 0) pdf.addPage();
+  while (offsetY < canvas.height) {
+    if (page > 0) {
+      pdf.addPage();
+      state.y = margin;
+    }
 
     const sliceCanvas = document.createElement("canvas");
     sliceCanvas.width = canvas.width;
-    sliceCanvas.height = Math.min(pageHeightPx, canvas.height - y);
+    sliceCanvas.height = Math.min(pageHeightPx, canvas.height - offsetY);
 
     const ctx = sliceCanvas.getContext("2d");
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-
     ctx.drawImage(
       canvas,
       0,
-      y,
+      offsetY,
       canvas.width,
       sliceCanvas.height,
       0,
@@ -854,12 +668,20 @@ function addCanvasToPdf(pdf, canvas, { margin = 10 } = {}) {
 
     const sliceData = sliceCanvas.toDataURL("image/png", 1.0);
     const sliceHeightMm = (sliceCanvas.height * imgWidth) / sliceCanvas.width;
+    pdf.addImage(sliceData, "PNG", margin, state.y, imgWidth, sliceHeightMm, undefined, "FAST");
 
-    pdf.addImage(sliceData, "PNG", margin, margin, imgWidth, sliceHeightMm, undefined, "FAST");
-
-    y += sliceCanvas.height;
+    offsetY += sliceCanvas.height;
     page += 1;
+    state.y = margin + sliceHeightMm + gap;
   }
+}
+
+function getExportBlocks(root) {
+  if (!root) return [];
+  const blocks = Array.from(root.children || []).filter(
+    (node) => node && node.nodeType === 1 && node.getBoundingClientRect().height > 0
+  );
+  return blocks.length > 0 ? blocks : [root];
 }
 
 /* =========================
@@ -930,34 +752,7 @@ const aiLang = "es";
   }
 }, [currentPlantId]);
 
-  const predictiveEnabled = Boolean(appSettings?.predictiveAlertsEnabled ?? true);
 const aiEnabled = Boolean(appSettings?.aiSummaryEnabled ?? true);
-const priorityQueueEnabled = Boolean(appSettings?.priorityQueueEnabled ?? true);
-
-const canSeePredictive = predictiveEnabled;
-const canSeePriorityQueue = priorityQueueEnabled && predictiveEnabled;
-
-const {
-  alerts: predAlerts,
-  total: predTotal,
-  loading: predLoading,
-  error: predError,
-  refresh: refreshPred,
-} = useDashboardPredictiveAlerts({
-  month,
-  enabled: canSeePredictive && !!currentPlantId,
-});
-
-const {
-  loading: pqLoading,
-  error: pqError,
-  items: pqItems,
-  total: pqTotal,
-  refresh: refreshPQ,
-} = useDashboardPriorityQueue({
-  month,
-  enabled: canSeePriorityQueue && !!currentPlantId,
-});
 
 useEffect(() => {
   load();
@@ -1181,6 +976,62 @@ useEffect(() => {
     };
   }, [summary]);
 
+  const conditionMetrics = useMemo(() => {
+    const reports =
+      summary?.activities?.conditionReports ||
+      summary?.monthlyTotals?.conditionReports ||
+      {};
+
+    const open = Number(reports.OPEN || 0);
+    const inProgress = Number(reports.IN_PROGRESS || 0);
+    const resolved = Number(reports.RESOLVED || 0);
+    const dismissed = Number(reports.DISMISSED || 0);
+    const reported = open + inProgress + resolved + dismissed;
+    const attended = inProgress + resolved + dismissed;
+    const active = open + inProgress;
+
+    return {
+      open,
+      inProgress,
+      resolved,
+      dismissed,
+      reported,
+      attended,
+      active,
+      statusData: [
+        { name: "Abiertas", value: open, fill: "#ef4444" },
+        { name: "En progreso", value: inProgress, fill: "#f59e0b" },
+        { name: "Resueltas", value: resolved, fill: "#22c55e" },
+        { name: "Descartadas", value: dismissed, fill: "#94a3b8" },
+      ],
+      attentionData: [
+        { name: "Atendidas", value: attended, fill: "#16a34a" },
+        { name: "Sin intervencion", value: Math.max(reported - attended, 0), fill: "#ef4444" },
+      ],
+    };
+  }, [summary]);
+
+  const aiSignals = useMemo(
+    () => [
+      {
+        label: "Cumplimiento",
+        value: `${kpis.compliance}%`,
+        note: "Cierre mensual del plan",
+      },
+      {
+        label: "Atrasadas",
+        value: kpis.overdue,
+        note: "Pendientes con fecha vencida",
+      },
+      {
+        label: "Condiciones activas",
+        value: conditionMetrics.active,
+        note: "Abiertas y en progreso",
+      },
+    ],
+    [conditionMetrics.active, kpis.compliance, kpis.overdue]
+  );
+
   const donutData = useMemo(() => {
     return [
       { name: "Completadas", value: kpis.completed },
@@ -1189,776 +1040,330 @@ useEffect(() => {
     ];
   }, [kpis.completed, kpis.pending, kpis.overdue]);
 
-  const dteTop =
-  canSeePredictive && Array.isArray(predAlerts?.lubricantDaysToEmptyTop)
-    ? predAlerts.lubricantDaysToEmptyTop
-    : [];
-
-const anomaliesTop =
-  canSeePredictive && Array.isArray(predAlerts?.equipmentConsumptionAnomaliesTop)
-    ? predAlerts.equipmentConsumptionAnomaliesTop
-    : [];
-
-  const execRisks = useMemo(() => {
-    if (!canSeePredictive) return [];
-
-    const rows = [];
-
-    if (Number(predAlerts?.riskPendingCount || 0) > 0) {
-      rows.push({
-        title: "Riesgo de atraso",
-        msg: `${Number(predAlerts.riskPendingCount || 0)} actividades con señal de atraso en el mes.`,
-        tone: Number(predAlerts?.riskOverdueCount || 0) > 0 ? "red" : "amber",
-        action:
-          Number(predAlerts?.riskOverdueCount || 0) > 0
-            ? `${Number(predAlerts.riskOverdueCount || 0)} ya están vencidas.`
-            : "Revisar carga y anticipar reasignaciones.",
-      });
-    }
-
-    if (Number(predAlerts?.criticalUnassignedCount || 0) > 0) {
-      rows.push({
-        title: "Crí­ticas sin técnico",
-        msg: `${Number(predAlerts.criticalUnassignedCount || 0)} actividades crí­ticas vencidas siguen sin asignación.`,
-        tone: "red",
-        action: "Asignar responsable inmediato y bloquear rezago.",
-      });
-    }
-
-    if (Number(predAlerts?.repeatedFailuresCount || 0) > 0) {
-      rows.push({
-        title: "Reincidencia",
-        msg: `${Number(predAlerts.repeatedFailuresCount || 0)} equipos muestran patrón repetido de fallas o malas condiciones.`,
-        tone: "amber",
-        action: "Atacar causa raí­z y revisar frecuencia/condición operativa.",
-      });
-    }
-
-    if (dteTop.length > 0) {
-      const x = dteTop[0];
-      rows.push({
-        title: "Days-to-empty",
-        msg: `${x?.lubricantName || "Lubricante"} con riesgo de quedarse sin stock (~${Math.round(
-          Number(x?.daysToEmpty || 0)
-        )} dí­as).`,
-        tone: String(x?.risk || "").toUpperCase() === "HIGH" ? "red" : "amber",
-        action: x?.underMin ? "Ya está bajo mí­nimo. Reabastecer o transferir stock." : "Programar compra/traspaso inmediato.",
-      });
-    }
-
-    if (anomaliesTop.length > 0) {
-      const x = anomaliesTop[0];
-      rows.push({
-        title: "Anomalí­a de consumo",
-        msg: `${x?.equipmentName || "Equipo"} con consumo anómalo (${String(x?.risk || "MED").toUpperCase()}).`,
-        tone: String(x?.risk || "").toUpperCase() === "HIGH" ? "red" : "amber",
-        action: "Revisar fugas, puntos, frecuencia y dosificación.",
-      });
-    }
-
-    return rows.slice(0, 6);
-  }, [canSeePredictive, predAlerts, dteTop, anomaliesTop]);
-
   const scrollTo = (ref) => {
-    try {
-      ref?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } catch {}
-  };
+  try {
+    ref?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch {}
+};
 
-  const exportPdf = useCallback(async () => {
-    try {
-      setExportErr("");
-      setExporting(true);
+const exportPdf = useCallback(async () => {
+  try {
+    setExportErr("");
+    setExporting(true);
 
-      const execEl = executiveRef.current;
-      const annexEl = annexRef.current;
+    const execEl = executiveRef.current;
+    const annexEl = annexRef.current;
+    if (!execEl) throw new Error("No se encontro la seccion ejecutiva.");
+    if (!annexEl) throw new Error("No se encontro la seccion de anexos.");
 
-      if (!execEl) throw new Error("No se encontra sección ejecutiva.");
-      if (!annexEl) throw new Error("No se encontra sección de anexos.");
+    const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+    const blocks = [...getExportBlocks(execEl), ...getExportBlocks(annexEl)];
+    const flow = { y: 10 };
 
-      const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
-
-      const execCanvas = await captureSectionToCanvas(execEl, { scale: 2 });
-      addCanvasToPdf(pdf, execCanvas, { margin: 10 });
-
-      pdf.addPage();
-
-      const annexCanvas = await captureSectionToCanvas(annexEl, { scale: 2 });
-      addCanvasToPdf(pdf, annexCanvas, { margin: 10 });
-
-      const file = safeFilename(`LubriPlan - Reporte inteligente mensual - ${month}.pdf`);
-      pdf.save(file);
-    } catch (e) {
-      setExportErr(e?.message || "No se pudo exportar PDF");
-    } finally {
-      setExporting(false);
+    for (const block of blocks) {
+      const canvas = await captureSectionToCanvas(block, { scale: 2 });
+      addCanvasToPdf(pdf, canvas, flow, { margin: 10, gap: 6 });
     }
-  }, [month]);
 
-  return (
-    <MainLayout>
-      <div style={{ padding: 16, minWidth: 0 }}>
-        {/* HEADER */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 22, fontWeight: 1000, color: "#0f172a" }}>
-              Reporte inteligente mensual
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 12,
-                fontWeight: 850,
-                color: "#64748b",
-              }}
-            >
-              {user?.name ? `Generado para: ${user.name}` : ""}
-{currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
- Â· {monthLabel(month)} · última actualización: {fmtDateTimeLocal(summary?.updatedAt)}
-            </div>
-          </div>
+    const file = safeFilename(`LubriPlan - Reporte inteligente mensual - ${month}.pdf`);
+    pdf.save(file);
+  } catch (e) {
+    setExportErr(e?.message || "No se pudo exportar PDF");
+  } finally {
+    setExporting(false);
+  }
+}, [month]);
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 950, color: "#64748b" }}>Mes</span>
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(0,0,0,0.12)",
-                }}
-              />
-            </div>
-
-            <button
-              onClick={load}
-              disabled={loading}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                fontWeight: 950,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#fff",
-              }}
-              type="button"
-              title="Actualizar"
-            >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="refresh" size="sm" />
-                {loading ? "Actualizando" : "Actualizar"}
-              </span>
-            </button>
-
-            <button
-              onClick={exportPdf}
-              disabled={exporting || loading}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                fontWeight: 950,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#0f172a",
-                color: "#fff",
-                cursor: exporting ? "not-allowed" : "pointer",
-                opacity: exporting ? 0.7 : 1,
-              }}
-              type="button"
-              title="Exportar a PDF"
-            >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="export" size="sm" />
-                {exporting ? "Exportando" : "Exportar PDF"}
-              </span>
-            </button>
-
-            <button
-              onClick={() => scrollTo(executiveRef)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                fontWeight: 950,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#fff",
-              }}
-              type="button"
-              title="Ir a resumen ejecutivo"
-            >
-              Ejecutivo 
-            </button>
-
-            <button
-              onClick={() => scrollTo(annexRef)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                fontWeight: 950,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#fff",
-              }}
-              type="button"
-              title="Ir a anexos"
-            >
-              Anexos 
-            </button>
-
-            <button
-              onClick={() => navigate("/dashboard")}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                fontWeight: 950,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#fff",
-              }}
-              type="button"
-              title="Volver al dashboard"
-            >
-              Volver
-            </button>
-          </div>
-        </div>
-
-        {err ? (
-          <div
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 14,
-              background: "#fee2e2",
-              border: "1px solid rgba(0,0,0,0.06)",
-              color: "#991b1b",
-              fontWeight: 900,
-            }}
-          >
-            {err}
-          </div>
-        ) : null}
-
-        {exportErr ? (
-          <div
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 14,
-              background: "#fff1f2",
-              border: "1px solid #fecaca",
-              color: "#991b1b",
-              fontWeight: 900,
-            }}
-          >
-            {exportErr}
-          </div>
-        ) : null}
-
-        {/* =========================
-            EJECUTIVO (1 â€œpÃ¡ginaâ€)
-        ========================= */}
-        <div ref={executiveRef} style={{ marginTop: 14, minWidth: 0 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "end",
-              gap: 10,
-              flexWrap: "wrap",
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 1000,
-                color: "#0f172a",
-                fontSize: 14,
-                letterSpacing: 0.4,
-              }}
-            >
-              Resumen ejecutivo (1 página)
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Chip tone="gray">{monthLabel(month)}</Chip>
-              <Chip
-                tone={
-                  kpis.compliance >= 85
-                    ? "green"
-                    : kpis.compliance >= 70
-                    ? "amber"
-                    : "red"
-                }
-              >
-                Cumplimiento: {kpis.compliance}%
-              </Chip>
-              <Chip
-                tone={
-                  kpis.opEfficiency >= 80
-                    ? "green"
-                    : kpis.opEfficiency >= 65
-                    ? "amber"
-                    : "red"
-                }
-              >
-                Eficiencia: {kpis.opEfficiency}%
-              </Chip>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 12,
-            }}
-          >
-            <KPI
-              label="Cumplimiento"
-              value={`${kpis.compliance}%`}
-              hint="Completadas / Total (mes)"
-              tone={kpis.compliance >= 85 ? "green" : kpis.compliance >= 70 ? "amber" : "red"}
-            />
-            <KPI
-              label="Eficiencia operativa"
-              value={`${kpis.opEfficiency}%`}
-              hint="Cumplimiento penalizado por atrasos"
-              tone={kpis.opEfficiency >= 80 ? "green" : kpis.opEfficiency >= 65 ? "amber" : "red"}
-            />
-            <KPI label="Completadas" value={kpis.completed} hint="Ejecutadas en el mes" tone="blue" />
-            <KPI label="Pendientes" value={kpis.pending} hint="Programadas futuras (mes)" tone="dark" />
-            <KPI label="Atrasadas" value={kpis.overdue} hint="Pendientes con fecha vencida" tone="red" />
-            <KPI
-              label="Condición abierta"
-              value={kpis.conditionOpen + kpis.conditionInProgress}
-              hint="OPEN + IN_PROGRESS"
-              tone="red"
-            />
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 12,
-              alignItems: "start",
-            }}
-          >
-            <ChartBox
-              title="Distribución de actividades"
-              subtitle="Completadas vs pendientes vs atrasadas"
-              right={<Chip tone="gray">Total: {kpis.total}</Chip>}
-            >
-              {kpis.total <= 0 ? (
-                <EmptyChart text="Sin actividades para el mes" />
-              ) : (
-                <div style={{ width: "100%", height: "100%", minWidth: 0 }}>
-                  <StableChart height={260}>
-  {({ width, height }) => (
-    <PieChart width={width} height={height}>
-      <Pie
-        data={donutData}
-        dataKey="value"
-        nameKey="name"
-        innerRadius={62}
-        outerRadius={90}
-        paddingAngle={2}
-        cx="50%"
-        cy="50%"
+return (
+  <MainLayout>
+    <div style={{ padding: 16, minWidth: 0 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
       >
-        <Cell fill="#22c55e" />
-        <Cell fill="#f59e0b" />
-        <Cell fill="#ef4444" />
-      </Pie>
-      <Tooltip />
-      <Legend />
-    </PieChart>
-  )}
-</StableChart>
-                </div>
-              )}
-            </ChartBox>
-
-            <ChartBox
-              title="Backlog del mes"
-              subtitle="Pendientes vs atrasadas"
-              right={<Chip tone={kpis.overdue > 0 ? "red" : "green"}>{kpis.overdue > 0 ? "Atención" : "OK"}</Chip>}
-            >
-              <div style={{ width: "100%", height: "100%", minWidth: 0 }}>
-                <StableChart height={260}>
-  {({ width, height }) => (
-    <BarChart
-      width={width}
-      height={height}
-      data={[{ name: "Mes", pending: kpis.pending, overdue: kpis.overdue }]}
-    >
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="name" />
-      <YAxis allowDecimals={false} />
-      <Tooltip />
-      <Legend />
-      <Bar dataKey="pending" name="Pendientes" fill="#f59e0b" />
-      <Bar dataKey="overdue" name="Atrasadas" fill="#ef4444" />
-    </BarChart>
-  )}
-</StableChart>
-              </div>
-            </ChartBox>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 22, fontWeight: 1000, color: "#0f172a" }}>
+            Reporte inteligente mensual
           </div>
-
-          <div
-  style={{
-    marginTop: 12,
-    display: "grid",
-    gridTemplateColumns: aiEnabled
-      ? "minmax(0, 1.25fr) minmax(0, 0.75fr)"
-      : "1fr",
-    gap: 12,
-    alignItems: "start",
-  }}
->
-  {aiEnabled ? (
-    <AiSummaryBox
-      month={month}
-      aiState={aiState}
-      onGenerate={() => loadAiSummary({ force: true })}
-      onRefresh={forceRefreshAi}
-      canForceRefresh
-    />
-  ) : null}
-
-            <Card
-              title={
-                <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-                  <Icon name="alert" size="sm" />
-                  Top riesgos
-                </span>
-              }
-              subtitle={
-  !canSeePredictive
-    ? "Desactivado en ajustes"
-    : predLoading
-    ? "Calculandose"
-    : predError
-    ? "No disponible"
-    : predTotal
-    ? `Detectados: ${predTotal}`
-    : "Sin señales relevantes"
-}
-             right={
-  canSeePredictive ? (
-    <button
-      onClick={refreshPred}
-      disabled={predLoading}
-      type="button"
-      style={{
-        padding: "8px 10px",
-        borderRadius: 12,
-        fontWeight: 950,
-        border: "1px solid rgba(0,0,0,0.08)",
-        background: "#fff",
-        cursor: predLoading ? "not-allowed" : "pointer",
-        opacity: predLoading ? 0.7 : 1,
-      }}
-      title="Actualizar predictivas"
-    >
-      <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-        <Icon name="refresh" size="sm" />
-        {predLoading ? "â€¦" : "Actualizar"}
-      </span>
-    </button>
-  ) : null
-}
-            >
-              {!canSeePredictive ? (
-  <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-    Las alertas predictivas están desactivadas en Ajustes.
-  </div>
-) : predError ? (
-  <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>{predError}</div>
-) : (
-                <div style={{ display: "grid", gap: 10 }}>
-                  {execRisks.length === 0 ? (
-                    <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-                      Todo estable. Sin riesgos destacados.
-                    </div>
-                  ) : (
-                    execRisks.map((r, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          border: "1px solid rgba(226,232,240,0.95)",
-                          borderRadius: 14,
-                          padding: 10,
-                          background: "rgba(248,250,252,0.7)",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ fontWeight: 950, color: "#0f172a" }}>{r.title}</div>
-                          <Chip tone={r.tone}>{String(r.tone || "").toUpperCase()}</Chip>
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 6,
-                            fontSize: 12,
-                            fontWeight: 850,
-                            color: "#475569",
-                          }}
-                        >
-                          {r.msg}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 6,
-                            fontSize: 12,
-                            fontWeight: 900,
-                            color: "#0f172a",
-                          }}
-                        >
-                          Acción:{" "}
-                          <span style={{ fontWeight: 850, color: "#334155" }}>{r.action}</span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </Card>
+          <div style={{ marginTop: 4, fontSize: 12, fontWeight: 850, color: "#64748b" }}>
+            {user?.name ? `Generado para: ${user.name}` : ""}
+            {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
+            {` - ${monthLabel(month)} - ultima actualizacion: ${fmtDateTimeLocal(summary?.updatedAt)}`}
           </div>
         </div>
 
-        {/* =========================
-            ANEXOS
-        ========================= */}
-        <div ref={annexRef} style={{ marginTop: 18, minWidth: 0 }}>
-          <div
-            style={{
-              fontWeight: 1000,
-              color: "#0f172a",
-              fontSize: 14,
-              letterSpacing: 0.4,
-            }}
-          >
-            Anexos (detalle)
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <ChartBox
-              title="Tendencia (útimos 6 meses)"
-              subtitle={trendLoading ? "Cargando" : trendErr ? "No disponible" : "Cumplimiento mensual"}
-              right={trendLoading ? <Chip tone="gray">â€¦</Chip> : <Chip tone="gray">6 meses</Chip>}
-            >
-              {trendErr ? (
-                <EmptyChart text={trendErr} />
-              ) : trend.length === 0 ? (
-                <EmptyChart text="Sin datos" />
-              ) : (
-                <div style={{ width: "100%", height: "100%", minWidth: 0 }}>
-                 <StableChart height={260}>
-  {({ width, height }) => (
-    <LineChart
-      width={width}
-      height={height}
-      data={trend.map((x) => ({ ...x, label: x.month }))}
-    >
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="label" tickFormatter={(v) => String(v).slice(5)} />
-      <YAxis domain={[0, 100]} />
-      <Tooltip />
-      <Legend />
-      <Line
-        type="monotone"
-        dataKey="compliance"
-        name="Cumplimiento (%)"
-        dot={false}
-        stroke="#1d4ed8"
-      />
-    </LineChart>
-  )}
-</StableChart>
-                </div>
-              )}
-            </ChartBox>
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 12,
-              alignItems: "start",
-            }}
-          >
-            <ChartBox
-              title="Actividades (detalle)"
-              subtitle="Conteo por estatus (mes)"
-            >
-              <div style={{ width: "100%", height: "100%", minWidth: 0 }}>
-               <StableChart height={260}>
-  {({ width, height }) => (
-    <BarChart
-      width={width}
-      height={height}
-      data={[
-        { name: "Completadas", value: kpis.completed },
-        { name: "Pendientes", value: kpis.pending },
-        { name: "Atrasadas", value: kpis.overdue },
-      ]}
-    >
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="name" />
-      <YAxis allowDecimals={false} />
-      <Tooltip />
-      <Bar dataKey="value" name="Actividades" fill="#0f172a" />
-    </BarChart>
-  )}
-</StableChart>
-              </div>
-            </ChartBox>
-
-            <Card
-              title={
-                <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-                  <Icon name="warn" size="sm" />
-                  Prioridad de hoy (anexo)
-                </span>
-              }
-              subtitle={
-                !canSeePriorityQueue
-                  ? "Desactivado en ajustes"
-                  : pqLoading
-                  ? "Calculando?"
-                  : pqError
-                  ? "No disponible"
-                  : pqTotal > 0
-                  ? `Casos que conviene atender primero: ${pqTotal}`
-                  : "Sin pendientes prioritarios"
-              }
-              right={
-                canSeePriorityQueue ? (
-                  <button
-                    onClick={refreshPQ}
-                    disabled={pqLoading}
-                    type="button"
-                    style={{
-                      padding: "8px 10px",
-                      borderRadius: 12,
-                      fontWeight: 950,
-                      border: "1px solid rgba(0,0,0,0.08)",
-                      background: "#fff",
-                    }}
-                    title="Actualizar prioridad"
-                  >
-                    <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-                      <Icon name="refresh" size="sm" />
-                      {pqLoading ? "?" : "Actualizar"}
-                    </span>
-                  </button>
-                ) : null
-              }
-            >
-              {!canSeePriorityQueue ? (
-                <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-                  La cola de prioridad est? desactivada en Ajustes.
-                </div>
-              ) : pqError ? (
-                <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>{pqError}</div>
-              ) : (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {(Array.isArray(pqItems) ? pqItems : []).slice(0, 10).map((raw, i) => {
-                    const x = formatPriorityQueueItem(raw);
-                    return (
-                      <div
-                        key={x?.key ?? i}
-                        style={{
-                          border: "1px solid rgba(226,232,240,0.95)",
-                          borderRadius: 14,
-                          padding: 10,
-                          background: "rgba(248,250,252,0.7)",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                          <div style={{ fontWeight: 950, color: "#0f172a" }}>
-                            {x?.title || "Acción prioritaria"}
-                          </div>
-                          <Chip tone={riskTone(x?.severity)}>{x?.priorityLabel || pqSeverityLabel(x?.severity)}</Chip>
-                        </div>
-                        <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          <Chip tone="gray">{x?.categoryLabel || pqTypeLabel(x?.type)}</Chip>
-                          <Chip tone="gray">Responsable: {x?.ownerLabel || "Equipo"}</Chip>
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 6,
-                            fontSize: 12,
-                            fontWeight: 850,
-                            color: "#64748b",
-                          }}
-                        >
-                          {x?.reason || "Sin detalle adicional."}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 6,
-                            fontSize: 12,
-                            fontWeight: 950,
-                            color: "#0f172a",
-                          }}
-                        >
-                          Siguiente paso: <span style={{ fontWeight: 850, color: "#334155" }}>{x?.actionLabel || "Revisar y atender."}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {pqTotal === 0 ? (
-                    <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-                      Todo bien. Nada urgente.
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </Card>
-
-          </div>
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px dashed rgba(0,0,0,0.18)",
-              borderRadius: 16,
-              padding: 12,
-              background: "rgba(255,255,255,0.65)",
-            }}
-          >
-            <div style={{ fontWeight: 1000, color: "#0f172a" }}>Exportación</div>
-            <div
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 950, color: "#64748b" }}>Mes</span>
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
               style={{
-                marginTop: 6,
-                fontSize: 12,
-                fontWeight: 850,
-                color: "#64748b",
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid rgba(0,0,0,0.12)",
               }}
-            >
-            </div>
+            />
           </div>
+
+          <button onClick={load} disabled={loading} style={toolbarButton} type="button" title="Actualizar">
+            <span style={toolbarButtonInner}>
+              <Icon name="refresh" size="sm" />
+              {loading ? "Actualizando" : "Actualizar"}
+            </span>
+          </button>
+
+          <button
+            onClick={exportPdf}
+            disabled={exporting || loading}
+            style={{ ...toolbarButtonDark, opacity: exporting ? 0.7 : 1 }}
+            type="button"
+            title="Exportar a PDF"
+          >
+            <span style={toolbarButtonInner}>
+              <Icon name="export" size="sm" />
+              {exporting ? "Exportando" : "Exportar PDF"}
+            </span>
+          </button>
+
+          <button onClick={() => scrollTo(executiveRef)} style={toolbarButton} type="button">
+            Ejecutivo
+          </button>
+
+          <button onClick={() => scrollTo(annexRef)} style={toolbarButton} type="button">
+            Anexos
+          </button>
+
+          <button onClick={() => navigate("/dashboard")} style={toolbarButton} type="button">
+            Volver
+          </button>
         </div>
       </div>
-    </MainLayout>
-  );
+
+      {err ? <div style={errorBox}>{err}</div> : null}
+      {exportErr ? <div style={exportErrorBox}>{exportErr}</div> : null}
+
+      <div ref={executiveRef} style={{ marginTop: 14, minWidth: 0, display: "grid", gap: 12 }}>
+        <div style={sectionHeaderRow}>
+          <div style={sectionHeaderTitle}>Resumen ejecutivo</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Chip tone="gray">{monthLabel(month)}</Chip>
+            <Chip tone={kpis.compliance >= 85 ? "green" : kpis.compliance >= 70 ? "amber" : "red"}>
+              Cumplimiento: {kpis.compliance}%
+            </Chip>
+            <Chip tone={kpis.opEfficiency >= 80 ? "green" : kpis.opEfficiency >= 65 ? "amber" : "red"}>
+              Eficiencia: {kpis.opEfficiency}%
+            </Chip>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 12,
+          }}
+        >
+          <KPI
+            label="Cumplimiento"
+            value={`${kpis.compliance}%`}
+            hint="Completadas / Total del mes"
+            tone={kpis.compliance >= 85 ? "green" : kpis.compliance >= 70 ? "amber" : "red"}
+          />
+          <KPI
+            label="Eficiencia operativa"
+            value={`${kpis.opEfficiency}%`}
+            hint="Cumplimiento penalizado por atrasos"
+            tone={kpis.opEfficiency >= 80 ? "green" : kpis.opEfficiency >= 65 ? "amber" : "red"}
+          />
+          <KPI label="Completadas" value={kpis.completed} hint="Ejecutadas en el mes" tone="blue" />
+          <KPI label="Pendientes" value={kpis.pending} hint="Programadas futuras" tone="dark" />
+          <KPI label="Atrasadas" value={kpis.overdue} hint="Pendientes con fecha vencida" tone="red" />
+          <KPI
+            label="Condiciones activas"
+            value={kpis.conditionOpen + kpis.conditionInProgress}
+            hint="OPEN + IN_PROGRESS"
+            tone="red"
+          />
+        </div>
+
+        <AiSummaryBox
+          month={month}
+          aiState={aiState}
+          enabled={aiEnabled}
+          onGenerate={() => loadAiSummary({ force: true })}
+          onRefresh={forceRefreshAi}
+          canForceRefresh
+          signals={aiSignals}
+        />
+
+        <ChartBox title="Actividades del periodo" subtitle="Conteo por estatus del mes">
+          <div style={{ width: "100%", height: "100%", minWidth: 0 }}>
+            <StableChart height={240}>
+              {({ width, height }) => (
+                <BarChart
+                  width={width}
+                  height={height}
+                  data={[
+                    { name: "Completadas", value: kpis.completed },
+                    { name: "Pendientes", value: kpis.pending },
+                    { name: "Atrasadas", value: kpis.overdue },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" name="Actividades" fill="#0f172a" />
+                </BarChart>
+              )}
+            </StableChart>
+          </div>
+        </ChartBox>
+      </div>
+
+      <div ref={annexRef} style={{ marginTop: 14, minWidth: 0, display: "grid", gap: 12 }}>
+        <div style={sectionHeaderRow}>
+          <div style={sectionHeaderTitle}>Anexos operativos</div>
+          <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
+            Graficas complementarias del periodo
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: 12,
+          }}
+        >
+          <ChartBox title="Distribucion del mes" subtitle="Completadas, pendientes y atrasadas">
+            <StableChart height={260}>
+              {({ width, height }) => {
+                const total = donutData.reduce((acc, item) => acc + Number(item.value || 0), 0);
+                const donutColors = ["#22c55e", "#3b82f6", "#ef4444"];
+                if (!total) return <EmptyChart text="Sin actividades registradas en el periodo" />;
+                return (
+                  <PieChart width={width} height={height}>
+                    <Pie
+                      data={donutData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={92}
+                      paddingAngle={4}
+                    >
+                      {donutData.map((entry, index) => (
+                        <Cell key={entry.name} fill={donutColors[index] || "#94a3b8"} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                );
+              }}
+            </StableChart>
+          </ChartBox>
+
+          <ChartBox title="Tendencia de cumplimiento" subtitle="Seguimiento de los ultimos 6 meses">
+            <StableChart height={260}>
+              {({ width, height }) => {
+                if (trendLoading) return <EmptyChart text="Cargando tendencia..." />;
+                if (trendErr) return <EmptyChart text={trendErr} />;
+                return (
+                  <LineChart width={width} height={height} data={trend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" />
+                    <YAxis allowDecimals={false} domain={[0, 100]} />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="compliance"
+                      name="Cumplimiento %"
+                      stroke="#f97316"
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                );
+              }}
+            </StableChart>
+          </ChartBox>
+
+          <ChartBox
+            title="Condiciones reportadas"
+            subtitle={`Total del periodo: ${conditionMetrics.reported}`}
+            right={<Chip tone={conditionMetrics.reported > 0 ? "amber" : "gray"}>{conditionMetrics.reported}</Chip>}
+          >
+            <StableChart height={260}>
+              {({ width, height }) => {
+                const total = conditionMetrics.statusData.reduce((acc, item) => acc + Number(item.value || 0), 0);
+                if (!total) return <EmptyChart text="Sin condiciones registradas en el periodo" />;
+                return (
+                  <BarChart width={width} height={height} data={conditionMetrics.statusData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="value" name="Condiciones">
+                      {conditionMetrics.statusData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                );
+              }}
+            </StableChart>
+          </ChartBox>
+
+          <ChartBox
+            title="Condiciones atendidas"
+            subtitle={`Atendidas: ${conditionMetrics.attended} | Sin intervencion: ${Math.max(
+              conditionMetrics.reported - conditionMetrics.attended,
+              0
+            )}`}
+            right={<Chip tone={conditionMetrics.attended > 0 ? "green" : "gray"}>{conditionMetrics.attended}</Chip>}
+          >
+            <StableChart height={260}>
+              {({ width, height }) => {
+                const total = conditionMetrics.attentionData.reduce((acc, item) => acc + Number(item.value || 0), 0);
+                if (!total) return <EmptyChart text="Sin atencion registrada en el periodo" />;
+                return (
+                  <PieChart width={width} height={height}>
+                    <Pie
+                      data={conditionMetrics.attentionData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={58}
+                      outerRadius={92}
+                      paddingAngle={4}
+                    >
+                      {conditionMetrics.attentionData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                );
+              }}
+            </StableChart>
+          </ChartBox>
+        </div>
+      </div>
+    </div>
+  </MainLayout>
+);
 }
 
 const aiSummaryRoot = {
@@ -1969,9 +1374,64 @@ const aiSummaryRoot = {
   minWidth: 0,
 };
 
+const toolbarButton = {
+  padding: "10px 12px",
+  borderRadius: 12,
+  fontWeight: 950,
+  border: "1px solid rgba(0,0,0,0.08)",
+  background: "#fff",
+};
+
+const toolbarButtonDark = {
+  ...toolbarButton,
+  background: "#0f172a",
+  color: "#fff",
+};
+
+const toolbarButtonInner = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+};
+
+const errorBox = {
+  marginTop: 12,
+  padding: 12,
+  borderRadius: 14,
+  background: "#fee2e2",
+  border: "1px solid rgba(0,0,0,0.06)",
+  color: "#991b1b",
+  fontWeight: 900,
+};
+
+const exportErrorBox = {
+  marginTop: 12,
+  padding: 12,
+  borderRadius: 14,
+  background: "#fff1f2",
+  border: "1px solid #fecaca",
+  color: "#991b1b",
+  fontWeight: 900,
+};
+
+const sectionHeaderRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "end",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
+const sectionHeaderTitle = {
+  fontWeight: 1000,
+  color: "#0f172a",
+  fontSize: 14,
+  letterSpacing: 0.4,
+};
+
 const aiLoadingBox = {
-  borderRadius: 24,
-  padding: "18px 20px",
+  borderRadius: 18,
+  padding: "16px 18px",
   background: "linear-gradient(180deg, #171c2c 0%, #101522 100%)",
   border: "1px solid rgba(255,255,255,0.08)",
   color: "#cbd5e1",
@@ -1980,7 +1440,7 @@ const aiLoadingBox = {
 };
 
 const aiErrorBox = {
-  borderRadius: 20,
+  borderRadius: 18,
   padding: "16px 18px",
   background: "linear-gradient(180deg, #2a1515 0%, #1b1010 100%)",
   border: "1px solid rgba(248,113,113,0.28)",
@@ -1989,33 +1449,15 @@ const aiErrorBox = {
   fontWeight: 900,
 };
 
-const printTitleBox = {
-  display: "none",
-  padding: "0 0 4px 0",
-};
-
-const printTitleMain = {
-  fontSize: 18,
-  fontWeight: 1000,
-  color: "#0f172a",
-};
-
-const printTitleSub = {
-  marginTop: 4,
-  fontSize: 12,
-  fontWeight: 700,
-  color: "#475569",
-};
-
 const heroBox = {
   display: "grid",
-  gap: 16,
-  padding: 18,
-  borderRadius: 28,
+  gap: 14,
+  padding: 16,
+  borderRadius: 24,
   background:
     "radial-gradient(circle at top left, rgba(249,115,22,0.14), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #0f1421 100%)",
   border: "1px solid rgba(255,255,255,0.08)",
-  boxShadow: "0 24px 60px rgba(15,23,42,0.28)",
+  boxShadow: "0 24px 60px rgba(15,23,42,0.20)",
 };
 
 const heroKicker = {
@@ -2030,12 +1472,10 @@ const heroChip = (isFallback) => ({
   display: "inline-flex",
   alignItems: "center",
   gap: 8,
-  padding: "8px 12px",
+  padding: "7px 11px",
   borderRadius: 999,
   background: isFallback ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)",
-  border: isFallback
-    ? "1px solid rgba(245,158,11,0.28)"
-    : "1px solid rgba(34,197,94,0.28)",
+  border: isFallback ? "1px solid rgba(245,158,11,0.28)" : "1px solid rgba(34,197,94,0.28)",
   color: isFallback ? "#fde68a" : "#bbf7d0",
   fontSize: 12,
   fontWeight: 950,
@@ -2045,7 +1485,7 @@ const heroModelChip = {
   display: "inline-flex",
   alignItems: "center",
   gap: 8,
-  padding: "8px 12px",
+  padding: "7px 11px",
   borderRadius: 999,
   background: "rgba(255,255,255,0.05)",
   border: "1px solid rgba(255,255,255,0.08)",
@@ -2054,43 +1494,55 @@ const heroModelChip = {
   fontWeight: 900,
 };
 
-const heroInner = {
-  borderRadius: 24,
-  padding: "24px 22px",
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+const heroSummary = {
+  fontSize: 17,
+  lineHeight: 1.5,
+  fontWeight: 900,
+  color: "#f8fafc",
+};
+
+const signalRow = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: 10,
+};
+
+const signalCard = {
+  borderRadius: 16,
+  padding: 12,
+  background: "rgba(12,18,32,0.52)",
   border: "1px solid rgba(255,255,255,0.08)",
 };
 
-const heroDiagnosisKicker = {
+const signalValue = {
+  fontSize: 24,
+  fontWeight: 1000,
+  color: "#f8fafc",
+  lineHeight: 1,
+};
+
+const signalLabel = {
+  marginTop: 6,
   fontSize: 12,
   fontWeight: 950,
-  letterSpacing: 1,
+  color: "#fdba74",
   textTransform: "uppercase",
-  color: "#fb923c",
+  letterSpacing: 0.4,
 };
 
-const heroTitle = {
-  marginTop: 12,
-  fontFamily: '"DM Serif Display", Georgia, serif',
-  fontSize: "clamp(28px, 3.2vw, 42px)",
-  lineHeight: 1.04,
-  color: "#f8fafc",
-  maxWidth: 980,
-};
-
-const screenGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-  gap: 14,
+const signalNote = {
+  marginTop: 4,
+  fontSize: 12,
+  fontWeight: 800,
+  color: "#cbd5e1",
+  lineHeight: 1.45,
 };
 
 const sectionCard = {
-  borderRadius: 24,
-  padding: 18,
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 20,
+  padding: 14,
+  background: "#ffffff",
+  border: "1px solid rgba(226,232,240,0.95)",
 };
 
 const sectionTitle = {
@@ -2101,61 +1553,44 @@ const sectionTitle = {
   color: "#fb923c",
 };
 
-const darkItemCard = {
-  borderRadius: 18,
-  padding: "14px 16px",
-  background: "rgba(12,18,32,0.58)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  color: "#f8fafc",
-  fontSize: 14,
+const compactRow = {
+  display: "grid",
+  gridTemplateColumns: "28px minmax(0, 1fr)",
+  gap: 10,
+  alignItems: "start",
+  padding: 10,
+  borderRadius: 14,
+  background: "#f8fafc",
+  border: "1px solid rgba(226,232,240,0.95)",
+};
+
+const compactIndexOrange = {
+  width: 28,
+  height: 28,
+  borderRadius: 999,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(249,115,22,0.14)",
+  color: "#f97316",
+  fontWeight: 1000,
+  fontSize: 12,
+};
+
+const compactIndexGreen = {
+  width: 28,
+  height: 28,
+  borderRadius: 999,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(34,197,94,0.14)",
+  color: "#16a34a",
+  fontWeight: 1000,
+  fontSize: 12,
+};
+
+const compactText = {
+  color: "#0f172a",
+  fontSize: 13,
+  lineHeight: 1.5,
   fontWeight: 850,
-  lineHeight: 1.45,
 };
-
-const riskCard = (lvl) => {
-  const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
-  const isMedium = lvl === "MEDIUM";
-
-  return {
-    borderRadius: 20,
-    padding: "16px 18px",
-    background: "rgba(12,18,32,0.62)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    boxShadow: isHigh
-      ? "inset 0 4px 0 rgba(239,68,68,0.85)"
-      : isMedium
-      ? "inset 0 4px 0 rgba(245,158,11,0.85)"
-      : "inset 0 4px 0 rgba(59,130,246,0.75)",
-  };
-};
-
-const riskBadge = (lvl) => {
-  const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
-  const isMedium = lvl === "MEDIUM";
-
-  return {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "8px 12px",
-    borderRadius: 999,
-    fontSize: 12,
-    fontWeight: 950,
-    background: isHigh
-      ? "rgba(239,68,68,0.14)"
-      : isMedium
-      ? "rgba(245,158,11,0.14)"
-      : "rgba(59,130,246,0.14)",
-    border: isHigh
-      ? "1px solid rgba(239,68,68,0.28)"
-      : isMedium
-      ? "1px solid rgba(245,158,11,0.28)"
-      : "1px solid rgba(59,130,246,0.28)",
-    color: isHigh ? "#fecaca" : isMedium ? "#fde68a" : "#bfdbfe",
-  };
-};
-
-
-
-
-

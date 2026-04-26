@@ -218,7 +218,7 @@ function cleanUiText(value) {
     .replace(/cr\uFFFDtica/g, "crítica")
     .replace(/Cr\uFFFDtico/g, "Crítico")
     .replace(/cr\uFFFDtico/g, "crítico")
-    .replace(/d\uFFFDa\(s\)/g, "día(s)")
+    .replace(/d\uFFFDa\(s\)/g, "dia(s)")
     .replace(/d\uFFFDas/g, "días")
     .replace(/d\uFFFDa/g, "día")
     .replace(/atr\uFFFDs/g, "atrás")
@@ -477,21 +477,37 @@ function AdminInventoryInsightCard({
   aiEnabled,
   lowStockItems = [],
   dteItems = [],
+  supplySuggestion = null,
 }) {
   const lowList = Array.isArray(lowStockItems) ? lowStockItems.filter(Boolean) : [];
   const dteList = Array.isArray(dteItems) ? dteItems.filter(Boolean) : [];
-  const effectiveLowStockCount = lowList.length > 0 ? lowList.length : Number(lowStockCount || 0);
-  const effectiveDteCount = dteList.length > 0 ? dteList.length : Number(dteCount || 0);
-  const hasProjectedRisk = effectiveDteCount > 0;
-  const hasLowStock = effectiveLowStockCount > 0;
+  const supplyMode = String(supplySuggestion?.mode || "").toUpperCase();
+  const supplyActions = Array.isArray(supplySuggestion?.actions)
+    ? supplySuggestion.actions.filter(Boolean).map((item) => cleanUiText(item))
+    : [];
+  const suggestionFocus = supplySuggestion?.focus || null;
+  const suggestionLowCount = Number(supplySuggestion?.lowStockCount);
+  const suggestionRiskCount = Number(supplySuggestion?.riskNextDaysCount);
+  const effectiveLowStockCount = lowList.length > 0
+    ? lowList.length
+    : Number.isFinite(suggestionLowCount)
+    ? suggestionLowCount
+    : Number(lowStockCount || 0);
+  const effectiveDteCount = dteList.length > 0
+    ? dteList.length
+    : Number.isFinite(suggestionRiskCount)
+    ? suggestionRiskCount
+    : Number(dteCount || 0);
+  const hasProjectedRisk = supplyMode === "DTE" || effectiveDteCount > 0;
+  const hasLowStock = supplyMode === "LOW_STOCK" || effectiveLowStockCount > 0;
   const tone = hasProjectedRisk ? "red" : hasLowStock ? "amber" : "green";
   const accent = tone === "red" ? "#dc2626" : tone === "amber" ? "#d97706" : "#16a34a";
   const badgeBg = tone === "red" ? "rgba(239,68,68,0.12)" : tone === "amber" ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)";
   const badgeBorder = tone === "red" ? "rgba(239,68,68,0.24)" : tone === "amber" ? "rgba(245,158,11,0.28)" : "rgba(34,197,94,0.24)";
   const badgeColor = tone === "red" ? "#991b1b" : tone === "amber" ? "#92400e" : "#166534";
-  const statusLabel = hasProjectedRisk ? "Riesgo de desabasto" : hasLowStock ? "Atención operativa" : "Cobertura estable";
+  const statusLabel = hasProjectedRisk ? "Riesgo de desabasto" : hasLowStock ? "Atencion operativa" : "Cobertura estable";
   const title = hasProjectedRisk
-    ? "Inventario crítico"
+    ? "Inventario critico"
     : hasLowStock
     ? "Inventario en seguimiento"
     : "Inventario controlado";
@@ -512,7 +528,7 @@ function AdminInventoryInsightCard({
 
   const focusLow = pickFocusItem(lowList);
   const focusProjected = pickFocusItem(dteList);
-  const focus = hasProjectedRisk ? focusProjected || focusLow : focusLow || focusProjected;
+  const focus = suggestionFocus || (hasProjectedRisk ? focusProjected || focusLow : focusLow || focusProjected);
 
   const focusName =
     String(
@@ -556,52 +572,52 @@ function AdminInventoryInsightCard({
 
   const summary = hasProjectedRisk
     ? focus
-      ? `${focusReference}: stock ${stockText}, mínimo ${minText} y cobertura estimada de ${fmtNum(focusDays, 1)} día(s).${focusDailyOut != null ? ` Salida media ${fmtNum(focusDailyOut)} ${(focusUnit || "").trim()}/día.` : ""}`
-      : `Hay ${effectiveDteCount} lubricante${effectiveDteCount === 1 ? "" : "s"} con riesgo de agotamiento próximo y ${effectiveLowStockCount} referencia${effectiveLowStockCount === 1 ? "" : "s"} por debajo del mínimo operativo.`
+      ? `${focusReference}: stock ${stockText}, minimo ${minText} y cobertura estimada de ${fmtNum(focusDays, 1)} dia(s).${focusDailyOut != null ? ` Salida media ${fmtNum(focusDailyOut)} ${(focusUnit || "").trim()}/dia.` : ""}`
+      : `Hay ${effectiveDteCount} lubricante${effectiveDteCount === 1 ? "" : "s"} con riesgo de agotamiento proximo y ${effectiveLowStockCount} referencia${effectiveLowStockCount === 1 ? "" : "s"} por debajo del minimo operativo.`
     : hasLowStock
     ? focus
-      ? `${focusReference}: stock ${stockText}, mínimo ${minText} y brecha técnica de ${gapText}.`
-      : `Se detectan ${effectiveLowStockCount} referencia${effectiveLowStockCount === 1 ? "" : "s"} por debajo del nivel recomendado, sin señal inmediata de agotamiento.`
-    : "El inventario no presenta referencias por debajo del mínimo ni alertas de agotamiento próximo para el periodo seleccionado.";
+      ? `${focusReference}: stock ${stockText}, minimo ${minText} y brecha tecnica de ${gapText}.`
+      : `Se detectan ${effectiveLowStockCount} referencia${effectiveLowStockCount === 1 ? "" : "s"} por debajo del nivel recomendado, sin senal inmediata de agotamiento.`
+    : "El inventario no presenta referencias por debajo del minimo ni alertas de agotamiento proximo para el periodo seleccionado.";
 
-  const technicalNote = hasProjectedRisk
+  const technicalNote = supplyActions[0] || (hasProjectedRisk
     ? focus
-      ? `${focusReference}: validar existencia física, revisar consumos por ruta y confirmar si el mínimo operativo sigue alineado con la demanda actual.`
-      : "Validar existencias físicas y revisar consumos recientes antes de que la cobertura pierda margen de seguridad."
+      ? `${focusReference}: validar existencia fisica, revisar consumos por ruta y confirmar si el minimo operativo sigue alineado con la demanda actual.`
+      : "Validar existencias fisicas y revisar consumos recientes antes de que la cobertura pierda margen de seguridad."
     : hasLowStock
     ? focus
-      ? `${focusReference}: anticipar reposición y revisar mínimos operativos para recuperar cobertura segura.`
-      : "Anticipar reposición y revisar mínimos operativos para recuperar cobertura segura."
-    : "Mantener seguimiento semanal de cobertura y consumo para anticipar desvíos antes del siguiente ciclo.";
+      ? `${focusReference}: anticipar reposicion y revisar minimos operativos para recuperar cobertura segura.`
+      : "Anticipar reposicion y revisar minimos operativos para recuperar cobertura segura."
+    : "Mantener seguimiento semanal de cobertura y consumo para anticipar desvios antes del siguiente ciclo.");
 
-  const recommendation = hasProjectedRisk
-    ? "Reponer de inmediato, confirmar stock físico y revisar la tasa de salida antes del siguiente ciclo operativo."
+  const recommendation = supplyActions[1] || (hasProjectedRisk
+    ? "Reponer de inmediato, confirmar stock fisico y revisar la tasa de salida antes del siguiente ciclo operativo."
     : hasLowStock
-    ? "Programar reposición y restablecer el mínimo operativo antes del siguiente frente de trabajo."
-    : "Mantener revisión semanal de cobertura y mínimos operativos.";
+    ? "Programar reposicion y restablecer el minimo operativo antes del siguiente frente de trabajo."
+    : "Mantener revision semanal de cobertura y minimos operativos.");
 
   const detailCards = focus
     ? [
         {
           label: "Lubricante foco",
           value: focusName,
-          sub: focusCode ? `Código ${focusCode}` : "Sin código visible",
+          sub: focusCode ? `Codigo ${focusCode}` : "Sin código visible",
         },
         {
           label: "Stock actual",
           value: stockText,
-          sub: Number.isFinite(focusMin) ? `Mínimo ${minText}` : "Mínimo no definido",
+          sub: Number.isFinite(focusMin) ? `Minimo ${minText}` : "Minimo no definido",
         },
         hasProjectedRisk
           ? {
               label: "Horizonte estimado",
-              value: focusDays != null ? `${fmtNum(focusDays, 1)} día(s)` : "Sin dato",
-              sub: focusDailyOut != null ? `Salida media ${fmtNum(focusDailyOut)} ${focusUnit || ""}/día`.trim() : "Sin consumo medio calculado",
+              value: focusDays != null ? `${fmtNum(focusDays, 1)} dia(s)` : "Sin dato",
+              sub: focusDailyOut != null ? `Salida media ${fmtNum(focusDailyOut)} ${focusUnit || ""}/dia`.trim() : "Sin consumo medio calculado",
             }
           : {
-              label: "Brecha técnica",
+              label: "Brecha tecnica",
               value: gapText,
-              sub: "Reposición recomendada en corto plazo",
+              sub: "Reposicion recomendada en corto plazo",
             },
       ]
     : [];
@@ -869,6 +885,54 @@ function safePct(num, den) {
 
 /* ================= IA SUMMARY BOX ================= */
 
+function stripAiEntityMarkers(value) {
+  return String(value || "").replace(/\[\[([^\]]+)\]\]/g, "$1");
+}
+
+const aiEntityHighlight = {
+  display: "inline-block",
+  padding: "1px 6px",
+  margin: "0 1px",
+  borderRadius: 8,
+  background: "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(239,68,68,0.10))",
+  border: "1px solid rgba(249,115,22,0.18)",
+  color: "#c2410c",
+  fontWeight: 1000,
+  lineHeight: "inherit",
+  verticalAlign: "baseline",
+};
+
+function renderAiEntityText(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+
+  const parts = [];
+  const regex = /\[\[([^\]]+)\]\]/g;
+  let lastIndex = 0;
+  let match;
+  let key = 0;
+
+  while ((match = regex.exec(text))) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    parts.push(
+      <span key={`ai-entity-${key++}`} style={aiEntityHighlight}>
+        {match[1]}
+      </span>
+    );
+
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length ? parts : stripAiEntityMarkers(text);
+}
+
 function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi = false }) {
   const loading = !!aiState?.loading;
   const err = aiState?.error;
@@ -881,17 +945,66 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
   const hallazgos = Array.isArray(summary?.highlights) ? summary.highlights.slice(0, 4) : [];
   const acciones = Array.isArray(summary?.recommendations) ? summary.recommendations.slice(0, 4) : [];
   const riesgos = Array.isArray(summary?.risks) ? summary.risks.slice(0, 4) : [];
-  const executiveText = String(summary?.executiveSummary || "").trim();
-  const executiveCompact = executiveText
-    ? executiveText.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ")
+  const executiveRawText = String(summary?.executiveSummary || "").trim();
+  const cutText = (value, max = 120) => {
+    const clean = stripAiEntityMarkers(value).replace(/\s+/g, " ").trim();
+    if (!clean) return "";
+    return clean.length > max ? `${clean.slice(0, Math.max(0, max - 1)).trim()}…` : clean;
+  };
+  const executiveCompact = executiveRawText
+    ? executiveRawText.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ")
     : "Sin diagnóstico disponible para este periodo.";
+
+  const leadRisk = riesgos[0] || null;
+  const leadRiskLevel = String(leadRisk?.level || "LOW").toUpperCase();
+  const leadRiskLabel =
+    leadRiskLevel === "CRITICAL"
+      ? "Crítico"
+      : leadRiskLevel === "HIGH"
+      ? "Alto"
+      : leadRiskLevel === "MEDIUM"
+      ? "Medio"
+      : "Bajo";
+  const leadRiskAccent =
+    leadRiskLevel === "CRITICAL" || leadRiskLevel === "HIGH"
+      ? "#ef4444"
+      : leadRiskLevel === "MEDIUM"
+      ? "#f59e0b"
+      : "#2563eb";
+
+  const heroSignals = [
+    {
+      key: "hallazgos",
+      icon: "warn",
+      accent: "#ef4444",
+      value: String(hallazgos.length),
+      title: hallazgos.length === 1 ? "Hallazgo clave" : "Hallazgos clave",
+      text: hallazgos[0] ? cutText(hallazgos[0], 86) : "Sin frentes críticos detectados por IA.",
+    },
+    {
+      key: "acciones",
+      icon: "tool",
+      accent: "#f97316",
+      value: String(acciones.length),
+      title: acciones.length === 1 ? "Acción prioritaria" : "Acciones recomendadas",
+      text: acciones[0] ? cutText(acciones[0], 86) : "Sin acciones sugeridas para este periodo.",
+    },
+    {
+      key: "attention",
+      icon: "shield",
+      accent: leadRiskAccent,
+      value: leadRiskLabel,
+      title: "Nivel de atención",
+      text: leadRisk ? cutText(leadRisk.action || leadRisk.message, 86) : "Sin presión adicional detectada.",
+    },
+  ];
   const statusLine = loading
     ? "Generando lectura ejecutiva…"
     : err
     ? "No se pudo generar el resumen IA."
     : summary
     ? "IA lista · " + (cached ? "cache" : "nuevo") + (model ? " · " + model : "") + (generatedAt ? " · " + generatedAt : "")
-    : "Listo para generar una lectura ejecutiva de riesgos y prioridades.";
+    : "Listo para generar una lectura ejecutiva operativa.";
 
   return (
     <div style={aiBox}>
@@ -955,250 +1068,388 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
             </div>
           </div>
         ) : summary ? (
-  <div style={{ display: "grid", gap: 12 }}>
-    <div
-      style={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 20,
-        padding: 16,
-        background:
-          "radial-gradient(circle at top left, rgba(249,115,22,0.10), transparent 28%), linear-gradient(180deg, #1a1f2f 0%, #111624 100%)",
-        boxShadow: "0 18px 40px rgba(15,23,42,0.18)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 950,
-              color: "#fb923c",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            Diagnóstico ejecutivo
-          </div>
-          <div style={{ marginTop: 6, fontSize: 12, fontWeight: 850, color: "#94a3b8" }}>
-            {summary.title || "Lectura ejecutiva del periodo"}
-          </div>
-        </div>
-
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 12px",
-            borderRadius: 999,
-            background: isFallback ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)",
-            border: isFallback ? "1px solid rgba(245,158,11,0.26)" : "1px solid rgba(34,197,94,0.26)",
-            color: isFallback ? "#fde68a" : "#bbf7d0",
-            fontSize: 12,
-            fontWeight: 950,
-          }}
-        >
-          {isFallback ? "Fallback seguro" : "IA activa"}
-        </span>
-      </div>
-
-      <div
-        style={{
-          marginTop: 14,
-          fontSize: 24,
-          lineHeight: 1.2,
-          color: "#f8fafc",
-          fontWeight: 980,
-          maxWidth: 920,
-        }}
-      >
-        {executiveCompact}
-      </div>
-    </div>
-
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-        gap: 12,
-      }}
-    >
-      <div
-        style={{
-          borderRadius: 18,
-          padding: 14,
-          background: "#ffffff",
-          border: "1px solid rgba(226,232,240,0.95)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 950,
-            color: "#f97316",
-            textTransform: "uppercase",
-            letterSpacing: 1,
-          }}
-        >
-          Hallazgos clave
-        </div>
-
-        <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-          {hallazgos.length ? (
-            hallazgos.slice(0, 3).map((item, i) => (
+          <div style={{ display: "grid", gap: 16 }}>
+            <div
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 24,
+                padding: 18,
+                background:
+                  "radial-gradient(circle at 8% 16%, rgba(249,115,22,0.18), transparent 20%), linear-gradient(180deg, #1b2234 0%, #121a29 100%)",
+                boxShadow: "0 22px 48px rgba(15,23,42,0.18)",
+              }}
+            >
               <div
-                key={i}
                 style={{
-                  borderRadius: 14,
-                  padding: "12px 13px",
-                  background: "#f8fafc",
-                  border: "1px solid rgba(226,232,240,0.95)",
-                  fontSize: 13,
-                  fontWeight: 850,
-                  color: "#0f172a",
-                  lineHeight: 1.4,
+                  position: "absolute",
+                  left: -42,
+                  bottom: -58,
+                  width: 190,
+                  height: 190,
+                  borderRadius: 999,
+                  border: "1px solid rgba(249,115,22,0.16)",
+                  opacity: 0.55,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: -6,
+                  bottom: -22,
+                  width: 118,
+                  height: 118,
+                  borderRadius: 999,
+                  border: "1px solid rgba(249,115,22,0.26)",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 22,
+                  bottom: 38,
+                  width: 11,
+                  height: 11,
+                  borderRadius: 999,
+                  background: "#f97316",
+                  boxShadow: "0 0 0 8px rgba(249,115,22,0.12)",
+                  opacity: 0.9,
+                }}
+              />
+
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1.2fr) minmax(280px, 0.85fr)",
+                  gap: 22,
+                  alignItems: "stretch",
                 }}
               >
-                {item}
-              </div>
-            ))
-          ) : (
-            <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-              Sin hallazgos disponibles.
-            </div>
-          )}
-        </div>
-      </div>
+                <div style={{ minWidth: 0, display: "grid", gap: 16 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 14, alignItems: "flex-start", minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 16,
+                          display: "grid",
+                          placeItems: "center",
+                          background: "rgba(249,115,22,0.12)",
+                          border: "1px solid rgba(249,115,22,0.18)",
+                          color: "#fb923c",
+                          boxShadow: "0 18px 32px rgba(2,6,23,0.16)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon name="doc" size="xl" />
+                      </div>
 
-      <div
-        style={{
-          borderRadius: 18,
-          padding: 14,
-          background: "#ffffff",
-          border: "1px solid rgba(226,232,240,0.95)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 950,
-            color: "#f97316",
-            textTransform: "uppercase",
-            letterSpacing: 1,
-          }}
-        >
-          Acciones recomendadas
-        </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 950,
+                            color: "#fb923c",
+                            textTransform: "uppercase",
+                            letterSpacing: 1,
+                          }}
+                        >
+                          Diagnóstico ejecutivo
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 13, fontWeight: 850, color: "#cbd5e1" }}>
+                          {summary.title || "Lectura ejecutiva operativa"}
+                        </div>
+                      </div>
+                    </div>
 
-        <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-          {acciones.length ? (
-            acciones.slice(0, 3).map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  borderRadius: 14,
-                  padding: "12px 13px",
-                  background: "#f8fafc",
-                  border: "1px solid rgba(226,232,240,0.95)",
-                  fontSize: 13,
-                  fontWeight: 900,
-                  color: "#0f172a",
-                  lineHeight: 1.4,
-                }}
-              >
-                {item}
-              </div>
-            ))
-          ) : (
-            <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
-              Sin acciones sugeridas.
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "8px 14px",
+                        borderRadius: 999,
+                        background: isFallback ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.14)",
+                        border: isFallback
+                          ? "1px solid rgba(245,158,11,0.26)"
+                          : "1px solid rgba(34,197,94,0.26)",
+                        color: isFallback ? "#fde68a" : "#bbf7d0",
+                        fontSize: 12,
+                        fontWeight: 950,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {isFallback ? "Fallback seguro" : "IA activa"}
+                    </span>
+                  </div>
 
-    {riesgos.length ? (
-      <div
-        style={{
-          borderRadius: 18,
-          padding: 14,
-          background: "#ffffff",
-          border: "1px solid rgba(226,232,240,0.95)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 950,
-            color: "#64748b",
-            textTransform: "uppercase",
-            letterSpacing: 1,
-          }}
-        >
-          Riesgos detectados
-        </div>
-
-        <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-          {riesgos.slice(0, 2).map((r, i) => {
-            const lvl = String(r.level || "LOW").toUpperCase();
-            const isHigh = lvl === "CRITICAL" || lvl === "HIGH";
-            const isMedium = lvl === "MEDIUM";
-
-            const tone = isHigh ? "#991b1b" : isMedium ? "#92400e" : "#166534";
-            const bg = isHigh
-              ? "rgba(254,226,226,0.60)"
-              : isMedium
-              ? "rgba(254,243,199,0.65)"
-              : "rgba(220,252,231,0.65)";
-
-            return (
-              <div
-                key={i}
-                style={{
-                  borderRadius: 14,
-                  padding: "12px 13px",
-                  background: bg,
-                  border: "1px solid rgba(226,232,240,0.95)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 10,
-                  alignItems: "flex-start",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.4 }}>
-                  <div>{r.message || "Sin descripción disponible."}</div>
-                  <div style={{ marginTop: 6, fontSize: 12, color: "#475569" }}>
-                    Acción: <b style={{ color: "#0f172a" }}>{r.action || "Sin acción sugerida."}</b>
+                  <div
+                    style={{
+                      fontSize: 23,
+                      lineHeight: 1.28,
+                      color: "#f8fafc",
+                      fontWeight: 980,
+                      maxWidth: 860,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    {renderAiEntityText(executiveCompact)}
                   </div>
                 </div>
 
-                <span
+                <div
                   style={{
-                    ...pqBadge,
-                    color: tone,
-                    borderColor: tone + "33",
-                    background: "rgba(255,255,255,0.70)",
+                    minWidth: 0,
+                    display: "grid",
+                    gap: 10,
+                    alignContent: "start",
+                    borderLeft: "1px solid rgba(148,163,184,0.24)",
+                    paddingLeft: 18,
                   }}
                 >
-                  {lvl}
-                </span>
+                  {heroSignals.map((item) => (
+                    <div
+                      key={item.key}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "44px minmax(0, 1fr)",
+                        gap: 12,
+                        alignItems: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 14,
+                          display: "grid",
+                          placeItems: "center",
+                          background: `${item.accent}1A`,
+                          border: `1px solid ${item.accent}44`,
+                          color: item.accent,
+                        }}
+                      >
+                        <Icon name={item.icon} size="md" />
+                      </div>
+
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 20, fontWeight: 1000, color: "#f8fafc", lineHeight: 1 }}>
+                            {item.value}
+                          </span>
+                          <span style={{ fontSize: 13, fontWeight: 900, color: "#f8fafc" }}>{item.title}</span>
+                        </div>
+                        <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#94a3b8", lineHeight: 1.4 }}>
+                          {item.text}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    ) : null}
-  </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  borderRadius: 16,
+                  padding: 16,
+                  background: "#ffffff",
+                  border: "1px solid rgba(226,232,240,0.95)",
+                  boxShadow: "0 12px 28px rgba(15,23,42,0.05)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 14,
+                      display: "grid",
+                      placeItems: "center",
+                      background: "rgba(249,115,22,0.10)",
+                      border: "1px solid rgba(249,115,22,0.18)",
+                      color: "#f97316",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon name="spark" size="md" />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 950,
+                        color: "#f97316",
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                      }}
+                    >
+                      Hallazgos clave
+                    </div>
+                    <div style={{ marginTop: 3, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
+                      Lo más importante detectado por IA
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+                  {hallazgos.length ? (
+                    hallazgos.slice(0, 3).map((item, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "38px minmax(0, 1fr)",
+                          gap: 12,
+                          alignItems: "start",
+                          borderRadius: 16,
+                          padding: 14,
+                          background: "#f8fafc",
+                          border: "1px solid rgba(226,232,240,0.95)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 999,
+                            display: "grid",
+                            placeItems: "center",
+                            background: "#f97316",
+                            color: "#ffffff",
+                            fontSize: 14,
+                            fontWeight: 1000,
+                            marginTop: 2,
+                          }}
+                        >
+                          {i + 1}
+                        </div>
+
+                        <div style={{ fontSize: 14, fontWeight: 850, color: "#0f172a", lineHeight: 1.45 }}>
+                          {renderAiEntityText(item)}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
+                      Sin hallazgos disponibles.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  borderRadius: 16,
+                  padding: 16,
+                  background: "#ffffff",
+                  border: "1px solid rgba(226,232,240,0.95)",
+                  boxShadow: "0 12px 28px rgba(15,23,42,0.05)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 14,
+                      display: "grid",
+                      placeItems: "center",
+                      background: "rgba(34,197,94,0.10)",
+                      border: "1px solid rgba(34,197,94,0.18)",
+                      color: "#16a34a",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon name="checkCircle" size="md" />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 950,
+                        color: "#16a34a",
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                      }}
+                    >
+                      Acciones recomendadas
+                    </div>
+                    <div style={{ marginTop: 3, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
+                      Qué hacer ahora para recuperar el control
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+                  {acciones.length ? (
+                    acciones.slice(0, 3).map((item, i) => {
+                      const iconName = i === 0 ? "tool" : i === 1 ? "user" : "calendar";
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "44px minmax(0, 1fr)",
+                            gap: 12,
+                            alignItems: "start",
+                            borderRadius: 16,
+                            padding: 14,
+                            background: "#f8fafc",
+                            border: "1px solid rgba(226,232,240,0.95)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: 12,
+                              display: "grid",
+                              placeItems: "center",
+                              background: "rgba(34,197,94,0.10)",
+                              border: "1px solid rgba(34,197,94,0.16)",
+                              color: "#16a34a",
+                              marginTop: 1,
+                            }}
+                          >
+                            <Icon name={iconName} size="md" />
+                          </div>
+
+                          <div style={{ fontSize: 14, fontWeight: 850, color: "#0f172a", lineHeight: 1.45 }}>
+                            {renderAiEntityText(item)}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
+                      Sin acciones sugeridas.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
           <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
             No hay resumen aún. Presiona <b>Generar</b>.
@@ -1208,7 +1459,6 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
     </div>
   );
 }
-
  /* ================= MINI CHARTS ================= */
 
 function ymFromDate(d) {
@@ -1286,6 +1536,603 @@ function MiniLines({ title, subtitle, series = [] }) {
   );
 }
 
+function getAlertTonePalette(tone, active = true) {
+  const palettes = {
+    red: {
+      stripe: "#d1433a",
+      iconBg: "rgba(209,67,58,0.10)",
+      iconBorder: "rgba(209,67,58,0.18)",
+      iconColor: "#b42318",
+      title: "#b42318",
+      cardBg: "rgba(255,247,247,0.98)",
+      cardBorder: "rgba(248,113,113,0.22)",
+      badgeBg: "rgba(255,255,255,0.82)",
+      badgeColor: "#b42318",
+    },
+    blue: {
+      stripe: "#2f6fed",
+      iconBg: "rgba(47,111,237,0.10)",
+      iconBorder: "rgba(47,111,237,0.18)",
+      iconColor: "#1d4ed8",
+      title: "#2f59d9",
+      cardBg: "rgba(246,249,255,0.98)",
+      cardBorder: "rgba(96,165,250,0.24)",
+      badgeBg: "rgba(255,255,255,0.82)",
+      badgeColor: "#1d4ed8",
+    },
+    amber: {
+      stripe: "#ffb000",
+      iconBg: "rgba(255,176,0,0.12)",
+      iconBorder: "rgba(251,191,36,0.20)",
+      iconColor: "#b25a08",
+      title: "#9a5612",
+      cardBg: "rgba(255,251,243,0.98)",
+      cardBorder: "rgba(251,191,36,0.22)",
+      badgeBg: "rgba(255,255,255,0.82)",
+      badgeColor: "#b25a08",
+    },
+    gray: {
+      stripe: "#94a3b8",
+      iconBg: "rgba(148,163,184,0.10)",
+      iconBorder: "rgba(148,163,184,0.18)",
+      iconColor: "#64748b",
+      title: "#64748b",
+      cardBg: "rgba(255,255,255,0.98)",
+      cardBorder: "rgba(226,232,240,0.95)",
+      badgeBg: "rgba(255,255,255,0.82)",
+      badgeColor: "#64748b",
+    },
+  };
+
+  const selected = palettes[tone] || palettes.gray;
+  if (active) return selected;
+  return {
+    ...palettes.gray,
+    stripe: "#cbd5e1",
+    cardBg: "rgba(255,255,255,0.92)",
+    cardBorder: "rgba(226,232,240,0.95)",
+    iconBg: "rgba(148,163,184,0.08)",
+    iconBorder: "rgba(148,163,184,0.12)",
+    iconColor: "#94a3b8",
+    title: "#94a3b8",
+    badgeBg: "rgba(255,255,255,0.80)",
+    badgeColor: "#94a3b8",
+  };
+}
+
+function AlertMetricCard({
+  title,
+  description,
+  count = 0,
+  icon = "alert",
+  tone = "gray",
+  disabled = false,
+  onClick,
+}) {
+  const active = !disabled && Number(count || 0) > 0;
+  const palette = getAlertTonePalette(tone, active);
+
+  return (
+    <button
+      type="button"
+      onClick={active ? onClick : undefined}
+      disabled={!active}
+      style={{
+        position: "relative",
+        width: "100%",
+        borderRadius: 18,
+        border: `1px solid ${palette.cardBorder}`,
+        background: palette.cardBg,
+        padding: "15px 15px 13px",
+        display: "grid",
+        gap: 10,
+        textAlign: "left",
+        cursor: active ? "pointer" : "default",
+        opacity: active ? 1 : 0.88,
+        boxShadow: "0 12px 28px rgba(15,23,42,0.04)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 6,
+          background: palette.stripe,
+        }}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "48px minmax(0, 1fr) auto",
+          gap: 10,
+          alignItems: "start",
+        }}
+      >
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 16,
+            display: "grid",
+            placeItems: "center",
+            background: palette.iconBg,
+            border: `1px solid ${palette.iconBorder}`,
+            color: palette.iconColor,
+            flexShrink: 0,
+          }}
+        >
+          <Icon name={icon} size="lg" />
+        </div>
+
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 1000, color: palette.title, lineHeight: 1.15 }}>
+            {title}
+          </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 12,
+              fontWeight: 800,
+              color: active ? "#475569" : "#94a3b8",
+              lineHeight: 1.55,
+              maxWidth: 260,
+            }}
+          >
+            {description}
+          </div>
+        </div>
+
+        <div
+          style={{
+            minWidth: 44,
+            height: 44,
+            borderRadius: 999,
+            border: "1px solid rgba(226,232,240,0.95)",
+            background: palette.badgeBg,
+            color: palette.badgeColor,
+            display: "grid",
+            placeItems: "center",
+            fontSize: 18,
+            fontWeight: 1000,
+            lineHeight: 1,
+            boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+          }}
+        >
+          {Number(count || 0)}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <span
+          style={{
+            color: active ? "#475569" : "#cbd5e1",
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          <Icon name="chevronRight" size="md" />
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function AlertClusterPanel({
+  title,
+  subtitle,
+  icon,
+  iconTone = "red",
+  items = [],
+  isMobile = false,
+  onRefresh = null,
+  refreshing = false,
+  footerLabel = "",
+  onFooterClick = null,
+  error = "",
+}) {
+  const panelTone = getAlertTonePalette(iconTone, true);
+
+  return (
+    <div
+      style={{
+        border: "1px solid rgba(226,232,240,0.95)",
+        borderRadius: 20,
+        background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
+        boxShadow: "0 14px 28px rgba(15,23,42,0.045)",
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ padding: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
+            <div
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 20,
+                display: "grid",
+                placeItems: "center",
+                background: panelTone.iconBg,
+                border: `1px solid ${panelTone.iconBorder}`,
+                color: panelTone.iconColor,
+                flexShrink: 0,
+              }}
+            >
+              <Icon name={icon} size="lg" />
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 1000, color: "#0f172a", lineHeight: 1.15 }}>
+                {title}
+              </div>
+              <div style={{ marginTop: 4, fontSize: 13, fontWeight: 800, color: "#64748b" }}>
+                {subtitle}
+              </div>
+            </div>
+          </div>
+
+          {onRefresh ? (
+            <button
+              type="button"
+              onClick={onRefresh}
+              style={btnAdminGhost}
+              disabled={refreshing}
+              title="Actualizar"
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <Icon name="refresh" size="sm" />
+                {refreshing ? "Actualizando..." : "Actualizar"}
+              </span>
+            </button>
+          ) : null}
+        </div>
+
+        {error ? <div style={{ marginTop: 12, ...miniError }}>{error}</div> : null}
+
+        <div
+          style={{
+            marginTop: 14,
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
+            gap: 12,
+          }}
+        >
+          {items.map(({ key, ...item }) => (
+            <AlertMetricCard key={key} {...item} />
+          ))}
+        </div>
+      </div>
+
+      {footerLabel && onFooterClick ? (
+        <div
+          style={{
+            borderTop: "1px solid rgba(226,232,240,0.95)",
+            padding: "16px 20px",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <button
+            type="button"
+            onClick={onFooterClick}
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "#2f59d9",
+              fontWeight: 950,
+              fontSize: 14,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <span
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 12,
+                display: "grid",
+                placeItems: "center",
+                background: "rgba(47,111,237,0.08)",
+                border: "1px solid rgba(47,111,237,0.16)",
+                color: "#2f59d9",
+              }}
+            >
+              <Icon name="trendUp" size="sm" />
+            </span>
+            <span>{footerLabel}</span>
+            <Icon name="chevronRight" size="sm" />
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function hasWeeklyPlanSignal(plan) {
+  if (!plan || typeof plan !== "object") return false;
+  return [
+    Number(plan?.overdueCount || 0),
+    Number(plan?.dueNext7DaysCount || 0),
+    Number(plan?.criticalNext7DaysCount || 0),
+    Number(plan?.unassignedNext7DaysCount || 0),
+  ].some((value) => value > 0) || Boolean(plan?.equipmentFocus) || Boolean(plan?.technicianFocus);
+}
+
+function computeWeeklyPlanFallback(items = [], todayYMD = toLocalYMD(new Date())) {
+  const source = Array.isArray(items) ? items.filter(Boolean) : [];
+  const start = toDateOnly(todayYMD || new Date());
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+
+  const overdueItems = [];
+  const dueItems = [];
+
+  for (const item of source) {
+    const scheduled = toDateOnly(item?.dateISO || item?.scheduledAt || item?.scheduledDate || null);
+    if (!scheduled) continue;
+    const status = String(item?.computedStatus || item?.statusLabel || "");
+    const isCompleted = status === "Completada" || String(item?.status || "").toUpperCase() === "COMPLETED";
+    if (isCompleted) continue;
+    if (scheduled.getTime() < start.getTime() || status === "Atrasada") {
+      overdueItems.push(item);
+      continue;
+    }
+    if (scheduled.getTime() >= start.getTime() && scheduled.getTime() <= end.getTime()) {
+      dueItems.push(item);
+    }
+  }
+
+  const criticalDue = [];
+  const unassignedDue = [];
+  const techMap = new Map();
+  for (const item of dueItems) {
+    const crit = String(item?.equipmentCriticality || item?.criticality || "").toUpperCase();
+    if (["ALTA", "CRITICA", "CRITICO"].includes(crit)) criticalDue.push(item);
+    const isUnassigned = Boolean(item?.isUnassigned) || !(item?.technicianName || item?.technicianId || item?.technician?.name);
+    if (isUnassigned) unassignedDue.push(item);
+    if (!isUnassigned) {
+      const key = String(item?.technicianId || item?.technician?.id || item?.technicianName || item?.technician?.name || "TECH");
+      const prev = techMap.get(key) || {
+        technicianName: item?.technicianName || item?.technician?.name || "Tecnico",
+        technicianCode: item?.technicianCode || item?.technician?.code || "",
+        assignedCount: 0,
+        criticalCount: 0,
+      };
+      prev.assignedCount += 1;
+      if (["ALTA", "CRITICA", "CRITICO"].includes(crit)) prev.criticalCount += 1;
+      techMap.set(key, prev);
+    }
+  }
+
+  const technicianFocus = [...techMap.values()].sort((a, b) => {
+    if (Number(b.criticalCount || 0) !== Number(a.criticalCount || 0)) {
+      return Number(b.criticalCount || 0) - Number(a.criticalCount || 0);
+    }
+    return Number(b.assignedCount || 0) - Number(a.assignedCount || 0);
+  })[0] || null;
+
+  const equipmentSource = overdueItems[0] || criticalDue[0] || dueItems[0] || null;
+  const equipmentFocus = equipmentSource
+    ? {
+        equipmentName:
+          equipmentSource?.equipmentName ||
+          (typeof equipmentSource?.equipment === "string" ? equipmentSource.equipment : equipmentSource?.equipment?.name) ||
+          "Equipo",
+        equipmentCode:
+          equipmentSource?.equipmentCode ||
+          (typeof equipmentSource?.equipment === "object" ? equipmentSource?.equipment?.code : "") ||
+          "",
+      }
+    : null;
+
+  const actions = [];
+  if (overdueItems.length > 0) {
+    actions.push(`Cerrar ${overdueItems.length} atrasada(s) antes de mover carga nueva.`);
+  }
+  if (unassignedDue.length > 0) {
+    actions.push(`Asignar ${unassignedDue.length} actividad(es) sin tecnico dentro de la ventana semanal.`);
+  }
+  if (technicianFocus && Number(technicianFocus.assignedCount || 0) >= 3) {
+    actions.push(`Rebalancear carga de ${technicianFocus.technicianName || "tecnico foco"} para proteger cumplimiento.`);
+  }
+  if (actions.length === 0 && dueItems.length > 0) {
+    actions.push("Sostener la secuencia semanal y revisar avance diario contra el plan.");
+  }
+
+  return {
+    overdueCount: overdueItems.length,
+    dueNext7DaysCount: dueItems.length,
+    criticalNext7DaysCount: criticalDue.length,
+    unassignedNext7DaysCount: unassignedDue.length,
+    technicianFocus,
+    equipmentFocus,
+    actions: actions.slice(0, 3),
+  };
+}
+
+function WeeklyPlanInsightCard({ weeklyPlan, fallbackItems = [], fallbackSummary = null, todayYMD = toLocalYMD(new Date()), navigate, month, isMobile = false }) {
+  const fallbackPlan = computeWeeklyPlanFallback(fallbackItems, todayYMD);
+  const summaryPlan = fallbackSummary && typeof fallbackSummary === "object" ? fallbackSummary : {};
+  const mergedFallbackPlan = {
+    ...fallbackPlan,
+    overdueCount: Math.max(Number(fallbackPlan?.overdueCount || 0), Number(summaryPlan?.overdueCount || 0)),
+    dueNext7DaysCount: Math.max(Number(fallbackPlan?.dueNext7DaysCount || 0), Number(summaryPlan?.dueNext7DaysCount || 0)),
+    criticalNext7DaysCount: Math.max(Number(fallbackPlan?.criticalNext7DaysCount || 0), Number(summaryPlan?.criticalNext7DaysCount || 0)),
+    unassignedNext7DaysCount: Math.max(Number(fallbackPlan?.unassignedNext7DaysCount || 0), Number(summaryPlan?.unassignedNext7DaysCount || 0)),
+    technicianFocus: fallbackPlan?.technicianFocus || summaryPlan?.technicianFocus || null,
+    equipmentFocus: fallbackPlan?.equipmentFocus || summaryPlan?.equipmentFocus || null,
+    actions: Array.isArray(fallbackPlan?.actions) && fallbackPlan.actions.length
+      ? fallbackPlan.actions
+      : Array.isArray(summaryPlan?.actions)
+      ? summaryPlan.actions
+      : [],
+  };
+  const resolvedPlan = hasWeeklyPlanSignal(weeklyPlan)
+    ? weeklyPlan
+    : mergedFallbackPlan;
+  const overdueCount = Number(resolvedPlan?.overdueCount || 0);
+  const dueNext7DaysCount = Number(resolvedPlan?.dueNext7DaysCount || 0);
+  const criticalNext7DaysCount = Number(resolvedPlan?.criticalNext7DaysCount || 0);
+  const unassignedNext7DaysCount = Number(resolvedPlan?.unassignedNext7DaysCount || 0);
+  const technicianFocus = resolvedPlan?.technicianFocus || null;
+  const equipmentFocus = resolvedPlan?.equipmentFocus || null;
+  const actions = Array.isArray(resolvedPlan?.actions)
+    ? resolvedPlan.actions.filter(Boolean).slice(0, 3).map((item) => cleanUiText(item))
+    : [];
+  const finalActions = actions.length
+    ? actions
+    : overdueCount > 0
+    ? [`Cerrar ${overdueCount} atrasada(s) antes de abrir carga nueva.`]
+    : dueNext7DaysCount > 0
+    ? [`Ordenar ${dueNext7DaysCount} actividad(es) de la ventana semanal y asegurar asignacion.`]
+    : ["Sin presion semanal visible en este momento."];
+  const tone = overdueCount > 0 ? "red" : criticalNext7DaysCount > 0 || unassignedNext7DaysCount > 0 ? "amber" : "blue";
+  const accent = tone === "red" ? "#dc2626" : tone === "amber" ? "#d97706" : "#2563eb";
+  const surface = tone === "red"
+    ? "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(255,255,255,0.96))"
+    : tone === "amber"
+    ? "linear-gradient(180deg, rgba(255,247,237,0.98), rgba(255,255,255,0.96))"
+    : "linear-gradient(180deg, rgba(239,246,255,0.98), rgba(255,255,255,0.96))";
+  const equipmentLine = equipmentFocus
+    ? `${cleanUiText(equipmentFocus.equipmentName || "Equipo foco")}${equipmentFocus.equipmentCode ? ` (${cleanUiText(equipmentFocus.equipmentCode)})` : ""}`
+    : "Sin equipo dominante en esta ventana.";
+  const technicianLine = technicianFocus
+    ? `${cleanUiText(technicianFocus.technicianName || "Tecnico foco")}${technicianFocus.technicianCode ? ` (${cleanUiText(technicianFocus.technicianCode)})` : ""}`
+    : "Carga semanal distribuida sin concentracion visible.";
+  const miniCardStyle = {
+    borderRadius: 14,
+    padding: 12,
+    border: "1px solid rgba(148,163,184,0.22)",
+    background: "rgba(255,255,255,0.88)",
+    display: "grid",
+    gap: 6,
+  };
+  const miniLabelStyle = {
+    fontSize: 11,
+    fontWeight: 900,
+    letterSpacing: ".06em",
+    textTransform: "uppercase",
+    color: "#64748b",
+  };
+  const miniValueStyle = {
+    fontSize: 28,
+    lineHeight: 1,
+    fontWeight: 1000,
+    color: "#0f172a",
+    fontFamily: EXEC_DISPLAY_FONT,
+  };
+  const noteBoxStyle = {
+    borderRadius: 14,
+    padding: 12,
+    border: "1px solid rgba(148,163,184,0.18)",
+    background: "rgba(255,255,255,0.84)",
+  };
+  const actionRowStyle = {
+    display: "flex",
+    alignItems: "start",
+    gap: 10,
+    padding: "10px 12px",
+    borderRadius: 14,
+    border: "1px solid rgba(148,163,184,0.18)",
+    background: "rgba(255,255,255,0.9)",
+  };
+  const actionIndexStyle = {
+    flexShrink: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 999,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 12,
+    fontWeight: 1000,
+    border: "1px solid rgba(148,163,184,0.22)",
+  };
+
+  return (
+    <div
+      style={{
+        borderRadius: 18,
+        padding: 16,
+        display: "grid",
+        gap: 12,
+        border: `2px solid ${accent}33`,
+        borderLeft: `6px solid ${accent}`,
+        background: surface,
+        boxShadow: "0 14px 32px rgba(15,23,42,0.06)",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "start" }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 950, color: accent, textTransform: "uppercase", letterSpacing: ".12em" }}>Plan semanal inteligente</div>
+          <div style={{ marginTop: 4, fontSize: 28, lineHeight: 1, fontWeight: 1000, color: "#0f172a", fontFamily: EXEC_DISPLAY_FONT }}>
+            {overdueCount > 0 ? `${overdueCount} frente(s) urgentes` : `${dueNext7DaysCount} actividad(es) en 7 dias`}
+          </div>
+          <div style={{ marginTop: 6, fontSize: 13, lineHeight: 1.5, fontWeight: 800, color: "#475569" }}>
+            Cierra atrasadas, protege las criticas de la semana y evita carga sin asignacion.
+          </div>
+        </div>
+        <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)}>
+          Ver semana
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10 }}>
+        <div style={miniCardStyle}>
+          <div style={miniLabelStyle}>Atrasadas</div>
+          <div style={miniValueStyle}>{overdueCount}</div>
+        </div>
+        <div style={miniCardStyle}>
+          <div style={miniLabelStyle}>Criticas 7 dias</div>
+          <div style={miniValueStyle}>{criticalNext7DaysCount}</div>
+        </div>
+        <div style={miniCardStyle}>
+          <div style={miniLabelStyle}>Sin tecnico</div>
+          <div style={miniValueStyle}>{unassignedNext7DaysCount}</div>
+        </div>
+        <div style={miniCardStyle}>
+          <div style={miniLabelStyle}>Ventana semanal</div>
+          <div style={miniValueStyle}>{dueNext7DaysCount}</div>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+        <div style={noteBoxStyle}>
+          <div style={{ fontWeight: 950, color: "#0f172a" }}>Equipo foco:</div>
+          <div style={{ marginTop: 4, fontWeight: 800, color: "#475569", lineHeight: 1.45 }}>{equipmentLine}</div>
+        </div>
+        <div style={noteBoxStyle}>
+          <div style={{ fontWeight: 950, color: "#0f172a" }}>Carga foco:</div>
+          <div style={{ marginTop: 4, fontWeight: 800, color: "#475569", lineHeight: 1.45 }}>{technicianLine}</div>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
+        {finalActions.map((item, index) => (
+          <div key={`${index}-${item}`} style={actionRowStyle}>
+            <span style={{ ...actionIndexStyle, color: accent, borderColor: `${accent}33`, background: "rgba(255,255,255,0.92)" }}>{index + 1}</span>
+            <span style={{ fontWeight: 850, color: "#334155", lineHeight: 1.5 }}>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ================= ADMIN PANEL ================= */
 
 function AdminPanel({
@@ -1299,6 +2146,8 @@ function AdminPanel({
   unassignedPending,
   lowStockCount,
   inventoryLow = [],
+  weeklyPlan = null,
+  supplySuggestion = null,
   totalRoutes,
   totalEquipments,
   loadMonthlyActivities,
@@ -1505,6 +2354,83 @@ function AdminPanel({
     });
   }, [predAlerts, month]);
   const dteCount = Number(predAlerts?.lubricantDaysToEmptyCount || 0);
+  const anomaliesCount = Number(predAlerts?.equipmentConsumptionAnomaliesCount || 0);
+  const adminOperationalAlertItems = [
+    {
+      key: "overdue",
+      title: "Atrasadas",
+      description: "Actividades vencidas que requieren atención inmediata.",
+      count: operationalOverdueCount,
+      icon: "clock",
+      tone: "red",
+      disabled: !operationalOverdueCount,
+      onClick: () => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "unassigned",
+      title: "Sin técnico",
+      description: "Actividades sin técnico asignado.",
+      count: unassignedPending,
+      icon: "user",
+      tone: "blue",
+      disabled: !unassignedPending,
+      onClick: () => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "criticalOverdue",
+      title: "Críticas vencidas",
+      description: "Actividades críticas que ya vencieron.",
+      count: operationalCriticalOverdueCount,
+      icon: "warn",
+      tone: "gray",
+      disabled: !operationalCriticalOverdueCount,
+      onClick: () =>
+        navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`),
+    },
+  ];
+  const adminPredictiveAlertItems = [
+    {
+      key: "riskLate",
+      title: "Riesgo de atraso",
+      description: "Actividades con alta probabilidad de no cumplirse a tiempo.",
+      count: Number(predAlerts?.riskPendingCount || 0),
+      icon: "clock",
+      tone: "blue",
+      disabled: !predAlerts?.riskPendingCount,
+      onClick: () => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "reincidence",
+      title: "Reincidencia",
+      description: "Equipos o actividades con reincidencia detectada.",
+      count: Number(repeatedFailuresTopCurrentMonth.length || 0),
+      icon: "warn",
+      tone: "amber",
+      disabled: !repeatedFailuresTopCurrentMonth.length,
+      onClick: () => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "overload",
+      title: "Sobrecarga técnica",
+      description: "Técnicos con carga operativa por encima del límite.",
+      count: overloadHotCount,
+      icon: "user",
+      tone: "gray",
+      disabled: !overloadHotCount,
+      onClick: () => navigate(`/activities?month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "anomalies",
+      title: "Consumo fuera de patrón",
+      description: "Consumo de lubricantes fuera de lo esperado.",
+      count: anomaliesCount,
+      icon: "alert",
+      tone: "gray",
+      disabled: !anomaliesCount,
+      onClick: () =>
+        navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`),
+    },
+  ];
 
   const kpis = [
     {
@@ -1524,7 +2450,7 @@ function AdminPanel({
     {
       title: "Atrasadas",
       value: String(currentMonthTotals.overdue || 0),
-      sub: operationalBuckets.maxOverdueDays > 0 ? `${operationalBuckets.maxOverdueDays} día(s) de retraso` : "Mes seleccionado",
+      sub: operationalBuckets.maxOverdueDays > 0 ? `${operationalBuckets.maxOverdueDays} dia(s) de retraso` : "Mes seleccionado",
       tone: "red",
       iconName: "clock",
     },
@@ -1733,12 +2659,12 @@ function AdminPanel({
           style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.22fr) minmax(280px, 0.78fr)",
-            gap: 14,
+            gap: 10,
             alignItems: "start",
           }}
         >
           <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontWeight: 1000, color: "#991b1b", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -1758,11 +2684,11 @@ function AdminPanel({
               ) : operationalBuckets.overdue.length === 0 ? (
                 <div style={{ fontWeight: 850, color: "#64748b" }}>Sin atrasadas en este momento.</div>
               ) : (
-                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.overdue.slice(0, 3).map((a) => renderAdminActivityCard(a, "overdue", "red"))}</div>
+                <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>{operationalBuckets.overdue.slice(0, 3).map((a) => renderAdminActivityCard(a, "overdue", "red"))}</div>
               )}
             </div>
 
-            <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontWeight: 1000, color: "#b45309", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -1780,11 +2706,11 @@ function AdminPanel({
               {operationalLoading ? null : operationalBuckets.today.length === 0 ? (
                 <div style={{ fontWeight: 850, color: "#64748b" }}>No hay pendientes programadas para hoy.</div>
               ) : (
-                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.today.slice(0, 3).map((a) => renderAdminActivityCard(a, "today", "amber"))}</div>
+                <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>{operationalBuckets.today.slice(0, 3).map((a) => renderAdminActivityCard(a, "today", "amber"))}</div>
               )}
             </div>
 
-            <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontWeight: 1000, color: "#166534", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -1802,7 +2728,7 @@ function AdminPanel({
               {operationalLoading ? null : operationalBuckets.upcoming.length === 0 ? (
                 <div style={{ fontWeight: 850, color: "#64748b" }}>Sin próximas actividades relevantes por ahora.</div>
               ) : (
-                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.upcoming.slice(0, 3).map((a) => renderAdminActivityCard(a, "upcoming", "green"))}</div>
+                <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>{operationalBuckets.upcoming.slice(0, 3).map((a) => renderAdminActivityCard(a, "upcoming", "green"))}</div>
               )}
             </div>
           </div>
@@ -1866,10 +2792,31 @@ function AdminPanel({
               aiEnabled={aiEnabled}
               lowStockItems={inventoryLow}
               dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
+              supplySuggestion={supplySuggestion}
             />
           </div>
         </div>
       </PanelCard>
+
+      <WeeklyPlanInsightCard
+        weeklyPlan={weeklyPlan}
+        fallbackItems={operationalItems}
+        fallbackSummary={{
+          overdueCount: operationalBuckets.overdue.length,
+          dueNext7DaysCount: operationalBuckets.today.length + operationalBuckets.upcoming.length,
+          criticalNext7DaysCount: operationalBuckets.today.length,
+          unassignedNext7DaysCount: unassignedPending,
+          actions: [
+            operationalBuckets.overdue.length > 0 ? `Cerrar ${operationalBuckets.overdue.length} atrasada(s) del corte actual.` : null,
+            operationalBuckets.today.length > 0 ? `Resolver ${operationalBuckets.today.length} pendiente(s) de hoy sin mover el resto del plan.` : null,
+            unassignedPending > 0 ? `Asignar ${unassignedPending} actividad(es) sin tecnico dentro de la semana.` : null,
+          ].filter(Boolean),
+        }}
+        todayYMD={todayYMD}
+        navigate={navigate}
+        month={month}
+        isMobile={isMobile}
+      />
 
       <PanelCard
         title="Centro de alertas"
@@ -1896,53 +2843,32 @@ function AdminPanel({
               alignItems: "start",
             }}
           >
-            <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
-                <div>
-                  <div style={{ fontWeight: 1000, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <Icon name="tool" size="sm" />
-                    Alertas operativas
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Atajos directos para lo urgente del día</div>
-                </div>
-              </div>
-                <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-                  <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!operationalOverdueCount}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="clock" size="sm" />Atrasadas</span><span style={chipCountMini}>{Number(operationalOverdueCount || 0)}</span></button>
-                  <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(unassignedPending ? chipBlueMini : chipOffMini) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="user" size="sm" />Sin técnico</span><span style={chipCountMini}>{Number(unassignedPending || 0)}</span></button>
-                  <button type="button" style={{ ...btnAdminChip, padding: "12px 12px", justifyContent: "space-between", ...(operationalCriticalOverdueCount ? chipRedMini : chipOffMini) }} onClick={() => navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`)} disabled={!operationalCriticalOverdueCount} title="Se activa cuando una actividad crítica ya venció y requiere atención inmediata."><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="warn" size="sm" />Críticas vencidas</span><span style={chipCountMini}>{Number(operationalCriticalOverdueCount || 0)}</span></button>
-                </div>
-              </div>
+            <AlertClusterPanel
+              title="Alertas operativas"
+              subtitle="Atajos directos para lo urgente del día"
+              icon="clock"
+              iconTone="red"
+              items={adminOperationalAlertItems}
+              isMobile={isMobile}
+            />
 
-            {(predLoading || predError || predTotal > 0 || predAlerts) ? (
-              <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontWeight: 1000, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      <Icon name="alert" size="sm" />
-                      Alertas predictivas
-                    </div>
-                    <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>{predLoading ? "Calculando..." : predTotal > 0 ? "Riesgos detectados para anticiparse" : "Sin señales predictivas por ahora"}</div>
-                  </div>
-                  <button type="button" onClick={handleRefreshPredictive} style={btnAdminGhost} disabled={predLoading} title="Actualizar predictivas"><span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Icon name="refresh" size="sm" />{predLoading ? "..." : "Actualizar"}</span></button>
-                </div>
-                {predError ? <div style={miniError}>{predError}</div> : null}
-                {(() => {
-                  const anomaliesCount = Number(predAlerts?.equipmentConsumptionAnomaliesCount || 0);
-                  return (
-                    <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse."><Icon name="clock" size="sm" />Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(repeatedFailuresTopCurrentMonth.length ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresTopCurrentMonth.length} title="Se activa cuando un equipo repite condiciones MALO o CRITICO en el mes activo y ya sugiere un patrón recurrente."><Icon name="warn" size="sm" />Reincidencia <span style={chipCount}>{Number(repeatedFailuresTopCurrentMonth.length || 0)}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo."><Icon name="user" size="sm" />Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span></button>
-                      <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y además hay muestra suficiente."><Icon name="alert" size="sm" />Consumo fuera de patrón <span style={chipCount}>{anomaliesCount}</span></button>
-                    </div>
-                  );
-                })()}
-              </div>
-            ) : (
-              <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)", fontWeight: 850, color: "#64748b" }}>
-                Sin señales predictivas por ahora.
-              </div>
-            )}
+            <AlertClusterPanel
+              title="Alertas predictivas"
+              subtitle={
+                predLoading
+                  ? "Calculando alertas predictivas"
+                  : predTotal > 0
+                  ? "Riesgos detectados para anticiparse"
+                  : "Sin señales predictivas por ahora"
+              }
+              icon="alert"
+              iconTone="amber"
+              items={adminPredictiveAlertItems}
+              isMobile={isMobile}
+              onRefresh={handleRefreshPredictive}
+              refreshing={predLoading}
+              error={predError}
+            />
           </div>
 
           <SupervisorPriorityTodayPanel month={month} navigate={navigate} canSeePriorityQueue={canSeePriorityQueue} pqLoading={pqLoading} pqError={pqError} pqItems={adminPriorityQueueViewItems} pqTotal={adminPriorityQueueViewItems.length} refreshPQ={refreshPQ} />
@@ -2232,6 +3158,7 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
 }
 
 function SupervisorDistributionAlertsPanel({
+  isMobile,
   month,
   donutTotals,
   donutLoading,
@@ -2257,24 +3184,99 @@ function SupervisorDistributionAlertsPanel({
   refreshPQ,
   onOpenScheduleActivity,
   onOpenEmergencyActivity,
+  upcomingActivities = [],
   activitiesNode = null,
   showPriority = true,
 }) {
-  const dteCount = Number(predAlerts?.lubricantDaysToEmptyCount || 0);
   const anomaliesCount = Number(predAlerts?.equipmentConsumptionAnomaliesCount || 0);
   const repeatedFailuresCount = (Array.isArray(predAlerts?.repeatedFailuresTop) ? predAlerts.repeatedFailuresTop : []).filter((item) => {
     const risk = String(item?.risk || "").toUpperCase();
     const monthKey = String(toLocalYMD(item?.lastBadAt || "")).slice(0, 7);
     return risk !== "LOW" && monthKey === String(month || "");
   }).length;
-  const priorityItems = (Array.isArray(pqItems) ? pqItems : [])
-    .map((x) => formatPriorityItem(x, month))
-    .slice(0, Math.max(6, Math.min(10, Number(pqTotal || 0) || 6)));
   const overloadHotCount = canSeeOverload ? Number(overloadHotItems?.length || 0) : 0;
   const handleRefreshPredictive = () => {
     refreshPred?.();
     loadOverload?.();
   };
+
+  const supervisorOperationalAlertItems = [
+    {
+      key: "overdue",
+      title: "Atrasadas",
+      description: "Actividades vencidas que requieren atención inmediata.",
+      count: Number(overdueCount || 0),
+      icon: "clock",
+      tone: "red",
+      disabled: !Number(overdueCount || 0),
+      onClick: () => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "unassigned",
+      title: "Sin técnico",
+      description: "Actividades sin técnico asignado.",
+      count: Number(unassignedPending || 0),
+      icon: "user",
+      tone: "blue",
+      disabled: !Number(unassignedPending || 0),
+      onClick: () => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "criticalOverdue",
+      title: "Críticas vencidas",
+      description: "Actividades críticas que ya vencieron.",
+      count: Number(criticalRiskOverdue || 0),
+      icon: "warn",
+      tone: "gray",
+      disabled: !Number(criticalRiskOverdue || 0),
+      onClick: () =>
+        navigate(`/activities?status=OVERDUE&filter=critical-risk&month=${encodeURIComponent(month)}`),
+    },
+  ];
+
+  const supervisorPredictiveAlertItems = [
+    {
+      key: "riskLate",
+      title: "Riesgo de atraso",
+      description: "Actividades con alta probabilidad de no cumplirse a tiempo.",
+      count: Number(predAlerts?.riskPendingCount || 0),
+      icon: "clock",
+      tone: "blue",
+      disabled: !Number(predAlerts?.riskPendingCount || 0),
+      onClick: () => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "reincidence",
+      title: "Reincidencia",
+      description: "Equipos o actividades con reincidencia detectada.",
+      count: Number(repeatedFailuresCount || 0),
+      icon: "warn",
+      tone: "amber",
+      disabled: !Number(repeatedFailuresCount || 0),
+      onClick: () => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "overload",
+      title: "Sobrecarga técnica",
+      description: "Técnicos con carga operativa por encima del límite.",
+      count: Number(overloadHotCount || 0),
+      icon: "user",
+      tone: "gray",
+      disabled: !Number(overloadHotCount || 0),
+      onClick: () => navigate(`/activities?month=${encodeURIComponent(month)}`),
+    },
+    {
+      key: "anomalies",
+      title: "Consumo fuera de patrón",
+      description: "Consumo de lubricantes fuera de lo esperado.",
+      count: Number(anomaliesCount || 0),
+      icon: "alert",
+      tone: "gray",
+      disabled: !Number(anomaliesCount || 0),
+      onClick: () =>
+        navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`),
+    },
+  ];
 
   return (
     <PanelCard
@@ -2297,61 +3299,56 @@ function SupervisorDistributionAlertsPanel({
       }
     >
       <div style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "grid", gap: 10 }}>
-          <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)" }}>
-            <div style={{ fontWeight: 1000, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <Icon name="tool" size="sm" />
-              Alertas operativas
-            </div>
-            <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Atajos directos para atender pendientes reales.</div>
-            <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="button" style={{ ...chipBtn, ...(overdueCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)} disabled={!overdueCount}>
-                <Icon name="clock" size="sm" />
-                Atrasadas <span style={chipCount}>{Number(overdueCount || 0)}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(unassignedPending ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`)} disabled={!unassignedPending}>
-                <Icon name="user" size="sm" />
-                Sin técnico <span style={chipCount}>{Number(unassignedPending || 0)}</span>
-              </button>
-            </div>
-          </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
+            gap: 12,
+            alignItems: "start",
+          }}
+        >
+          <AlertClusterPanel
+            title="Alertas operativas"
+            subtitle="Atajos directos para atender pendientes reales."
+            icon="clock"
+            iconTone="red"
+            items={supervisorOperationalAlertItems}
+            isMobile={isMobile}
 
-          <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.92)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-              <div>
-                <div style={{ fontWeight: 1000, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="alert" size="sm" />
-                  Alertas predictivas
-                </div>
-                <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
-                  {predLoading ? "Calculando…" : predTotal > 0 ? "Riesgos detectados para anticiparse" : "Sin señales predictivas por ahora"}
-                </div>
-              </div>
-              <button type="button" onClick={handleRefreshPredictive} style={btnAdminGhost} disabled={predLoading || !predictiveEnabled}>Actualizar</button>
-            </div>
-            {predError ? <div style={miniError}>{predError}</div> : null}
-            <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="button" style={{ ...chipBtn, ...(predAlerts?.riskPendingCount ? chipBlue : chipOff) }} onClick={() => navigate(`/activities?filter=risk-late&month=${encodeURIComponent(month)}`)} disabled={!predAlerts?.riskPendingCount} title="Se activa cuando hay actividades que por carga, fecha o contexto tienen probabilidad alta de atrasarse.">
-                <Icon name="clock" size="sm" />
-                Riesgo de atraso <span style={chipCount}>{Number(predAlerts?.riskPendingCount || 0)}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(repeatedFailuresCount ? chipAmber : chipOff) }} onClick={() => navigate(`/history?filter=bad-condition&month=${encodeURIComponent(month)}`)} disabled={!repeatedFailuresCount}>
-                <Icon name="warn" size="sm" />
-                Reincidencia <span style={chipCount}>{repeatedFailuresCount}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(overloadHotCount ? chipRed : chipOff) }} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)} disabled={!overloadHotCount} title="Se activa cuando la carga estimada del técnico supera la capacidad configurada para el periodo.">
-                <Icon name="user" size="sm" />
-                Sobrecarga técnica <span style={chipCount}>{overloadHotCount}</span>
-              </button>
-              <button type="button" style={{ ...chipBtn, ...(anomaliesCount ? chipRed : chipOff) }} onClick={() => navigate(`/analysis?tab=consumption&filter=anomalies&month=${encodeURIComponent(month)}`)} disabled={!anomaliesCount} title="Se activa cuando el consumo reciente por movimiento supera claramente el comportamiento habitual del equipo y además hay muestra suficiente.">
-                <Icon name="alert" size="sm" />
-                Consumo fuera de patrón <span style={chipCount}>{anomaliesCount}</span>
-              </button>
-            </div>
-          </div>
+          />
 
-{showPriority ? <SupervisorPriorityTodayPanel month={month} navigate={navigate} canSeePriorityQueue={canSeePriorityQueue} pqLoading={pqLoading} pqError={pqError} pqItems={adminPriorityQueueItems} pqTotal={adminPriorityQueueItems.length} refreshPQ={refreshPQ} /> : null}
+          <AlertClusterPanel
+            title="Alertas predictivas"
+            subtitle={
+              predLoading
+                ? "Calculando alertas predictivas"
+                : predTotal > 0
+                ? "Riesgos detectados para anticiparse"
+                : "Sin señales predictivas por ahora"
+            }
+            icon="alert"
+            iconTone="amber"
+            items={supervisorPredictiveAlertItems}
+            isMobile={isMobile}
+            onRefresh={handleRefreshPredictive}
+            refreshing={predLoading || !predictiveEnabled}
+
+            error={predError}
+          />
         </div>
+
+        {showPriority ? (
+          <SupervisorPriorityTodayPanel
+            month={month}
+            navigate={navigate}
+            canSeePriorityQueue={canSeePriorityQueue}
+            pqLoading={pqLoading}
+            pqError={pqError}
+            pqItems={pqItems}
+            pqTotal={pqTotal}
+            refreshPQ={refreshPQ}
+          />
+        ) : null}
       </div>
     </PanelCard>
   );
@@ -3916,6 +4913,8 @@ loadTechDashboardActivities,
     donutTotals,
 
     inventoryLow,
+    weeklyPlan: summary?.weeklyPlan || null,
+    supplySuggestion: summary?.supplySuggestion || null,
     canSeeInventory,
     criticalEquipments,
     topOverdue,
@@ -4071,6 +5070,8 @@ function AdminDashboard(props) {
         unassignedPending={unassignedPending}
         lowStockCount={lowStockCount}
         inventoryLow={props.inventoryLow}
+        weeklyPlan={props.weeklyPlan}
+        supplySuggestion={props.supplySuggestion}
         totalRoutes={adminCounts?.routes || 0}
         totalEquipments={adminCounts?.equipments || 0}
         loadMonthlyActivities={loadMonthlyActivities}
@@ -4115,6 +5116,8 @@ function SupervisorExecutivePanel({
   unassignedPending,
   lowStockCount,
   inventoryLow,
+  weeklyPlan = null,
+  supplySuggestion = null,
   loadMonthlyActivities,
   aiState,
   loadAiSummary,
@@ -4136,6 +5139,7 @@ function SupervisorExecutivePanel({
   refreshPQ,
   onOpenScheduleActivity,
   onOpenEmergencyActivity,
+  upcomingActivities = [],
   activitiesNode = null,
   showPriority = true,
 }) {
@@ -4272,6 +5276,7 @@ function SupervisorExecutivePanel({
             aiEnabled={aiEnabled}
             lowStockItems={inventoryLow}
             dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
+            supplySuggestion={supplySuggestion}
           />
 
           <PanelCard
@@ -4335,6 +5340,24 @@ function SupervisorExecutivePanel({
         </div>
       </div>
 
+      <WeeklyPlanInsightCard
+        weeklyPlan={weeklyPlan}
+        fallbackItems={upcomingActivities}
+        fallbackSummary={{
+          overdueCount: overdueCount,
+          dueNext7DaysCount: Array.isArray(upcomingActivities) ? upcomingActivities.length : 0,
+          criticalNext7DaysCount: criticalRiskOverdue,
+          unassignedNext7DaysCount: unassignedPending,
+          actions: [
+            overdueCount > 0 ? `Cerrar ${overdueCount} atrasada(s) antes de abrir nuevas cargas.` : null,
+            Array.isArray(upcomingActivities) && upcomingActivities.length > 0 ? `Ordenar ${upcomingActivities.length} actividad(es) de la ventana semanal.` : null,
+            unassignedPending > 0 ? `Asignar ${unassignedPending} actividad(es) sin tecnico para proteger cumplimiento.` : null,
+          ].filter(Boolean),
+        }}
+        navigate={navigate}
+        month={month}
+        isMobile={isMobile}
+      />
       {aiEnabled ? (
         <div
           style={{
@@ -4376,6 +5399,7 @@ function SupervisorExecutivePanel({
       </div>
 
       <SupervisorDistributionAlertsPanel
+        isMobile={isMobile}
         month={month}
         donutTotals={donutTotals}
         donutLoading={donutLoading}
@@ -4975,14 +5999,14 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
   return (
     <div
       style={{
-        borderRadius: 20,
+        borderRadius: 18,
         border: `1px solid ${statusTone.badgeBorder}`,
         borderLeft: `6px solid ${statusTone.accent}`,
         background: statusTone.bg,
         boxShadow: "0 12px 28px rgba(15,23,42,0.06)",
         padding: isMobile ? "14px 14px 16px" : "18px",
         display: "grid",
-        gap: 14,
+        gap: 10,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
@@ -4994,7 +6018,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
               justifyContent: "center",
               borderRadius: 999,
               padding: "8px 12px",
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 950,
               background: statusTone.badgeBg,
               color: statusTone.badgeColor,
@@ -5027,7 +6051,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
             ? {
                 display: "grid",
                 gridTemplateColumns: "minmax(0, 1fr) 220px",
-                gap: 16,
+                gap: 12,
                 alignItems: "start",
               }
             : { display: "grid", gap: 12 }
@@ -5039,7 +6063,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
               ? {
                   display: "grid",
                   gridTemplateColumns: "minmax(0, 1fr) minmax(220px, 0.72fr)",
-                  gap: 14,
+                  gap: 10,
                   alignItems: "start",
                   minWidth: 0,
                 }
@@ -6425,6 +7449,14 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
+
+
+
+
+
+
+
 
 
 

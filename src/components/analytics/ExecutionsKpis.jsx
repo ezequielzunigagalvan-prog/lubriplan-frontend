@@ -5,7 +5,7 @@ import { Icon } from "../ui/lpIcons";
 export default function ExecutionsKpis({ days = 180, techId }) {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [s, setS] = useState(null);
+  const [summary, setSummary] = useState(null);
 
   const load = async () => {
     try {
@@ -15,11 +15,11 @@ export default function ExecutionsKpis({ days = 180, techId }) {
         days,
         techId: techId || undefined,
       });
-      setS(json || null);
-    } catch (e) {
-      console.error(e);
-      setErr(e?.message || "Error cargando KPIs de actividades");
-      setS(null);
+      setSummary(json || null);
+    } catch (error) {
+      console.error(error);
+      setErr(error?.message || "Error cargando KPIs de actividades");
+      setSummary(null);
     } finally {
       setLoading(false);
     }
@@ -31,7 +31,7 @@ export default function ExecutionsKpis({ days = 180, techId }) {
   }, [days, techId]);
 
   const cards = useMemo(() => {
-    const safe = s || {};
+    const safe = summary || {};
     const pct = (n) => `${Number(n || 0).toFixed(0)}%`;
 
     return [
@@ -39,90 +39,74 @@ export default function ExecutionsKpis({ days = 180, techId }) {
         key: "scheduled",
         label: "Programadas",
         value: safe.totalScheduled ?? 0,
-        hint: `Últimos ${days} días`,
-        tone: "neutral",
+        hint: "Ventana de analisis",
+        tone: "steel",
         icon: "calendar",
       },
       {
-        key: "completed",
+        key: "completedMonth",
         label: "Completadas",
         value: safe.completed ?? 0,
-        hint: `Últimos ${days} días`,
+        hint: "Cierre del periodo",
         tone: "blue",
         icon: "check",
       },
       {
-        key: "ontime",
-        label: "A tiempo",
-        value: safe.onTime ?? 0,
-        hint: "Dentro del plazo",
-        tone: "ok",
+        key: "completed30d",
+        label: "Ultimos 30 dias",
+        value: safe.completed30d ?? 0,
+        hint: "Actividad ejecutada reciente",
+        tone: "green",
         icon: "bolt",
-      },
-      {
-        key: "late",
-        label: "Tarde",
-        value: safe.late ?? 0,
-        hint: "Fuera de tiempo",
-        tone: "warn",
-        icon: "warn",
       },
       {
         key: "pending",
         label: "Pendientes",
         value: safe.pendingDue ?? 0,
-        hint: "Aún no vencen",
-        tone: "neutral",
+        hint: "Aun no vencen",
+        tone: "steel",
         icon: "list",
       },
       {
         key: "overdue",
         label: "Vencidas",
         value: safe.overdue ?? 0,
-        hint: "Requieren atención",
+        hint: "Requieren atencion",
         tone: "danger",
         icon: "alert",
       },
       {
         key: "completionRate",
-        label: "% Cumplimiento",
+        label: "Cumplimiento",
         value: pct(safe.completionRate),
         hint: "Completadas / programadas",
         tone: "purple",
         icon: "doc",
       },
-      {
-        key: "onTimeRate",
-        label: "% A tiempo",
-        value: pct(safe.onTimeRate),
-        hint: "Completadas en tiempo",
-        tone: "ok",
-        icon: "route",
-      },
     ];
-  }, [s, days]);
+  }, [summary]);
 
   return (
     <div style={{ marginTop: 10 }}>
       {err ? <div style={errorBox}>{err}</div> : null}
 
       <div style={grid}>
-        {cards.map((c) => (
-          <div key={c.key} className="lpKpiCard" style={{ ...kpiCard, ...toneCard(c.tone) }}>
-            <div style={topAccent(c.tone)} />
+        {cards.map((card) => (
+          <div key={card.key} className="lpKpiCard" style={{ ...kpiCard, ...toneCard(card.tone) }}>
+            <div style={topAccent(card.tone)} />
 
             <div style={kpiHeader}>
-              <div style={kpiLabel}>{c.label}</div>
-              <span style={iconWrap(c.tone)}>
-                <Icon name={c.icon} />
+              <div style={kpiLabel}>{card.label}</div>
+              <span style={iconWrap(card.tone)}>
+                <Icon name={card.icon} />
               </span>
             </div>
 
-            <div style={{ ...kpiValue, ...toneValue(c.tone) }}>
-              {loading ? "â€¦" : c.value}
+            <div style={{ ...kpiValue, ...toneValue(card.tone) }}>
+              {loading ? "..." : card.value}
             </div>
 
-            <div style={kpiSub}>{c.hint}</div>
+            <div style={kpiSub}>{card.hint}</div>
           </div>
         ))}
       </div>
@@ -134,35 +118,28 @@ function toneCard(tone) {
   if (tone === "danger") {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #fff7f7 100%)",
-      border: "1px solid rgba(248,113,113,0.22)",
+      border: "1px solid rgba(248,113,113,0.24)",
     };
   }
 
-  if (tone === "warn") {
-    return {
-      background: "linear-gradient(180deg, #ffffff 0%, #fffaf5 100%)",
-      border: "1px solid rgba(251,146,60,0.22)",
-    };
-  }
-
-  if (tone === "ok") {
+  if (tone === "green") {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #f7fff9 100%)",
-      border: "1px solid rgba(74,222,128,0.22)",
+      border: "1px solid rgba(74,222,128,0.24)",
     };
   }
 
   if (tone === "blue") {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)",
-      border: "1px solid rgba(96,165,250,0.22)",
+      border: "1px solid rgba(96,165,250,0.24)",
     };
   }
 
   if (tone === "purple") {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #fbfaff 100%)",
-      border: "1px solid rgba(167,139,250,0.22)",
+      border: "1px solid rgba(167,139,250,0.24)",
     };
   }
 
@@ -174,10 +151,8 @@ function toneCard(tone) {
 
 function topAccent(tone) {
   let bg = "#334155";
-
   if (tone === "danger") bg = "#dc2626";
-  if (tone === "warn") bg = "#ea580c";
-  if (tone === "ok") bg = "#16a34a";
+  if (tone === "green") bg = "#16a34a";
   if (tone === "blue") bg = "#2563eb";
   if (tone === "purple") bg = "#7c3aed";
 
@@ -195,8 +170,7 @@ function topAccent(tone) {
 
 function toneValue(tone) {
   if (tone === "danger") return { color: "#b91c1c" };
-  if (tone === "warn") return { color: "#c2410c" };
-  if (tone === "ok") return { color: "#15803d" };
+  if (tone === "green") return { color: "#15803d" };
   if (tone === "blue") return { color: "#1d4ed8" };
   if (tone === "purple") return { color: "#6d28d9" };
   return { color: "#0f172a" };
@@ -213,13 +187,7 @@ function iconWrap(tone) {
     fg = "#b91c1c";
   }
 
-  if (tone === "warn") {
-    bg = "rgba(255,237,213,0.95)";
-    bd = "rgba(251,146,60,0.28)";
-    fg = "#c2410c";
-  }
-
-  if (tone === "ok") {
+  if (tone === "green") {
     bg = "rgba(220,252,231,0.95)";
     bd = "rgba(74,222,128,0.28)";
     fg = "#15803d";
@@ -292,16 +260,17 @@ const kpiValue = {
 const kpiSub = {
   marginTop: 10,
   fontSize: 12,
-  color: "#94a3b8",
+  color: "#475569",
   fontWeight: 850,
+  lineHeight: 1.45,
 };
 
 const errorBox = {
   marginBottom: 10,
-  background: "#fee2e2",
-  border: "1px solid #fecaca",
-  padding: 10,
-  borderRadius: 12,
+  padding: 12,
+  borderRadius: 14,
+  background: "rgba(254,242,242,0.95)",
+  border: "1px solid rgba(248,113,113,0.25)",
   color: "#991b1b",
-  fontWeight: 800,
+  fontWeight: 900,
 };

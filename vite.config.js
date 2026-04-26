@@ -17,6 +17,7 @@ export default defineConfig({
       ],
       manifest: false,
       workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: "/offline.html",
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
         runtimeCaching: [
@@ -74,4 +75,5 @@ export default defineConfig({
     },
   },
 });
+
 
