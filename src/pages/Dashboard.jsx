@@ -2121,7 +2121,7 @@ function WeeklyPlanInsightCard({ weeklyPlan, fallbackItems = [], fallbackSummary
         </div>
       </div>
 
-      <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
+      <div style={{ display: "grid", gap: 8 }}>
         {finalActions.map((item, index) => (
           <div key={`${index}-${item}`} style={actionRowStyle}>
             <span style={{ ...actionIndexStyle, color: accent, borderColor: `${accent}33`, background: "rgba(255,255,255,0.92)" }}>{index + 1}</span>
@@ -2664,7 +2664,7 @@ function AdminPanel({
           }}
         >
           <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
+            <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontWeight: 1000, color: "#991b1b", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -2684,11 +2684,11 @@ function AdminPanel({
               ) : operationalBuckets.overdue.length === 0 ? (
                 <div style={{ fontWeight: 850, color: "#64748b" }}>Sin atrasadas en este momento.</div>
               ) : (
-                <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>{operationalBuckets.overdue.slice(0, 3).map((a) => renderAdminActivityCard(a, "overdue", "red"))}</div>
+                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.overdue.slice(0, 3).map((a) => renderAdminActivityCard(a, "overdue", "red"))}</div>
               )}
             </div>
 
-            <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
+            <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontWeight: 1000, color: "#b45309", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -2706,11 +2706,11 @@ function AdminPanel({
               {operationalLoading ? null : operationalBuckets.today.length === 0 ? (
                 <div style={{ fontWeight: 850, color: "#64748b" }}>No hay pendientes programadas para hoy.</div>
               ) : (
-                <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>{operationalBuckets.today.slice(0, 3).map((a) => renderAdminActivityCard(a, "today", "amber"))}</div>
+                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.today.slice(0, 3).map((a) => renderAdminActivityCard(a, "today", "amber"))}</div>
               )}
             </div>
 
-            <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>
+            <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontWeight: 1000, color: "#166534", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -2728,7 +2728,7 @@ function AdminPanel({
               {operationalLoading ? null : operationalBuckets.upcoming.length === 0 ? (
                 <div style={{ fontWeight: 850, color: "#64748b" }}>Sin próximas actividades relevantes por ahora.</div>
               ) : (
-                <div style={{ display: "grid", gap: 8, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))" }}>{operationalBuckets.upcoming.slice(0, 3).map((a) => renderAdminActivityCard(a, "upcoming", "green"))}</div>
+                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.upcoming.slice(0, 3).map((a) => renderAdminActivityCard(a, "upcoming", "green"))}</div>
               )}
             </div>
           </div>
@@ -7449,6 +7449,7 @@ const dashboardCompactInstructionText = {
 
   const pqBadgeDte = { background: "#ecfeff", color: "#0e7490", border: "1px solid rgba(6,182,212,0.30)" };
   const pqBadgeAnom = { background: "#fff7ed", color: "#9a3412", border: "1px solid rgba(251,146,60,0.35)" };
+
 
 
 
