@@ -3,6 +3,9 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import lubriPlanLogo from "../assets/lubriplan-logo.png.png";
+import landingDashboardCover from "../assets/landing-dashboard-cover.png";
+import landingAlerts from "../assets/landing-alerts.png";
+import landingAiSummary from "../assets/landing-ai-summary.png";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const DEMO_URL = "https://www.hidrolub.com/lubriplan";
@@ -210,31 +213,28 @@ export default function LubriPlanLanding() {
             <div style={panelHead}>
               <div>
                 <div style={panelKicker}>Vista operativa</div>
-                <div style={panelTitle}>Lo primero que mantenimiento necesita ver para actuar</div>
+                <div style={panelTitle}>La plataforma ya se muestra con lenguaje industrial, control y jerarquía real</div>
               </div>
-              <span style={liveBadge}>Tiempo real</span>
+              <span style={liveBadge}>Producto real</span>
             </div>
 
-            <div style={metrics}>
-              <MetricCard value="12" label="Actividades vencidas" tone="red" />
-              <MetricCard value="7" label="Pendientes críticas" tone="amber" />
-              <MetricCard value="3" label="Equipos con riesgo" tone="red" />
-              <MetricCard value="24" label="Rutas activas" tone="blue" />
-              <MetricCard value="92%" label="Cumplimiento" tone="green" />
+            <div style={heroImageShell}>
+              <img src={landingDashboardCover} alt="Panel de control de LubriPlan" style={heroImage} />
             </div>
 
-            <div style={priorityCard}>
-              <div style={cardTopRow}>
-                <div style={miniTitle}>Prioridad de hoy</div>
-                <span style={chipRed}>Crítica</span>
+            <div style={heroImageFooter}>
+              <div style={heroImagePoint}>
+                <span style={heroImageDot} />
+                KPIs operativos para mantenimiento
               </div>
-              <div style={priorityTitle}>Equipo principal con actividad vencida y condición crítica abierta</div>
-              <div style={priorityText}>Acción sugerida: ejecutar, validar condición, capturar evidencia y confirmar consumo real.</div>
-            </div>
-
-            <div style={miniGrid}>
-              <MiniCard title="Inventario" chip="Riesgo" chipStyle={chipAmber} text="Lubricante crítico con cobertura limitada para los próximos días." />
-              <MiniCard title="Lectura ejecutiva" chip="IA lista" chipStyle={chipBlue} text="La base ya está preparada para resúmenes, prioridades y señales predictivas para decisión ejecutiva." />
+              <div style={heroImagePoint}>
+                <span style={heroImageDot} />
+                Prioridades visibles por rol
+              </div>
+              <div style={heroImagePoint}>
+                <span style={heroImageDot} />
+                Dashboard listo para planta y dirección
+              </div>
             </div>
           </div>
         </div>
@@ -304,6 +304,34 @@ export default function LubriPlanLanding() {
           </p>
         </div>
         <div style={featureGrid}>{capabilities.map((item) => <FeatureLine key={item} text={item} />)}</div>
+      </section>
+
+      <section style={section}>
+        <div style={sectionHeadWide}>
+          <div style={sectionKicker}>PRUEBA VISUAL DEL PRODUCTO</div>
+          <h2 style={sectionTitle}>Alertas y lectura ejecutiva listas para operación real</h2>
+          <p style={sectionText}>
+            LubriPlan no solo organiza actividades. También presenta alertas claras y una lectura ejecutiva
+            que ayuda a mantenimiento a priorizar con rapidez.
+          </p>
+        </div>
+
+        <div style={screenshotGrid}>
+          <ScreenshotCard
+            image={landingAlerts}
+            alt="Alertas operativas y predictivas de LubriPlan"
+            kicker="Centro de alertas"
+            title="Alertas operativas y predictivas en una sola vista"
+            text="Atajos claros para atrasadas, sin tecnico, riesgo de atraso, reincidencia y sobrecarga operativa."
+          />
+          <ScreenshotCard
+            image={landingAiSummary}
+            alt="Resumen inteligente de LubriPlan"
+            kicker="Lectura ejecutiva"
+            title="Resumen inteligente con prioridades accionables"
+            text="La IA entrega diagnostico ejecutivo, hallazgos y acciones recomendadas con foco en ejecucion y cumplimiento."
+          />
+        </div>
       </section>
 
       <section style={section}>
@@ -466,6 +494,21 @@ function PainCard({ text }) {
   );
 }
 
+function ScreenshotCard({ image, alt, kicker, title, text }) {
+  return (
+    <div style={screenshotCard}>
+      <div style={screenshotFrame}>
+        <img src={image} alt={alt} style={screenshotImage} />
+      </div>
+      <div style={screenshotMeta}>
+        <div style={screenshotKicker}>{kicker}</div>
+        <div style={screenshotTitle}>{title}</div>
+        <div style={screenshotText}>{text}</div>
+      </div>
+    </div>
+  );
+}
+
 const page = {
   background: "radial-gradient(circle at 14% 12%, rgba(249,115,22,0.18), transparent 24%), radial-gradient(circle at 84% 18%, rgba(234,88,12,0.14), transparent 22%), linear-gradient(180deg, #0b1220 0%, #111827 46%, #0f172a 100%)",
   color: "#fff",
@@ -502,6 +545,11 @@ const panelKicker = { fontSize: 12, fontWeight: 900, letterSpacing: 0.9, color: 
 const panelTitle = { marginTop: 6, fontSize: 22, lineHeight: 1.18, fontWeight: 900, maxWidth: 380 };
 const liveBadge = { display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "8px 12px", borderRadius: 999, background: "rgba(34,197,94,0.14)", color: "#bbf7d0", border: "1px solid rgba(34,197,94,0.24)", fontSize: 11, fontWeight: 950 };
 const metrics = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 };
+const heroImageShell = { borderRadius: 24, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(15,23,42,0.66)", boxShadow: "0 24px 44px rgba(2,6,23,0.28)" };
+const heroImage = { width: "100%", display: "block", objectFit: "cover" };
+const heroImageFooter = { marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 };
+const heroImagePoint = { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 16, background: "rgba(15,23,42,0.58)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontWeight: 850, lineHeight: 1.4 };
+const heroImageDot = { width: 10, height: 10, borderRadius: 999, background: "linear-gradient(135deg, #fb923c 0%, #f97316 100%)", flexShrink: 0, boxShadow: "0 0 0 6px rgba(249,115,22,0.12)" };
 const metricCard = { borderRadius: 18, padding: 16, background: "rgba(15,23,42,0.78)", border: "1px solid rgba(255,255,255,0.08)" };
 const metricValue = { fontSize: 30, fontWeight: 1000, lineHeight: 1 };
 const metricLabel = { marginTop: 7, fontSize: 12, fontWeight: 900, letterSpacing: 0.8, textTransform: "uppercase", color: "#94a3b8" };
@@ -520,6 +568,7 @@ const sectionTight = { maxWidth: 1320, margin: "0 auto", padding: "0 24px 18px" 
 const section = { maxWidth: 1320, margin: "0 auto", padding: "34px 24px" };
 const sectionAlt = { maxWidth: 1320, margin: "0 auto", padding: "34px 24px" };
 const sectionHead = { maxWidth: 860, marginBottom: 24 };
+const sectionHeadWide = { maxWidth: 980, marginBottom: 24 };
 const sectionKicker = { fontSize: 12, fontWeight: 950, letterSpacing: 1.05, color: "#fb923c", textTransform: "uppercase", marginBottom: 10 };
 const sectionTitle = { margin: 0, fontSize: "clamp(2rem, 4vw, 3rem)", lineHeight: 1, letterSpacing: -1.1 };
 const sectionText = { marginTop: 14, color: "#cbd5e1", fontSize: 16, lineHeight: 1.65, fontWeight: 600 };
@@ -552,6 +601,14 @@ const journeyNumber = { fontSize: 34, lineHeight: 1, fontWeight: 1000, color: "#
 const journeyTitle = { marginTop: 12, fontSize: 19, lineHeight: 1.2, fontWeight: 950 };
 const journeyText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
 const industryWrap = { display: "flex", gap: 10, flexWrap: "wrap" };
+const screenshotGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: 18, alignItems: "start" };
+const screenshotCard = { display: "grid", gap: 14, padding: 18, borderRadius: 28, background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 44px rgba(2,6,23,0.16)" };
+const screenshotFrame = { borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,23,42,0.72)" };
+const screenshotImage = { width: "100%", display: "block", objectFit: "cover" };
+const screenshotMeta = { display: "grid", gap: 8 };
+const screenshotKicker = { fontSize: 12, fontWeight: 950, letterSpacing: 1.05, color: "#fb923c", textTransform: "uppercase" };
+const screenshotTitle = { fontSize: 22, lineHeight: 1.1, fontWeight: 950, color: "#f8fafc" };
+const screenshotText = { color: "#cbd5e1", fontSize: 14, lineHeight: 1.65, fontWeight: 700 };
 const industryPill = { padding: "12px 16px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "#e2e8f0", fontSize: 13, fontWeight: 900 };
 const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 72px" };
 const ctaBox = { position: "relative", overflow: "hidden", padding: "30px 24px", borderRadius: 30, background: "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)", border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 24px 70px rgba(2,6,23,0.28)" };
