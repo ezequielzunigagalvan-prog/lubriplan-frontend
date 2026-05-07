@@ -183,6 +183,7 @@ export default function MainLayout({ children }) {
     analysis: role === "ADMIN" || role === "SUPERVISOR",
     export: role === "ADMIN" || role === "SUPERVISOR",
     reports: role === "ADMIN" || role === "SUPERVISOR",
+    technicalAssistant: true,
 
     users: role === "ADMIN",
     links: role === "ADMIN",
@@ -472,6 +473,16 @@ export default function MainLayout({ children }) {
             </NavLink>
           )}
 
+          {can.technicalAssistant && (
+            <NavLink className="lpSideLink" to="/technical-assistant" style={navLinkStyle("/technical-assistant")}>
+              <span style={sideRow}>
+                <span style={navIconStyle("/technical-assistant")}>
+                  <Icon name="tool" />
+                </span>
+                <span style={sideText}>Asistente tecnico</span>
+              </span>
+            </NavLink>
+          )}
           {can.analysis && (
             <NavLink className="lpSideLink" to="/analysis" style={navLinkStyle("/analysis")}>
               <span style={sideRow}>
@@ -777,6 +788,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/admin/onboarding")) return "Alta cliente";
   if (pathname.startsWith("/settings")) return "Ajustes";
   if (pathname.startsWith("/notifications")) return "Notificaciones";
+  if (pathname.startsWith("/technical-assistant")) return "Asistente tecnico";
   return "LubriPlan";
 }
 
@@ -1268,6 +1280,9 @@ const seeAll = {
   fontWeight: 950,
   color: "#0f172a",
 };
+
+
+
 
 
 

@@ -1,0 +1,79 @@
+﻿export const greaseTypes = [
+  { id: "LITHIUM", label: "Litio" },
+  { id: "LITHIUM_COMPLEX", label: "Complejo de litio" },
+  { id: "CALCIUM", label: "Calcio" },
+  { id: "CALCIUM_SULFONATE", label: "Sulfonato de calcio" },
+  { id: "POLYUREA", label: "Poliurea" },
+  { id: "ALUMINUM_COMPLEX", label: "Complejo de aluminio" },
+  { id: "BENTONE", label: "Bentonita / Arcilla" },
+];
+
+export const compatibilityMatrix = {
+  LITHIUM: {
+    LITHIUM: "COMPATIBLE",
+    LITHIUM_COMPLEX: "COMPATIBLE",
+    CALCIUM: "PARTIAL",
+    CALCIUM_SULFONATE: "PARTIAL",
+    POLYUREA: "PARTIAL",
+    ALUMINUM_COMPLEX: "PARTIAL",
+    BENTONE: "INCOMPATIBLE",
+  },
+  LITHIUM_COMPLEX: {
+    LITHIUM: "COMPATIBLE",
+    LITHIUM_COMPLEX: "COMPATIBLE",
+    CALCIUM: "PARTIAL",
+    CALCIUM_SULFONATE: "PARTIAL",
+    POLYUREA: "PARTIAL",
+    ALUMINUM_COMPLEX: "PARTIAL",
+    BENTONE: "INCOMPATIBLE",
+  },
+  CALCIUM: {
+    LITHIUM: "PARTIAL",
+    LITHIUM_COMPLEX: "PARTIAL",
+    CALCIUM: "COMPATIBLE",
+    CALCIUM_SULFONATE: "PARTIAL",
+    POLYUREA: "INCOMPATIBLE",
+    ALUMINUM_COMPLEX: "PARTIAL",
+    BENTONE: "INCOMPATIBLE",
+  },
+  CALCIUM_SULFONATE: {
+    LITHIUM: "PARTIAL",
+    LITHIUM_COMPLEX: "PARTIAL",
+    CALCIUM: "PARTIAL",
+    CALCIUM_SULFONATE: "COMPATIBLE",
+    POLYUREA: "PARTIAL",
+    ALUMINUM_COMPLEX: "PARTIAL",
+    BENTONE: "INCOMPATIBLE",
+  },
+  POLYUREA: {
+    LITHIUM: "PARTIAL",
+    LITHIUM_COMPLEX: "PARTIAL",
+    CALCIUM: "INCOMPATIBLE",
+    CALCIUM_SULFONATE: "PARTIAL",
+    POLYUREA: "COMPATIBLE",
+    ALUMINUM_COMPLEX: "PARTIAL",
+    BENTONE: "INCOMPATIBLE",
+  },
+  ALUMINUM_COMPLEX: {
+    LITHIUM: "PARTIAL",
+    LITHIUM_COMPLEX: "PARTIAL",
+    CALCIUM: "PARTIAL",
+    CALCIUM_SULFONATE: "PARTIAL",
+    POLYUREA: "PARTIAL",
+    ALUMINUM_COMPLEX: "COMPATIBLE",
+    BENTONE: "PARTIAL",
+  },
+  BENTONE: {
+    LITHIUM: "INCOMPATIBLE",
+    LITHIUM_COMPLEX: "INCOMPATIBLE",
+    CALCIUM: "INCOMPATIBLE",
+    CALCIUM_SULFONATE: "INCOMPATIBLE",
+    POLYUREA: "INCOMPATIBLE",
+    ALUMINUM_COMPLEX: "PARTIAL",
+    BENTONE: "COMPATIBLE",
+  },
+};
+
+export function getCompatibility(current, next) {
+  return compatibilityMatrix?.[current]?.[next] || "UNKNOWN";
+}

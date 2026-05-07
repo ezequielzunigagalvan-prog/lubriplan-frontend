@@ -32,6 +32,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import MonthlyIntelligentReport from "./pages/reports/MonthlyIntelligentReport";
 import SettingsPage from "./pages/SettingsPage";
 import AdminOnboardingPage from "./pages/AdminOnboardingPage";
+import TechnicalAssistantPage from "./pages/TechnicalAssistantPage";
 
 function NotFoundRedirect() {
   const { isAuthenticated } = useAuth();
@@ -250,7 +251,16 @@ export default function App() {
         }
       />
 
+      <Route
+        path="/technical-assistant"
+        element={
+          <ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}>
+            <TechnicalAssistantPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );
 }
+

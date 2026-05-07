@@ -106,6 +106,28 @@ export default function LubriPlanLanding() {
     []
   );
 
+
+  const technicalTools = useMemo(
+    () => [
+      {
+        title: "Compatibilidad de grasas",
+        text: "Ayuda a validar cambios de grasa entre espesantes y reduce el riesgo de mezcla inadecuada en rodamientos, guias y sistemas centralizados.",
+      },
+      {
+        title: "Reengrase de rodamientos",
+        text: "Entrega una referencia inicial de cantidad y frecuencia para apoyar decisiones rapidas de mantenimiento en campo.",
+      },
+      {
+        title: "Viscosidad para reductores",
+        text: "Sugiere un ISO VG inicial segun velocidad, carga, temperatura y choque operativo para cajas y reductores.",
+      },
+      {
+        title: "Conversor tecnico",
+        text: "Resuelve conversiones de distancia, volumen, presion, temperatura y viscosidad, incluyendo pulgadas en fraccion.",
+      },
+    ],
+    []
+  );
   const industries = useMemo(
     () => [
       "Manufactura",
@@ -334,6 +356,31 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
+      <section style={sectionAlt}>
+        <div style={twoCol}>
+          <div style={glassBlock}>
+            <div style={sectionKicker}>ASISTENTE TECNICO DE LUBRICACION</div>
+            <h2 style={sectionTitle}>Herramientas tecnicas para decidir mejor en planta</h2>
+            <p style={sectionText}>
+              LubriPlan tambien incorpora un asistente tecnico con utilidades practicas para apoyar decisiones de lubricacion,
+              compatibilidad, conversiones y referencia inicial de seleccion tecnica sin salir de la plataforma.
+            </p>
+            <div style={assistantNoteBox}>
+              <div style={assistantNoteTitle}>Valor operativo inmediato</div>
+              <div style={assistantNoteText}>
+                Reduce consultas dispersas, acelera definiciones en campo y ayuda a mantener un criterio tecnico mas consistente entre supervision y ejecucion.
+              </div>
+            </div>
+          </div>
+
+          <div style={assistantGrid}>
+            {technicalTools.map((item) => (
+              <TechnicalToolCard key={item.title} {...item} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section style={section}>
         <div style={sectionHead}>
           <div style={sectionKicker}>DÓNDE ENCAJA MEJOR</div>
@@ -494,6 +541,16 @@ function PainCard({ text }) {
   );
 }
 
+
+function TechnicalToolCard({ title, text }) {
+  return (
+    <div style={assistantCard}>
+      <div style={assistantCardIcon}><Icon name="tool" /></div>
+      <div style={assistantCardTitle}>{title}</div>
+      <div style={assistantCardText}>{text}</div>
+    </div>
+  );
+}
 function ScreenshotCard({ image, alt, kicker, title, text }) {
   return (
     <div style={screenshotCard}>
@@ -601,6 +658,14 @@ const journeyNumber = { fontSize: 34, lineHeight: 1, fontWeight: 1000, color: "#
 const journeyTitle = { marginTop: 12, fontSize: 19, lineHeight: 1.2, fontWeight: 950 };
 const journeyText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
 const industryWrap = { display: "flex", gap: 10, flexWrap: "wrap" };
+const assistantGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
+const assistantCard = { padding: 18, borderRadius: 22, background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 18px 34px rgba(2,6,23,0.12)" };
+const assistantCardIcon = { width: 46, height: 46, borderRadius: 16, background: "rgba(249,115,22,0.15)", color: "#fb923c", display: "grid", placeItems: "center", marginBottom: 14 };
+const assistantCardTitle = { fontSize: 18, fontWeight: 950, color: "#f8fafc", lineHeight: 1.2 };
+const assistantCardText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
+const assistantNoteBox = { marginTop: 16, padding: 16, borderRadius: 20, background: "rgba(15,23,42,0.56)", border: "1px solid rgba(255,255,255,0.08)" };
+const assistantNoteTitle = { fontSize: 13, fontWeight: 950, letterSpacing: 0.8, textTransform: "uppercase", color: "#fdba74" };
+const assistantNoteText = { marginTop: 8, color: "#e2e8f0", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
 const screenshotGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: 18, alignItems: "start" };
 const screenshotCard = { display: "grid", gap: 14, padding: 18, borderRadius: 28, background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 44px rgba(2,6,23,0.16)" };
 const screenshotFrame = { borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,23,42,0.72)" };
@@ -618,6 +683,8 @@ const contactNote = { position: "relative", zIndex: 1, marginTop: 14, color: "#c
 const contactMailText = { display: "inline-flex", alignItems: "center", padding: "15px 20px", borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#e2e8f0", fontWeight: 800 };
 const contactMailStrong = { color: "#fdba74", fontWeight: 900 };
 const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
+
+
 
 
 
