@@ -21,6 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
 import { formatRouteDisplayName } from "../utils/routeNames";
+import { getSuggestedActivityOrder } from "../utils/activityPriority";
 
 import { API_ASSETS_URL } from "../services/api";
 
@@ -1762,8 +1763,9 @@ useEffect(() => {
         ) : null}
 
         <div style={list}>
-          {filtered.map((a) => {
+          {suggestedActivities.map((a, index) => {
   const isHighlighted = Number(a.id) === Number(highlightExecutionId);
+  const suggestedLabel = index === 0 && a.computedStatus !== "Completada" ? "Atender primero" : "";
 
   return (
     <div
@@ -1837,6 +1839,7 @@ export function ActivityCard({
   showPreviewAction = false,
   previewActionLabel = "Abrir",
   compactPreviewMode = false,
+  suggestedLabel = "",
 }) {
   const displayActivityTitle = activity?.isManual
     ? cleanUiText(activity?.activityName || "Actividad programada")
@@ -2003,6 +2006,11 @@ export function ActivityCard({
           >
             {technicianStatusText}
           </span>
+          {suggestedLabel ? (
+            <span style={suggestedPriorityPill}>
+              {suggestedLabel}
+            </span>
+          ) : null}
           {activitySourceBadge ? (
             <span
               style={activitySourcePill(
@@ -2250,7 +2258,12 @@ export function ActivityCard({
                 <span>Desde notificación</span>
               </span>
             ) : null}
-            {activitySourceBadge ? (
+            {suggestedLabel ? (
+            <span style={suggestedPriorityPill}>
+              {suggestedLabel}
+            </span>
+          ) : null}
+          {activitySourceBadge ? (
               <span
                 style={activitySourcePill(
                   activitySourceBadge.tone,
@@ -2629,6 +2642,12 @@ export function ActivityCard({
           </div>
 
           <div style={cardTopBadges}>
+            {suggestedLabel ? (
+              <span style={suggestedPriorityPill}>
+                {suggestedLabel}
+              </span>
+            ) : null}
+
             {activity.isToday ? (
               <span
                 style={pillStrong(
@@ -2665,7 +2684,12 @@ export function ActivityCard({
               </span>
             ) : null}
 
-            {activitySourceBadge ? (
+            {suggestedLabel ? (
+            <span style={suggestedPriorityPill}>
+              {suggestedLabel}
+            </span>
+          ) : null}
+          {activitySourceBadge ? (
               <span style={activitySourcePill(activitySourceBadge.tone)}>
                 <span
                   style={activitySourceDot(activitySourceBadge.tone)}
@@ -3905,6 +3929,21 @@ const cardTaskTitle = {
   letterSpacing: 0.2,
 };
 
+const suggestedPriorityPill = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "8px 12px",
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.14)",
+  color: "#9a3412",
+  border: "1px solid rgba(249,115,22,0.34)",
+  fontSize: 12,
+  fontWeight: 1000,
+  letterSpacing: 0.2,
+  boxShadow: "0 8px 18px rgba(249,115,22,0.10)",
+};
+
 const cardTopBadges = {
   display: "flex",
   gap: 8,
@@ -4252,6 +4291,11 @@ const centerIconWrap = {
   border: "1px solid rgba(251,146,60,0.85)",
   boxShadow: "0 14px 30px rgba(249,115,22,0.18)",
 };
+
+
+
+
+
 
 
 

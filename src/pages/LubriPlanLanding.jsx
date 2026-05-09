@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from "react";
+﻿import React, { useEffect, useMemo } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -13,6 +13,26 @@ const CONTACT_EMAIL = "lubriplan@hidrolub.com";
 
 export default function LubriPlanLanding() {
   const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+
+    const existing = document.querySelector('script[data-lubriplan-chatbot="autochatmx"]');
+    if (existing) return undefined;
+
+    const script = document.createElement("script");
+    script.src = "https://api.autochatmx.com/public/widget.js?v=20260503c";
+    script.async = true;
+    script.dataset.apiUrl = "https://api.autochatmx.com";
+    script.dataset.businessId = "cmoyi5hsk0005nd4f32980jsq";
+    script.dataset.lubriplanChatbot = "autochatmx";
+    document.body.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
 
   const signals = useMemo(
     () => [
@@ -683,6 +703,7 @@ const contactNote = { position: "relative", zIndex: 1, marginTop: 14, color: "#c
 const contactMailText = { display: "inline-flex", alignItems: "center", padding: "15px 20px", borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#e2e8f0", fontWeight: 800 };
 const contactMailStrong = { color: "#fdba74", fontWeight: 900 };
 const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
+
 
 
 
