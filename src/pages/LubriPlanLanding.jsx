@@ -20,7 +20,7 @@ export default function LubriPlanLanding() {
     if (existing) return undefined;
 
     const script = document.createElement("script");
-    script.src = "https://api.autochatmx.com/public/widget.js?v=20260503c";
+    script.src = "https://api.autochatmx.com/public/widget.js?v=20260509b";
     script.async = true;
     script.dataset.apiUrl = "https://api.autochatmx.com";
     script.dataset.businessId = "cmoyi5hsk0005nd4f32980jsq";
@@ -703,6 +703,7 @@ const contactNote = { position: "relative", zIndex: 1, marginTop: 14, color: "#c
 const contactMailText = { display: "inline-flex", alignItems: "center", padding: "15px 20px", borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#e2e8f0", fontWeight: 800 };
 const contactMailStrong = { color: "#fdba74", fontWeight: 900 };
 const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
+
 
 
 
