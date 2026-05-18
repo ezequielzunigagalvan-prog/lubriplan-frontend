@@ -1,20 +1,16 @@
- // src/components/ui/TechnicianCard.jsx
+// src/components/ui/TechnicianCard.jsx
 import { useMemo, useState } from "react";
 import { Icon } from "../ui/lpIcons";
 
-export default function TechnicianCard({
-  technician,
-  onEdit,
-  onDelete,
-  canDelete = false,
-}) {
-  const statusRaw = String(technician?.status || "");
-  const status = statusRaw.toUpperCase().trim();
+export default function TechnicianCard({ technician, onEdit, onDelete, canDelete = false }) {
+  const [hover, setHover] = useState(false);
 
-  const specialtyRaw = String(technician?.specialty || "—");
-  const specialty = specialtyRaw.toUpperCase().trim();
+  const statusRaw = String(technician?.status || "").toUpperCase().trim();
+  const isActive  = statusRaw === "ACTIVO" || statusRaw === "ACTIVE";
+  const statusLabel = isActive ? "Activo" : statusRaw ? "Inactivo" : "—";
 
-  const code = technician?.code || "—";
+  const specialty = String(technician?.specialty || "").trim();
+  const code      = technician?.code || "";
 
   const realLastActivity = useMemo(() => {
     const raw =
@@ -23,9 +19,7 @@ export default function TechnicianCard({
       technician?.lastCompletedAt ||
       technician?.lastCompletedExecutionAt ||
       null;
-
     if (!raw) return null;
-
     const dt = raw instanceof Date ? raw : new Date(raw);
     return Number.isFinite(dt.getTime()) ? dt : null;
   }, [
@@ -35,23 +29,26 @@ export default function TechnicianCard({
     technician?.lastCompletedExecutionAt,
   ]);
 
-  const lastText = formatRelative(realLastActivity);
-  const tone = activityTone(realLastActivity);
-  const hasRealActivity = Boolean(realLastActivity);
-
-  const isActive = status === "ACTIVO" || status === "ACTIVE";
-  const [hover, setHover] = useState(false);
-
-  const initials = getInitials(technician?.name);
+  const lastText  = formatRelative(realLastActivity);
+  const actTone   = activityTone(realLastActivity);
+  const initials  = getInitials(technician?.name);
 
   return (
     <div
-      style={{ ...card, ...(hover ? cardHover : null) }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      style={{
+        ...card,
+        borderLeft: isActive
+          ? "4px solid rgba(249,115,22,0.55)"
+          : "4px solid rgba(148,163,184,0.40)",
+        transform: hover ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hover
+          ? "0 20px 44px rgba(2,6,23,0.13), 0 4px 12px rgba(2,6,23,0.07)"
+          : "0 10px 24px rgba(2,6,23,0.07)",
+      }}
     >
-      <div style={topAccent} />
-
+      {/* ── HEADER: avatar + nombre + acciones ── */}
       <div style={header}>
         <div style={avatarWrap} aria-hidden>
           <div style={avatarRing} />
@@ -60,188 +57,127 @@ export default function TechnicianCard({
 
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={nameRow}>
-            <h3 style={name} title={technician?.name || ""}>
-              {String(technician?.name || "—").toUpperCase()}
-            </h3>
+            <span style={nameText} title={technician?.name || ""}>
+              {technician?.name || "—"}
+            </span>
 
-            <div style={actions}>
+            <div style={actionGroup} onClick={(e) => e.stopPropagation()}>
               {typeof onEdit === "function" ? (
                 <button
                   type="button"
-                  style={{ ...iconBtn, ...(hover ? iconBtnHover : null) }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit?.(technician);
-                  }}
+                  style={iconBtn}
+                  onClick={() => onEdit?.(technician)}
                   title="Editar"
                   aria-label="Editar técnico"
                 >
-                  <Icon name="edit" />
+                  <Icon name="edit" size="sm" />
                 </button>
               ) : null}
-
               {canDelete && typeof onDelete === "function" ? (
                 <button
                   type="button"
-                  style={{
-                    ...iconBtn,
-                    ...iconBtnDanger,
-                    ...(hover ? iconBtnDangerHover : null),
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete?.(technician.id);
-                  }}
+                  style={iconBtnDanger}
+                  onClick={() => onDelete?.(technician.id)}
                   title="Eliminar"
                   aria-label="Eliminar técnico"
                 >
-                  <Icon name="trash" />
+                  <Icon name="trash" size="sm" />
                 </button>
               ) : null}
             </div>
           </div>
 
-          <div style={subRow}>
-            <span style={codeBadge} title="Código">
-              <span style={badgeIcon}>
-                <Icon name="tag" />
-              </span>
-              <span style={{ fontWeight: 1000, letterSpacing: 0.2 }}>{code}</span>
-            </span>
-
-            <span style={specChip} title="Especialidad">
-              <span style={specTop}>ESPECIALIDAD</span>
-              <span style={specVal}>{specialty || "—"}</span>
-            </span>
-          </div>
+          {specialty ? (
+            <div style={specialtyLabel}>{specialty}</div>
+          ) : null}
         </div>
       </div>
 
-      <div style={body}>
-        <span style={statusPill(isActive)} title="Estatus">
-          <span style={dot(isActive)} />
-          {status || "—"}
-        </span>
+      {/* ── META: código + estado ── */}
+      <div style={metaRow}>
+        {code ? (
+          <span style={codePill} title="Código de técnico">
+            <Icon name="tag" size="sm" />
+            {code}
+          </span>
+        ) : null}
 
-        <div
-          style={{ ...activityBox, ...tone }}
-          title={realLastActivity ? realLastActivity.toLocaleString() : "Sin actividad"}
-        >
-          <div style={activityTop}>
-            <span style={activityIcon}>
-              <Icon name="clock" />
-            </span>
-            <span style={activityLbl}>
-              {hasRealActivity ? "Última actividad" : "Sin actividad registrada"}
-            </span>
-          </div>
-          <div style={activityVal}>{lastText}</div>
+        <span style={statusPill(isActive)}>
+          <span style={statusDot(isActive)} />
+          {statusLabel}
+        </span>
+      </div>
+
+      {/* ── FOOTER: última actividad ── */}
+      <div style={{ ...activityBar, ...actTone }}>
+        <span style={activityIcon}>
+          <Icon name="clock" size="sm" />
+        </span>
+        <div style={activityContent}>
+          <span style={activityLabel}>
+            {realLastActivity ? "Última actividad" : "Sin actividad registrada"}
+          </span>
+          <span style={activityValue}>{lastText}</span>
         </div>
       </div>
     </div>
   );
 }
 
-/* ======= helpers ======= */
+/* ── Helpers ── */
 
 function getInitials(name) {
   if (!name) return "—";
   const parts = String(name).trim().split(/\s+/);
-  const first = parts[0]?.[0] || "";
-  const second = parts[1]?.[0] || "";
-  return (first + second).toUpperCase();
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
 }
 
 function formatRelative(date) {
   if (!date || !Number.isFinite(date.getTime())) return "Sin actividad";
-
-  const diffMs = Math.max(0, Date.now() - date.getTime());
-  const min = Math.floor(diffMs / 60000);
-
-  if (min < 1) return "Hace unos segundos";
+  const min = Math.floor(Math.max(0, Date.now() - date.getTime()) / 60000);
+  if (min < 1)  return "Hace unos segundos";
   if (min < 60) return `Hace ${min} min`;
-
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `Hace ${hr} h`;
-
+  if (hr < 24)  return `Hace ${hr} h`;
   const day = Math.floor(hr / 24);
-  return `Hace ${day} d`;
+  return `Hace ${day} día${day === 1 ? "" : "s"}`;
 }
 
 function activityTone(date) {
   if (!date || !Number.isFinite(date.getTime())) {
-    return {
-      background: "rgba(148,163,184,0.18)",
-      border: "1px solid rgba(100,116,139,0.45)",
-      color: "#334155",
-    };
+    return { background: "rgba(148,163,184,0.10)", borderTop: "1px solid rgba(148,163,184,0.20)", color: "#64748b" };
   }
-
   const hrs = Math.max(0, Date.now() - date.getTime()) / 36e5;
-
-  if (hrs < 24) {
-    return {
-      background: "rgba(34,197,94,0.20)",
-      border: "1px solid rgba(22,163,74,0.50)",
-      color: "#14532d",
-    };
-  }
-
-  if (hrs < 72) {
-    return {
-      background: "rgba(245,158,11,0.22)",
-      border: "1px solid rgba(217,119,6,0.55)",
-      color: "#7c2d12",
-    };
-  }
-
-  return {
-    background: "rgba(148,163,184,0.18)",
-    border: "1px solid rgba(100,116,139,0.45)",
-    color: "#334155",
-  };
+  if (hrs < 24) return { background: "rgba(34,197,94,0.08)",  borderTop: "1px solid rgba(34,197,94,0.18)",  color: "#166534" };
+  if (hrs < 72) return { background: "rgba(245,158,11,0.10)", borderTop: "1px solid rgba(245,158,11,0.22)", color: "#92400e" };
+  return           { background: "rgba(148,163,184,0.10)", borderTop: "1px solid rgba(148,163,184,0.20)", color: "#475569" };
 }
 
-/* ======= styles ======= */
+/* ── Styles ── */
 
 const card = {
-  position: "relative",
-  background: "rgba(255,255,255,0.74)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   borderRadius: 18,
-  padding: 14,
-  transition: "transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
-  boxShadow: "0 10px 22px rgba(15,23,42,0.06)",
   overflow: "hidden",
-};
-
-const cardHover = {
-  transform: "translateY(-2px)",
-  border: "1px solid rgba(148,163,184,0.70)",
-  boxShadow: "0 18px 34px rgba(15,23,42,0.10)",
-};
-
-const topAccent = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 6,
-  borderTopLeftRadius: 18,
-  borderTopRightRadius: 18,
-  background: "#f97316",
+  display: "flex",
+  flexDirection: "column",
+  gap: 0,
+  transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms ease",
+  boxShadow: "0 10px 24px rgba(2,6,23,0.07)",
 };
 
 const header = {
   display: "flex",
   gap: 12,
   alignItems: "flex-start",
-  marginTop: 6,
+  padding: "14px 14px 0",
 };
 
 const avatarWrap = {
-  width: 44,
-  height: 44,
+  width: 46,
+  height: 46,
   position: "relative",
   flexShrink: 0,
 };
@@ -250,204 +186,161 @@ const avatarRing = {
   position: "absolute",
   inset: 0,
   borderRadius: 999,
-  background: "linear-gradient(180deg, rgba(15,23,42,0.18), rgba(15,23,42,0.08))",
-  border: "1px solid rgba(15,23,42,0.35)",
+  background: "linear-gradient(135deg, rgba(249,115,22,0.30), rgba(15,23,42,0.20))",
+  border: "1px solid rgba(249,115,22,0.25)",
 };
 
 const avatarCore = {
   position: "absolute",
   inset: 3,
   borderRadius: 999,
-  background: "linear-gradient(135deg, #334155, #1e293b)",
+  background: "linear-gradient(135deg, #1e293b, #0f172a)",
   display: "grid",
   placeItems: "center",
-  fontWeight: 1000,
+  fontWeight: 900,
   fontSize: 14,
-  color: "#ffffff",
-  letterSpacing: 0.8,
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15)",
+  color: "#f97316",
+  letterSpacing: 1,
+  boxShadow: "inset 0 1px 0 rgba(249,115,22,0.15)",
 };
 
 const nameRow = {
   display: "flex",
-  alignItems: "center",
-  gap: 10,
+  alignItems: "flex-start",
   justifyContent: "space-between",
+  gap: 8,
 };
 
-const name = {
-  margin: 0,
+const nameText = {
   fontSize: 15,
-  fontWeight: 1000,
-  color: "#020617",
-  letterSpacing: 0.6,
+  fontWeight: 900,
+  color: "#0f172a",
+  lineHeight: 1.2,
   display: "-webkit-box",
   WebkitLineClamp: 2,
   WebkitBoxOrient: "vertical",
   overflow: "hidden",
-  whiteSpace: "normal",
-  lineHeight: 1.15,
+  minWidth: 0,
 };
 
-const actions = {
+const specialtyLabel = {
+  marginTop: 4,
+  fontSize: 11,
+  fontWeight: 900,
+  color: "#64748b",
+  letterSpacing: 0.4,
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const actionGroup = {
   display: "flex",
-  gap: 8,
+  gap: 6,
   flexShrink: 0,
-  width: 104,
-  justifyContent: "flex-end",
 };
 
 const iconBtn = {
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.92)",
-  borderRadius: 12,
-  padding: "10px 12px",
+  background: "rgba(255,255,255,0.90)",
+  borderRadius: 10,
+  padding: "7px 9px",
   cursor: "pointer",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#0f172a",
-  transition: "transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease",
-};
-
-const iconBtnHover = {
-  border: "1px solid rgba(148,163,184,0.75)",
-  boxShadow: "0 10px 18px rgba(2,6,23,0.06)",
+  color: "#334155",
 };
 
 const iconBtnDanger = {
-  border: "1px solid rgba(254,202,202,0.95)",
-  background: "rgba(255,241,242,0.85)",
+  ...iconBtn,
+  border: "1px solid rgba(254,202,202,0.90)",
+  background: "rgba(255,241,242,0.80)",
+  color: "#b91c1c",
 };
 
-const iconBtnDangerHover = {
-  boxShadow: "0 10px 18px rgba(153,27,27,0.08)",
-};
-
-const subRow = {
-  marginTop: 10,
+const metaRow = {
   display: "flex",
-  gap: 10,
+  gap: 8,
   flexWrap: "wrap",
-  alignItems: "stretch",
+  alignItems: "center",
+  padding: "10px 14px",
 };
 
-const codeBadge = {
+const codePill = {
   display: "inline-flex",
   alignItems: "center",
-  gap: 8,
-  padding: "8px 10px",
+  gap: 6,
+  padding: "5px 10px",
   borderRadius: 999,
   fontSize: 11,
   fontWeight: 950,
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(248,250,252,0.90)",
   color: "#0f172a",
-};
-
-const badgeIcon = {
-  display: "inline-flex",
-  width: 26,
-  height: 26,
-  borderRadius: 999,
-  alignItems: "center",
-  justifyContent: "center",
-  background: "rgba(15,23,42,0.06)",
+  background: "rgba(15,23,42,0.05)",
   border: "1px solid rgba(226,232,240,0.95)",
-};
-
-const specChip = {
-  display: "inline-flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  gap: 2,
-  padding: "8px 12px",
-  borderRadius: 14,
-  background: "rgba(15,23,42,0.04)",
-  border: "1px solid rgba(226,232,240,0.80)",
-  minWidth: 160,
-};
-
-const specTop = {
-  fontSize: 10,
-  fontWeight: 1000,
-  letterSpacing: 0.9,
-  color: "#475569",
-};
-
-const specVal = {
-  fontSize: 11,
-  fontWeight: 1000,
-  color: "#0f172a",
-  letterSpacing: 0.4,
-};
-
-const body = {
-  marginTop: 12,
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 10,
-  flexWrap: "wrap",
-  alignItems: "center",
+  whiteSpace: "nowrap",
 };
 
 const statusPill = (active) => ({
-  padding: "8px 12px",
-  borderRadius: 999,
   display: "inline-flex",
   alignItems: "center",
-  gap: 8,
-  fontSize: 11,
-  fontWeight: 1000,
-  letterSpacing: 0.3,
-  background: active ? "rgba(34,197,94,0.10)" : "rgba(245,158,11,0.12)",
-  border: active ? "1px solid rgba(34,197,94,0.22)" : "1px solid rgba(245,158,11,0.22)",
-  color: active ? "#14532d" : "#78350f",
-});
-
-const dot = (active) => ({
-  width: 9,
-  height: 9,
-  borderRadius: 999,
-  background: active ? "#22c55e" : "#f59e0b",
-  boxShadow: "0 0 0 3px rgba(15,23,42,0.05)",
-});
-
-const activityBox = {
-  minWidth: 210,
-  padding: "10px 12px",
-  borderRadius: 14,
-  display: "flex",
-  flexDirection: "column",
   gap: 6,
-};
+  padding: "5px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 950,
+  background: active ? "rgba(34,197,94,0.10)" : "rgba(148,163,184,0.12)",
+  color:      active ? "#14532d"              : "#475569",
+  border:     active ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(148,163,184,0.25)",
+  whiteSpace: "nowrap",
+});
 
-const activityTop = {
+const statusDot = (active) => ({
+  width: 7,
+  height: 7,
+  borderRadius: 999,
+  background: active ? "#22c55e" : "#94a3b8",
+  flexShrink: 0,
+});
+
+const activityBar = {
   display: "flex",
   alignItems: "center",
-  gap: 8,
-  opacity: 0.95,
+  gap: 10,
+  padding: "10px 14px",
+  marginTop: "auto",
 };
 
 const activityIcon = {
   display: "inline-flex",
-  width: 26,
-  height: 26,
+  width: 30,
+  height: 30,
   borderRadius: 10,
   alignItems: "center",
   justifyContent: "center",
-  background: "rgba(255,255,255,0.55)",
-  border: "1px solid rgba(226,232,240,0.75)",
+  background: "rgba(255,255,255,0.50)",
+  border: "1px solid rgba(255,255,255,0.70)",
+  flexShrink: 0,
 };
 
-const activityLbl = {
-  fontSize: 11,
-  fontWeight: 1000,
-  letterSpacing: 0.2,
+const activityContent = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 1,
+  minWidth: 0,
 };
 
-const activityVal = {
+const activityLabel = {
+  fontSize: 10,
+  fontWeight: 900,
+  letterSpacing: 0.4,
+  textTransform: "uppercase",
+  opacity: 0.75,
+};
+
+const activityValue = {
   fontSize: 13,
-  fontWeight: 1000,
-  color: "currentColor",
+  fontWeight: 900,
+  lineHeight: 1.2,
 };

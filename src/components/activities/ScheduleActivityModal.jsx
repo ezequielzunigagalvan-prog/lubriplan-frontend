@@ -180,7 +180,7 @@ export default function ScheduleActivityModal({ open, onClose, onSaved, canAssig
         <div className="lpModalHeader" style={headerRow}>
           <div>
             <div style={kicker}>ACTIVIDAD ÚNICA</div>
-            <div style={{ fontWeight: 980, fontSize: 18, color: "#0f172a" }}>Programar actividad</div>
+            <div style={{ fontWeight: 980, fontSize: 18, color: "#fff" }}>Programar actividad</div>
             <div className="lpMuted" style={{ marginTop: 6 }}>
               Crea una actividad no recurrente y deja evidencia de referencia si hace falta.
             </div>
@@ -359,7 +359,7 @@ const kicker = {
   fontSize: 11,
   letterSpacing: "0.12em",
   fontWeight: 900,
-  color: "#b45309",
+  color: "rgba(249,115,22,0.90)",
 };
 
 const sectionCard = {

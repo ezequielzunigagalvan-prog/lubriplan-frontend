@@ -36,36 +36,66 @@ function toWeeksFromMonthlyCounts({ completed = 0, pending = 0, overdue = 0 }) {
   ];
 }
 
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={ttBox}>
+      <div style={{ fontWeight: 900, color: "#f8fafc" }}>{label}</div>
+      <div style={{ marginTop: 4, fontSize: 12, color: "#94a3b8", fontWeight: 800 }}>
+        Completadas: <span style={{ color: "#f97316" }}>{payload[0]?.value}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function WeeklyTrendChart({ monthlyTotals }) {
   const data = toWeeksFromMonthlyCounts(monthlyTotals || {});
 
   return (
-    <div
-      style={{
-        border: "1px solid rgba(226,232,240,0.95)",
-        borderRadius: 16,
-        padding: 12,
-        background: "#fff",
-      }}
-    >
-      <div style={{ fontWeight: 1000, color: "#0f172a" }}>
+    <div style={card}>
+      <div style={{ fontWeight: 900, fontSize: 15, color: "#0f172a" }}>
         Tendencia de ejecución (semanal)
       </div>
       <div style={{ marginTop: 4, fontSize: 12, fontWeight: 850, color: "#64748b" }}>
         Completadas por semana (estimación hasta conectar endpoint real)
       </div>
 
-      <div style={{ marginTop: 10, width: "100%", height: 220 }}>
+      <div style={{ marginTop: 14, width: "100%", height: 220 }}>
         <ResponsiveContainer>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="4 4" />
-            <XAxis dataKey="label" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Line type="monotone" dataKey="completed" strokeWidth={3} dot />
+          <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(226,232,240,0.9)" />
+            <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#64748b", fontWeight: 800 }} axisLine={false} tickLine={false} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#64748b", fontWeight: 800 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} />
+            <Line
+              type="monotone"
+              dataKey="completed"
+              stroke="#2563eb"
+              strokeWidth={3}
+              dot={{ r: 4, fill: "#2563eb", strokeWidth: 0 }}
+              activeDot={{ r: 6 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
 }
+
+const card = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderRadius: 16,
+  padding: 14,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  boxShadow: "0 10px 24px rgba(2,6,23,0.06)",
+};
+
+const ttBox = {
+  background: "#0f172a",
+  border: "1px solid rgba(249,115,22,0.35)",
+  borderRadius: 12,
+  padding: "8px 12px",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.28)",
+  minWidth: 130,
+};

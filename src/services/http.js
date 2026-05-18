@@ -107,6 +107,8 @@ export async function request(
       err.status = res.status;
       err.url = url;
       err.data = data;
+      const retryAfterRaw = res.headers.get("retry-after") || res.headers.get("x-ratelimit-reset-requests") || "";
+      err.retryAfter = retryAfterRaw ? Math.ceil(Number(retryAfterRaw) || 0) : 0;
       throw err;
     }
 

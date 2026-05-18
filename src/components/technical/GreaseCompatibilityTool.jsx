@@ -91,15 +91,16 @@ export default function GreaseCompatibilityTool() {
 
 const card = {
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   borderRadius: 22,
   padding: 18,
-  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 18px 34px rgba(15,23,42,0.08)",
 };
 
 const header = { marginBottom: 14 };
-const eyebrow = { fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 };
-const title = { fontSize: 21, fontWeight: 1000, color: "#0f172a", marginTop: 4 };
+const eyebrow = { fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2 };
+const title = { fontSize: 21, fontWeight: 900, color: "#0f172a", marginTop: 4 };
 const subtitle = { fontSize: 13, fontWeight: 800, color: "#64748b", marginTop: 6, lineHeight: 1.45 };
 
 const grid = {
@@ -132,7 +133,7 @@ const resultBox = {
   border: "1px solid rgba(0,0,0,0.08)",
 };
 
-const resultTitle = { fontSize: 18, fontWeight: 1000 };
+const resultTitle = { fontSize: 18, fontWeight: 900 };
 const resultText = { marginTop: 8, fontSize: 13, fontWeight: 850, lineHeight: 1.45 };
 const resultAction = { marginTop: 10, fontSize: 13, fontWeight: 850, lineHeight: 1.45 };
 

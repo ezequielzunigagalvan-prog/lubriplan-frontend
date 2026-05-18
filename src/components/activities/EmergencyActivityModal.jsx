@@ -345,11 +345,11 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
 }
 
 const overlay = { position: "fixed", inset: 0, background: "rgba(2,6,23,0.6)", display: "grid", placeItems: "center", padding: 14, zIndex: 60 };
-const modal = { width: "min(920px, 100%)", maxHeight: "92vh", overflow: "auto", background: "rgba(255,255,255,0.97)", borderRadius: 24, border: "1px solid rgba(226,232,240,0.95)", boxShadow: "0 24px 60px rgba(2,6,23,0.25)", backdropFilter: "blur(8px)" };
-const modalHeader = { position: "sticky", top: 0, zIndex: 1, background: "rgba(255,255,255,0.96)", borderBottom: "1px solid #eef2f7", padding: 16, display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start" };
-const kicker = { fontSize: 11, letterSpacing: "0.14em", fontWeight: 900, color: "#b45309" };
-const modalTitle = { margin: "2px 0 0", fontSize: 20, fontWeight: 980, color: "#0f172a" };
-const modalSub = { marginTop: 6, color: "#64748b", fontWeight: 850, fontSize: 13 };
+const modal = { width: "min(920px, 100%)", maxHeight: "92vh", overflow: "auto", background: "rgba(255,255,255,0.97)", borderRadius: 24, border: "1px solid rgba(226,232,240,0.95)", borderTop: "4px solid #f97316", boxShadow: "0 24px 60px rgba(2,6,23,0.25)", backdropFilter: "blur(8px)" };
+const modalHeader = { position: "sticky", top: 0, zIndex: 1, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", borderBottom: "1px solid rgba(249,115,22,0.25)", borderLeft: "3px solid rgba(249,115,22,0.55)", padding: 16, display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start" };
+const kicker = { fontSize: 11, letterSpacing: "0.14em", fontWeight: 900, color: "rgba(249,115,22,0.90)" };
+const modalTitle = { margin: "2px 0 0", fontSize: 20, fontWeight: 980, color: "#fff" };
+const modalSub = { marginTop: 6, color: "rgba(255,255,255,0.65)", fontWeight: 850, fontSize: 13 };
 const xBtn = { border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.9)", borderRadius: 12, width: 40, height: 40, display: "grid", placeItems: "center", cursor: "pointer" };
 const errorBox = { margin: "16px 16px 0", background: "#fee2e2", border: "1px solid #fecaca", padding: 12, borderRadius: 12, color: "#991b1b", fontWeight: 900 };
 const body = { padding: 16, display: "grid", gap: 14 };

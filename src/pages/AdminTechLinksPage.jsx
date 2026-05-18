@@ -83,6 +83,10 @@ export default function AdminTechLinksPage() {
     <MainLayout>
       <div style={header}>
         <div>
+          <div style={kicker}>
+            <span style={{ width: 18, height: 2, background: "rgba(249,115,22,0.90)", display: "inline-block", borderRadius: 2, flexShrink: 0 }} />
+            ADMIN · VÍNCULOS
+          </div>
           <div style={h1}>Vincular Técnicos ↔ Usuarios</div>
           <div style={muted}>
             Esto define qué usuario TECH corresponde a qué registro de Técnico (para actividades, filtros y nombres).
@@ -188,12 +192,38 @@ export default function AdminTechLinksPage() {
 }
 
 /* estilos inline (consistentes con tu app) */
-const header = { display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "flex-start", marginBottom: 12 };
+const header = {
+  display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "flex-start",
+  marginBottom: 14,
+  padding: "14px 16px",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
+  borderRadius: 16,
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 10px 28px rgba(2,6,23,0.06)",
+};
+const kicker = {
+  fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2,
+  display: "flex", alignItems: "center", gap: 8, marginBottom: 6,
+};
 const h1 = { fontSize: 22, fontWeight: 950, color: "#0f172a" };
 const muted = { marginTop: 6, color: "#64748b", fontWeight: 800, fontSize: 12 };
 
-const panel = { border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, background: "#fff" };
-const row = { border: "1px solid #eef2f7", borderRadius: 14, padding: 12, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" };
+const panel = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderRadius: 16,
+  padding: 14,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
+};
+const row = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "3px solid rgba(15,23,42,0.08)",
+  borderRadius: 14, padding: 12, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap",
+  background: "rgba(248,250,252,0.72)",
+};
 const rowTitle = { fontWeight: 950, color: "#0f172a" };
 const rowSub = { marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" };
 

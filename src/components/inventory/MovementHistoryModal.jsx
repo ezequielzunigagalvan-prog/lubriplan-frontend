@@ -139,24 +139,21 @@ export default function MovementHistoryModal({ open, item, onClose }) {
           }
         `}</style>
 
-        {/* top accent + gray band */}
-        <div style={accentBarOrange} />
-        <div style={topBandGray} />
-
-        <div style={topRow}>
+        <div style={modalHeader}>
           <div style={{ minWidth: 0 }}>
+            <div style={hKicker}>MOVIMIENTOS · HISTORIAL</div>
             <div style={hTitle}>Historial de movimientos</div>
             <div style={sub}>
-              <strong style={{ color: "#0f172a" }}>{titleName}</strong>
+              <strong style={{ color: "rgba(255,255,255,0.90)" }}>{titleName}</strong>
               {" "}· Stock actual:{" "}
-              <strong style={{ color: "#0f172a" }}>
+              <strong style={{ color: "rgba(255,255,255,0.90)" }}>
                 {fmtQty(item?.stock ?? 0)} {unit}
               </strong>
-              {" "}· Registros: <strong style={{ color: "#0f172a" }}>{total}</strong>
+              {" "}· Registros: <strong style={{ color: "rgba(255,255,255,0.90)" }}>{total}</strong>
             </div>
           </div>
 
-          <button onClick={onClose} style={btnGhost} title="Cerrar">✕</button>
+          <button onClick={onClose} style={btnGhostHead} title="Cerrar">✕</button>
         </div>
 
         {err && <div style={errorBox}>{err}</div>}
@@ -261,50 +258,43 @@ const modal = {
   maxWidth: "96vw",
   background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
   borderRadius: 16,
   padding: 16,
   boxShadow: "0 18px 44px rgba(2,6,23,0.18)",
-  position: "relative",
   overflow: "hidden",
 };
 
-const accentBarOrange = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 8,
-  background: "#f97316",
-};
-
-const topBandGray = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 8,
-  height: 22,
-  background: "rgba(229,231,235,0.95)",
-};
-
-const topRow = {
+const modalHeader = {
   display: "flex",
   justifyContent: "space-between",
   gap: 12,
   alignItems: "flex-start",
-  position: "relative",
-  marginTop: 12, // deja espacio para barras
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  margin: "-16px -16px 12px",
+  padding: "14px 16px",
+  borderRadius: "14px 14px 0 0",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+};
+
+const hKicker = {
+  fontSize: 11,
+  letterSpacing: "0.12em",
+  fontWeight: 900,
+  color: "rgba(249,115,22,0.90)",
+  marginBottom: 4,
 };
 
 const hTitle = {
   margin: 0,
   fontWeight: 980,
   fontSize: 18,
-  color: "#0f172a",
+  color: "#fff",
 };
 
 const sub = {
   marginTop: 6,
-  color: "#64748b",
+  color: "rgba(255,255,255,0.65)",
   fontSize: 13,
   fontWeight: 850,
   lineHeight: 1.35,
@@ -367,6 +357,16 @@ const btnGhost = {
   fontWeight: 950,
   color: "#0f172a",
   boxShadow: "0 8px 18px rgba(2,6,23,0.06)",
+};
+
+const btnGhostHead = {
+  border: "1px solid rgba(255,255,255,0.20)",
+  background: "rgba(255,255,255,0.10)",
+  borderRadius: 12,
+  padding: "8px 12px",
+  cursor: "pointer",
+  fontWeight: 950,
+  color: "#fff",
 };
 
 const footer = {

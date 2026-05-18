@@ -65,26 +65,20 @@ export default function NewMovementModal({ open, item, onClose, onSave }) {
   return (
     <div style={overlay} onClick={onClose}>
       <div style={modal} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", gap: 10 }}>
+        <div style={modalHeader}>
           <div>
-            <h2 style={{ margin: 0 }}>Movimiento</h2>
-            <div style={{ color: "#6b7280", marginTop: 6, fontSize: 13 }}>
-              {item ? (
-                <>
-                  <strong>{item.name}</strong> · Stock actual:{" "}
-                  <strong>
-                    {Number(item.stock ?? 0)} {item.unit || ""}
-                  </strong>
-                </>
-              ) : (
-                "—"
-              )}
-            </div>
+            <div style={mKicker}>INVENTARIO · MOVIMIENTO</div>
+            <h2 style={{ margin: "6px 0 0", fontWeight: 950, color: "#fff", fontSize: 18 }}>Movimiento</h2>
+            {item ? (
+              <div style={{ color: "rgba(255,255,255,0.65)", marginTop: 6, fontSize: 13, fontWeight: 850 }}>
+                <strong style={{ color: "rgba(255,255,255,0.90)" }}>{item.name}</strong> · Stock actual:{" "}
+                <strong style={{ color: "rgba(255,255,255,0.90)" }}>
+                  {Number(item.stock ?? 0)} {item.unit || ""}
+                </strong>
+              </div>
+            ) : null}
           </div>
-
-          <button onClick={onClose} style={btnGhost}>
-            ✕
-          </button>
+          <button onClick={onClose} style={btnGhostHead}>✕</button>
         </div>
 
         <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
@@ -191,6 +185,38 @@ const modal = {
   background: "#fff",
   borderRadius: 16,
   padding: 16,
+  borderTop: "4px solid #f97316",
+  overflow: "hidden",
+};
+
+const modalHeader = {
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  margin: "-16px -16px 14px",
+  padding: "14px 16px",
+  borderRadius: "14px 14px 0 0",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 10,
+  flexWrap: "wrap",
+  alignItems: "flex-start",
+};
+
+const mKicker = {
+  fontSize: 11,
+  fontWeight: 950,
+  color: "rgba(249,115,22,0.90)",
+  letterSpacing: 1.2,
+};
+
+const btnGhostHead = {
+  border: "1px solid rgba(255,255,255,0.20)",
+  background: "rgba(255,255,255,0.10)",
+  borderRadius: 10,
+  padding: "8px 12px",
+  cursor: "pointer",
+  fontWeight: 900,
+  color: "#fff",
 };
 
 const input = {

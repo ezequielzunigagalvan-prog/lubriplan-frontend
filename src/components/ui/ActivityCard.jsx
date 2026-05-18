@@ -1,4 +1,5 @@
-﻿import { Icon } from "./lpIcons";
+import { useState } from "react";
+import { Icon } from "./lpIcons";
 
 const toLocalYMD = (value) => {
   if (!value) return "";
@@ -11,19 +12,55 @@ const toLocalYMD = (value) => {
   return `${y}-${m}-${d}`;
 };
 
+const STATUS_TONES = {
+  Atrasada:   { bg: "rgba(254,226,226,0.55)", border: "rgba(239,68,68,0.18)",  top: "#dc2626", badgeBg: "#fee2e2", badgeColor: "#b91c1c" },
+  Pendiente:  { bg: "rgba(255,251,235,0.55)", border: "rgba(245,158,11,0.18)", top: "#0f172a", badgeBg: "#fef3c7", badgeColor: "#92400e" },
+  Completada: { bg: "rgba(240,253,244,0.55)", border: "rgba(34,197,94,0.18)",  top: "#15803d", badgeBg: "#dcfce7", badgeColor: "#166534" },
+};
+
+const KIND_ICON = { INSPECTION: "search", LUBRICATION: "drop", DEFAULT: "tool" };
+const KIND_TONE = {
+  INSPECTION: { bg: "rgba(59,130,246,0.12)", color: "#1d4ed8" },
+  LUBRICATION: { bg: "rgba(249,115,22,0.12)", color: "#c2410c" },
+  DEFAULT: { bg: "rgba(15,23,42,0.08)", color: "#334155" },
+};
+
+function getKind(routeKind) {
+  const k = String(routeKind || "").trim().toUpperCase();
+  if (k === "INSPECTION") return "INSPECTION";
+  if (k === "LUBRICATION") return "LUBRICATION";
+  return "DEFAULT";
+}
+
+function InfoChip({ label, value }) {
+  if (!value || value === "—") return null;
+  return (
+    <span style={infoChip}>
+      <span style={infoChipLabel}>{label}</span>
+      <span style={infoChipValue}>{value}</span>
+    </span>
+  );
+}
+
 export default function ActivityCard({ activity, onOpen }) {
+  const [hover, setHover] = useState(false);
   const today = toLocalYMD(new Date());
 
   const status = activity?.status || activity?.computedStatus || "Pendiente";
   const isCompleted = status === "Completada" || activity?.statusRaw === "COMPLETED";
 
   const dateStr = toLocalYMD(activity?.date || activity?.scheduledAt || activity?.dateLabel || "");
-
   const isFuture = !isCompleted && dateStr && dateStr > today;
   const clickable = !isCompleted && !isFuture;
+
+  const routeKind = activity?.route?.routeKind || activity?.routeKind || "";
+  const kind = getKind(routeKind);
+  const kindIcon = KIND_ICON[kind];
+  const kindTone = KIND_TONE[kind];
+
   const displayRouteName = formatRouteDisplayName(
     activity?.routeName || activity?.route?.name || activity?.activityName,
-    activity?.route?.routeKind || activity?.routeKind,
+    routeKind,
     "Ruta"
   );
 
@@ -39,118 +76,128 @@ export default function ActivityCard({ activity, onOpen }) {
     activity?.equipmentName ||
     (typeof activity?.equipment === "string" ? activity.equipment : "") ||
     "—";
-
   const equipmentCode = eqObj?.code || activity?.equipmentCode || "";
   const equipmentLocation = eqObj?.location || activity?.equipmentLocation || "";
 
   const lubObj = activity?.lubricant && typeof activity.lubricant === "object" ? activity.lubricant : null;
-  const lubricantName =
-    lubObj?.name || (typeof activity?.lubricant === "string" ? activity.lubricant : "") || "—";
+  const lubricantName = lubObj?.name || (typeof activity?.lubricant === "string" ? activity.lubricant : "") || null;
+  const commercialName = activity?.commercialName || null;
+  const quantity = (activity?.quantityLabel ?? activity?.quantity) ? String(activity?.quantityLabel ?? activity?.quantity) : null;
+  const method = activity?.method || null;
+
+  const techName =
+    activity?.technicianName ||
+    activity?.technician?.name ||
+    activity?.assignedTechnicianName ||
+    null;
 
   const conditionRaw = String(
     activity?.condition ?? activity?.executionCondition ?? activity?.route?.condition ?? ""
-  )
-    .trim()
-    .toUpperCase();
-
-  const isBadCondition =
-    conditionRaw === "MALO" || conditionRaw === "CRITICO" || conditionRaw === "CRÍTICO";
+  ).trim().toUpperCase();
+  const isBadCondition = conditionRaw === "MALO" || conditionRaw === "CRITICO" || conditionRaw === "CRÍTICO";
 
   const critRaw = String(
     eqObj?.criticality ?? activity?.equipmentCriticality ?? activity?.route?.equipment?.criticality ?? ""
-  )
-    .trim()
-    .toUpperCase();
-
+  ).trim().toUpperCase();
   const isHighCriticality = critRaw === "ALTA" || critRaw === "CRITICA" || critRaw === "CRÍTICA";
 
   const isOverdue = status === "Atrasada";
 
-  const leftAccent = isOverdue ? "#ef4444" : isBadCondition ? "#ef4444" : isHighCriticality ? "#f59e0b" : "#e5e7eb";
+  const leftAccentColor = isOverdue || isBadCondition
+    ? "rgba(239,68,68,0.65)"
+    : isHighCriticality
+    ? "rgba(245,158,11,0.65)"
+    : "rgba(15,23,42,0.08)";
+  const leftAccentWidth = (isOverdue || isBadCondition || isHighCriticality) ? 5 : 4;
 
-  const borderStyle =
-    isOverdue || isBadCondition || isHighCriticality
-      ? { border: `1px solid rgba(148,163,184,0.35)`, borderLeft: `6px solid ${leftAccent}` }
-      : { border: "1px solid #e5e7eb" };
+  const tone = STATUS_TONES[isCompleted ? "Completada" : isOverdue ? "Atrasada" : "Pendiente"];
 
-  const showAlertChip = isOverdue || isBadCondition || isHighCriticality;
+  const hasAnyInfo = lubricantName || commercialName || quantity || method;
 
   return (
     <div
       style={{
         ...card,
-        ...borderStyle,
+        background: `linear-gradient(160deg, ${tone.bg} 0%, rgba(248,250,252,0.92) 100%)`,
+        borderTop: `4px solid ${tone.top}`,
+        borderRight: `1px solid ${tone.border}`,
+        borderBottom: `1px solid ${tone.border}`,
+        borderLeft: `${leftAccentWidth}px solid ${leftAccentColor}`,
         cursor: clickable ? "pointer" : "default",
-        opacity: isCompleted ? 0.6 : 1,
+        opacity: isCompleted ? 0.72 : 1,
+        transform: hover ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hover
+          ? "0 20px 48px rgba(2,6,23,0.13), 0 4px 12px rgba(2,6,23,0.07)"
+          : "0 10px 22px rgba(2,6,23,0.06)",
       }}
-      onClick={() => {
-        if (clickable && onOpen) onOpen(activity);
-      }}
-      title={isFuture ? `Esta actividad está programada para ${dateStr}` : ""}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={() => { if (clickable && onOpen) onOpen(activity); }}
+      title={isFuture ? `Programada para ${dateStr}` : ""}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <strong
-            style={{
-              display: "block",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {displayRouteName}
-          </strong>
+      {/* ── Header ─────────────────────────────────── */}
+      <div style={headerRow}>
+        <div style={{ ...kindIconBox, background: kindTone.bg }}>
+          <Icon name={kindIcon} size="sm" style={{ color: kindTone.color }} />
+        </div>
 
-          <div style={muted}>
-            <span style={{ fontWeight: 800, color: "#334155" }}>{equipmentName}</span>
-            {equipmentCode ? <span> · {equipmentCode}</span> : null}
-            {equipmentLocation ? <span> · {equipmentLocation}</span> : null}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={routeTitle}>{displayRouteName}</div>
+          <div style={eqMeta}>
+            <span style={eqNameBold}>{equipmentName}</span>
+            {equipmentCode ? <span style={eqPill}>{equipmentCode}</span> : null}
+            {equipmentLocation ? <span style={eqPill}>{equipmentLocation}</span> : null}
           </div>
         </div>
 
-        {showAlertChip ? (
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            {isOverdue && <span style={pill("#fee2e2", "#991b1b")}>ATRASADA</span>}
-            {isBadCondition && <span style={pill("#fee2e2", "#991b1b")}>EQUIPO {conditionRaw}</span>}
-            {isHighCriticality && !isBadCondition && <span style={pill("#fef3c7", "#92400e")}>CRITICIDAD {critRaw}</span>}
-          </div>
-        ) : null}
-
-        {activity?.hasEvidence && (
-          <button
-            type="button"
-            title="Ver evidencia"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onOpen) onOpen(activity);
-            }}
-            style={cameraBtn}
-          >
-            <Icon name="camera" size="md" />
-          </button>
-        )}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 6, flexShrink: 0 }}>
+          {activity?.hasEvidence && (
+            <button
+              type="button"
+              title="Ver evidencia"
+              onClick={(e) => { e.stopPropagation(); if (onOpen) onOpen(activity); }}
+              style={cameraBtn}
+            >
+              <Icon name="camera" size="sm" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <div style={row}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      {/* ── Alert chips ─────────────────────────────── */}
+      {(isOverdue || isBadCondition || isHighCriticality) && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {isOverdue && <span style={alertPill("#dc2626", "rgba(220,38,38,0.10)")}>ATRASADA</span>}
+          {isBadCondition && <span style={alertPill("#dc2626", "rgba(220,38,38,0.10)")}>EQUIPO {conditionRaw}</span>}
+          {isHighCriticality && !isBadCondition && <span style={alertPill("#b45309", "rgba(245,158,11,0.12)")}>CRITICIDAD {critRaw}</span>}
+        </div>
+      )}
+
+      {/* ── Info chips ──────────────────────────────── */}
+      {hasAnyInfo && (
+        <div style={infoChipsRow}>
+          <InfoChip label="Lubricante" value={lubricantName} />
+          <InfoChip label="Comercial" value={commercialName} />
+          <InfoChip label="Cantidad" value={quantity} />
+          <InfoChip label="Método" value={method} />
+        </div>
+      )}
+
+      {/* ── Footer ──────────────────────────────────── */}
+      <div style={footer}>
+        <span style={dateChip}>
           <Icon name="calendar" size="sm" />
           {dateStr || "—"}
         </span>
-        <span style={badge(status)}>{status}</span>
-      </div>
 
-      <div style={details}>
-        <div>
-          <strong>Lubricante:</strong> {lubricantName}
-        </div>
-        <div>
-          <strong>Comercial:</strong> {activity?.commercialName || "—"}
-        </div>
-        <div>
-          <strong>Cantidad:</strong> {(activity?.quantityLabel ?? activity?.quantity) ?? "—"}
-        </div>
-        <div>
-          <strong>Método:</strong> {activity?.method || "—"}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {techName && (
+            <span style={techChip}>
+              <Icon name="user" size="sm" />
+              {techName}
+            </span>
+          )}
+          <span style={statusBadge(tone.badgeBg, tone.badgeColor)}>{status}</span>
         </div>
       </div>
 
@@ -163,71 +210,169 @@ export default function ActivityCard({ activity, onOpen }) {
   );
 }
 
+/* ── Styles ─────────────────────────────────────────── */
+
 const card = {
-  background: "#fff",
-  borderRadius: 14,
-  padding: 16,
+  borderRadius: 16,
+  padding: "14px 16px",
   display: "flex",
   flexDirection: "column",
   gap: 10,
+  transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms ease",
+  position: "relative",
+  overflow: "hidden",
 };
 
-const row = {
+const headerRow = {
   display: "flex",
-  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: 10,
+};
+
+const kindIconBox = {
+  width: 38,
+  height: 38,
+  borderRadius: 10,
+  display: "flex",
   alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
 };
 
-const details = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: 8,
+const routeTitle = {
+  fontWeight: 800,
   fontSize: 14,
+  color: "#0f172a",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  lineHeight: 1.3,
 };
 
-const muted = {
-  fontSize: 12,
-  color: "#6b7280",
+const eqMeta = {
+  display: "flex",
+  alignItems: "center",
+  gap: 5,
+  marginTop: 4,
+  flexWrap: "wrap",
 };
 
-const badge = (status) => ({
-  padding: "4px 10px",
-  borderRadius: 999,
+const eqNameBold = {
   fontSize: 12,
+  fontWeight: 800,
+  color: "#334155",
+};
+
+const eqPill = {
+  fontSize: 11,
   fontWeight: 700,
-  background: status === "Atrasada" ? "#fee2e2" : status === "Pendiente" ? "#fef3c7" : "#dcfce7",
-  color: status === "Atrasada" ? "#b91c1c" : status === "Pendiente" ? "#92400e" : "#166534",
-});
+  color: "#64748b",
+  background: "rgba(15,23,42,0.06)",
+  borderRadius: 6,
+  padding: "2px 7px",
+  border: "1px solid rgba(226,232,240,0.8)",
+};
 
-const pill = (bg, color) => ({
-  background: bg,
-  color,
+const alertPill = (color, bg) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "3px 9px",
   borderRadius: 999,
-  padding: "4px 10px",
   fontSize: 11,
   fontWeight: 900,
-  border: "1px solid rgba(226,232,240,0.9)",
+  color,
+  background: bg,
+  border: `1px solid ${color}33`,
+  letterSpacing: "0.5px",
   whiteSpace: "nowrap",
 });
 
-const futureNote = {
-  marginTop: 6,
+const infoChipsRow = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 6,
+};
+
+const infoChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  background: "rgba(15,23,42,0.04)",
+  border: "1px solid rgba(226,232,240,0.85)",
+  borderRadius: 8,
+  padding: "4px 9px",
   fontSize: 12,
+};
+
+const infoChipLabel = {
+  color: "#94a3b8",
+  fontWeight: 700,
+  fontSize: 11,
+};
+
+const infoChipValue = {
+  color: "#1e293b",
+  fontWeight: 800,
+  fontSize: 12,
+};
+
+const footer = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 8,
+  marginTop: 2,
+  flexWrap: "wrap",
+};
+
+const dateChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  fontSize: 12,
+  fontWeight: 700,
   color: "#64748b",
 };
 
+const techChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  fontSize: 11,
+  fontWeight: 800,
+  color: "#0f766e",
+  background: "rgba(13,148,136,0.10)",
+  border: "1px solid rgba(13,148,136,0.20)",
+  borderRadius: 999,
+  padding: "3px 10px",
+};
+
+const statusBadge = (bg, color) => ({
+  padding: "4px 11px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 800,
+  background: bg,
+  color,
+});
+
+const futureNote = {
+  fontSize: 12,
+  color: "#64748b",
+  marginTop: 2,
+};
+
 const cameraBtn = {
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  borderRadius: 10,
-  padding: "6px 10px",
+  border: "1px solid rgba(226,232,240,0.9)",
+  background: "rgba(255,255,255,0.85)",
+  borderRadius: 9,
+  padding: "6px 9px",
   cursor: "pointer",
-  fontWeight: 900,
-  height: 34,
-  alignSelf: "flex-start",
+  height: 32,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
+  color: "#475569",
 };
 
 function getRouteKindPrefix(routeKind) {
@@ -246,15 +391,9 @@ function stripRouteKindPrefix(value) {
 function formatRouteDisplayName(name, routeKind, fallback = "") {
   const rawName = String(name || "").trim();
   const normalizedKind = String(routeKind || "").trim().toUpperCase();
-
   if (!rawName) return fallback;
-
-  if (normalizedKind !== "INSPECTION" && normalizedKind !== "LUBRICATION") {
-    return rawName;
-  }
-
+  if (normalizedKind !== "INSPECTION" && normalizedKind !== "LUBRICATION") return rawName;
   const baseName = stripRouteKindPrefix(rawName);
   if (!baseName) return fallback;
-
   return `${getRouteKindPrefix(normalizedKind)} ${baseName}`.trim();
 }

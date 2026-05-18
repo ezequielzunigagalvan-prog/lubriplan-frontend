@@ -98,10 +98,14 @@ export default function EditRoutePage() {
   return (
     <MainLayout>
       <div style={pageShell}>
-        <h1 style={title}>Editar ruta</h1>
-        <p style={subtitle}>
-          Actualiza la información de la ruta
-        </p>
+        <div style={topBar}>
+          <div style={kicker}>
+            <span style={{ width: 18, height: 2, background: "rgba(249,115,22,0.90)", display: "inline-block", borderRadius: 2, flexShrink: 0 }} />
+            RUTAS · EDITAR
+          </div>
+          <h1 style={title}>Editar ruta</h1>
+          <p style={subtitle}>Actualiza la información de la ruta</p>
+        </div>
 
         {error ? (
           <div style={{ color: "#991b1b", marginBottom: 16, fontWeight: 700 }}>{error}</div>
@@ -251,17 +255,35 @@ const pageShell = {
   border: "1px solid #e5e7eb",
 };
 
+const topBar = {
+  padding: "14px 16px",
+  marginBottom: 18,
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
+  borderRadius: 16,
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 10px 28px rgba(2,6,23,0.06)",
+};
+
+const kicker = {
+  fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2,
+  display: "flex", alignItems: "center", gap: 8, marginBottom: 8,
+};
+
 const title = {
   margin: 0,
-  fontSize: typeof window !== "undefined" && window.innerWidth <= 820 ? 30 : 36,
+  fontSize: 28,
   fontWeight: 950,
   color: "#0f172a",
 };
 
 const subtitle = {
   color: "#64748b",
-  marginBottom: 24,
+  marginTop: 6,
+  marginBottom: 0,
   fontWeight: 800,
+  fontSize: 12,
 };
 
 

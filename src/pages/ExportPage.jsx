@@ -502,7 +502,6 @@ export default function ExportPage() {
         />
 
         <div className="lpCard" style={card}>
-          <div style={orangeBar} />
           <div style={cardTop}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={iconBoxSoft}>
@@ -573,7 +572,6 @@ export default function ExportPage() {
 function ExportCard({ icon, title, desc, onDownload, busy, badge }) {
   return (
     <div className="lpCard" style={card}>
-      <div style={orangeBar} />
       <div style={cardTop}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={iconBox}>
@@ -622,7 +620,6 @@ function ImportBlock({
 
   return (
     <section style={importWrap}>
-      <div style={orangeBar} />
       <div style={importHead}>
         <div>
           <div style={sectionKicker}>Importar datos</div>
@@ -748,6 +745,14 @@ const pageHeader = {
   alignItems: "flex-end",
   gap: 12,
   flexWrap: "wrap",
+  padding: "14px 16px",
+  marginBottom: 14,
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
+  borderRadius: 16,
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 10px 28px rgba(2,6,23,0.06)",
 };
 
 const summaryRow = {
@@ -768,21 +773,22 @@ const grid = {
 const sectionDivider = {
   marginTop: 20,
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.45)",
   borderRadius: 18,
   padding: 16,
-  background: "rgba(255,255,255,0.92)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
   boxShadow: "0 10px 24px rgba(2,6,23,0.05)",
 };
 
 const importWrap = {
-  position: "relative",
   marginTop: 16,
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
   borderRadius: 18,
   padding: 16,
-  background: "rgba(255,255,255,0.96)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 14px 34px rgba(2,6,23,0.07)",
-  overflow: "hidden",
 };
 
 const importHead = {
@@ -915,22 +921,12 @@ const okMessage = {
 };
 
 const card = {
-  position: "relative",
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
   borderRadius: 14,
   padding: 14,
-  background: "#fff",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 12px 30px rgba(2,6,23,0.06)",
-  overflow: "hidden",
-};
-
-const orangeBar = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 8,
-  background: "#f97316",
 };
 
 const cardTop = {
@@ -938,7 +934,6 @@ const cardTop = {
   alignItems: "flex-start",
   justifyContent: "space-between",
   gap: 12,
-  marginTop: 6,
 };
 
 const cardTitle = { fontWeight: 950, color: "#0f172a" };

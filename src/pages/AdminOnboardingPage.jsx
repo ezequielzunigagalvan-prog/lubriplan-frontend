@@ -499,7 +499,7 @@ const title = {
   margin: "8px 0 0 0",
   fontSize: 34,
   lineHeight: 1,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
 };
 
@@ -569,7 +569,7 @@ const summaryHead = {
 
 const summaryTitle = {
   fontSize: 20,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
 };
 
@@ -674,7 +674,7 @@ const cardIconBox = {
 
 const cardTitle = {
   fontSize: 18,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
 };
 
@@ -798,7 +798,7 @@ const toggleDot = {
 
 const toggleText = {
   fontSize: 12,
-  fontWeight: 1000,
+  fontWeight: 900,
   letterSpacing: 0.2,
 };
 

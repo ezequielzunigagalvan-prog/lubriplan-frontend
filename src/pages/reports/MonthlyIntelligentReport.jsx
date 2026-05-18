@@ -220,7 +220,7 @@ function Card({ title, subtitle, right, children }) {
           {title ? (
             <div
               style={{
-                fontWeight: 1000,
+                fontWeight: 900,
                 color: "#0f172a",
                 display: "inline-flex",
                 alignItems: "center",
@@ -283,7 +283,7 @@ function KPI({ label, value, hint, tone = "dark" }) {
       >
         {label}
       </div>
-      <div style={{ marginTop: 8, fontSize: 28, fontWeight: 1000, color }}>
+      <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, color }}>
         {value}
       </div>
       <div
@@ -318,7 +318,7 @@ function ChartBox({ title, subtitle, right, children }) {
         }}
       >
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontWeight: 1000, color: "#0f172a" }}>{title}</div>
+          <div style={{ fontWeight: 900, color: "#0f172a" }}>{title}</div>
           {subtitle ? (
             <div
               style={{
@@ -441,7 +441,7 @@ function AiSummaryBox({
         <div style={{ minWidth: 0, flex: 1 }}>
           <div
             style={{
-              fontWeight: 1000,
+              fontWeight: 900,
               color: "#0f172a",
               display: "inline-flex",
               alignItems: "center",
@@ -1087,7 +1087,7 @@ return (
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 22, fontWeight: 1000, color: "#0f172a" }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#0f172a" }}>
             Reporte inteligente mensual
           </div>
           <div style={{ marginTop: 4, fontSize: 12, fontWeight: 850, color: "#64748b" }}>
@@ -1423,7 +1423,7 @@ const sectionHeaderRow = {
 };
 
 const sectionHeaderTitle = {
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   fontSize: 14,
   letterSpacing: 0.4,
@@ -1516,7 +1516,7 @@ const signalCard = {
 
 const signalValue = {
   fontSize: 24,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#f8fafc",
   lineHeight: 1,
 };
@@ -1572,7 +1572,7 @@ const compactIndexOrange = {
   placeItems: "center",
   background: "rgba(249,115,22,0.14)",
   color: "#f97316",
-  fontWeight: 1000,
+  fontWeight: 900,
   fontSize: 12,
 };
 
@@ -1584,7 +1584,7 @@ const compactIndexGreen = {
   placeItems: "center",
   background: "rgba(34,197,94,0.14)",
   color: "#16a34a",
-  fontWeight: 1000,
+  fontWeight: 900,
   fontSize: 12,
 };
 

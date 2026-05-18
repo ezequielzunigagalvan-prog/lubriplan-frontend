@@ -9,7 +9,22 @@ const card = {
   width: "min(680px, 100%)",
   background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb",
   boxShadow: "0 20px 60px rgba(2,6,23,0.25)", padding: 14,
+  borderTop: "4px solid #f97316", overflow: "hidden",
 };
+const cHeader = {
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  margin: "-14px -14px 12px",
+  padding: "14px 14px",
+  borderRadius: "14px 14px 0 0",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 10,
+  flexWrap: "wrap",
+  alignItems: "flex-start",
+};
+const cKicker = { fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2, marginBottom: 6 };
+const cBtnX = { border: "1px solid rgba(255,255,255,0.20)", background: "rgba(255,255,255,0.10)", borderRadius: 12, padding: "8px 10px", cursor: "pointer", fontWeight: 950, color: "#fff" };
 const row = { display: "grid", gap: 6, marginTop: 10 };
 const lbl = { fontSize: 12, fontWeight: 900, color: "#64748b" };
 const inp = { border: "1px solid #e5e7eb", borderRadius: 12, padding: "10px 12px", fontWeight: 900 };
@@ -80,14 +95,15 @@ export default function ScheduleCorrectiveModal({
   return (
     <div style={box} onMouseDown={(e) => (e.target === e.currentTarget ? onClose?.() : null)}>
       <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", gap: 10, alignItems: "start" }}>
+        <div style={cHeader}>
           <div>
-            <div style={{ fontWeight: 950, color: "#0f172a", fontSize: 18 }}>🛠 Programar acción correctiva</div>
-            <div style={{ marginTop: 4, color: "#64748b", fontWeight: 850, fontSize: 12 }}>
-              Se creará una actividad ligada al reporte y el reporte pasará a <b>IN_PROGRESS</b>.
+            <div style={cKicker}>CONDICIÓN · CORRECTIVO</div>
+            <div style={{ fontWeight: 950, color: "#fff", fontSize: 18 }}>Programar acción correctiva</div>
+            <div style={{ marginTop: 4, color: "rgba(255,255,255,0.65)", fontWeight: 850, fontSize: 12 }}>
+              Se creará una actividad ligada al reporte y el reporte pasará a <b style={{ color: "rgba(249,115,22,0.90)" }}>IN_PROGRESS</b>.
             </div>
           </div>
-          <button style={btn} onClick={onClose} disabled={saving}>✕</button>
+          <button style={cBtnX} onClick={onClose} disabled={saving}>✕</button>
         </div>
 
         {err ? (

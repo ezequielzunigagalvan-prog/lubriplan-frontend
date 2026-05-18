@@ -10,6 +10,7 @@ import Toast from "../components/ui/Toast";
 import { usePlant } from "../context/PlantContext";
 import { getTechnicians } from "../services/techniciansService";
 import { updateRoute } from "../services/routesService";
+import { RouteSkeleton } from "../components/ui/CardSkeleton";
 
 function mapRouteToModalData(route) {
   if (!route) return null;
@@ -398,11 +399,14 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
 
   return (
     <MainLayout>
-      <div style={pageShell}>
+      <div className="lp-fade-in" style={pageShell}>
         {/* TOP BAR */}
         <div style={topBar}>
           <div>
-            
+            <div style={kicker}>
+              <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+              RUTAS · LUBRICACIÓN
+            </div>
             <h1 style={title}>Rutas</h1>
             <div style={subtitle}>
   Planifica y gestiona las rutas de lubricación
@@ -459,9 +463,9 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
         {/* KPIs (3 cards) */}
         {!loading ? (
           <div style={kpiGrid}>
-            <KpiCard title="Equipos" value={kpis.equipments} icon="settings" />
-            <KpiCard title="Rutas" value={kpis.routes} icon="route" />
-            <KpiCard title="Con instrucciones" value={kpis.withInstructions} icon="doc" />
+            <KpiCard title="Equipos"          value={kpis.equipments}       icon="settings" accentColor="#0f172a" iconTone="navy"   />
+            <KpiCard title="Rutas"            value={kpis.routes}           icon="route"    accentColor="#f97316" iconTone="orange" />
+            <KpiCard title="Con instrucciones" value={kpis.withInstructions} icon="doc"      accentColor="#3b82f6" iconTone="blue"  />
           </div>
         ) : null}
 
@@ -481,20 +485,23 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
         )}
 
         {/* CONTENT */}
-        {loading && (
-          <div style={panel}>
-            <p style={{ margin: 0, fontWeight: 900, color: "#0f172a" }}>Cargando rutas…</p>
-          </div>
-        )}
+        {loading && <RouteSkeleton count={4} />}
 
         {!loading && routes.length === 0 && (
           <div style={emptyBox}>
-            {canEditRoutes ? (
-              <>
-                No hay rutas aún. Crea tu primera ruta con <b>Nueva ruta</b>.
-              </>
-            ) : (
-              <>No hay rutas aún.</>
+            <div style={emptyIconWrap}>
+              <Icon name="route" style={{ width: 24, height: 24, color: "#94a3b8" }} />
+            </div>
+            <div style={emptyTitle}>Sin rutas</div>
+            <div style={emptyDesc}>
+              {canEditRoutes
+                ? "No hay rutas registradas. Crea la primera para comenzar."
+                : "No hay rutas registradas para esta planta."}
+            </div>
+            {canEditRoutes && (
+              <button type="button" style={emptyActionPrimary} onClick={() => setShowNewRoute(true)}>
+                + Nueva ruta
+              </button>
             )}
           </div>
         )}
@@ -542,17 +549,27 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
    UI PIECES
 ========================= */
 
-function KpiCard({ title, value, icon }) {
+const KPI_ICON_TONES = {
+  navy:   { background: "rgba(15,23,42,0.06)",   border: "1px solid rgba(15,23,42,0.12)",    color: "#334155" },
+  orange: { background: "rgba(249,115,22,0.10)",  border: "1px solid rgba(249,115,22,0.28)",  color: "#9a3412" },
+  blue:   { background: "rgba(59,130,246,0.08)",  border: "1px solid rgba(59,130,246,0.22)",  color: "#1e40af" },
+  green:  { background: "rgba(34,197,94,0.09)",   border: "1px solid rgba(34,197,94,0.22)",   color: "#166534" },
+  red:    { background: "rgba(239,68,68,0.08)",   border: "1px solid rgba(239,68,68,0.22)",   color: "#991b1b" },
+  amber:  { background: "rgba(245,158,11,0.10)",  border: "1px solid rgba(245,158,11,0.25)",  color: "#78350f" },
+  slate:  { background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.20)", color: "#475569" },
+};
+
+function KpiCard({ title, value, icon, accentColor = "#0f172a", iconTone = "navy", small }) {
+  const tone = KPI_ICON_TONES[iconTone] || KPI_ICON_TONES.navy;
   return (
-    <div style={kpiCard}>
-      <div style={kpiStripe} />
-      <div style={kpiBody}>
-        <div style={kpiIconWrap}>
-          <Icon name={icon} style={{ width: 18, height: 18, color: "#0b1220" }} />
+    <div style={{ ...kpiCard, borderTop: `4px solid ${accentColor}` }} className="lpKpiCard">
+      <div style={kpiInner}>
+        <div style={{ ...kpiIconBox, ...tone }}>
+          <Icon name={icon} style={{ width: 20, height: 20 }} />
         </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={kpiValue}>{value}</div>
-          <div style={kpiTitle}>{title}</div>
+        <div style={kpiRight}>
+          <div style={small ? kpiValueSmall : kpiValue}>{value}</div>
+          <div style={kpiLabel}>{title}</div>
         </div>
       </div>
     </div>
@@ -636,10 +653,9 @@ function EquipmentGroupCard({
 ========================= */
 
 const pageShell = {
-  padding: 16,
-  background: "linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%)",
-  borderRadius: 16,
-  border: "1px solid #e5e7eb",
+  paddingTop: 6,
+  display: "grid",
+  gap: 14,
 };
 
 const topBar = {
@@ -648,11 +664,19 @@ const topBar = {
   alignItems: "flex-end",
   gap: 12,
   flexWrap: "wrap",
-  paddingBottom: 12,
-  borderBottom: "1px solid #e5e7eb",
+  padding: "14px 16px",
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
 const kicker = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
   fontSize: 11,
   fontWeight: 950,
   color: "#64748b",
@@ -722,13 +746,53 @@ const metaPill = {
 
 const emptyBox = {
   marginTop: 14,
-  padding: 12,
-  borderRadius: 12,
-  border: "1px dashed #cbd5e1",
+  padding: "40px 24px",
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid rgba(226,232,240,0.80)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 10,
+  textAlign: "center",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.05)",
+};
+
+const emptyIconWrap = {
+  width: 52,
+  height: 52,
+  borderRadius: 16,
+  background: "rgba(15,23,42,0.05)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  display: "grid",
+  placeItems: "center",
+};
+
+const emptyTitle = {
+  fontSize: 16,
+  fontWeight: 900,
+  color: "#0f172a",
+};
+
+const emptyDesc = {
+  fontSize: 13,
   color: "#64748b",
   fontWeight: 800,
+  maxWidth: "36ch",
+};
+
+const emptyActionPrimary = {
+  marginTop: 6,
+  padding: "9px 18px",
+  borderRadius: 12,
+  border: "1px solid rgba(249,115,22,0.45)",
+  background: "#f97316",
+  fontWeight: 950,
   fontSize: 13,
-  background: "rgba(248,250,252,0.85)",
+  color: "#0b1220",
+  cursor: "pointer",
+  boxShadow: "0 8px 18px rgba(249,115,22,0.22)",
 };
 
 /* SEARCH */
@@ -765,61 +829,66 @@ const iconBtn = {
 const kpiGrid = {
   marginTop: 14,
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 14,
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: 12,
 };
 
 const kpiCard = {
-  position: "relative",
-  overflow: "hidden",
-  borderRadius: 16,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.80)",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-  minHeight: 84,
-};
-
-const kpiStripe = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 10,
-  background: "rgba(15,23,42,0.88)", // ✅ franja gris oscuro
-};
-
-const kpiBody = {
-  padding: 14,
-  paddingTop: 18,
+  borderRadius: 18,
+  padding: 16,
+  boxShadow: "0 10px 24px rgba(2,6,23,0.07)",
+  minHeight: 80,
   display: "flex",
-  gap: 12,
-  alignItems: "center",
+  flexDirection: "column",
+  justifyContent: "center",
 };
 
-const kpiIconWrap = {
-  width: 42,
-  height: 42,
+const kpiInner = {
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+};
+
+const kpiIconBox = {
+  width: 48,
+  height: 48,
   borderRadius: 14,
   display: "grid",
   placeItems: "center",
-  background: "rgba(249,115,22,0.92)", // ✅ naranja
-  border: "1px solid rgba(251,146,60,0.90)",
-  boxShadow: "0 10px 22px rgba(249,115,22,0.18)",
+  flexShrink: 0,
+};
+
+const kpiRight = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  flex: 1,
+  lineHeight: 1.05,
 };
 
 const kpiValue = {
-  fontSize: 28,
-  fontWeight: 950,
+  fontSize: 38,
+  fontWeight: 900,
+  color: "#0f172a",
+  lineHeight: 1,
+  letterSpacing: -1,
+};
+
+const kpiValueSmall = {
+  fontSize: 22,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1,
 };
 
-const kpiTitle = {
-  marginTop: 4,
-  fontSize: 12,
-  fontWeight: 900,
+const kpiLabel = {
+  marginTop: 5,
+  fontSize: 11,
+  fontWeight: 950,
   color: "#64748b",
-  letterSpacing: 0.6,
+  letterSpacing: 0.7,
   textTransform: "uppercase",
 };
 

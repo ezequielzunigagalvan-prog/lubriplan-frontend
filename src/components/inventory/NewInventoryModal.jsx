@@ -234,9 +234,12 @@ export default function NewInventoryModal({ open, onClose, onSave, initialData }
       
 
       <div style={modal}>
-        <h2 style={{ margin: 0 }}>
-          {initialData ? "Editar producto" : "Nuevo producto"}
-        </h2>
+        <div style={modalHeader}>
+          <div style={modalKicker}>INVENTARIO · LUBRICANTE</div>
+          <h2 style={{ margin: "6px 0 0", fontWeight: 950, color: "#fff", fontSize: 18 }}>
+            {initialData ? "Editar producto" : "Nuevo producto"}
+          </h2>
+        </div>
 
         <div style={modalBody}>
           <Field label="Nombre *" active={focusKey === "name"}>
@@ -550,6 +553,23 @@ const modal = {
   gap: 14,
   border: "1px solid rgba(226,232,240,0.95)",
   boxShadow: "0 18px 34px rgba(15,23,42,0.18)",
+  borderTop: "4px solid #f97316",
+  overflow: "hidden",
+};
+
+const modalHeader = {
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  margin: "-20px -20px 0",
+  padding: "14px 20px 12px",
+  borderRadius: "14px 14px 0 0",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+};
+
+const modalKicker = {
+  fontSize: 11,
+  fontWeight: 950,
+  color: "rgba(249,115,22,0.90)",
+  letterSpacing: 1.2,
 };
 
 const modalBody = {

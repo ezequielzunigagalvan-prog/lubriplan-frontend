@@ -273,6 +273,10 @@ export default function EditEquipmentPage() {
         <div style={topBar}>
           <div style={compactHeaderRow}>
             <div style={headerLeft}>
+              <div style={edKicker}>
+                <span style={{ width: 18, height: 2, background: "rgba(249,115,22,0.90)", display: "inline-block", borderRadius: 2, flexShrink: 0 }} />
+                EQUIPOS · EDITAR
+              </div>
               <div style={headerBadgeRow}>
   <span style={headerBadge}>
     {form.code ? normalizeCode(form.code) : `ID ${equipmentId}`}
@@ -306,8 +310,6 @@ export default function EditEquipmentPage() {
           <div style={compactLayoutGrid}>
             {/* FORM */}
             <form onSubmit={handleSubmit} style={formCard}>
-              <div style={cardTopAccent} />
-
               <div style={cardHeader}>
                 <div>
                   <div style={cardTitle}>Datos del equipo</div>
@@ -579,8 +581,14 @@ const topBar = {
   display: "flex",
   flexDirection: "column",
   gap: 12,
-  paddingBottom: 12,
-  borderBottom: "1px solid #e5e7eb",
+  padding: "14px 16px",
+  marginBottom: 14,
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
+  borderRadius: 16,
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 10px 28px rgba(2,6,23,0.06)",
 };
 
 const headerRow = {
@@ -591,6 +599,7 @@ const headerRow = {
 };
 
 const headerLeft = { flex: 1, minWidth: 0 };
+const edKicker = { fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2, display: "flex", alignItems: "center", gap: 8, marginBottom: 8 };
 
 const headerRight = {
   display: "flex",
@@ -632,22 +641,12 @@ const loadingCard = {
 };
 
 const formCard = {
-  position: "relative",
-  background: "rgba(255,255,255,0.90)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
   borderRadius: 18,
   padding: 16,
   boxShadow: "0 16px 30px rgba(15, 23, 42, 0.07)",
-  overflow: "hidden",
-};
-
-const cardTopAccent = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 6,
-  background: "rgba(249,115,22,0.85)",
 };
 
 const cardHeader = {
@@ -668,7 +667,7 @@ const cardAccent = {
   boxShadow: "0 10px 18px rgba(249,115,22,0.18)",
 };
 
-const cardTitle = { fontWeight: 1000, color: "#0f172a", fontSize: 14 };
+const cardTitle = { fontWeight: 900, color: "#0f172a", fontSize: 14 };
 const cardHint = { marginTop: 4, fontSize: 12, color: "#64748b", fontWeight: 800 };
 
 const statusPill = (status) => {
@@ -677,7 +676,7 @@ const statusPill = (status) => {
     padding: "7px 10px",
     borderRadius: 999,
     fontSize: 11,
-    fontWeight: 1000,
+    fontWeight: 900,
     border: active ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(148,163,184,0.45)",
     background: active ? "rgba(34,197,94,0.10)" : "rgba(148,163,184,0.12)",
     color: active ? "#166534" : "#334155",
@@ -877,14 +876,14 @@ const sideHeader = {
   gap: 10,
 };
 
-const sideTitle = { fontWeight: 1000, color: "#0f172a", fontSize: 14 };
+const sideTitle = { fontWeight: 900, color: "#0f172a", fontSize: 14 };
 const sideDesc = { marginTop: 8, fontSize: 12, color: "#64748b", fontWeight: 800, lineHeight: 1.5 };
 
 const sideBadge = {
   padding: "6px 10px",
   borderRadius: 999,
   fontSize: 11,
-  fontWeight: 1000,
+  fontWeight: 900,
   border: "1px solid rgba(226,232,240,1)",
   background: "rgba(249,115,22,0.10)",
   color: "#9a3412",
@@ -962,7 +961,7 @@ const headerBadge = {
   border: "1px solid rgba(249,115,22,0.28)",
   background: "rgba(249,115,22,0.12)",
   color: "#9a3412",
-  fontWeight: 1000,
+  fontWeight: 900,
   letterSpacing: 0.8,
   textTransform: "uppercase",
   fontSize: 11,
@@ -983,7 +982,7 @@ const btnPrimaryOrange = {
   padding: "10px 14px",
   borderRadius: 12,
   border: "1px solid #fb923c",
-  fontWeight: 1000,
+  fontWeight: 900,
   cursor: "pointer",
   boxShadow: "0 14px 30px rgba(249,115,22,0.22)",
   display: "inline-flex",
@@ -991,7 +990,7 @@ const btnPrimaryOrange = {
   justifyContent: "center",
   gap: 8,
 };
-const blockedTitle = { fontWeight: 1000, fontSize: 16, color: "#0f172a" };
+const blockedTitle = { fontWeight: 900, fontSize: 16, color: "#0f172a" };
 const blockedSub = { marginTop: 6, color: "#64748b", fontWeight: 800, fontSize: 12 };
 
 

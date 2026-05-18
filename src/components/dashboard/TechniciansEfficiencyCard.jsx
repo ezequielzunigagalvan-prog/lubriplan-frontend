@@ -156,7 +156,7 @@ const card = {
   borderRadius: 18,
   overflow: "hidden",
   background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
-  boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
+  boxShadow: "0 16px 34px rgba(2,6,23,0.09)",
 };
 
 const head = {
@@ -181,7 +181,7 @@ const iconBox = {
   color: "#fff",
 };
 
-const title = { fontWeight: 1000 };
+const title = { fontWeight: 900 };
 const sub = { marginTop: 4, fontSize: 12, fontWeight: 800, color: "rgba(226,232,240,0.92)" };
 
 const monthPill = {
@@ -241,7 +241,7 @@ const rowTop = {
 };
 
 const nameLine = { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" };
-const nameTxt = { fontWeight: 1000, color: "#0f172a" };
+const nameTxt = { fontWeight: 900, color: "#0f172a" };
 
 const tag = {
   fontSize: 12,
@@ -282,7 +282,7 @@ const scoreChip = {
   padding: "6px 10px",
   borderRadius: 999,
   fontSize: 12,
-  fontWeight: 1000,
+  fontWeight: 900,
   whiteSpace: "nowrap",
 };
 

@@ -401,7 +401,7 @@ const topRow = {
 };
 
 const titleRow = { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" };
-const panelTitle = { fontWeight: 1000, fontSize: 16, color: "#0f172a" };
+const panelTitle = { fontWeight: 900, fontSize: 16, color: "#0f172a" };
 const panelSub = { marginTop: 6, fontSize: 12, color: "#64748b", fontWeight: 850, lineHeight: 1.4 };
 
 const pillOk = {

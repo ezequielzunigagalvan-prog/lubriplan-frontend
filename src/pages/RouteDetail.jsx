@@ -227,7 +227,10 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
         {/* TOP */}
         <div style={topBar}>
           <div style={{ minWidth: 0 }}>
-            <div style={kicker}>LUBRIPLAN - RUTAS</div>
+            <div style={kicker}>
+              <span style={{ width: 18, height: 2, background: "rgba(249,115,22,0.90)", display: "inline-block", borderRadius: 2, flexShrink: 0 }} />
+              RUTAS · DETALLE
+            </div>
             <h1 style={pageTitle}>{routeDisplayName}</h1>
 
             <div style={subRow}>
@@ -460,16 +463,24 @@ const topBar = {
   alignItems: "flex-end",
   gap: 12,
   flexWrap: "wrap",
-  paddingBottom: 12,
-  borderBottom: "1px solid #e5e7eb",
+  padding: "14px 16px",
   marginBottom: 14,
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
+  borderRadius: 16,
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 10px 28px rgba(2,6,23,0.06)",
 };
 
 const kicker = {
   fontSize: 11,
   fontWeight: 950,
-  color: "#64748b",
+  color: "rgba(249,115,22,0.90)",
   letterSpacing: 1.2,
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
 };
 
 const pageTitle = {
@@ -552,11 +563,15 @@ const emptyBox = {
 };
 
 const mainCard = {
-  background: "rgba(255,255,255,0.78)",
+  background: "rgba(255,255,255,0.92)",
   borderRadius: 18,
   padding: 14,
- border: "3px solid rgba(203,213,225,0.95)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.45)",
   boxShadow: "0 14px 30px rgba(2,6,23,0.06)",
+  display: "grid",
+  gap: 14,
 };
 
 const grid = {
@@ -567,8 +582,9 @@ const grid = {
 
 const infoCard = {
   borderRadius: 16,
-  border: "2px solid rgba(226,232,240,0.98)", // contorno fuerte
-  background: "rgba(255,255,255,0.80)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
   padding: 14,
   minHeight: 98,
@@ -623,10 +639,10 @@ const infoSubMuted = {
 };
 
 const sectionCard = {
-  marginTop: 12,
   borderRadius: 16,
-  border: "2px solid rgba(226,232,240,0.98)", // contorno fuerte
-  background: "rgba(255,255,255,0.80)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
   padding: 14,
 };

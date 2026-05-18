@@ -16,6 +16,7 @@ import {
   getLubricants,
   getTechniciansPerformance,
   getConditionReportsAnalytics,
+  getOleMetrics,
 } from "../services/analyticsService";
 
 import { Icon } from "../components/ui/lpIcons";
@@ -379,6 +380,13 @@ export default function AnalysisPage() {
   const [crErr, setCrErr] = useState("");
   const [crData, setCrData] = useState(null);
 
+  // KPI OLE
+  const [oleData, setOleData] = useState(null);
+  const [oleLoading, setOleLoading] = useState(false);
+  const [oleErr, setOleErr] = useState("");
+  const [oleDays, setOleDays] = useState(90);
+  const oleReqRef = useRef(0);
+
   const { alerts: predictiveAlerts } = useDashboardPredictiveAlerts({
     month: analysisMonth,
     enabled: Boolean(currentPlantId),
@@ -478,6 +486,29 @@ export default function AnalysisPage() {
   useEffect(() => {
     loadConditionAnalytics();
   }, [loadConditionAnalytics]);
+
+  const loadOle = useCallback(async () => {
+    if (!currentPlantId) return;
+    const myReq = ++oleReqRef.current;
+    setOleLoading(true);
+    setOleErr("");
+    try {
+      const json = await getOleMetrics({ days: oleDays });
+      if (myReq !== oleReqRef.current) return;
+      setOleData(json);
+    } catch (e) {
+      if (myReq !== oleReqRef.current) return;
+      setOleErr(e?.message || "Error cargando KPI OLE");
+      setOleData(null);
+    } finally {
+      if (myReq !== oleReqRef.current) return;
+      setOleLoading(false);
+    }
+  }, [currentPlantId, oleDays]);
+
+  useEffect(() => {
+    if (tab === "ole" && currentPlantId) loadOle();
+  }, [tab, currentPlantId, oleDays]);
 
   useEffect(() => {
     if (!currentPlantId) return;
@@ -735,7 +766,11 @@ export default function AnalysisPage() {
 
       <div style={headerRow}>
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ margin: 0 }}>Analisis</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
+            <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+            ANÁLISIS · TENDENCIAS
+          </div>
+          <h1 style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 950, color: "#0f172a" }}>Análisis</h1>
           <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 900 }}>
             Tendencias y estadisticas de lubricacion
             {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
@@ -803,6 +838,7 @@ export default function AnalysisPage() {
             { value: "actividades", label: "Actividades", icon: <Icon name="route" /> },
             { value: "fallas", label: "Fallas", icon: <Icon name="warn" /> },
             { value: "condicion", label: "Condicion", icon: <Icon name="warn" /> },
+            { value: "ole", label: "KPI OLE", icon: <Icon name="trendUp" /> },
           ]}
         />
       </div>
@@ -853,9 +889,10 @@ export default function AnalysisPage() {
 
       {err ? <div style={errorBox}>{err}</div> : null}
       {loading ? (
-        <p style={{ marginTop: 14, color: "#64748b", fontWeight: 900 }}>
-          Cargando analisis...
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12, padding: "18px 16px", borderRadius: 16, border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.88)", fontWeight: 900, color: "#475569" }}>
+          <Icon name="refresh" style={{ width: 18, height: 18, color: "#f97316", flexShrink: 0 }} />
+          Cargando análisis…
+        </div>
       ) : null}
 
       {!loading && (
@@ -895,7 +932,7 @@ export default function AnalysisPage() {
 
                   <div style={kpiGrid}>
                     <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
+                      <div style={kpiTopBarDark} /><div style={kpiSideStripe} />
                       <div style={kpiLbl}>Lubricante foco</div>
                       <div style={kpiVal}>{oilSummary?.topLubricant?.name || "?"}</div>
                       <div style={kpiSub}>
@@ -906,7 +943,7 @@ export default function AnalysisPage() {
                     </div>
 
                     <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
+                      <div style={kpiTopBarDark} /><div style={kpiSideStripe} />
                       <div style={kpiLbl}>Equipo foco</div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
@@ -922,7 +959,7 @@ export default function AnalysisPage() {
                     </div>
 
                     <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
+                      <div style={kpiTopBarDark} /><div style={kpiSideStripe} />
                       <div style={kpiLbl}>Cambio mensual</div>
                       <div style={kpiVal}>{oilTrendLabel}</div>
                       <div style={kpiSub}>Comparado vs mes anterior</div>
@@ -962,7 +999,7 @@ export default function AnalysisPage() {
 
                   <div style={kpiGrid}>
                     <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />                     
+                      <div style={kpiTopBarDark} /><div style={kpiSideStripe} />                     
                       <div style={kpiLbl}>Lubricante foco</div>
                       <div style={kpiVal}>{greaseSummary?.topLubricant?.name || "?"}</div>
                       <div style={kpiSub}>
@@ -973,7 +1010,7 @@ export default function AnalysisPage() {
                     </div>
 
                     <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
+                      <div style={kpiTopBarDark} /><div style={kpiSideStripe} />
                       <div style={kpiLbl}>Equipo foco</div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
@@ -989,7 +1026,7 @@ export default function AnalysisPage() {
                     </div>
 
                     <div className="lpCard" style={kpiCard}>
-                      <div style={kpiTopBarDark} />
+                      <div style={kpiTopBarDark} /><div style={kpiSideStripe} />
                       <div style={kpiLbl}>Cambio mensual</div>
                       <div style={kpiVal}>{greaseTrendLabel}</div>
                       <div style={kpiSub}>Comparado vs mes anterior</div>
@@ -1444,6 +1481,142 @@ export default function AnalysisPage() {
               <FailuresByEquipment />
             </div>
           )}
+
+          {tab === "ole" && (
+            <div style={{ marginTop: 14, display: "grid", gap: 14 }}>
+              {/* Header del OLE */}
+              <div className="lpCard" style={{ ...panel, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <div style={accentBarOrange} />
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontWeight: 980, fontSize: 16, color: "#0f172a" }}>KPI OLE — Overall Lubrication Effectiveness</div>
+                  <div style={{ fontSize: 12, color: "#64748b", fontWeight: 900, marginTop: 2 }}>
+                    Disponibilidad × Cumplimiento × Efectividad · Periodo: {oleDays} dias
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 12, fontWeight: 950, color: "#64748b" }}>Rango</span>
+                  <select
+                    value={oleDays}
+                    onChange={(e) => setOleDays(Number(e.target.value))}
+                    style={selectMini}
+                  >
+                    <option value={30}>30 dias</option>
+                    <option value={60}>60 dias</option>
+                    <option value={90}>90 dias</option>
+                    <option value={180}>180 dias</option>
+                  </select>
+                  <button
+                    className="lpPress"
+                    style={btnGhost}
+                    onClick={loadOle}
+                    disabled={oleLoading}
+                    type="button"
+                  >
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <Icon name="reset" />
+                      {oleLoading ? "Cargando..." : "Actualizar"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {oleErr ? <div style={errorBox}>{oleErr}</div> : null}
+
+              {oleLoading && !oleData ? (
+                <div style={{ padding: "18px 16px", borderRadius: 14, border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.88)", fontWeight: 900, color: "#475569" }}>
+                  Cargando KPI OLE...
+                </div>
+              ) : null}
+
+              {!oleLoading && oleData && (
+                <>
+                  {/* OLE principal */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+                    <OleGauge value={toNum(oleData.ole)} label="OLE" subtitle="Indice global de efectividad" benchmark={oleData.benchmark} />
+                    <OleGauge value={toNum(oleData.availability)} label="Disponibilidad" subtitle="Equipos y planes activos vs total" color="#2563eb" />
+                    <OleGauge value={toNum(oleData.compliance)} label="Cumplimiento" subtitle="Actividades completadas a tiempo" color="#16a34a" />
+                    <OleGauge value={toNum(oleData.effectiveness)} label="Efectividad" subtitle="Ejecuciones sin condicion critica" color="#d97706" />
+                  </div>
+
+                  {/* Referencia */}
+                  {oleData.benchmark && (
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <Tag tone="green">Meta: {oleData.benchmark.target}%</Tag>
+                      <Tag tone="amber">Aceptable: {oleData.benchmark.good}%</Tag>
+                      {toNum(oleData.ole) >= oleData.benchmark.target ? (
+                        <Tag tone="green">En objetivo</Tag>
+                      ) : toNum(oleData.ole) >= oleData.benchmark.good ? (
+                        <Tag tone="amber">Aceptable — mejorar</Tag>
+                      ) : (
+                        <Tag tone="red">Bajo objetivo — requiere atencion</Tag>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tendencia mensual */}
+                  {Array.isArray(oleData.monthTrend) && oleData.monthTrend.length > 0 && (
+                    <div className="lpCard" style={panel}>
+                      <div style={accentBarOrange} />
+                      <PanelHeader
+                        icon={<Icon name="trendUp" />}
+                        title="Tendencia mensual OLE"
+                        subtitle="Evolucion de los 4 indicadores por mes."
+                      />
+                      <div style={{ overflowX: "auto", marginTop: 10 }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                          <thead>
+                            <tr>
+                              {["Mes", "OLE %", "Disponibilidad %", "Cumplimiento %", "Efectividad %"].map((h) => (
+                                <th key={h} style={{ textAlign: "left", fontSize: 12, color: "#64748b", padding: "8px 10px", fontWeight: 950 }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {oleData.monthTrend.map((row) => {
+                              const oleVal = toNum(row.ole);
+                              const target = oleData.benchmark?.target ?? 85;
+                              const good = oleData.benchmark?.good ?? 75;
+                              const oleFg = oleVal >= target ? "#166534" : oleVal >= good ? "#92400e" : "#991b1b";
+                              return (
+                                <tr key={row.month} style={{ borderTop: "1px solid rgba(226,232,240,0.75)" }}>
+                                  <td style={{ padding: "10px 10px", fontWeight: 950, color: "#0f172a", fontSize: 13 }}>{row.month}</td>
+                                  <td style={{ padding: "10px 10px", fontWeight: 980, color: oleFg, fontSize: 14 }}>{oleVal.toFixed(1)}%</td>
+                                  <td style={{ padding: "10px 10px", color: "#334155", fontSize: 13 }}>{toNum(row.availability).toFixed(1)}%</td>
+                                  <td style={{ padding: "10px 10px", color: "#334155", fontSize: 13 }}>{toNum(row.compliance).toFixed(1)}%</td>
+                                  <td style={{ padding: "10px 10px", color: "#334155", fontSize: 13 }}>{toNum(row.effectiveness).toFixed(1)}%</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Detalle executions */}
+                  {oleData.executions && (
+                    <div className="lpCard" style={panel}>
+                      <div style={accentBarOrange} />
+                      <PanelHeader icon={<Icon name="doc" />} title="Datos del periodo" subtitle="Base de calculo para el OLE." />
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginTop: 12 }}>
+                        {[
+                          { label: "Programadas", value: toNum(oleData.executions.scheduled) },
+                          { label: "Completadas", value: toNum(oleData.executions.completed) },
+                          { label: "A tiempo", value: toNum(oleData.executions.onTime) },
+                          { label: "Sin condicion critica", value: toNum(oleData.executions.noCondition) },
+                        ].map((item) => (
+                          <div key={item.label} style={{ padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(226,232,240,0.9)", background: "rgba(248,250,252,0.9)" }}>
+                            <div style={{ fontSize: 12, color: "#64748b", fontWeight: 950 }}>{item.label}</div>
+                            <div style={{ fontSize: 22, fontWeight: 980, color: "#0f172a", marginTop: 4 }}>{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </>
       )}
     </MainLayout>
@@ -1531,14 +1704,50 @@ function SimpleTopList({ items, onGo }) {
   );
 }
 
+function OleGauge({ value, label, subtitle, color = "#f97316", benchmark }) {
+  const pct = Math.max(0, Math.min(100, Number(value) || 0));
+  const target = benchmark?.target ?? 85;
+  const good = benchmark?.good ?? 75;
+
+  let barColor = color;
+  if (label === "OLE") {
+    barColor = pct >= target ? "#16a34a" : pct >= good ? "#d97706" : "#dc2626";
+  }
+
+  return (
+    <div className="lpCard" style={{
+      ...panel,
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+      alignItems: "flex-start",
+    }}>
+      <div style={accentBarOrange} />
+      <div style={{ marginTop: 6, fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 40, fontWeight: 980, color: barColor, lineHeight: 1 }}>{pct.toFixed(1)}<span style={{ fontSize: 22 }}>%</span></div>
+      <div style={{ fontSize: 12, color: "#64748b", fontWeight: 850 }}>{subtitle}</div>
+      <div style={{ width: "100%", height: 10, borderRadius: 999, background: "rgba(226,232,240,0.95)", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 999, transition: "width 600ms ease" }} />
+      </div>
+    </div>
+  );
+}
+
 /* ===================== styles ===================== */
 
 const headerRow = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "flex-end",
+  alignItems: "flex-start",
   gap: 12,
   flexWrap: "wrap",
+  padding: "14px 16px",
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
 const tabsWrap = {
@@ -1630,8 +1839,8 @@ const accentBarOrange = {
   left: 0,
   right: 0,
   top: 0,
-  height: 8,
-  background: "#f97316",
+  height: 5,
+  background: "#0f172a",
 };
 
 const panelHeaderRow = {
@@ -1683,17 +1892,25 @@ const kpiTopBarDark = {
   left: 0,
   right: 0,
   top: 0,
-  height: 14,
+  height: 5,
+  background: "#0f172a",
+};
+
+const kpiSideStripe = {
+  position: "absolute",
+  top: 5,
+  left: 0,
+  bottom: 0,
+  width: 4,
   background: "#334155",
-  borderTopLeftRadius: 14,
-  borderTopRightRadius: 14,
 };
 
 const kpiLbl = {
   fontSize: 12,
   color: "#64748b",
   fontWeight: 950,
-  marginTop: 8,
+  marginTop: 10,
+  paddingLeft: 4,
 };
 const kpiVal = { marginTop: 6, fontSize: 18, fontWeight: 980, color: "#0f172a" };
 const kpiSub = { marginTop: 6, fontSize: 12, color: "#475569", fontWeight: 850 };
@@ -1758,7 +1975,7 @@ const conditionMetricTitle = {
 const conditionMetricValue = {
   marginTop: 14,
   fontSize: 24,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.05,
 };

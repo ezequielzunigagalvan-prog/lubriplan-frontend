@@ -18,7 +18,7 @@ export default function MainLayout({ children }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { currentPlant, currentPlantId } = usePlant();
+  const { currentPlant, currentPlantId, plants } = usePlant();
 
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
   const displayName = String(user?.name || "?").trim();
@@ -235,28 +235,49 @@ export default function MainLayout({ children }) {
         }
 
         .lpSideLink {
-          transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border 140ms ease;
+          transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
         }
 
-        .lpSideLink:hover {
+        .lpSideLink:not([data-active="true"]):hover {
           transform: translateY(-1px);
           box-shadow: 0 14px 30px rgba(2,6,23,0.08);
           background: rgba(248,250,252,0.92);
-          border: 1px solid rgba(226,232,240,0.95);
+          border-color: rgba(226,232,240,0.95);
+        }
+
+        .lpLogoutBtn {
+          transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease, border-color 140ms ease;
+        }
+        .lpLogoutBtn:hover {
+          background: rgba(255,241,242,0.90);
+          border-color: rgba(252,165,165,0.60);
+          color: #991b1b;
+          box-shadow: 0 8px 18px rgba(239,68,68,0.08);
+        }
+        .lpLogoutBtn:active {
+          transform: scale(0.97);
+        }
+
+        .lpNotifDrop {
+          animation: lpPop 200ms ease both;
         }
 
         .lpBellBtn {
           transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 160ms ease, color 160ms ease;
         }
 
+        /* Alert state: red border + persistent soft ping ring */
         .lpBellBtn--alert {
-          border-color: rgba(220, 38, 38, 0.55) !important;
-          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), 0 12px 26px rgba(220, 38, 38, 0.12);
+          border-color: rgba(220, 38, 38, 0.50) !important;
           color: #b91c1c;
+          animation: lpBellPing 2.4s ease-out infinite;
         }
 
+        /* Incoming notification: realistic bell ring (plays twice) */
         .lpBellBtn--pulse {
-          animation: lpBellPulse 1.2s ease-in-out 2;
+          animation: lpBellRing 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) 2,
+                     lpBellPing 2.4s ease-out infinite;
+          transform-origin: 50% 8%;
         }
 
         .lpBellBtn:hover {
@@ -281,15 +302,38 @@ export default function MainLayout({ children }) {
         }
 
         @keyframes lpPop {
-          0% { transform: scale(0.92); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
+          0%   { transform: scale(0.92); opacity: 0; }
+          100% { transform: scale(1);    opacity: 1; }
         }
 
-        @keyframes lpBellPulse {
-          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.22); }
-          35% { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.12); }
-          70% { transform: scale(0.98); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08); }
-          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        /* Damped bell-ring oscillation — pivot at top of button */
+        @keyframes lpBellRing {
+          0%   { transform: rotate(0deg); }
+          8%   { transform: rotate(-24deg); }
+          20%  { transform: rotate(20deg); }
+          32%  { transform: rotate(-15deg); }
+          44%  { transform: rotate(10deg); }
+          56%  { transform: rotate(-6deg); }
+          68%  { transform: rotate(3deg); }
+          80%  { transform: rotate(-1.5deg); }
+          90%  { transform: rotate(0.8deg); }
+          100% { transform: rotate(0deg); }
+        }
+
+        /* Persistent soft radial ping for unread notifications */
+        @keyframes lpBellPing {
+          0%   { box-shadow: 0 0 0 0   rgba(239,68,68,0.50), 0 0 0 0 rgba(239,68,68,0.25); }
+          40%  { box-shadow: 0 0 0 6px rgba(239,68,68,0.14), 0 0 0 12px rgba(239,68,68,0.06); }
+          80%  { box-shadow: 0 0 0 10px rgba(239,68,68,0),   0 0 0 20px rgba(239,68,68,0); }
+          100% { box-shadow: 0 0 0 0   rgba(239,68,68,0),    0 0 0 0  rgba(239,68,68,0); }
+        }
+
+        /* Badge entrance pop */
+        @keyframes lpBadgePop {
+          0%   { transform: scale(0);    opacity: 0; }
+          55%  { transform: scale(1.30); opacity: 1; }
+          78%  { transform: scale(0.88); }
+          100% { transform: scale(1);    opacity: 1; }
         }
 
         @media (max-width: 820px) {
@@ -487,9 +531,20 @@ export default function MainLayout({ children }) {
             <NavLink className="lpSideLink" to="/analysis" style={navLinkStyle("/analysis")}>
               <span style={sideRow}>
                 <span style={navIconStyle("/analysis")}>
-                  <Icon name="settings" />
+                  <Icon name="trendUp" />
                 </span>
                 <span style={sideText}>Análisis</span>
+              </span>
+            </NavLink>
+          )}
+
+          {can.analysis && Array.isArray(plants) && plants.length >= 2 && (
+            <NavLink className="lpSideLink" to="/corporate" style={navLinkStyle("/corporate")}>
+              <span style={sideRow}>
+                <span style={navIconStyle("/corporate")}>
+                  <Icon name="building" />
+                </span>
+                <span style={sideText}>Dashboard Corporativo</span>
               </span>
             </NavLink>
           )}
@@ -509,7 +564,7 @@ export default function MainLayout({ children }) {
             <NavLink className="lpSideLink" to="/export" style={navLinkStyle("/export")}>
               <span style={sideRow}>
                 <span style={navIconStyle("/export")}>
-                  <Icon name="settings" />
+                  <Icon name="export" />
                 </span>
                 <span style={sideText}>Exportar/Importar</span>
               </span>
@@ -543,7 +598,7 @@ export default function MainLayout({ children }) {
             <NavLink className="lpSideLink" to="/settings" style={navLinkStyle("/settings")}>
               <span style={sideRow}>
                 <span style={navIconStyle("/settings")}>
-                  <Icon name="settings" />
+                  <Icon name="wrench" />
                 </span>
                 <span style={sideText}>Ajustes</span>
               </span>
@@ -554,7 +609,7 @@ export default function MainLayout({ children }) {
         <div style={{ flex: 1 }} />
 
         <div style={sideFooter}>
-          <button onClick={onLogout} style={logoutBtn} title="Cerrar sesión" type="button">
+          <button onClick={onLogout} className="lpLogoutBtn" style={logoutBtn} title="Cerrar sesión" type="button">
             Cerrar sesión
           </button>
         </div>
@@ -658,10 +713,10 @@ export default function MainLayout({ children }) {
               </button>
 
               {openNotif ? (
-                <div style={notifDrop}>
+                <div className="lpNotifDrop" style={notifDrop}>
                   <div style={notifTop}>
                     <div>
-                      <div style={{ fontWeight: 1000, color: "#0f172a" }}>Notificaciones</div>
+                      <div style={{ fontWeight: 900, color: "#0f172a" }}>Notificaciones</div>
                       <div style={{ marginTop: 2, fontSize: 11, fontWeight: 800, color: "#94a3b8" }}>
                     {notifLoading ? "Actualizando" : unreadCount ? `${unreadCount} sin leer` : "Todo al día"}
                       </div>
@@ -741,7 +796,7 @@ export default function MainLayout({ children }) {
                       style={seeAll}
                       type="button"
                     >
-                      Ver todas ?
+                      Ver todas las notificaciones →
                     </button>
                   </div>
                 </div>
@@ -756,7 +811,7 @@ export default function MainLayout({ children }) {
           </div>
         </header>
 
-        <main style={{ ...content, ...(isMobile ? contentMobile : {}) }}>
+        <main key={pathname} className="lp-page-enter" style={{ ...content, ...(isMobile ? contentMobile : {}) }}>
           {children}
         </main>
       </div>
@@ -781,6 +836,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/activities")) return "Actividades";
   if (pathname.startsWith("/history")) return "Historial";
   if (pathname.startsWith("/analysis")) return "Análisis";
+  if (pathname.startsWith("/corporate")) return "Dashboard Corporativo";
   if (pathname.startsWith("/export")) return "Exportar/Importar";
   if (pathname.startsWith("/reports/monthly")) return "Reporte mensual";
   if (pathname.startsWith("/users")) return "Usuarios";
@@ -1188,13 +1244,13 @@ const bellBadge = {
   borderRadius: 999,
   display: "grid",
   placeItems: "center",
-  background: "#fee2e2",
-  color: "#991b1b",
-  border: "1px solid #fecaca",
-  fontSize: 11,
+  background: "#dc2626",
+  color: "#fff",
+  border: "2px solid #fff",
+  fontSize: 10,
   fontWeight: 950,
-  boxShadow: "0 10px 22px rgba(2,6,23,0.10)",
-  animation: "lpPop 140ms ease-out",
+  boxShadow: "0 2px 8px rgba(220,38,38,0.45)",
+  animation: "lpBadgePop 360ms cubic-bezier(0.22,1,0.36,1) both",
 };
 
 const dotLive = {
@@ -1274,11 +1330,17 @@ const notifFoot = {
 };
 
 const seeAll = {
-  border: "none",
-  background: "transparent",
+  width: "100%",
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(249,115,22,0.07)",
+  borderColor: "rgba(249,115,22,0.25)",
+  borderRadius: 10,
+  padding: "8px 12px",
   cursor: "pointer",
-  fontWeight: 950,
-  color: "#0f172a",
+  fontWeight: 900,
+  fontSize: 13,
+  color: "#c2410c",
+  transition: "background 140ms ease",
 };
 
 

@@ -1,7 +1,14 @@
-export function Button({ children, className = "", ...props }) {
+export function Button({ children, variant = "primary", className = "", style, ...props }) {
+  const variants = {
+    primary: "lp-btn-primary",
+    ghost:   "lp-btn-ghost",
+    danger:  "lp-btn-danger",
+  };
+
   return (
     <button
-      className={`px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition ${className}`}
+      className={`lp-btn ${variants[variant] ?? variants.primary} ${className}`}
+      style={style}
       {...props}
     >
       {children}

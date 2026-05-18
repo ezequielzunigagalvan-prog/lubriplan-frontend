@@ -292,7 +292,8 @@ export default function ExecutionsMonthlyChart({ year, techId }) {
 const panel = {
   borderRadius: 18,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
+  borderTop: "4px solid #0f172a",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 16px 34px rgba(2,6,23,0.07)",
   padding: 16,
 };
@@ -307,7 +308,7 @@ const panelTop = {
 
 const panelTitle = {
   fontSize: 22,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.05,
 };
@@ -395,23 +396,23 @@ const footerLabel = {
 const footerValue = {
   marginTop: 8,
   fontSize: 24,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1,
 };
 
 const tooltip = {
-  background: "#fff",
-  border: "1px solid rgba(226,232,240,0.95)",
+  background: "#0f172a",
+  border: "1px solid rgba(249,115,22,0.35)",
   borderRadius: 14,
   padding: 12,
-  boxShadow: "0 18px 34px rgba(2,6,23,0.14)",
+  boxShadow: "0 18px 34px rgba(2,6,23,0.32)",
   minWidth: 200,
 };
 
 const tooltipTitle = {
   fontWeight: 950,
-  color: "#0f172a",
+  color: "#f8fafc",
 };
 
 const tooltipGrid = {
@@ -420,7 +421,7 @@ const tooltipGrid = {
   gap: 6,
   fontSize: 12,
   fontWeight: 850,
-  color: "#334155",
+  color: "#94a3b8",
 };
 
 const errorBox = {

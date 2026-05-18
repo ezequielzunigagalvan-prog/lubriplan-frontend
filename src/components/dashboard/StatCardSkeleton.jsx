@@ -1,26 +1,35 @@
 function StatCardSkeleton() {
   return (
     <div style={cardStyle}>
-      <div style={shine} />
+      <div className="skeleton" style={innerTop} />
+      <div className="skeleton" style={innerLabel} />
     </div>
   );
 }
 
 const cardStyle = {
-  height: 95,
-  borderRadius: 14,
-  background: "var(--card)",
-  boxShadow: "var(--shadow)",
-  position: "relative",
-  overflow: "hidden",
+  height: 96,
+  borderRadius: 16,
+  background: "var(--lp-surface, #fff)",
+  border: "1px solid var(--lp-border, #e2e8f0)",
+  borderTop: "4px solid var(--lp-border, #e2e8f0)",
+  padding: "20px 20px 16px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 10,
 };
 
-const shine = {
-  position: "absolute",
-  inset: 0,
-  background:
-    "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 45%, transparent 60%)",
-  animation: "shine 1.3s infinite",
+const innerTop = {
+  width: 56,
+  height: 28,
+  borderRadius: 8,
+};
+
+const innerLabel = {
+  width: 80,
+  height: 14,
+  borderRadius: 6,
 };
 
 export default StatCardSkeleton;

@@ -29,15 +29,15 @@ function CustomTooltip({ active, payload }) {
     <div
       style={{
         borderRadius: 16,
-        border: "1px solid rgba(226,232,240,0.96)",
-        background: "rgba(255,255,255,0.98)",
-        boxShadow: "0 18px 34px rgba(2,6,23,0.14)",
+        border: "1px solid rgba(249,115,22,0.35)",
+        background: "#0f172a",
+        boxShadow: "0 18px 34px rgba(2,6,23,0.32)",
         padding: 12,
         minWidth: 180,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 950, color: "#0f172a" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 950, color: "#f8fafc" }}>
           <span
             style={{
               width: 30,
@@ -56,8 +56,8 @@ function CustomTooltip({ active, payload }) {
         </div>
         <span style={{ fontSize: 12, fontWeight: 950, color: tone.color }}>{item.pct}%</span>
       </div>
-      <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, color: "#64748b" }}>Cantidad</div>
-      <div style={{ marginTop: 2, fontSize: 22, fontWeight: 1000, color: "#0f172a" }}>{item.value}</div>
+      <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, color: "#94a3b8" }}>Cantidad</div>
+      <div style={{ marginTop: 2, fontSize: 22, fontWeight: 900, color: "#f8fafc" }}>{item.value}</div>
     </div>
   );
 }
@@ -263,13 +263,12 @@ export default function ActivitiesDonut({
 }
 
 const wrap = {
-  position: "relative",
   background: "radial-gradient(circle at top, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 58%, rgba(241,245,249,0.92) 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   borderRadius: 22,
   padding: 16,
   boxShadow: "0 18px 34px rgba(2,6,23,0.08)",
-  overflow: "hidden",
 };
 
 const titleRow = {
@@ -307,7 +306,7 @@ const iconChipSmall = {
   flex: "0 0 auto",
 };
 
-const title = { fontWeight: 1000, fontSize: 15, color: "#0f172a" };
+const title = { fontWeight: 900, fontSize: 15, color: "#0f172a" };
 const subTitle = { fontWeight: 800, fontSize: 12, color: "#64748b", marginTop: 2 };
 
 const rightMeta = { display: "flex", gap: 8, flexWrap: "wrap" };
@@ -340,7 +339,7 @@ const center = {
 };
 
 const centerTop = { fontWeight: 900, fontSize: 12, color: "#64748b" };
-const centerBig = { fontWeight: 1000, fontSize: 30, color: "#0f172a", lineHeight: 1.05 };
+const centerBig = { fontWeight: 900, fontSize: 30, color: "#0f172a", lineHeight: 1.05 };
 const centerSub = {
   marginTop: 8,
   fontWeight: 850,
@@ -374,7 +373,7 @@ const legendSub = {
   alignItems: "center",
   gap: 8,
 };
-const legendValue = { fontWeight: 1000, fontSize: 14, color: "#0f172a" };
+const legendValue = { fontWeight: 900, fontSize: 14, color: "#0f172a" };
 
 function miniDot(color) {
   return {

@@ -1,104 +1,449 @@
+/* ============================================================
+   LubriPlan — Design Tokens & Global Styles
+   ============================================================ */
+
 :root {
-  /* STATUS COLORS */
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  /* Brand */
+  --lp-orange:        #f97316;
+  --lp-orange-dark:   #ea6a0a;
+  --lp-orange-light:  #fb923c;
+  --lp-orange-muted:  rgba(249,115,22,0.12);
+  --lp-orange-glow:   rgba(249,115,22,0.22);
 
-  --success-rgb: 34,197,94;
-  --warning-rgb: 245,158,11;
-  --danger-rgb: 239,68,68;
+  /* Surfaces */
+  --lp-bg:            #f1f5f9;
+  --lp-surface:       #ffffff;
+  --lp-surface-2:     #f8fafc;
+  --lp-border:        #e2e8f0;
+  --lp-border-hover:  #cbd5e1;
 
-  /* UI */
-  --card: #ffffff;
-  --text: #1f2933;
-  --muted: #6b7280;
-  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  /* Text */
+  --lp-text:          #0f172a;
+  --lp-text-2:        #334155;
+  --lp-text-muted:    #64748b;
+  --lp-text-faint:    #94a3b8;
 
-  /* CHARTS */
-  --grid: rgba(0,0,0,0.08);
+  /* Status */
+  --success:          #22c55e;
+  --success-bg:       rgba(34,197,94,0.10);
+  --warning:          #f59e0b;
+  --warning-bg:       rgba(245,158,11,0.12);
+  --danger:           #ef4444;
+  --danger-bg:        rgba(239,68,68,0.10);
+  --info:             #3b82f6;
+  --info-bg:          rgba(59,130,246,0.10);
+
+  --success-rgb:      34,197,94;
+  --warning-rgb:      245,158,11;
+  --danger-rgb:       239,68,68;
+
+  /* Elevation */
+  --shadow-sm:        0 1px 3px rgba(2,6,23,0.06), 0 1px 2px rgba(2,6,23,0.04);
+  --shadow-md:        0 4px 12px rgba(2,6,23,0.08), 0 2px 4px rgba(2,6,23,0.04);
+  --shadow-lg:        0 12px 28px rgba(2,6,23,0.10), 0 4px 8px rgba(2,6,23,0.06);
+  --shadow-xl:        0 24px 48px rgba(2,6,23,0.14), 0 8px 16px rgba(2,6,23,0.06);
+
+  /* Radius */
+  --radius-sm:        8px;
+  --radius-md:        12px;
+  --radius-lg:        16px;
+  --radius-xl:        20px;
+  --radius-pill:      9999px;
+
+  /* Legacy compat */
+  --card:             #ffffff;
+  --text:             #0f172a;
+  --muted:            #64748b;
+  --shadow:           0 4px 12px rgba(0,0,0,0.08);
+  --grid:             rgba(0,0,0,0.08);
 }
 
 [data-theme="dark"] {
-  --card: #1e293b;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --shadow: 0 12px 30px rgba(0,0,0,0.45);
+  --lp-bg:            #0b1120;
+  --lp-surface:       #1e293b;
+  --lp-surface-2:     #162032;
+  --lp-border:        rgba(255,255,255,0.10);
+  --lp-border-hover:  rgba(255,255,255,0.18);
 
-  /* CHARTS */
-  --grid: rgba(255,255,255,0.15);
+  --lp-text:          #f1f5f9;
+  --lp-text-2:        #cbd5e1;
+  --lp-text-muted:    #94a3b8;
+  --lp-text-faint:    #64748b;
+
+  --shadow-sm:        0 1px 3px rgba(0,0,0,0.30);
+  --shadow-md:        0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:        0 12px 28px rgba(0,0,0,0.45);
+  --shadow-xl:        0 24px 48px rgba(0,0,0,0.55);
+
+  --card:             #1e293b;
+  --text:             #e5e7eb;
+  --muted:            #94a3b8;
+  --shadow:           0 12px 30px rgba(0,0,0,0.45);
+  --grid:             rgba(255,255,255,0.15);
 }
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--lp-text);
+  background: var(--lp-bg);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
 @keyframes shine {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-    
-  }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -450px 0; }
+  100% { background-position: 450px 0; }
 }
 
 @keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  100% {
-    opacity: 1;
-    @keyframes shimmer {
-  0% {
-    background-position: -450px 0;
-  }
-  100% {
-    background-position: 450px 0;
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   Skeleton
+   ============================================================ */
 
 .skeleton {
   background: linear-gradient(
     90deg,
-    #eeeeee 25%,
-    #f5f5f5 37%,
-    #eeeeee 63%
+    #e2e8f0 25%,
+    #f1f5f9 50%,
+    #e2e8f0 75%
   );
   background-size: 400px 100%;
   animation: shimmer 1.4s ease infinite;
-}
-  }
-  
+  border-radius: var(--radius-sm);
 }
 
-/* ===== LubriPlan Premium Focus ===== */
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 25%,
+    #273549 50%,
+    #1e293b 75%
+  );
+  background-size: 400px 100%;
+}
+
+/* ============================================================
+   Form inputs — LubriPlan style
+   ============================================================ */
+
 .lp-input,
 .lp-textarea,
 .lp-select {
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  font-family: inherit;
+}
+
+.lp-input:hover:not(:disabled),
+.lp-textarea:hover:not(:disabled),
+.lp-select:hover:not(:disabled) {
+  border-color: var(--lp-border-hover);
 }
 
 .lp-input:focus,
 .lp-textarea:focus,
 .lp-select:focus {
-  border-color: rgba(249, 115, 22, 0.85) !important; /* naranja */
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.16) !important;
+  outline: none;
+  border-color: var(--lp-orange) !important;
+  box-shadow: 0 0 0 3px var(--lp-orange-muted) !important;
 }
 
 .lp-input:disabled,
 .lp-textarea:disabled,
 .lp-select:disabled {
-  background: rgba(241, 245, 249, 0.85) !important;
-  color: rgba(15, 23, 42, 0.65) !important;
+  background: var(--lp-surface-2) !important;
+  color: var(--lp-text-muted) !important;
   cursor: not-allowed !important;
+  opacity: 0.7;
 }
 
-/* opcional: hover sutil */
-.lp-input:hover:not(:disabled),
-.lp-textarea:hover:not(:disabled),
-.lp-select:hover:not(:disabled) {
-  border-color: rgba(148, 163, 184, 0.9);
+/* ============================================================
+   Interactive utilities
+   ============================================================ */
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease, opacity 140ms ease;
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
 }
-body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  margin: 0;
-  padding: 0;
+
+.lp-btn:active { transform: scale(0.97); }
+.lp-btn:disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
+
+.lp-btn-primary {
+  background: var(--lp-orange);
+  color: #0b1220;
+  border-color: rgba(249,115,22,0.45);
+  box-shadow: 0 4px 12px var(--lp-orange-glow);
+}
+.lp-btn-primary:hover:not(:disabled) {
+  background: var(--lp-orange-dark);
+  box-shadow: 0 8px 20px var(--lp-orange-glow);
+  transform: translateY(-1px);
+}
+
+.lp-btn-ghost {
+  background: transparent;
+  color: var(--lp-text-muted);
+  border-color: var(--lp-border);
+}
+.lp-btn-ghost:hover:not(:disabled) {
+  background: var(--lp-surface-2);
+  color: var(--lp-text);
+  border-color: var(--lp-border-hover);
+}
+
+.lp-btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: rgba(239,68,68,0.30);
+}
+.lp-btn-danger:hover:not(:disabled) {
+  background: rgba(239,68,68,0.18);
+  box-shadow: 0 4px 12px rgba(239,68,68,0.18);
+}
+
+/* Card hover */
+.lp-card-hover {
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+.lp-card-hover:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--lp-border-hover);
+}
+
+/* Fade-in animation helper */
+.lp-fade-in  { animation: fadeIn 260ms ease both; }
+.lp-scale-in { animation: scaleIn 220ms ease both; }
+
+/* Focus ring */
+.lp-focus-ring:focus-visible {
+  outline: 2px solid var(--lp-orange);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--lp-border-hover); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--lp-text-faint); }
+
+/* ============================================================
+   Industrial entrance animations
+   ============================================================ */
+
+@keyframes lpSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lpSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lpPopIn {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lpBarGrow {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+
+/* Card entrance — apply to any card-level element */
+.lp-enter        { animation: lpSlideUp 320ms cubic-bezier(0.22,1,0.36,1) both; }
+.lp-enter-pop    { animation: lpPopIn 280ms cubic-bezier(0.22,1,0.36,1) both; }
+.lp-enter-slide  { animation: lpSlideIn 280ms cubic-bezier(0.22,1,0.36,1) both; }
+
+/* Stagger helpers — add to grid/flex containers */
+.lp-stagger > *:nth-child(1)  { animation-delay: 40ms; }
+.lp-stagger > *:nth-child(2)  { animation-delay: 80ms; }
+.lp-stagger > *:nth-child(3)  { animation-delay: 120ms; }
+.lp-stagger > *:nth-child(4)  { animation-delay: 160ms; }
+.lp-stagger > *:nth-child(5)  { animation-delay: 200ms; }
+.lp-stagger > *:nth-child(6)  { animation-delay: 240ms; }
+
+/* KPI card animations */
+.lpKpiCard { animation: lpSlideUp 340ms cubic-bezier(0.22,1,0.36,1) both; }
+.lpKpiCard:nth-child(1) { animation-delay: 0ms; }
+.lpKpiCard:nth-child(2) { animation-delay: 55ms; }
+.lpKpiCard:nth-child(3) { animation-delay: 110ms; }
+.lpKpiCard:nth-child(4) { animation-delay: 165ms; }
+.lpKpiCard:nth-child(5) { animation-delay: 220ms; }
+.lpKpiCard:nth-child(6) { animation-delay: 275ms; }
+
+/* Card hover — industrial lift */
+.lpCard {
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.lpCard:hover {
+  box-shadow: 0 20px 40px rgba(2,6,23,0.12);
+  transform: translateY(-2px);
+}
+
+/* Live connection dot pulse */
+@keyframes lpDotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
+  50%       { box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+}
+
+.lp-dot-live {
+  animation: lpDotPulse 1.8s ease-in-out infinite;
+}
+
+/* ============================================================
+   Page transition
+   ============================================================ */
+
+@keyframes lpPageEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lp-page-enter {
+  animation: lpPageEnter 220ms cubic-bezier(0.22,1,0.36,1) both;
+}
+
+/* ============================================================
+   Skeleton shimmer — card-level
+   ============================================================ */
+
+@keyframes lpShimmerSlide {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.lpShimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(226,232,240,0.80) 25%,
+    rgba(241,245,249,0.96) 50%,
+    rgba(226,232,240,0.80) 75%
+  );
+  background-size: 600px 100%;
+  animation: lpShimmerSlide 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Skeleton card shell */
+.lpSkeletonCard {
+  background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%);
+  border: 1px solid rgba(226,232,240,0.95);
+  border-top: 4px solid rgba(226,232,240,0.80);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ============================================================
+   Filter chips
+   ============================================================ */
+
+.lpFilterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  border: 1px solid rgba(249,115,22,0.35);
+  background: rgba(249,115,22,0.08);
+  color: #c2410c;
+  transition: background 140ms ease, box-shadow 140ms ease;
+  white-space: nowrap;
+}
+.lpFilterChip:hover {
+  background: rgba(249,115,22,0.14);
+  box-shadow: 0 4px 10px rgba(249,115,22,0.12);
+}
+
+/* ============================================================
+   Tooltip
+   ============================================================ */
+
+.lpTooltipWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.lpTooltipWrap .lpTooltipBox {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.88);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 9999;
+  box-shadow: 0 8px 18px rgba(2,6,23,0.18);
+}
+
+.lpTooltipWrap:hover .lpTooltipBox {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
 }

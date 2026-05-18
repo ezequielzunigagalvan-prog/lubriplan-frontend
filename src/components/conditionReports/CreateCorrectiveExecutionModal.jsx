@@ -204,20 +204,23 @@ const modal = {
   padding: 16,
   boxShadow: "0 24px 60px rgba(2,6,23,0.25)",
   backdropFilter: "blur(6px)",
+  borderTop: "4px solid #f97316",
+  overflow: "hidden",
 };
 
-const head = { display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" };
-const kicker = { fontSize: 11, letterSpacing: "0.12em", fontWeight: 900, color: "#92400e" };
-const title = { marginTop: 2, fontWeight: 980, color: "#0f172a", fontSize: 18 };
-const sub = { marginTop: 5, color: "#64748b", fontWeight: 850, fontSize: 12, maxWidth: 580 };
+const head = { display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", margin: "-16px -16px 12px", padding: "14px 16px", borderRadius: "18px 18px 0 0", borderLeft: "3px solid rgba(249,115,22,0.55)" };
+const kicker = { fontSize: 11, letterSpacing: "0.12em", fontWeight: 900, color: "rgba(249,115,22,0.90)" };
+const title = { marginTop: 2, fontWeight: 980, color: "#fff", fontSize: 18 };
+const sub = { marginTop: 5, color: "rgba(255,255,255,0.65)", fontWeight: 850, fontSize: 12, maxWidth: 580 };
 
 const xBtn = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.85)",
+  border: "1px solid rgba(255,255,255,0.20)",
+  background: "rgba(255,255,255,0.10)",
   borderRadius: 12,
   padding: "8px 10px",
   cursor: "pointer",
   fontWeight: 950,
+  color: "#fff",
 };
 
 const shell = {

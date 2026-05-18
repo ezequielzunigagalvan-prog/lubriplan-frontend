@@ -81,7 +81,7 @@ const title = {
   margin: "8px 0 0",
   fontSize: "clamp(1.9rem, 3vw, 2.6rem)",
   lineHeight: 1.02,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#ffffff",
 };
 
@@ -104,7 +104,7 @@ const heroNote = {
 
 const heroNoteTitle = {
   fontSize: 15,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#9a3412",
 };
 

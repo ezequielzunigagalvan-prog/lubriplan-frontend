@@ -370,23 +370,24 @@ export default function LubricationFrequencyTool() {
 
 const card = {
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   borderRadius: 18,
   padding: 16,
-  background: "#fff",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
 };
 
 const kicker = {
   fontSize: 11,
   fontWeight: 950,
-  color: "#64748b",
+  color: "rgba(249,115,22,0.90)",
   letterSpacing: 1,
 };
 
 const title = {
   marginTop: 4,
   fontSize: 20,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
 };
 
@@ -448,7 +449,7 @@ const resultLabel = {
 const resultValue = {
   marginTop: 6,
   fontSize: 26,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.1,
 };
@@ -464,7 +465,7 @@ const priorityBadge = {
   borderRadius: 999,
   padding: "8px 12px",
   fontSize: 12,
-  fontWeight: 1000,
+  fontWeight: 900,
   border: "1px solid rgba(0,0,0,0.08)",
 };
 
@@ -492,7 +493,7 @@ const detailLabel = {
 const detailValue = {
   marginTop: 6,
   fontSize: 15,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
 };
 
@@ -506,7 +507,7 @@ const recommendBox = {
 
 const recommendTitle = {
   fontSize: 13,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#9a3412",
 };
 

@@ -301,8 +301,6 @@ export default function EquipmentDetailPage() {
         </div>
 
         <div style={heroCard}>
-          <div style={heroAccent} />
-
           <div style={heroHeader}>
             <div style={heroLeft}>
               <div style={heroIcon}>
@@ -580,7 +578,6 @@ export default function EquipmentDetailPage() {
 function InfoCard({ icon, title, value, sub }) {
   return (
     <div style={kpiCard}>
-      <div style={kpiStripe} />
       <div style={kpiInner}>
         <div style={kpiIcon}>{icon}</div>
         <div style={{ minWidth: 0 }}>
@@ -621,10 +618,10 @@ function DetailRow({ label, value }) {
 /* ===== STYLES ===== */
 
 const compactHeroCard = {
-  position: "relative",
-  overflow: "hidden",
-  background: "rgba(255,255,255,0.88)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
   borderRadius: 18,
   padding: 18,
   boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
@@ -655,10 +652,11 @@ const compactBottomGrid = {
   gap: 14,
 };
 const compactPanel = {
-  background: "#fff",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   borderRadius: 16,
   padding: 16,
-  border: "1px solid #e5e7eb",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
 };
 const compactDetailsGrid = {
@@ -690,22 +688,13 @@ const topBackRow = {
 };
 
 const heroCard = {
-  position: "relative",
-  overflow: "hidden",
-  background: "rgba(255,255,255,0.88)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
   borderRadius: 18,
   padding: 18,
   boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
-};
-
-const heroAccent = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 10,
-  background: "linear-gradient(90deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86))",
 };
 
 const heroHeader = {
@@ -713,7 +702,6 @@ const heroHeader = {
   justifyContent: "space-between",
   alignItems: "flex-start",
   gap: 14,
-  marginTop: 4,
 };
 
 const heroLeft = {
@@ -739,7 +727,7 @@ const heroIcon = {
 const title = {
   margin: 0,
   fontSize: typeof window !== "undefined" && window.innerWidth <= 820 ? 24 : 30,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.05,
 };
@@ -816,27 +804,17 @@ const kpiGrid = {
 };
 
 const kpiCard = {
-  position: "relative",
-  overflow: "hidden",
   borderRadius: 16,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.82)",
+  borderTop: "5px solid #0f172a",
+  borderLeft: "4px solid rgba(51,65,85,0.45)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
   minHeight: 92,
 };
 
-const kpiStripe = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 10,
-  background: "rgba(15,23,42,0.88)",
-};
-
 const kpiInner = {
   padding: 14,
-  paddingTop: 18,
   display: "flex",
   gap: 12,
   alignItems: "center",
@@ -857,7 +835,7 @@ const kpiIcon = {
 
 const kpiValue = {
   fontSize: 22,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.05,
   whiteSpace: "nowrap",
@@ -899,10 +877,11 @@ const bottomGrid = {
 };
 
 const panel = {
-  background: "#fff",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   borderRadius: 16,
   padding: 16,
-  border: "1px solid #e5e7eb",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
 };
 

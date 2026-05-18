@@ -142,8 +142,6 @@ export default function TechniciansPerformance({ days = 180 }) {
 
   return (
     <div className="lpCard" style={panel}>
-      <div style={accentBarOrange} />
-
       <div style={topRow}>
         <div>
           <div style={panelTitle}>Desempeno por tecnico</div>
@@ -237,24 +235,12 @@ export default function TechniciansPerformance({ days = 180 }) {
 }
 
 const panel = {
-  position: "relative",
-  border: "1px solid rgba(148,163,184,0.55)",
-  borderRadius: 14,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
+  borderRadius: 16,
   padding: 14,
-  background: "rgba(255,255,255,0.96)",
-  boxShadow: "0 10px 26px rgba(2,6,23,0.08)",
-  outline: "1px solid rgba(255,255,255,0.9)",
-  outlineOffset: -2,
-  overflow: "hidden",
-};
-
-const accentBarOrange = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 8,
-  background: "#f97316",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.07)",
 };
 
 const topRow = {
@@ -263,7 +249,6 @@ const topRow = {
   gap: 12,
   alignItems: "flex-start",
   flexWrap: "wrap",
-  marginTop: 6,
 };
 
 const panelTitle = { fontWeight: 980, color: "#0f172a" };

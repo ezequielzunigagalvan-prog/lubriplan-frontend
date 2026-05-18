@@ -1,11 +1,13 @@
-export default function Card({ children, style }) {
+export default function Card({ children, style, hoverable = false, className = "" }) {
   return (
     <div
+      className={hoverable ? `lp-card-hover ${className}` : className}
       style={{
-        background: "#fff",
-        borderRadius: 12,
+        background: "var(--lp-surface, #fff)",
+        borderRadius: "var(--radius-lg, 16px)",
         padding: 16,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+        border: "1px solid var(--lp-border, #e2e8f0)",
+        boxShadow: "var(--shadow-sm)",
         ...style,
       }}
     >

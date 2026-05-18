@@ -187,7 +187,7 @@ export default function InventoryDrawer({
           <div style={{ minWidth: 0 }}>
             <div style={drawerTitle}>Inventario</div>
             <div style={drawerSub} title={item?.name || ""}>
-              <strong style={{ color: "#0f172a" }}>{item?.name || "—"}</strong>
+              <strong style={{ color: "rgba(255,255,255,0.90)" }}>{item?.name || "—"}</strong>
               {item?.code ? ` · ${item.code}` : ""}
             </div>
           </div>
@@ -397,7 +397,7 @@ const drawer = {
   width: "min(560px, 92vw)",
   height: "100%",
   background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
-  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
   boxShadow: "0 20px 60px rgba(2,6,23,0.35)",
   padding: 14,
   display: "flex",
@@ -409,13 +409,17 @@ const topBar = {
   justifyContent: "space-between",
   alignItems: "flex-start",
   gap: 10,
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  margin: "-14px -14px 0",
+  padding: "14px 14px 12px",
+  borderBottom: "2px solid rgba(249,115,22,0.45)",
 };
 
-const drawerTitle = { fontSize: 16, fontWeight: 950, color: "#0f172a" };
+const drawerTitle = { fontSize: 16, fontWeight: 950, color: "#fff" };
 const drawerSub = {
   marginTop: 4,
   fontSize: 12,
-  color: "#64748b",
+  color: "rgba(255,255,255,0.65)",
   fontWeight: 850,
   whiteSpace: "nowrap",
   overflow: "hidden",
@@ -424,12 +428,13 @@ const drawerSub = {
 };
 
 const btnX = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.9)",
+  border: "1px solid rgba(255,255,255,0.20)",
+  background: "rgba(255,255,255,0.10)",
   borderRadius: 12,
   padding: "8px 10px",
   cursor: "pointer",
   fontWeight: 950,
+  color: "#fff",
 };
 
 const tabs = { display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" };

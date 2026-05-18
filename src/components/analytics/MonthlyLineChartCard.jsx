@@ -308,7 +308,6 @@ export default function MonthlyLineChartCard({
   if (loading) {
     return (
       <div className="lpCard" style={card}>
-        <div style={topBar} />
         <div style={titleRow}>
           <div>
             <div style={titleTxt}>{title}</div>
@@ -323,7 +322,6 @@ export default function MonthlyLineChartCard({
   if (err) {
     return (
       <div className="lpCard" style={card}>
-        <div style={topBar} />
         <div style={titleRow}>
           <div>
             <div style={titleTxt}>{title}</div>
@@ -338,7 +336,6 @@ export default function MonthlyLineChartCard({
   if (!normalized.length) {
     return (
       <div className="lpCard" style={card}>
-        <div style={topBar} />
         <div style={titleRow}>
           <div>
             <div style={titleTxt}>{title}</div>
@@ -356,8 +353,6 @@ export default function MonthlyLineChartCard({
 
   return (
     <div className="lpCard" style={card}>
-      <div style={topBar} />
-
       <div style={titleRow}>
         <div>
           <div style={titleTxt}>{title}</div>
@@ -475,8 +470,8 @@ export default function MonthlyLineChartCard({
 
         {hover ? (
           <div style={{ ...tooltip, left: hover.x, top: hover.y }}>
-            <div style={{ fontWeight: 900, color: "#0f172a" }}>{hover.month}</div>
-            <div style={{ marginTop: 4, fontSize: 12, color: "#475569", fontWeight: 800 }}>
+            <div style={{ fontWeight: 900, color: "#f8fafc" }}>{hover.month}</div>
+            <div style={{ marginTop: 4, fontSize: 12, color: "#94a3b8", fontWeight: 800 }}>
               {formatByKind(hover.total, kind)}
             </div>
           </div>
@@ -492,24 +487,12 @@ export default function MonthlyLineChartCard({
 
 /* styles */
 const card = {
-  position: "relative",
-  border: "1px solid rgba(148,163,184,0.55)",
-  borderRadius: 14,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
+  borderRadius: 16,
   padding: 14,
-  background: "rgba(255,255,255,0.98)",
-  boxShadow: "0 10px 26px rgba(2,6,23,0.08)",
-  outline: "1px solid rgba(255,255,255,0.9)",
-  outlineOffset: -2,
-  overflow: "hidden",
-};
-
-const topBar = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 8,
-  background: "#f97316",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.07)",
 };
 
 const titleRow = {
@@ -518,7 +501,6 @@ const titleRow = {
   gap: 12,
   flexWrap: "wrap",
   alignItems: "flex-start",
-  marginTop: 6,
 };
 
 const titleTxt = { fontWeight: 950, color: "#0f172a", fontSize: 15 };
@@ -578,11 +560,11 @@ const kpiVal = { marginTop: 4, fontSize: 14, color: "#0f172a", fontWeight: 900 }
 const tooltip = {
   position: "fixed",
   transform: "translate(-50%, -120%)",
-  background: "#ffffff",
-  border: "1px solid #e5e7eb",
-  boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
-  borderRadius: 12,
-  padding: "10px 12px",
+  background: "#0f172a",
+  border: "1px solid rgba(249,115,22,0.35)",
+  boxShadow: "0 18px 34px rgba(2,6,23,0.32)",
+  borderRadius: 14,
+  padding: "10px 14px",
   zIndex: 9999,
   pointerEvents: "none",
   minWidth: 140,

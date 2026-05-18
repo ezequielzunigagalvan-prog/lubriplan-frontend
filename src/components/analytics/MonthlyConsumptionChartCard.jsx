@@ -310,7 +310,8 @@ export default function MonthlyConsumptionChartCard({
 const card = {
   borderRadius: 18,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
+  borderTop: "4px solid #0f172a",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 16px 34px rgba(2,6,23,0.07)",
   padding: 16,
 };
@@ -325,7 +326,7 @@ const titleRow = {
 
 const titleTxt = {
   fontSize: 22,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.05,
 };
@@ -375,7 +376,7 @@ const statLabel = {
 const statValue = {
   marginTop: 8,
   fontSize: 20,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.1,
 };
@@ -398,22 +399,22 @@ const chartInner = {
 };
 
 const tooltip = {
-  background: "#ffffff",
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "10px 12px",
-  boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+  background: "#0f172a",
+  border: "1px solid rgba(249,115,22,0.35)",
+  borderRadius: 14,
+  padding: "10px 14px",
+  boxShadow: "0 18px 34px rgba(2,6,23,0.32)",
 };
 
 const tooltipTitle = {
-  fontWeight: 900,
-  color: "#0f172a",
+  fontWeight: 950,
+  color: "#f8fafc",
 };
 
 const tooltipSub = {
   marginTop: 4,
   fontSize: 12,
-  color: "#475569",
+  color: "#94a3b8",
   fontWeight: 800,
 };
 

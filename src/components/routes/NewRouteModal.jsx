@@ -1643,23 +1643,24 @@ const modal = {
   display: "flex",
   flexDirection: "column",
   overflow: "hidden",
+  borderTop: "4px solid #f97316",
 };
 
 const modalHeader = {
-  padding: 16,
+  padding: "14px 16px",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
   gap: 12,
-  borderBottom: "1px solid #eef2f7",
-  background:
-    "linear-gradient(180deg, rgba(246,247,249,0.85) 0%, rgba(255,255,255,0.65) 100%)",
+  borderBottom: "1px solid rgba(249,115,22,0.20)",
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
 };
 
 const kicker = {
   fontSize: 11,
   fontWeight: 950,
-  color: "#64748b",
+  color: "rgba(249,115,22,0.90)",
   letterSpacing: 1.2,
 };
 
@@ -1667,13 +1668,13 @@ const modalTitle = {
   margin: "6px 0 0",
   fontSize: 28,
   fontWeight: 950,
-  color: "#0f172a",
+  color: "#fff",
   letterSpacing: 0.2,
 };
 
 const modalSub = {
   marginTop: 6,
-  color: "#64748b",
+  color: "rgba(255,255,255,0.65)",
   fontWeight: 800,
   fontSize: 12,
 };
@@ -1681,14 +1682,14 @@ const modalSub = {
 const xBtn = {
   width: 42,
   height: 42,
-  border: "1px solid #e5e7eb",
-  background: "rgba(255,255,255,0.75)",
+  border: "1px solid rgba(255,255,255,0.20)",
+  background: "rgba(255,255,255,0.10)",
   borderRadius: 12,
   display: "grid",
   placeItems: "center",
   cursor: "pointer",
   fontWeight: 950,
-  color: "#0f172a",
+  color: "#fff",
 };
 
 const modalBody = {

@@ -52,7 +52,7 @@ export default function LubriPlanLanding() {
       {
         icon: "route",
         title: "Rutas bajo control",
-        text: "Organiza frecuencias, puntos, método y responsables sin depender de hojas sueltas o seguimiento informal.",
+        text: "Frecuencias, puntos, métodos y responsables en una sola base. Sin hojas sueltas ni seguimiento informal.",
       },
       {
         icon: "checkCircle",
@@ -62,12 +62,12 @@ export default function LubriPlanLanding() {
       {
         icon: "trendUp",
         title: "Visibilidad ejecutiva",
-        text: "Dashboards, alertas y reportes para supervisar pendientes, vencidos y riesgos operativos reales.",
+        text: "KPIs, alertas y reportes para supervisar pendientes, vencidos y riesgos antes de que escalen.",
       },
       {
         icon: "drop",
         title: "Inventario conectado",
-        text: "El consumo de lubricantes se conecta con la operación y ayuda a anticipar riesgo de desabasto.",
+        text: "El consumo de lubricantes se registra con cada actividad y anticipa riesgo de desabasto.",
       },
     ],
     []
@@ -75,12 +75,12 @@ export default function LubriPlanLanding() {
 
   const capabilities = useMemo(
     () => [
-      "Trabajo por rol para administrador, supervisor y técnico",
+      "Roles diferenciados: administrador, supervisor y técnico",
       "Historial completo por equipo, técnico y condición",
-      "Inventario conectado con consumo real y alertas",
-      "Base preparada para IA, lectura ejecutiva y alertas predictivas",
-      "Control por planta sin mezclar datos entre operaciones",
-      "Soporte para ejecución, evidencia y seguimiento operativo",
+      "Inventario con consumo real y alertas de existencia",
+      "Lectura ejecutiva y alertas predictivas con IA",
+      "Multiplanta sin mezcla de datos entre operaciones",
+      "Modo offline para ejecución en campo sin red",
     ],
     []
   );
@@ -89,15 +89,15 @@ export default function LubriPlanLanding() {
     () => [
       {
         title: "Menos atraso operativo",
-        text: "Reduce actividades vencidas, evita acumulación y mejora el seguimiento diario de la lubricación.",
+        text: "Visibilidad inmediata de actividades vencidas y pendientes. El equipo prioriza con datos, no con suposiciones.",
       },
       {
-        title: "Más control en campo",
-        text: "El técnico ejecuta con instrucciones, evidencia y captura de consumo en una sola experiencia.",
+        title: "Campo ejecuta con contexto",
+        text: "El técnico recibe instrucciones claras, captura evidencia y registra consumo real en una sola pantalla.",
       },
       {
-        title: "Decisión con contexto",
-        text: "Supervisión y jefatura reciben alertas, lectura ejecutiva e historial útil para priorizar mejor.",
+        title: "Jefatura decide con información",
+        text: "Supervisión y gerencia reciben alertas, resumen ejecutivo e historial útil para actuar con prioridad.",
       },
     ],
     []
@@ -117,7 +117,7 @@ export default function LubriPlanLanding() {
       "Análisis",
       "Alertas",
       "Reportes IA",
-      "PDF",
+      "Exportar PDF",
       "Multiplanta",
       "Modo offline",
       "Importar y exportar",
@@ -128,39 +128,35 @@ export default function LubriPlanLanding() {
   const audiences = useMemo(
     () => [
       "Jefes de mantenimiento",
-      "Supervisores",
-      "Responsables de lubricación",
+      "Supervisores de lubricación",
+      "Responsables de confiabilidad",
       "Técnicos de campo",
-      "Manufactura",
-      "Automotriz",
-      "Metalmecánica",
-      "Plantas industriales",
     ],
     []
   );
-
 
   const technicalTools = useMemo(
     () => [
       {
         title: "Compatibilidad de grasas",
-        text: "Ayuda a validar cambios de grasa entre espesantes y reduce el riesgo de mezcla inadecuada en rodamientos, guias y sistemas centralizados.",
+        text: "Valida cambios de grasa entre espesantes y reduce el riesgo de mezcla inadecuada en rodamientos, guías y sistemas centralizados.",
       },
       {
         title: "Reengrase de rodamientos",
-        text: "Entrega una referencia inicial de cantidad y frecuencia para apoyar decisiones rapidas de mantenimiento en campo.",
+        text: "Calcula una referencia inicial de cantidad y frecuencia para decisiones rápidas de mantenimiento en campo.",
       },
       {
         title: "Viscosidad para reductores",
-        text: "Sugiere un ISO VG inicial segun velocidad, carga, temperatura y choque operativo para cajas y reductores.",
+        text: "Sugiere un ISO VG inicial según velocidad, carga, temperatura y choque operativo para cajas y reductores.",
       },
       {
-        title: "Conversor tecnico",
-        text: "Resuelve conversiones de distancia, volumen, presion, temperatura y viscosidad, incluyendo pulgadas en fraccion.",
+        title: "Conversor técnico",
+        text: "Conversiones de distancia, volumen, presión, temperatura y viscosidad, incluyendo pulgadas en fracción.",
       },
     ],
     []
   );
+
   const industries = useMemo(
     () => [
       "Manufactura",
@@ -177,23 +173,23 @@ export default function LubriPlanLanding() {
     () => [
       [
         "01",
-        "Estandarizas la lubricación",
-        "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos sobre una base única.",
+        "Estandarizas la operación",
+        "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos en una base única y compartida.",
       ],
       [
         "02",
-        "La operación se ordena",
-        "LubriPlan genera actividades, separa prioridades y mantiene visible lo vencido, lo pendiente y lo crítico.",
+        "LubriPlan ordena las prioridades",
+        "Genera actividades automáticamente, separa lo vencido de lo pendiente y mantiene visibles los riesgos activos.",
       ],
       [
         "03",
-        "Campo ejecuta con contexto",
-        "El técnico trabaja con instrucciones claras, evidencia y captura del consumo real aplicado.",
+        "El técnico ejecuta con contexto",
+        "Instrucciones claras, captura de evidencia y registro del consumo real, todo desde su dispositivo en planta.",
       ],
       [
         "04",
-        "Mantenimiento decide mejor",
-        "La jefatura recibe indicadores, alertas y reportes para priorizar y corregir a tiempo.",
+        "La jefatura decide con datos",
+        "Indicadores, alertas y resumen ejecutivo para priorizar, corregir y demostrar control operativo.",
       ],
     ],
     []
@@ -201,12 +197,12 @@ export default function LubriPlanLanding() {
 
   const pains = useMemo(
     () => [
-      "Actividades vencidas que nadie ve a tiempo",
-      "Seguimiento en Excel, papel o WhatsApp",
+      "Actividades vencidas que nadie detecta a tiempo",
+      "Control en Excel, papel o mensajes de WhatsApp",
       "Ejecución inconsistente entre técnicos",
-      "Inventario separado del consumo real",
-      "Poca trazabilidad por equipo, técnico y condición",
-      "Dificultad para priorizar mantenimiento con datos claros",
+      "Inventario desconectado del consumo real",
+      "Sin trazabilidad por equipo, técnico ni condición",
+      "Decisiones reactivas por falta de visibilidad",
     ],
     []
   );
@@ -240,26 +236,25 @@ export default function LubriPlanLanding() {
 
         <div style={heroGrid}>
           <div>
-            <div style={eyebrow}>CONTROL OPERATIVO PARA LUBRICACIÓN INDUSTRIAL</div>
+            <div style={eyebrow}>GESTIÓN DE LUBRICACIÓN INDUSTRIAL</div>
             <h1 style={heroTitle}>
-              Convierte la lubricación en un proceso visible, controlado y defendible
+              Control real sobre la lubricación de tu planta
             </h1>
             <p style={heroText}>
-              LubriPlan ayuda a mantenimiento a dejar atrás el seguimiento disperso y operar con una
-              base única para rutas, ejecución, condición, consumo e inventario. El resultado es una
-              operación más ordenada, más visible y más confiable para planta.
+              LubriPlan reemplaza el seguimiento en Excel, papel o mensajes con una plataforma
+              que conecta planeación, ejecución, condición, consumo e inventario en un solo lugar.
             </p>
             <div style={heroRoleLine}>
-              Diseñado para jefes de mantenimiento, supervisores y responsables de lubricación en planta.
+              Para jefes de mantenimiento, supervisores y técnicos de lubricación industrial.
             </div>
             <div style={actions}>
               <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
-              <a href="#como-funciona" style={btnGhost}>Ver cómo funciona</a>
-              <Link to="/login" style={btnGhostSoft}>Entrar a plataforma</Link>
+              <a href="#como-funciona" style={btnGhost}>Cómo funciona</a>
+              <Link to="/login" style={btnGhostSoft}>Entrar a la plataforma</Link>
             </div>
             <div style={statsRow}>
               <Tag icon="checkCircle" text="Trazabilidad por actividad" />
-              <Tag icon="alert" text="Prioridad operativa inmediata" />
+              <Tag icon="alert" text="Alertas de riesgo operativo" />
               <Tag icon="trendUp" text="Indicadores para supervisión" />
             </div>
           </div>
@@ -267,8 +262,8 @@ export default function LubriPlanLanding() {
           <div style={panel}>
             <div style={panelHead}>
               <div>
-                <div style={panelKicker}>Vista operativa</div>
-                <div style={panelTitle}>La plataforma ya se muestra con lenguaje industrial, control y jerarquía real</div>
+                <div style={panelKicker}>Dashboard operativo</div>
+                <div style={panelTitle}>Visibilidad en tiempo real para mantenimiento y dirección</div>
               </div>
               <span style={liveBadge}>Producto real</span>
             </div>
@@ -280,32 +275,56 @@ export default function LubriPlanLanding() {
             <div style={heroImageFooter}>
               <div style={heroImagePoint}>
                 <span style={heroImageDot} />
-                KPIs operativos para mantenimiento
+                KPIs operativos en tiempo real
               </div>
               <div style={heroImagePoint}>
                 <span style={heroImageDot} />
-                Prioridades visibles por rol
+                Prioridades diferenciadas por rol
               </div>
               <div style={heroImagePoint}>
                 <span style={heroImageDot} />
-                Dashboard listo para planta y dirección
+                Alertas accionables desde el dashboard
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── Belt de señales de valor ── */}
       <section style={sectionTight}>
         <div style={signalGrid}>{signals.map((item) => <SignalCard key={item.title} {...item} />)}</div>
       </section>
 
+      {/* ── El problema ── */}
+      <section style={sectionAlt}>
+        <div style={twoCol}>
+          <div style={glassBlock}>
+            <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />EL PROBLEMA</div>
+            <h2 style={sectionTitle}>La lubricación se vuelve riesgosa sin un sistema</h2>
+            <p style={sectionText}>
+              Cuando el control vive en papel, Excel o mensajes de WhatsApp, los pendientes se
+              acumulan, las prioridades no son claras y el inventario deja de reflejar lo que
+              pasa realmente en planta.
+            </p>
+          </div>
+          <div style={board}>
+            <ProblemLine icon="warn" text="Actividades vencidas que nadie detecta a tiempo" />
+            <ProblemLine icon="xCircle" text="Sobrelubricación o deficiencia por ejecución inconsistente" />
+            <ProblemLine icon="search" text="Sin trazabilidad por equipo, técnico ni condición" />
+            <ProblemLine icon="drop" text="Inventario desconectado del consumo real" />
+            <ProblemLine icon="trendDown" text="Decisiones reactivas por falta de visibilidad operativa" />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Lo que LubriPlan aporta ── */}
       <section style={section}>
         <div style={sectionHead}>
-          <div style={sectionKicker}>VALOR PARA EL CLIENTE INDUSTRIAL</div>
-          <h2 style={sectionTitle}>Lo que LubriPlan aporta a la operación desde las primeras semanas</h2>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />LA DIFERENCIA</div>
+          <h2 style={sectionTitle}>Control operativo desde el primer día</h2>
           <p style={sectionText}>
-            No se trata solo de digitalizar formatos. Se trata de ordenar la ejecución, recuperar
-            visibilidad y darle a mantenimiento una base confiable para actuar con prioridad.
+            No es solo digitalizar formatos. Es darle a cada rol la información que necesita
+            para ejecutar mejor, priorizar sin adivinar y demostrar control operativo con datos reales.
           </p>
         </div>
         <div style={winGrid}>
@@ -315,93 +334,72 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      <section style={section}>
+      {/* ── Cómo funciona ── */}
+      <section id="como-funciona" style={sectionAlt}>
         <div style={sectionHead}>
-          <div style={sectionKicker}>QUÉ RESUELVE LUBRIPLAN</div>
-          <h2 style={sectionTitle}>Reduce desorden operativo y mejora el control real de la lubricación</h2>
-          <p style={sectionText}>
-            LubriPlan funciona como sistema digital para la gestión y control de actividades de lubricación,
-            ayudando a ordenar la ejecución diaria, mejorar la trazabilidad y dar visibilidad a lo que pone
-            en riesgo la operación.
-          </p>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />CÓMO FUNCIONA</div>
+          <h2 style={sectionTitle}>De la planeación al control ejecutivo en cuatro pasos</h2>
         </div>
-        <div style={painGrid}>{pains.map((item) => <PainCard key={item} text={item} />)}</div>
+        <div style={journeyGrid}>{journey.map(([n, title, text]) => <JourneyCard key={n} n={n} title={title} text={text} />)}</div>
       </section>
 
-      <section style={sectionAlt}>
-        <div style={twoCol}>
-          <div style={glassBlock}>
-            <div style={sectionKicker}>EL PROBLEMA OPERATIVO</div>
-            <h2 style={sectionTitle}>La lubricación se vuelve riesgosa cuando depende de seguimiento informal</h2>
-            <p style={sectionText}>
-              Cuando la gestión de lubricación vive entre papel, Excel, mensajes o memoria operativa,
-              los pendientes se mezclan, las prioridades no son claras y el inventario deja de representar
-              lo que realmente pasa en planta.
-            </p>
-          </div>
-          <div style={board}>
-            <ProblemLine icon="warn" text="Actividades vencidas que nadie ve a tiempo" />
-            <ProblemLine icon="xCircle" text="Sobrelubricación o falta de lubricación por ejecución inconsistente" />
-            <ProblemLine icon="search" text="Sin trazabilidad clara por equipo, técnico y condición" />
-            <ProblemLine icon="drop" text="Inventario que no conversa con el consumo real" />
-            <ProblemLine icon="trendDown" text="Decisiones reactivas y poca visibilidad ejecutiva" />
-          </div>
-        </div>
-      </section>
-
-      <section id="capacidades" style={sectionAlt}>
+      {/* ── Capacidades ── */}
+      <section id="capacidades" style={section}>
         <div style={sectionHead}>
-          <div style={sectionKicker}>CAPACIDADES CLAVE</div>
-          <h2 style={sectionTitle}>Una sola plataforma para planear, ejecutar, alertar y dirigir</h2>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />CAPACIDADES</div>
+          <h2 style={sectionTitle}>Una plataforma para planear, ejecutar, alertar y decidir</h2>
           <p style={sectionText}>
-            LubriPlan no es solo una bitácora: es una plataforma para mantenimiento de lubricación industrial
-            que conecta control operativo, monitoreo de condición, inventario y lectura ejecutiva.
+            LubriPlan conecta control operativo, monitoreo de condición, inventario y lectura
+            ejecutiva en un solo sistema, sin módulos separados ni hojas paralelas.
           </p>
         </div>
         <div style={featureGrid}>{capabilities.map((item) => <FeatureLine key={item} text={item} />)}</div>
       </section>
 
-      <section style={section}>
+      {/* ── Screenshots ── */}
+      <section style={sectionAlt}>
         <div style={sectionHeadWide}>
-          <div style={sectionKicker}>PRUEBA VISUAL DEL PRODUCTO</div>
-          <h2 style={sectionTitle}>Alertas y lectura ejecutiva listas para operación real</h2>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />EL PRODUCTO EN USO</div>
+          <h2 style={sectionTitle}>Alertas y lectura ejecutiva para operar con anticipación</h2>
           <p style={sectionText}>
-            LubriPlan no solo organiza actividades. También presenta alertas claras y una lectura ejecutiva
-            que ayuda a mantenimiento a priorizar con rapidez.
+            LubriPlan muestra lo que importa en el momento que importa: alertas accionables y
+            un resumen inteligente que ayuda a priorizar sin necesidad de revisar cada registro.
           </p>
         </div>
 
         <div style={screenshotGrid}>
           <ScreenshotCard
             image={landingAlerts}
-            alt="Alertas operativas y predictivas de LubriPlan"
+            alt="Alertas operativas de LubriPlan"
             kicker="Centro de alertas"
-            title="Alertas operativas y predictivas en una sola vista"
-            text="Atajos claros para atrasadas, sin tecnico, riesgo de atraso, reincidencia y sobrecarga operativa."
+            title="Riesgos operativos visibles antes de que escalen"
+            text="Atrasadas, sin técnico, riesgo de reincidencia y sobrecarga operativa, todo clasificado y accionable desde una sola vista."
           />
           <ScreenshotCard
             image={landingAiSummary}
-            alt="Resumen inteligente de LubriPlan"
-            kicker="Lectura ejecutiva"
-            title="Resumen inteligente con prioridades accionables"
-            text="La IA entrega diagnostico ejecutivo, hallazgos y acciones recomendadas con foco en ejecucion y cumplimiento."
+            alt="Resumen ejecutivo inteligente de LubriPlan"
+            kicker="Lectura ejecutiva con IA"
+            title="Diagnóstico automático con prioridades accionables"
+            text="La IA analiza la operación del mes, detecta patrones, identifica riesgos y entrega recomendaciones con contexto real de planta."
           />
         </div>
       </section>
 
-      <section style={sectionAlt}>
+      {/* ── Asistente técnico ── */}
+      <section style={section}>
         <div style={twoCol}>
           <div style={glassBlock}>
-            <div style={sectionKicker}>ASISTENTE TECNICO DE LUBRICACION</div>
-            <h2 style={sectionTitle}>Herramientas tecnicas para decidir mejor en planta</h2>
+            <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ASISTENTE TÉCNICO</div>
+            <h2 style={sectionTitle}>Herramientas técnicas integradas en la plataforma</h2>
             <p style={sectionText}>
-              LubriPlan tambien incorpora un asistente tecnico con utilidades practicas para apoyar decisiones de lubricacion,
-              compatibilidad, conversiones y referencia inicial de seleccion tecnica sin salir de la plataforma.
+              LubriPlan incluye un asistente técnico con utilidades prácticas para tomar decisiones
+              de lubricación, validar compatibilidad y resolver conversiones, sin salir del sistema.
             </p>
             <div style={assistantNoteBox}>
-              <div style={assistantNoteTitle}>Valor operativo inmediato</div>
+              <div style={assistantNoteTitle}>Criterio técnico más consistente</div>
               <div style={assistantNoteText}>
-                Reduce consultas dispersas, acelera definiciones en campo y ayuda a mantener un criterio tecnico mas consistente entre supervision y ejecucion.
+                Reduce consultas dispersas, acelera definiciones en campo y alinea el criterio
+                técnico entre supervisión y ejecución.
               </div>
             </div>
           </div>
@@ -414,67 +412,55 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      <section style={section}>
-        <div style={sectionHead}>
-          <div style={sectionKicker}>DÓNDE ENCAJA MEJOR</div>
-          <h2 style={sectionTitle}>Pensado para operaciones industriales que necesitan más control y menos improvisación</h2>
-        </div>
-        <div style={industryWrap}>
-          {industries.map((item) => (
-            <span key={item} style={industryPill}>
-              {item}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <section id="como-funciona" style={section}>
-        <div style={sectionHead}>
-          <div style={sectionKicker}>CÓMO FUNCIONA</div>
-          <h2 style={sectionTitle}>De la planeación a la visibilidad ejecutiva, sin perder continuidad</h2>
-        </div>
-        <div style={journeyGrid}>{journey.map(([n, title, text]) => <JourneyCard key={n} n={n} title={title} text={text} />)}</div>
-      </section>
-
-      <section style={section}>
-        <div style={sectionHead}>
-          <div style={sectionKicker}>ALCANCE ACTUAL</div>
-          <h2 style={sectionTitle}>Módulos y capacidades ya integradas en LubriPlan</h2>
-        </div>
-        <div style={industryWrap}>
-          {modules.map((item) => (
-            <span key={item} style={industryPill}>
-              {item}
-            </span>
-          ))}
-        </div>
-      </section>
-
+      {/* ── Para quién / industrias / módulos (combinado) ── */}
       <section style={sectionAlt}>
         <div style={sectionHead}>
-          <div style={sectionKicker}>PARA QUIÉN ES</div>
-          <h2 style={sectionTitle}>Pensado para equipos que necesitan orden, visibilidad y trazabilidad</h2>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ALCANCE Y AUDIENCIA</div>
+          <h2 style={sectionTitle}>Para quién es y qué incluye</h2>
         </div>
-        <div style={industryWrap}>
-          {audiences.map((item) => (
-            <span key={item} style={industryPill}>
-              {item}
-            </span>
-          ))}
+
+        <div style={pillSectionGrid}>
+          <div>
+            <div style={pillGroupLabel}>Roles</div>
+            <div style={industryWrap}>
+              {audiences.map((item) => (
+                <span key={item} style={industryPill}>{item}</span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={pillGroupLabel}>Industrias</div>
+            <div style={industryWrap}>
+              {industries.map((item) => (
+                <span key={item} style={industryPill}>{item}</span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={pillGroupLabel}>Módulos incluidos</div>
+            <div style={industryWrap}>
+              {modules.map((item) => (
+                <span key={item} style={industryPill}>{item}</span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
+      {/* ── CTA ── */}
       <section id="contacto" style={ctaSection}>
         <div style={ctaBox}>
-          <div style={sectionKicker}>LISTO PARA DEMOSTRARSE EN PLANTA</div>
-          <h2 style={ctaTitle}>Solicita una demo de LubriPlan y evalúa cómo ordenar tu operación de lubricación</h2>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />SIGUIENTE PASO</div>
+          <h2 style={ctaTitle}>¿Tu planta sigue controlando la lubricación con Excel o papel?</h2>
           <p style={ctaText}>
-            Si hoy tu planta depende de Excel, papel o seguimiento informal para controlar actividades de lubricación,
-            LubriPlan puede convertirse en la base operativa para ejecutar mejor, ver antes los riesgos y tomar decisiones con contexto real.
+            LubriPlan es la base operativa para ejecutar con orden, anticipar riesgos y demostrar
+            control con datos reales. Solicita una demo y evalúalo en tu operación.
           </p>
           <div style={actions}>
             <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
-            <span style={contactMailText}>Correo de contacto: <span style={contactMailStrong}>{CONTACT_EMAIL}</span></span>
+            <span style={contactMailText}>
+              Contacto: <span style={contactMailStrong}>{CONTACT_EMAIL}</span>
+            </span>
           </div>
         </div>
       </section>
@@ -558,7 +544,25 @@ function WinCard({ title, text }) {
 function JourneyCard({ n, title, text }) {
   return (
     <div style={journeyCard}>
-      <div style={journeyNumber}>{n}</div>
+      {/* Large ghost number in background */}
+      <div style={{
+        position: "absolute", top: -6, right: 10,
+        fontSize: 80, fontWeight: 900, lineHeight: 1,
+        color: "rgba(249,115,22,0.07)",
+        pointerEvents: "none", userSelect: "none",
+        letterSpacing: -4,
+      }}>{n}</div>
+      <div style={journeyNumber}>
+        <span style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: 26, height: 26, borderRadius: 8,
+          background: "rgba(249,115,22,0.14)",
+          border: "1px solid rgba(249,115,22,0.28)",
+          fontSize: 11, fontWeight: 900, color: "#f97316",
+          letterSpacing: 0, flexShrink: 0,
+        }}>{n}</span>
+        Paso {n}
+      </div>
       <div style={journeyTitle}>{title}</div>
       <div style={journeyText}>{text}</div>
     </div>
@@ -599,121 +603,370 @@ function ScreenshotCard({ image, alt, kicker, title, text }) {
   );
 }
 
+/* ═══════════════════════════════════════════════
+   INDUSTRIAL DESIGN SYSTEM — LubriPlan Landing
+   Dark navy + orange accent + dot-grid texture
+═══════════════════════════════════════════════ */
+
 const page = {
-  background: "radial-gradient(circle at 14% 12%, rgba(249,115,22,0.18), transparent 24%), radial-gradient(circle at 84% 18%, rgba(234,88,12,0.14), transparent 22%), linear-gradient(180deg, #0b1220 0%, #111827 46%, #0f172a 100%)",
+  background: [
+    "radial-gradient(circle at 12% 10%, rgba(249,115,22,0.20), transparent 26%)",
+    "radial-gradient(circle at 86% 16%, rgba(234,88,12,0.13), transparent 24%)",
+    "radial-gradient(rgba(255,255,255,0.028) 1px, transparent 1px)",
+    "linear-gradient(180deg, #080e1a 0%, #0f172a 44%, #0b1220 100%)",
+  ].join(", "),
+  backgroundSize: "auto, auto, 28px 28px, auto",
   color: "#fff",
   fontFamily: FONT,
-  overflow: "hidden",
+  overflowX: "hidden",
 };
-const hero = { position: "relative", maxWidth: 1320, margin: "0 auto", padding: "26px 24px 40px" };
-const glowA = { position: "absolute", width: 420, height: 420, borderRadius: 999, background: "radial-gradient(circle, rgba(249,115,22,0.14), transparent 70%)", top: -140, right: -120, pointerEvents: "none" };
-const glowB = { position: "absolute", width: 360, height: 360, borderRadius: 999, background: "radial-gradient(circle, rgba(56,189,248,0.08), transparent 70%)", bottom: -160, left: -120, pointerEvents: "none" };
-const topBar = { position: "relative", zIndex: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, padding: "10px 0 22px", flexWrap: "wrap" };
+
+/* ── Hero section ── */
+const hero = { position: "relative", maxWidth: 1320, margin: "0 auto", padding: "0 24px 44px" };
+const glowA = { position: "absolute", width: 500, height: 500, borderRadius: 999, background: "radial-gradient(circle, rgba(249,115,22,0.16), transparent 68%)", top: -160, right: -140, pointerEvents: "none" };
+const glowB = { position: "absolute", width: 400, height: 400, borderRadius: 999, background: "radial-gradient(circle, rgba(56,189,248,0.07), transparent 70%)", bottom: -180, left: -140, pointerEvents: "none" };
+
+/* ── Sticky navbar ── */
+const topBar = {
+  position: "sticky", top: 0, zIndex: 20,
+  display: "flex", alignItems: "center", justifyContent: "space-between",
+  gap: 18, padding: "14px 0 16px", flexWrap: "wrap",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  borderBottom: "1px solid rgba(249,115,22,0.12)",
+  marginBottom: 28,
+};
 const brand = { display: "flex", alignItems: "center", gap: 14 };
-const brandBox = { width: 88, height: 88, borderRadius: 0, background: "transparent", border: "none", display: "grid", placeItems: "center", boxShadow: "none", flexShrink: 0 };
-const brandLogo = { width: 88, height: 88, objectFit: "contain", display: "block" };
-const brandTitle = { fontSize: 28, lineHeight: 1, fontWeight: 700, letterSpacing: -0.8 };
-const brandSub = { marginTop: 6, color: "rgba(226,232,240,0.78)", fontSize: 13, fontWeight: 800, letterSpacing: 0.4 };
-const nav = { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" };
-const navLink = { color: "#e2e8f0", textDecoration: "none", fontSize: 14, fontWeight: 800, padding: "10px 0" };
-const navBtn = { display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", background: "rgba(255,255,255,0.08)", color: "#fff", padding: "12px 16px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", fontWeight: 900 };
-const heroGrid = { position: "relative", zIndex: 2, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 26, alignItems: "center" };
-const eyebrow = { display: "inline-block", padding: "9px 14px", borderRadius: 999, background: "rgba(249,115,22,0.14)", border: "1px solid rgba(249,115,22,0.22)", fontSize: 12, fontWeight: 900, letterSpacing: 1.1, color: "#fdba74", marginBottom: 18 };
-const heroTitle = { margin: 0, fontSize: "clamp(2.5rem, 5.4vw, 4.6rem)", lineHeight: 0.98, letterSpacing: -1.6, maxWidth: 860 };
-const heroText = { marginTop: 18, maxWidth: 760, fontSize: 17, lineHeight: 1.72, color: "rgba(226,232,240,0.90)", fontWeight: 600 };
-const heroRoleLine = { marginTop: 14, color: "#fdba74", fontSize: 14, lineHeight: 1.55, fontWeight: 900 };
+const brandBox = { width: 72, height: 72, borderRadius: 0, background: "transparent", border: "none", display: "grid", placeItems: "center", flexShrink: 0 };
+const brandLogo = { width: 72, height: 72, objectFit: "contain", display: "block", filter: "drop-shadow(0 6px 14px rgba(249,115,22,0.22))" };
+const brandTitle = { fontSize: 26, lineHeight: 1, fontWeight: 900, letterSpacing: -0.9 };
+const brandSub = { marginTop: 5, color: "rgba(226,232,240,0.65)", fontSize: 12, fontWeight: 800, letterSpacing: 0.5 };
+const nav = { display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" };
+const navLink = { color: "rgba(226,232,240,0.80)", textDecoration: "none", fontSize: 13, fontWeight: 800, padding: "10px 0", letterSpacing: "0.02em" };
+const navBtn = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  textDecoration: "none",
+  background: "linear-gradient(135deg, rgba(249,115,22,0.90) 0%, rgba(234,88,12,0.92) 100%)",
+  color: "#0b1220",
+  padding: "10px 18px", borderRadius: 10,
+  border: "1px solid rgba(251,146,60,0.60)",
+  fontWeight: 900, fontSize: 13,
+  boxShadow: "0 8px 20px rgba(249,115,22,0.22)",
+};
+
+/* ── Hero content ── */
+const heroGrid = { position: "relative", zIndex: 2, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 28, alignItems: "center" };
+const eyebrow = {
+  display: "inline-flex", alignItems: "center", gap: 10,
+  padding: "8px 14px 8px 10px",
+  borderRadius: 6,
+  background: "rgba(249,115,22,0.11)",
+  border: "1px solid rgba(249,115,22,0.22)",
+  borderLeft: "4px solid #f97316",
+  fontSize: 11, fontWeight: 900, letterSpacing: "0.13em",
+  color: "#fdba74", marginBottom: 18, textTransform: "uppercase",
+};
+const heroTitle = { margin: 0, fontSize: "clamp(2.6rem, 5.6vw, 4.8rem)", lineHeight: 0.96, letterSpacing: -1.8, maxWidth: 880 };
+const heroText = { marginTop: 20, maxWidth: 760, fontSize: 17, lineHeight: 1.72, color: "rgba(226,232,240,0.86)", fontWeight: 600 };
+const heroRoleLine = { marginTop: 14, color: "#fdba74", fontSize: 13, lineHeight: 1.55, fontWeight: 900, letterSpacing: "0.01em" };
 const actions = { marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" };
-const btnPrimary = { display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", background: "linear-gradient(135deg, #fb923c 0%, #f97316 100%)", color: "#0f172a", padding: "15px 20px", borderRadius: 16, fontWeight: 950, border: "1px solid rgba(251,146,60,0.9)", boxShadow: "0 18px 34px rgba(249,115,22,0.24)" };
-const btnGhost = { display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", background: "rgba(255,255,255,0.05)", color: "#fff", padding: "15px 20px", borderRadius: 16, fontWeight: 900, border: "1px solid rgba(255,255,255,0.12)" };
-const btnGhostSoft = { display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", background: "rgba(255,255,255,0.03)", color: "#e2e8f0", padding: "15px 20px", borderRadius: 16, fontWeight: 900, border: "1px solid rgba(255,255,255,0.08)" };
-const statsRow = { marginTop: 22, display: "flex", gap: 10, flexWrap: "wrap" };
-const tag = { display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "#e2e8f0", fontSize: 12, fontWeight: 900 };
+const btnPrimary = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  textDecoration: "none",
+  background: "linear-gradient(135deg, #fb923c 0%, #f97316 100%)",
+  color: "#0b1220", padding: "15px 24px", borderRadius: 12,
+  fontWeight: 900, border: "none",
+  borderBottom: "3px solid rgba(194,65,12,0.45)",
+  boxShadow: "0 18px 36px rgba(249,115,22,0.26)",
+};
+const btnGhost = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  textDecoration: "none",
+  background: "rgba(255,255,255,0.05)", color: "#fff",
+  padding: "15px 22px", borderRadius: 12,
+  fontWeight: 900, border: "1px solid rgba(255,255,255,0.14)",
+};
+const btnGhostSoft = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  textDecoration: "none",
+  background: "transparent", color: "rgba(226,232,240,0.70)",
+  padding: "15px 22px", borderRadius: 12,
+  fontWeight: 800, border: "1px solid rgba(255,255,255,0.08)",
+  fontSize: 14,
+};
+const statsRow = { marginTop: 24, display: "flex", gap: 10, flexWrap: "wrap" };
+const tag = {
+  display: "inline-flex", alignItems: "center", gap: 8,
+  padding: "9px 12px", borderRadius: 8,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.10)",
+  borderLeft: "2px solid rgba(249,115,22,0.50)",
+  color: "#e2e8f0", fontSize: 12, fontWeight: 900,
+};
 const tagIcon = { display: "grid", placeItems: "center", color: "#fb923c" };
-const panel = { borderRadius: 28, padding: 20, background: "linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 24px 60px rgba(2,6,23,0.32)", backdropFilter: "blur(10px)" };
+
+/* ── Hero product panel ── */
+const panel = {
+  borderRadius: 24, padding: 20,
+  background: "linear-gradient(165deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderTop: "2px solid rgba(249,115,22,0.35)",
+  boxShadow: "0 30px 80px rgba(2,6,23,0.40), inset 0 1px 0 rgba(255,255,255,0.07)",
+  backdropFilter: "blur(12px)",
+};
 const panelHead = { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 16, flexWrap: "wrap" };
-const panelKicker = { fontSize: 12, fontWeight: 900, letterSpacing: 0.9, color: "#fdba74", textTransform: "uppercase" };
-const panelTitle = { marginTop: 6, fontSize: 22, lineHeight: 1.18, fontWeight: 900, maxWidth: 380 };
-const liveBadge = { display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "8px 12px", borderRadius: 999, background: "rgba(34,197,94,0.14)", color: "#bbf7d0", border: "1px solid rgba(34,197,94,0.24)", fontSize: 11, fontWeight: 950 };
+const panelKicker = { fontSize: 11, fontWeight: 900, letterSpacing: "0.14em", color: "#fdba74", textTransform: "uppercase" };
+const panelTitle = { marginTop: 6, fontSize: 20, lineHeight: 1.2, fontWeight: 900, maxWidth: 380 };
+const liveBadge = {
+  display: "inline-flex", alignItems: "center", gap: 6,
+  padding: "7px 12px", borderRadius: 999,
+  background: "rgba(34,197,94,0.14)", color: "#bbf7d0",
+  border: "1px solid rgba(34,197,94,0.24)",
+  fontSize: 11, fontWeight: 900,
+};
 const metrics = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 };
-const heroImageShell = { borderRadius: 24, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(15,23,42,0.66)", boxShadow: "0 24px 44px rgba(2,6,23,0.28)" };
+const heroImageShell = {
+  borderRadius: 18, overflow: "hidden",
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(8,14,26,0.80)",
+  boxShadow: "0 28px 56px rgba(2,6,23,0.36)",
+};
 const heroImage = { width: "100%", display: "block", objectFit: "cover" };
-const heroImageFooter = { marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 };
-const heroImagePoint = { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 16, background: "rgba(15,23,42,0.58)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontWeight: 850, lineHeight: 1.4 };
-const heroImageDot = { width: 10, height: 10, borderRadius: 999, background: "linear-gradient(135deg, #fb923c 0%, #f97316 100%)", flexShrink: 0, boxShadow: "0 0 0 6px rgba(249,115,22,0.12)" };
-const metricCard = { borderRadius: 18, padding: 16, background: "rgba(15,23,42,0.78)", border: "1px solid rgba(255,255,255,0.08)" };
-const metricValue = { fontSize: 30, fontWeight: 1000, lineHeight: 1 };
-const metricLabel = { marginTop: 7, fontSize: 12, fontWeight: 900, letterSpacing: 0.8, textTransform: "uppercase", color: "#94a3b8" };
-const priorityCard = { marginTop: 14, padding: 16, borderRadius: 20, background: "linear-gradient(180deg, rgba(15,23,42,0.84), rgba(15,23,42,0.72))", border: "1px solid rgba(255,255,255,0.08)" };
-const miniGrid = { marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 };
-const miniCard = { padding: 14, borderRadius: 18, background: "rgba(15,23,42,0.62)", border: "1px solid rgba(255,255,255,0.08)" };
+const heroImageFooter = { marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 };
+const heroImagePoint = {
+  display: "flex", alignItems: "center", gap: 10,
+  padding: "10px 13px", borderRadius: 12,
+  background: "rgba(8,14,26,0.65)",
+  border: "1px solid rgba(255,255,255,0.07)",
+  color: "#e2e8f0", fontSize: 12, fontWeight: 800, lineHeight: 1.4,
+};
+const heroImageDot = {
+  width: 8, height: 8, borderRadius: 999,
+  background: "#f97316", flexShrink: 0,
+  boxShadow: "0 0 0 4px rgba(249,115,22,0.16)",
+};
+const metricCard = { borderRadius: 16, padding: 14, background: "rgba(8,14,26,0.80)", border: "1px solid rgba(255,255,255,0.08)" };
+const metricValue = { fontSize: 28, fontWeight: 900, lineHeight: 1 };
+const metricLabel = { marginTop: 6, fontSize: 11, fontWeight: 900, letterSpacing: "0.10em", textTransform: "uppercase", color: "#94a3b8" };
+const priorityCard = { marginTop: 14, padding: 14, borderRadius: 18, background: "rgba(8,14,26,0.78)", border: "1px solid rgba(255,255,255,0.08)" };
+const miniGrid = { marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 };
+const miniCard = { padding: 14, borderRadius: 16, background: "rgba(8,14,26,0.68)", border: "1px solid rgba(255,255,255,0.07)" };
 const cardTopRow = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" };
-const miniTitle = { fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: 0.8, color: "#cbd5e1" };
+const miniTitle = { fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.10em", color: "#94a3b8" };
 const priorityTitle = { marginTop: 10, fontSize: 17, lineHeight: 1.42, fontWeight: 900 };
 const priorityText = { marginTop: 8, fontSize: 13, lineHeight: 1.55, color: "#cbd5e1", fontWeight: 700 };
 const miniText = { marginTop: 8, color: "#cbd5e1", fontSize: 13, lineHeight: 1.55, fontWeight: 700 };
-const chipRed = { padding: "6px 10px", borderRadius: 999, background: "rgba(239,68,68,0.14)", color: "#fecaca", border: "1px solid rgba(239,68,68,0.24)", fontSize: 11, fontWeight: 950 };
-const chipAmber = { padding: "6px 10px", borderRadius: 999, background: "rgba(245,158,11,0.14)", color: "#fde68a", border: "1px solid rgba(245,158,11,0.24)", fontSize: 11, fontWeight: 950 };
-const chipBlue = { padding: "6px 10px", borderRadius: 999, background: "rgba(59,130,246,0.14)", color: "#bfdbfe", border: "1px solid rgba(59,130,246,0.24)", fontSize: 11, fontWeight: 950 };
-const sectionTight = { maxWidth: 1320, margin: "0 auto", padding: "0 24px 18px" };
-const section = { maxWidth: 1320, margin: "0 auto", padding: "34px 24px" };
-const sectionAlt = { maxWidth: 1320, margin: "0 auto", padding: "34px 24px" };
-const sectionHead = { maxWidth: 860, marginBottom: 24 };
-const sectionHeadWide = { maxWidth: 980, marginBottom: 24 };
-const sectionKicker = { fontSize: 12, fontWeight: 950, letterSpacing: 1.05, color: "#fb923c", textTransform: "uppercase", marginBottom: 10 };
-const sectionTitle = { margin: 0, fontSize: "clamp(2rem, 4vw, 3rem)", lineHeight: 1, letterSpacing: -1.1 };
-const sectionText = { marginTop: 14, color: "#cbd5e1", fontSize: 16, lineHeight: 1.65, fontWeight: 600 };
+const chipRed = { padding: "5px 10px", borderRadius: 999, background: "rgba(239,68,68,0.14)", color: "#fecaca", border: "1px solid rgba(239,68,68,0.24)", fontSize: 11, fontWeight: 900 };
+const chipAmber = { padding: "5px 10px", borderRadius: 999, background: "rgba(245,158,11,0.14)", color: "#fde68a", border: "1px solid rgba(245,158,11,0.24)", fontSize: 11, fontWeight: 900 };
+const chipBlue = { padding: "5px 10px", borderRadius: 999, background: "rgba(59,130,246,0.14)", color: "#bfdbfe", border: "1px solid rgba(59,130,246,0.24)", fontSize: 11, fontWeight: 900 };
+
+/* ── Section structure ── */
+const sectionTight = { maxWidth: 1320, margin: "0 auto", padding: "0 24px 22px" };
+const section = {
+  maxWidth: 1320, margin: "0 auto", padding: "48px 24px",
+  borderTop: "1px solid rgba(255,255,255,0.05)",
+};
+const sectionAlt = {
+  maxWidth: 1320, margin: "0 auto", padding: "48px 24px",
+  borderTop: "1px solid rgba(255,255,255,0.05)",
+};
+const sectionHead = { maxWidth: 860, marginBottom: 28 };
+const sectionHeadWide = { maxWidth: 980, marginBottom: 28 };
+const sectionKicker = {
+  display: "inline-flex", alignItems: "center", gap: 8,
+  fontSize: 11, fontWeight: 900, letterSpacing: "0.15em",
+  color: "#fb923c", textTransform: "uppercase", marginBottom: 12,
+};
+const sectionTitle = { margin: 0, fontSize: "clamp(2rem, 4.2vw, 3.2rem)", lineHeight: 1, letterSpacing: -1.2 };
+const sectionText = { marginTop: 16, color: "#94a3b8", fontSize: 16, lineHeight: 1.70, fontWeight: 600 };
+
+/* ── Signal cards (top belt) ── */
 const signalGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 };
-const signalCard = { display: "flex", gap: 14, alignItems: "flex-start", padding: 18, borderRadius: 22, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 18px 40px rgba(2,6,23,0.12)" };
-const signalIcon = { width: 46, height: 46, borderRadius: 16, background: "rgba(249,115,22,0.14)", color: "#fb923c", display: "grid", placeItems: "center", flexShrink: 0 };
-const signalTitle = { fontSize: 16, fontWeight: 950 };
-const signalText = { marginTop: 6, color: "#cbd5e1", fontSize: 13, lineHeight: 1.55, fontWeight: 700 };
-const painGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
-const painCard = { display: "flex", alignItems: "flex-start", gap: 12, padding: 18, borderRadius: 22, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" };
-const painIcon = { width: 42, height: 42, borderRadius: 14, background: "rgba(239,68,68,0.14)", color: "#fca5a5", display: "grid", placeItems: "center", flexShrink: 0 };
-const painText = { fontWeight: 900, lineHeight: 1.45, color: "#f8fafc" };
-const twoCol = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 18, alignItems: "stretch" };
-const glassBlock = { padding: 24, borderRadius: 28, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" };
-const board = { padding: 20, borderRadius: 28, background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)", display: "grid", gap: 12 };
-const problemLine = { display: "flex", gap: 12, alignItems: "center", padding: "14px 14px", borderRadius: 18, background: "rgba(15,23,42,0.56)", border: "1px solid rgba(255,255,255,0.06)" };
-const problemIcon = { width: 42, height: 42, borderRadius: 14, background: "rgba(239,68,68,0.14)", color: "#fca5a5", display: "grid", placeItems: "center", flexShrink: 0 };
-const problemText = { fontWeight: 900, lineHeight: 1.45 };
-const featureGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 };
-const featureLine = { display: "flex", gap: 12, alignItems: "flex-start", padding: 18, borderRadius: 20, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#f8fafc", fontWeight: 800, lineHeight: 1.5 };
-const featureLineIcon = { width: 34, height: 34, borderRadius: 12, background: "rgba(249,115,22,0.15)", color: "#fb923c", display: "grid", placeItems: "center", flexShrink: 0 };
+const signalCard = {
+  display: "flex", gap: 14, alignItems: "flex-start",
+  padding: 18, borderRadius: 18,
+  background: "rgba(255,255,255,0.045)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  boxShadow: "0 16px 36px rgba(2,6,23,0.14)",
+};
+const signalIcon = {
+  width: 44, height: 44, borderRadius: 14,
+  background: "rgba(249,115,22,0.12)", color: "#fb923c",
+  display: "grid", placeItems: "center", flexShrink: 0,
+};
+const signalTitle = { fontSize: 15, fontWeight: 900, letterSpacing: "-0.01em" };
+const signalText = { marginTop: 6, color: "#94a3b8", fontSize: 13, lineHeight: 1.58, fontWeight: 700 };
+
+/* ── Pain cards ── */
+const painGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 };
+const painCard = {
+  display: "flex", alignItems: "flex-start", gap: 12,
+  padding: "16px 18px", borderRadius: 14,
+  background: "rgba(239,68,68,0.05)",
+  border: "1px solid rgba(239,68,68,0.14)",
+  borderLeft: "4px solid rgba(239,68,68,0.55)",
+};
+const painIcon = {
+  width: 38, height: 38, borderRadius: 12,
+  background: "rgba(239,68,68,0.14)", color: "#f87171",
+  display: "grid", placeItems: "center", flexShrink: 0,
+};
+const painText = { fontWeight: 900, lineHeight: 1.5, color: "#f1f5f9", fontSize: 14 };
+
+/* ── Two-col sections ── */
+const twoCol = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 20, alignItems: "stretch" };
+const glassBlock = {
+  padding: 28, borderRadius: 24,
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.09)",
+  borderTop: "2px solid rgba(249,115,22,0.28)",
+};
+const board = {
+  padding: 22, borderRadius: 24,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
+  border: "1px solid rgba(255,255,255,0.08)",
+  display: "grid", gap: 10,
+};
+const problemLine = {
+  display: "flex", gap: 12, alignItems: "center",
+  padding: "13px 14px", borderRadius: 14,
+  background: "rgba(8,14,26,0.55)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  borderLeft: "3px solid rgba(239,68,68,0.40)",
+};
+const problemIcon = {
+  width: 38, height: 38, borderRadius: 12,
+  background: "rgba(239,68,68,0.12)", color: "#f87171",
+  display: "grid", placeItems: "center", flexShrink: 0,
+};
+const problemText = { fontWeight: 900, lineHeight: 1.45, fontSize: 14 };
+
+/* ── Feature lines (capabilities) ── */
+const featureGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 };
+const featureLine = {
+  display: "flex", gap: 12, alignItems: "flex-start",
+  padding: "16px 18px", borderRadius: 16,
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.07)",
+  borderLeft: "3px solid rgba(249,115,22,0.45)",
+  color: "#e2e8f0", fontWeight: 800, lineHeight: 1.5, fontSize: 14,
+};
+const featureLineIcon = {
+  width: 32, height: 32, borderRadius: 10,
+  background: "rgba(249,115,22,0.14)", color: "#fb923c",
+  display: "grid", placeItems: "center", flexShrink: 0,
+};
+
+/* ── Win cards ── */
 const winGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
-const winCard = { padding: 20, borderRadius: 22, background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)" };
-const winIcon = { width: 46, height: 46, borderRadius: 16, background: "rgba(249,115,22,0.15)", color: "#fb923c", display: "grid", placeItems: "center", marginBottom: 14 };
-const winTitle = { fontSize: 18, fontWeight: 950 };
-const winText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
+const winCard = {
+  padding: 22, borderRadius: 20,
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderTop: "3px solid rgba(249,115,22,0.40)",
+};
+const winIcon = {
+  width: 44, height: 44, borderRadius: 14,
+  background: "rgba(249,115,22,0.13)", color: "#fb923c",
+  display: "grid", placeItems: "center", marginBottom: 14,
+};
+const winTitle = { fontSize: 18, fontWeight: 900 };
+const winText = { marginTop: 8, color: "#94a3b8", fontSize: 14, lineHeight: 1.62, fontWeight: 700 };
+
+/* ── Journey cards (how it works steps) ── */
 const journeyGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
-const journeyCard = { padding: 20, borderRadius: 24, background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)" };
-const journeyNumber = { fontSize: 34, lineHeight: 1, fontWeight: 1000, color: "#fb923c" };
-const journeyTitle = { marginTop: 12, fontSize: 19, lineHeight: 1.2, fontWeight: 950 };
-const journeyText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
+const journeyCard = {
+  padding: 22, borderRadius: 20,
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  position: "relative", overflow: "hidden",
+};
+const journeyNumber = {
+  fontSize: 11, fontWeight: 900, letterSpacing: "0.14em", color: "#f97316",
+  textTransform: "uppercase", marginBottom: 10,
+  display: "flex", alignItems: "center", gap: 8,
+};
+const journeyTitle = { marginTop: 0, fontSize: 19, lineHeight: 1.2, fontWeight: 900 };
+const journeyText = { marginTop: 10, color: "#94a3b8", fontSize: 14, lineHeight: 1.62, fontWeight: 700 };
+
+/* ── Industry / modules pills ── */
+const pillSectionGrid = { display: "grid", gap: 28 };
+const pillGroupLabel = {
+  fontSize: 11, fontWeight: 900, letterSpacing: "0.13em",
+  textTransform: "uppercase", color: "#fb923c",
+  marginBottom: 12,
+};
 const industryWrap = { display: "flex", gap: 10, flexWrap: "wrap" };
+const industryPill = {
+  padding: "10px 16px", borderRadius: 8,
+  background: "rgba(255,255,255,0.045)",
+  border: "1px solid rgba(255,255,255,0.09)",
+  borderLeft: "2px solid rgba(249,115,22,0.40)",
+  color: "#cbd5e1", fontSize: 13, fontWeight: 900,
+};
+
+/* ── Technical assistant section ── */
 const assistantGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
-const assistantCard = { padding: 18, borderRadius: 22, background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 18px 34px rgba(2,6,23,0.12)" };
-const assistantCardIcon = { width: 46, height: 46, borderRadius: 16, background: "rgba(249,115,22,0.15)", color: "#fb923c", display: "grid", placeItems: "center", marginBottom: 14 };
-const assistantCardTitle = { fontSize: 18, fontWeight: 950, color: "#f8fafc", lineHeight: 1.2 };
-const assistantCardText = { marginTop: 8, color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
-const assistantNoteBox = { marginTop: 16, padding: 16, borderRadius: 20, background: "rgba(15,23,42,0.56)", border: "1px solid rgba(255,255,255,0.08)" };
-const assistantNoteTitle = { fontSize: 13, fontWeight: 950, letterSpacing: 0.8, textTransform: "uppercase", color: "#fdba74" };
-const assistantNoteText = { marginTop: 8, color: "#e2e8f0", fontSize: 14, lineHeight: 1.6, fontWeight: 700 };
-const screenshotGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: 18, alignItems: "start" };
-const screenshotCard = { display: "grid", gap: 14, padding: 18, borderRadius: 28, background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 44px rgba(2,6,23,0.16)" };
-const screenshotFrame = { borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,23,42,0.72)" };
+const assistantCard = {
+  padding: 20, borderRadius: 20,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.09)",
+  borderTop: "2px solid rgba(249,115,22,0.35)",
+  boxShadow: "0 16px 32px rgba(2,6,23,0.14)",
+};
+const assistantCardIcon = {
+  width: 44, height: 44, borderRadius: 14,
+  background: "rgba(249,115,22,0.13)", color: "#fb923c",
+  display: "grid", placeItems: "center", marginBottom: 14,
+};
+const assistantCardTitle = { fontSize: 17, fontWeight: 900, color: "#f8fafc", lineHeight: 1.2 };
+const assistantCardText = { marginTop: 8, color: "#94a3b8", fontSize: 14, lineHeight: 1.62, fontWeight: 700 };
+const assistantNoteBox = {
+  marginTop: 18, padding: 16, borderRadius: 16,
+  background: "rgba(8,14,26,0.60)",
+  border: "1px solid rgba(249,115,22,0.18)",
+  borderLeft: "4px solid rgba(249,115,22,0.55)",
+};
+const assistantNoteTitle = { fontSize: 12, fontWeight: 900, letterSpacing: "0.10em", textTransform: "uppercase", color: "#fdba74" };
+const assistantNoteText = { marginTop: 8, color: "#e2e8f0", fontSize: 14, lineHeight: 1.62, fontWeight: 700 };
+
+/* ── Screenshot cards ── */
+const screenshotGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: 20, alignItems: "start" };
+const screenshotCard = {
+  display: "grid", gap: 14, padding: 18, borderRadius: 24,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.09)",
+  borderTop: "2px solid rgba(249,115,22,0.35)",
+  boxShadow: "0 24px 52px rgba(2,6,23,0.20)",
+};
+const screenshotFrame = { borderRadius: 18, overflow: "hidden", border: "1px solid rgba(255,255,255,0.09)", background: "rgba(8,14,26,0.80)" };
 const screenshotImage = { width: "100%", display: "block", objectFit: "cover" };
-const screenshotMeta = { display: "grid", gap: 8 };
-const screenshotKicker = { fontSize: 12, fontWeight: 950, letterSpacing: 1.05, color: "#fb923c", textTransform: "uppercase" };
-const screenshotTitle = { fontSize: 22, lineHeight: 1.1, fontWeight: 950, color: "#f8fafc" };
-const screenshotText = { color: "#cbd5e1", fontSize: 14, lineHeight: 1.65, fontWeight: 700 };
-const industryPill = { padding: "12px 16px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "#e2e8f0", fontSize: 13, fontWeight: 900 };
-const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 72px" };
-const ctaBox = { position: "relative", overflow: "hidden", padding: "30px 24px", borderRadius: 30, background: "linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(15,23,42,0.80) 45%, rgba(15,23,42,0.92) 100%)", border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 24px 70px rgba(2,6,23,0.28)" };
-const ctaTitle = { position: "relative", zIndex: 1, margin: 0, fontSize: "clamp(2rem, 4vw, 3.1rem)", lineHeight: 1, letterSpacing: -1.1 };
-const ctaText = { position: "relative", zIndex: 1, marginTop: 12, maxWidth: 760, color: "#e2e8f0", fontSize: 16, lineHeight: 1.65, fontWeight: 600 };
+const screenshotMeta = { display: "grid", gap: 8, padding: "4px 0" };
+const screenshotKicker = { fontSize: 11, fontWeight: 900, letterSpacing: "0.14em", color: "#fb923c", textTransform: "uppercase" };
+const screenshotTitle = { fontSize: 21, lineHeight: 1.1, fontWeight: 900, color: "#f8fafc" };
+const screenshotText = { color: "#94a3b8", fontSize: 14, lineHeight: 1.65, fontWeight: 700 };
+
+/* ── CTA section ── */
+const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 80px" };
+const ctaBox = {
+  position: "relative", overflow: "hidden",
+  padding: "48px 36px", borderRadius: 28,
+  background: "linear-gradient(135deg, rgba(249,115,22,0.16) 0%, rgba(8,14,26,0.82) 40%, rgba(8,14,26,0.96) 100%)",
+  border: "1px solid rgba(249,115,22,0.24)",
+  borderTop: "3px solid rgba(249,115,22,0.70)",
+  boxShadow: "0 30px 90px rgba(2,6,23,0.40)",
+};
+const ctaTitle = { position: "relative", zIndex: 1, margin: 0, fontSize: "clamp(2rem, 4.2vw, 3.3rem)", lineHeight: 1, letterSpacing: -1.2 };
+const ctaText = { position: "relative", zIndex: 1, marginTop: 14, maxWidth: 760, color: "#94a3b8", fontSize: 16, lineHeight: 1.70, fontWeight: 600 };
 const contactNote = { position: "relative", zIndex: 1, marginTop: 14, color: "#cbd5e1", fontSize: 14, fontWeight: 700 };
-const contactMailText = { display: "inline-flex", alignItems: "center", padding: "15px 20px", borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#e2e8f0", fontWeight: 800 };
+const contactMailText = {
+  display: "inline-flex", alignItems: "center",
+  padding: "14px 20px", borderRadius: 12,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  color: "#e2e8f0", fontWeight: 800,
+};
 const contactMailStrong = { color: "#fdba74", fontWeight: 900 };
 const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
 

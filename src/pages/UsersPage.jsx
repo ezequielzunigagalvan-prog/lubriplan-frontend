@@ -519,7 +519,11 @@ export default function UsersPage() {
 
       <div className="lpUsersHeader">
         <div>
-          <h1 style={{ margin: 0 }}>Usuarios</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
+            <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+            USUARIOS · ACCESOS
+          </div>
+          <h1 style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 950, color: "#0f172a" }}>Usuarios</h1>
           <div className="lpUsersSub">Administración de accesos, roles y vínculos con técnicos.</div>
         </div>
 
@@ -910,6 +914,7 @@ function KpiCard({ title, value, icon }) {
   return (
     <div className="lpCard lpKpiCard">
       <div className="lpKpiBand" />
+      <div className="lpKpiSide" />
       <div className="lpKpiBody">
         <div className="lpKpiIcon"><Icon name={icon} /></div>
         <div style={{ minWidth: 0 }}>
@@ -921,50 +926,348 @@ function KpiCard({ title, value, icon }) {
   );
 }
 
+function ucInitials(name) {
+  if (!name) return "—";
+  const parts = String(name).trim().split(/\s+/);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
+}
+
+function ucFormatActivity(value) {
+  if (!value) return null;
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return null;
+  return dt.toLocaleString("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const ROLE_BORDER = { ADMIN: "#d97706", SUPERVISOR: "#2563eb", TECHNICIAN: "#16a34a" };
+const ROLE_AVATAR = {
+  ADMIN:      { bg: "rgba(245,158,11,0.14)", border: "rgba(245,158,11,0.35)", color: "#92400e" },
+  SUPERVISOR: { bg: "rgba(59,130,246,0.14)", border: "rgba(59,130,246,0.35)", color: "#1d4ed8" },
+  TECHNICIAN: { bg: "rgba(34,197,94,0.14)",  border: "rgba(34,197,94,0.35)",  color: "#166534" },
+};
+
 function UserCard({ u, toggling, onToggle, onEdit, onPwd }) {
-  const role = roleChip(u?.role);
-  const status = statusChip(!!u?.active);
-  const password = passwordChip(!!u?.hasPassword);
-  const lastActivityText = u?.lastActivityAt
-    ? `${fmtDateTime(u.lastActivityAt)}${u?.lastActivityRouteName ? ` · ${u.lastActivityRouteName}` : ""}${u?.lastActivityStatus ? ` · ${String(u.lastActivityStatus).toUpperCase()}` : ""}`
-    : "Sin actividad registrada";
+  const [hover, setHover] = useState(false);
+
+  const roleKey    = toRole(u?.role);
+  const role       = roleChip(u?.role);
+  const password   = passwordChip(!!u?.hasPassword);
+  const isActive   = !!u?.active;
+  const isTech     = roleKey === "TECHNICIAN";
+
+  const initials       = ucInitials(u?.name);
+  const avatarTone     = ROLE_AVATAR[roleKey] || ROLE_AVATAR.TECHNICIAN;
+  const borderColor    = ROLE_BORDER[roleKey] || "#94a3b8";
+  const plantsText     = buildPlantsText(u);
+  const techLabel      = buildTechLabel(u);
+  const lastActivity   = ucFormatActivity(u?.lastActivityAt);
 
   return (
-    <div className="lpCard lpUserCard">
-      <div className="lpUserTopRow">
-        <div className="lpUserIconSlate"><Icon name="user" /></div>
-        <div style={{ minWidth: 0 }}>
-          <div className="lpUserName">{u?.name || "—"}</div>
-          <div className="lpUserEmail">{u?.email || "—"}</div>
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        ...ucCard,
+        borderLeft: `4px solid ${borderColor}`,
+        transform: hover ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hover
+          ? "0 20px 44px rgba(2,6,23,0.13), 0 4px 12px rgba(2,6,23,0.07)"
+          : "0 10px 24px rgba(2,6,23,0.07)",
+      }}
+    >
+      {/* ── Header: avatar + nombre + rol ── */}
+      <div style={ucHeader}>
+        <div style={{ ...ucAvatar, background: avatarTone.bg, border: `1px solid ${avatarTone.border}`, color: avatarTone.color }}>
+          {initials}
         </div>
-        <div className="lpUserChips">
-          <span className="lpChip" style={{ background: role.bg, color: role.fg }}>
-            <span className="lpChipRow"><Icon name={role.icon} />{ROLE_LABEL[toRole(u?.role)] || role.label}</span>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={ucName}>{u?.name || "—"}</div>
+          <div style={ucEmail}>{u?.email || "—"}</div>
+        </div>
+        <span style={{ ...ucRoleBadge, background: role.bg, color: role.fg }}>
+          <Icon name={role.icon} size="sm" />
+          {ROLE_LABEL[roleKey] || role.label}
+        </span>
+      </div>
+
+      {/* ── Pills de estado y contraseña ── */}
+      <div style={ucPillRow}>
+        <span style={ucStatusPill(isActive)}>
+          <span style={ucDot(isActive)} />
+          {isActive ? "Activo" : "Inactivo"}
+        </span>
+
+        <span style={{ ...ucPill, background: password.bg, color: password.fg }}>
+          <Icon name="lock" size="sm" />
+          {password.label}
+        </span>
+
+        {isTech && techLabel !== "—" && techLabel !== "Sin vínculo" ? (
+          <span style={ucPill}>
+            <Icon name="user" size="sm" />
+            {techLabel}
           </span>
-          <span className="lpChip" style={{ background: status.bg, color: status.fg }}>
-            <span className="lpChipRow"><Icon name={status.icon} />{status.label}</span>
+        ) : null}
+      </div>
+
+      {/* ── Plantas ── */}
+      {plantsText !== "Sin planta asignada" ? (
+        <div style={ucPlantsRow}>
+          <Icon name="building" size="sm" />
+          <span style={ucPlantsText}>{plantsText}</span>
+        </div>
+      ) : null}
+
+      {/* ── Última actividad ── */}
+      <div style={ucActivityBar(!!lastActivity)}>
+        <span style={ucActivityIcon}>
+          <Icon name="clock" size="sm" />
+        </span>
+        <div style={ucActivityContent}>
+          <span style={ucActivityLabel}>
+            {lastActivity ? "Última actividad" : "Sin actividad registrada"}
           </span>
+          {lastActivity ? <span style={ucActivityValue}>{lastActivity}</span> : null}
         </div>
       </div>
 
-      <div className="lpUserMeta">
-        <div className="lpMetaItem"><Icon name="tag" /><span><b>Técnico:</b> {buildTechLabel(u)}</span></div>
-        <div className="lpMetaItem"><Icon name="building" /><span><b>Plantas:</b> {buildPlantsText(u)}</span></div>
-        <div className="lpMetaItem"><Icon name="lock" /><span><b>Contraseña:</b> <span className="lpInlineStatus" style={{ background: password.bg, color: password.fg }}>{password.label}</span></span></div>
-        <div className="lpMetaItem"><Icon name="calendar" /><span><b>Última actividad:</b> {lastActivityText}</span></div>
-      </div>
-
-      <div className="lpUserActions">
-        <button className="lpBtnGhost lpPress" onClick={onEdit} type="button" title="Editar usuario">
-          <span className="lpBtnRow"><Icon name="edit" />Editar</span>
+      {/* ── Acciones ── */}
+      <div style={ucActions}>
+        <button style={ucBtnGhost} onClick={onEdit} type="button" title="Editar usuario">
+          <Icon name="edit" size="sm" /> Editar
         </button>
-        <button className="lpBtnGhost lpPress" onClick={onPwd} type="button" title="Asignar o resetear contraseña">
-          <span className="lpBtnRow"><Icon name="lock" />Contraseña</span>
+        <button style={ucBtnGhost} onClick={onPwd} type="button" title="Cambiar contraseña">
+          <Icon name="lock" size="sm" /> Contraseña
         </button>
-        <button className={u?.active ? "lpBtnDanger lpPress" : "lpBtnDark lpPress"} onClick={onToggle} disabled={toggling} type="button" title="Cambiar estado">
-          <span className="lpBtnRow"><Icon name={u?.active ? "warn" : "check"} />{toggling ? "…" : u?.active ? "Desactivar" : "Activar"}</span>
+        <button
+          style={u?.active ? ucBtnDanger : ucBtnDark}
+          onClick={onToggle}
+          disabled={toggling}
+          type="button"
+        >
+          <Icon name={u?.active ? "warn" : "check"} size="sm" />
+          {toggling ? "…" : u?.active ? "Desactivar" : "Activar"}
         </button>
       </div>
     </div>
   );
 }
+
+/* ── UserCard inline styles ── */
+
+const ucCard = {
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderRadius: 18,
+  overflow: "hidden",
+  display: "flex",
+  flexDirection: "column",
+  gap: 0,
+  transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms ease",
+};
+
+const ucHeader = {
+  display: "flex",
+  gap: 12,
+  alignItems: "flex-start",
+  padding: "14px 14px 0",
+};
+
+const ucAvatar = {
+  width: 44,
+  height: 44,
+  borderRadius: 14,
+  display: "grid",
+  placeItems: "center",
+  fontWeight: 900,
+  fontSize: 15,
+  letterSpacing: 0.8,
+  flexShrink: 0,
+};
+
+const ucName = {
+  fontSize: 15,
+  fontWeight: 900,
+  color: "#0f172a",
+  lineHeight: 1.2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const ucEmail = {
+  marginTop: 3,
+  fontSize: 12,
+  fontWeight: 800,
+  color: "#64748b",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const ucRoleBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "5px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 950,
+  whiteSpace: "nowrap",
+  flexShrink: 0,
+};
+
+const ucPillRow = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  alignItems: "center",
+  padding: "10px 14px 0",
+};
+
+const ucStatusPill = (active) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "5px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 950,
+  background: active ? "rgba(34,197,94,0.10)" : "rgba(148,163,184,0.12)",
+  color:      active ? "#14532d"              : "#475569",
+  border:     active ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(148,163,184,0.25)",
+  whiteSpace: "nowrap",
+});
+
+const ucDot = (active) => ({
+  width: 7,
+  height: 7,
+  borderRadius: 999,
+  background: active ? "#22c55e" : "#94a3b8",
+  flexShrink: 0,
+});
+
+const ucPill = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "5px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 950,
+  background: "rgba(15,23,42,0.04)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  color: "#334155",
+  whiteSpace: "nowrap",
+  maxWidth: 180,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const ucPlantsRow = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 8,
+  padding: "8px 14px 0",
+  color: "#64748b",
+  fontSize: 12,
+  fontWeight: 800,
+};
+
+const ucPlantsText = {
+  lineHeight: 1.4,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  flex: 1,
+};
+
+const ucActivityBar = (hasActivity) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "10px 14px",
+  marginTop: 10,
+  background: hasActivity ? "rgba(59,130,246,0.07)" : "rgba(148,163,184,0.08)",
+  borderTop: hasActivity ? "1px solid rgba(59,130,246,0.14)" : "1px solid rgba(148,163,184,0.14)",
+  color: hasActivity ? "#1e40af" : "#64748b",
+});
+
+const ucActivityIcon = {
+  width: 28,
+  height: 28,
+  borderRadius: 9,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(255,255,255,0.55)",
+  border: "1px solid rgba(255,255,255,0.70)",
+  flexShrink: 0,
+};
+
+const ucActivityContent = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 1,
+  minWidth: 0,
+};
+
+const ucActivityLabel = {
+  fontSize: 10,
+  fontWeight: 900,
+  letterSpacing: 0.4,
+  textTransform: "uppercase",
+  opacity: 0.70,
+};
+
+const ucActivityValue = {
+  fontSize: 13,
+  fontWeight: 900,
+};
+
+const ucActions = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  padding: "10px 14px 14px",
+  borderTop: "1px solid rgba(226,232,240,0.80)",
+  marginTop: 10,
+};
+
+const ucBtnBase = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "7px 12px",
+  borderRadius: 10,
+  fontSize: 12,
+  fontWeight: 950,
+  cursor: "pointer",
+  border: "1px solid rgba(226,232,240,0.95)",
+};
+
+const ucBtnGhost = {
+  ...ucBtnBase,
+  background: "rgba(255,255,255,0.90)",
+  color: "#0f172a",
+};
+
+const ucBtnDark = {
+  ...ucBtnBase,
+  background: "rgba(51,65,85,0.92)",
+  border: "1px solid rgba(51,65,85,0.55)",
+  color: "#fff",
+};
+
+const ucBtnDanger = {
+  ...ucBtnBase,
+  background: "rgba(239,68,68,0.08)",
+  border: "1px solid rgba(239,68,68,0.28)",
+  color: "#991b1b",
+};

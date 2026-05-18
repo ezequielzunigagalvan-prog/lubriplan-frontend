@@ -230,7 +230,7 @@ const titleRow = {
 const title = {
   margin: 0,
   fontSize: 15,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#020617",
   letterSpacing: 0.3,
   whiteSpace: "nowrap",

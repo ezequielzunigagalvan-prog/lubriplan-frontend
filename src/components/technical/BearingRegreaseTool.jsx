@@ -102,13 +102,14 @@ function Field({ label, children }) {
 
 const card = {
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   borderRadius: 22,
   padding: 18,
-  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 18px 34px rgba(15,23,42,0.08)",
 };
-const eyebrow = { fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 };
-const title = { fontSize: 21, fontWeight: 1000, color: "#0f172a", marginTop: 4 };
+const eyebrow = { fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2 };
+const title = { fontSize: 21, fontWeight: 900, color: "#0f172a", marginTop: 4 };
 const subtitle = { fontSize: 13, fontWeight: 800, color: "#64748b", marginTop: 6, lineHeight: 1.45, marginBottom: 14 };
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 };
 const field = { display: "grid", gap: 6, fontSize: 12, fontWeight: 950, color: "#475569" };
@@ -116,6 +117,6 @@ const input = { border: "1px solid rgba(226,232,240,0.95)", borderRadius: 12, pa
 const resultGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 14 };
 const metricCard = { border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 14, background: "#fff" };
 const metricLabel = { fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8 };
-const metricValue = { fontSize: 28, fontWeight: 1000, color: "#0f172a", marginTop: 8 };
+const metricValue = { fontSize: 28, fontWeight: 900, color: "#0f172a", marginTop: 8 };
 const metricHelp = { fontSize: 12, fontWeight: 800, color: "#64748b", marginTop: 6 };
 const note = { marginTop: 12, fontSize: 12, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };

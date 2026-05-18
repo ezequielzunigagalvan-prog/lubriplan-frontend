@@ -184,6 +184,8 @@ const modal = {
   border: "1px solid rgba(226,232,240,0.95)",
   boxShadow: "0 30px 90px rgba(0,0,0,0.28)",
   backdropFilter: "blur(10px)",
+  borderTop: "4px solid #f97316",
+  overflow: "hidden",
 };
 
 const modalHeader = {
@@ -191,41 +193,44 @@ const modalHeader = {
   justifyContent: "space-between",
   alignItems: "flex-start",
   gap: 12,
-  paddingBottom: 12,
-  borderBottom: "1px solid rgba(226,232,240,0.75)",
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  margin: "-16px -16px 12px",
+  padding: "14px 16px",
+  borderRadius: "16px 16px 0 0",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
 };
 
 const modalKicker = {
   fontSize: 11,
   fontWeight: 950,
-  color: "#64748b",
+  color: "rgba(249,115,22,0.90)",
   letterSpacing: 1.2,
 };
 
 const modalTitle = {
   marginTop: 6,
-  fontWeight: 1000,
-  color: "#0f172a",
+  fontWeight: 900,
+  color: "#fff",
   letterSpacing: 0.3,
   fontSize: 18,
 };
 
 const modalSub = {
   marginTop: 6,
-  color: "#64748b",
+  color: "rgba(255,255,255,0.65)",
   fontWeight: 800,
   fontSize: 12,
 };
 
 const xBtn = (disabled) => ({
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.85)",
+  border: "1px solid rgba(255,255,255,0.20)",
+  background: "rgba(255,255,255,0.10)",
   borderRadius: 12,
   width: 38,
   height: 38,
   cursor: disabled ? "not-allowed" : "pointer",
   fontWeight: 950,
-  color: "#0f172a",
+  color: "#fff",
   display: "grid",
   placeItems: "center",
   opacity: disabled ? 0.6 : 1,
@@ -299,7 +304,7 @@ const btnPrimary = (disabled) => ({
   padding: "10px 14px",
   borderRadius: 14,
   border: "1px solid rgba(251,146,60,0.95)",
-  fontWeight: 1000,
+  fontWeight: 900,
   cursor: disabled ? "not-allowed" : "pointer",
   boxShadow: "0 12px 24px rgba(249,115,22,0.22)",
   opacity: disabled ? 0.7 : 1,

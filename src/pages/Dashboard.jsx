@@ -36,6 +36,7 @@ import { getTechniciansEfficiencyMonthly } from "../services/dashboardTechnician
 import TechniciansEfficiencyCard from "../components/dashboard/TechniciansEfficiencyCard";
 
 import { getAiSummary, refreshAiSummary } from "../services/aiService";
+import { getAnalyticsSummary } from "../services/analyticsService";
 
 import CompleteExecutionModal from "../pages/CompleteExecutionModal";
 import ScheduleActivityModal from "../components/activities/ScheduleActivityModal";
@@ -161,6 +162,18 @@ function priorityOwnerLabel(owner) {
 function priorityStripeColor(severity) {
   const s = String(severity || "").toUpperCase();
   return s === "CRITICAL" || s === "HIGH" ? "#dc2626" : "#f59e0b";
+}
+
+function priorityTypeIcon(type) {
+  const t = String(type || "").toUpperCase();
+  if (t.includes("OVERDUE") || t === "EXEC_OVERDUE") return "warn";
+  if (t.includes("UNASSIGNED")) return "user";
+  if (t.includes("RISK")) return "warn";
+  if (t.includes("CONDITION") || t.includes("COND_REPORT")) return "doc";
+  if (t.includes("STOCK") || t.includes("EMPTY")) return "drop";
+  if (t.includes("REPEATED") || t.includes("FAILURE")) return "refresh";
+  if (t.includes("ANOMALY") || t.includes("ANOMALIES")) return "warn";
+  return "warn";
 }
 
 function cleanUiText(value) {
@@ -456,8 +469,13 @@ const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI"
 function PanelCard({ title, subtitle, right = null, children, executive = false, cardStyle = null, bodyStyle = null }) {
   return (
     <div style={{ ...panelAdminCard, ...(cardStyle || null) }}>
-      <div style={panelAdminHeader}>
-        <div style={{ minWidth: 0 }}>
+      <div style={{ ...panelAdminHeader, position: "relative", overflow: "hidden" }}>
+        {/* Orange left accent on dark header */}
+        <div style={{
+          position: "absolute", top: 0, bottom: 0, left: 0, width: 4,
+          background: "linear-gradient(180deg, #f97316 0%, #fb923c 100%)",
+        }} />
+        <div style={{ paddingLeft: 8, minWidth: 0 }}>
           <div style={panelTitleAdminRow}>
             <div style={executive ? { ...panelTitleAdmin, fontFamily: EXEC_DISPLAY_FONT, letterSpacing: "-.02em", fontWeight: 700 } : panelTitleAdmin}>{title}</div>
             {right}
@@ -674,7 +692,7 @@ function AdminInventoryInsightCard({
           </div>
 
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 1000, color: "#0f172a", fontSize: 18, lineHeight: 1.1 }}>{title}</div>
+            <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 18, lineHeight: 1.1 }}>{title}</div>
             <div style={{ marginTop: 5, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <span
                 style={{
@@ -782,7 +800,7 @@ function AdminInventoryInsightCard({
               <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.4, textTransform: "uppercase", color: "#64748b" }}>
                 {item.label}
               </div>
-              <div style={{ fontSize: 17, lineHeight: 1.25, fontWeight: 1000, color: "#0f172a" }}>{item.value}</div>
+              <div style={{ fontSize: 17, lineHeight: 1.25, fontWeight: 900, color: "#0f172a" }}>{item.value}</div>
               <div style={{ fontSize: 12, lineHeight: 1.45, fontWeight: 800, color: "#475569" }}>{item.sub}</div>
             </div>
           ))}
@@ -823,52 +841,75 @@ function AdminInventoryInsightCard({
 }
 function KpiCard({ title, value, sub, tone = "blue", iconName = "alert", executive = false }) {
   const toneMap = {
-    blue: { bg: "rgba(239,246,255,0.95)", bd: "rgba(191,219,254,0.95)", fg: "#1d4ed8" },
-    red: { bg: "rgba(254,226,226,0.95)", bd: "rgba(254,202,202,0.95)", fg: "#991b1b" },
-    amber: { bg: "rgba(254,243,199,0.95)", bd: "rgba(253,230,138,0.95)", fg: "#92400e" },
-    green: { bg: "rgba(220,252,231,0.95)", bd: "rgba(187,247,208,0.95)", fg: "#166534" },
-    gray: { bg: "rgba(248,250,252,0.95)", bd: "rgba(226,232,240,0.95)", fg: "#0f172a" },
+    blue:  { bg: "rgba(239,246,255,0.95)", bd: "rgba(191,219,254,0.95)", fg: "#1d4ed8", bar: "#2563eb", iconBg: "rgba(37,99,235,0.10)", iconFg: "#1d4ed8" },
+    red:   { bg: "rgba(254,226,226,0.95)", bd: "rgba(254,202,202,0.95)", fg: "#991b1b", bar: "#dc2626", iconBg: "rgba(220,38,38,0.10)", iconFg: "#dc2626" },
+    amber: { bg: "rgba(254,243,199,0.95)", bd: "rgba(253,230,138,0.95)", fg: "#92400e", bar: "#d97706", iconBg: "rgba(217,119,6,0.10)",  iconFg: "#d97706" },
+    green: { bg: "rgba(220,252,231,0.95)", bd: "rgba(187,247,208,0.95)", fg: "#166534", bar: "#16a34a", iconBg: "rgba(22,163,74,0.10)",  iconFg: "#16a34a" },
+    gray:  { bg: "rgba(248,250,252,0.95)", bd: "rgba(226,232,240,0.95)", fg: "#0f172a", bar: "#334155", iconBg: "rgba(51,65,85,0.10)",   iconFg: "#334155" },
   };
   const t = toneMap[tone] || toneMap.blue;
 
   return (
     <div
+      className="lpKpiCard"
       style={{
         border: `1px solid ${t.bd}`,
         borderRadius: 18,
         overflow: "hidden",
-        boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
+        boxShadow: "0 12px 28px rgba(2,6,23,0.07)",
         minWidth: 0,
-        background: "rgba(255,255,255,0.9)",
+        background: "#fff",
+        position: "relative",
       }}
     >
-      <div style={{ height: 10, background: "#0f172a", opacity: 0.92 }} />
-      <div style={{ padding: 12 }}>
+      {/* dark top bar */}
+      <div style={{ height: 5, background: "#0f172a" }} />
+      {/* tone left stripe */}
+      <div style={{
+        position: "absolute", top: 5, bottom: 0, left: 0, width: 4,
+        background: t.bar, opacity: 0.80,
+      }} />
+
+      <div style={{ padding: "12px 14px 14px 18px" }}>
+        {/* icon + label */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 14,
-              display: "grid",
-              placeItems: "center",
-              background: "#f97316",
-              border: "1px solid rgba(0,0,0,0.10)",
-              color: "#0b0f19",
+              width: 38, height: 38, borderRadius: 12,
+              display: "grid", placeItems: "center",
+              background: t.iconBg,
+              border: `1px solid ${t.bd}`,
+              color: t.iconFg,
               flex: "0 0 auto",
-              boxShadow: "0 10px 18px rgba(15,23,42,0.10)",
             }}
           >
             <Icon name={iconName} size="lg" weight="bold" />
           </div>
-
-          <div style={{ minWidth: 0 }}>
-            <div style={executive ? { fontSize: 11, fontWeight: 900, color: "#64748b", textTransform: "uppercase", letterSpacing: ".12em", fontFamily: EXEC_TEXT_FONT } : { fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" }}>{title}</div>
-            <div style={executive ? { marginTop: 6, fontSize: 30, fontWeight: 700, color: t.fg, lineHeight: 0.98, fontFamily: EXEC_DISPLAY_FONT, letterSpacing: "-.03em" } : { marginTop: 6, fontSize: 28, fontWeight: 1000, color: t.fg, lineHeight: 1.05 }}>{value}</div>
-          </div>
+          <div style={{
+            fontSize: 11, fontWeight: 900, color: "#64748b",
+            textTransform: "uppercase", letterSpacing: ".10em",
+            fontFamily: executive ? EXEC_TEXT_FONT : undefined,
+          }}>{title}</div>
         </div>
 
-        {sub ? <div style={executive ? { marginTop: 10, fontSize: 12, fontWeight: 700, color: "#475569", fontFamily: EXEC_TEXT_FONT, letterSpacing: ".01em" } : { marginTop: 10, fontSize: 12, fontWeight: 850, color: "#475569" }}>{sub}</div> : null}
+        {/* divider */}
+        <div style={{ margin: "10px 0 8px", height: 1, background: "rgba(226,232,240,0.70)" }} />
+
+        {/* value */}
+        <div style={{
+          fontSize: executive ? 30 : 28,
+          fontWeight: 900, color: t.fg, lineHeight: 1,
+          letterSpacing: "-.03em",
+          fontFamily: executive ? EXEC_DISPLAY_FONT : undefined,
+        }}>{value}</div>
+
+        {sub ? (
+          <div style={{
+            marginTop: 6, fontSize: 11, fontWeight: 800,
+            color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".07em",
+            fontFamily: executive ? EXEC_TEXT_FONT : undefined,
+          }}>{sub}</div>
+        ) : null}
       </div>
     </div>
   );
@@ -897,7 +938,7 @@ const aiEntityHighlight = {
   background: "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(239,68,68,0.10))",
   border: "1px solid rgba(249,115,22,0.18)",
   color: "#c2410c",
-  fontWeight: 1000,
+  fontWeight: 900,
   lineHeight: "inherit",
   verticalAlign: "baseline",
 };
@@ -933,15 +974,67 @@ function renderAiEntityText(value) {
   return parts.length ? parts : stripAiEntityMarkers(text);
 }
 
+function monthToDays(month) {
+  if (!month) return 31;
+  const [y, m] = String(month).split("-").map(Number);
+  if (!y || !m) return 31;
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0);
+  const today = new Date();
+  const refEnd = end < today ? end : today;
+  const days = Math.ceil((refEnd - start) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(1, days);
+}
+
 function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi = false }) {
+  const { currentPlantId } = usePlant();
   const loading = !!aiState?.loading;
   const err = aiState?.error;
+  const backendDetail = aiState?.backendDetail || "";
+  const serverRetryAfter = Number(aiState?.retryAfter || 0);
+  const is429 = err === "429" || (Boolean(err) && (err.includes("429") || err.includes("límite") || err.includes("rate")));
   const data = aiState?.data;
   const summary = data?.summary;
   const cached = !!data?.cached;
   const model = data?.model;
   const generatedAt = data?.generatedAt ? fmtDateTimeLocal(data.generatedAt) : null;
   const isFallback = /fallback/i.test(String(summary?.title || ""));
+
+  const [topOil, setTopOil] = useState(null);
+  const [topGrease, setTopGrease] = useState(null);
+
+  useEffect(() => {
+    if (!currentPlantId || !month) return;
+    let alive = true;
+    const days = monthToDays(month);
+    Promise.all([
+      getAnalyticsSummary({ days, kind: "ACEITE" }),
+      getAnalyticsSummary({ days, kind: "GRASA" }),
+    ])
+      .then(([oil, grease]) => {
+        if (!alive) return;
+        setTopOil(oil?.topLubricant || null);
+        setTopGrease(grease?.topLubricant || null);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [month, currentPlantId]);
+
+  const [retryCountdown, setRetryCountdown] = useState(0);
+
+  useEffect(() => {
+    if (!is429) { setRetryCountdown(0); return; }
+    const start = serverRetryAfter > 0 ? serverRetryAfter : 60;
+    setRetryCountdown(start);
+    const id = setInterval(() => {
+      setRetryCountdown((c) => {
+        if (c <= 1) { clearInterval(id); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [is429, err]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const hallazgos = Array.isArray(summary?.highlights) ? summary.highlights.slice(0, 4) : [];
   const acciones = Array.isArray(summary?.recommendations) ? summary.recommendations.slice(0, 4) : [];
   const riesgos = Array.isArray(summary?.risks) ? summary.risks.slice(0, 4) : [];
@@ -1061,11 +1154,74 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
         {loading ? (
           <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>Preparando lectura para {month}…</div>
         ) : err ? (
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#991b1b" }}>
-            {err}
-            <div style={{ marginTop: 8, fontWeight: 800, color: "#64748b" }}>
-              Tip: revisa la conexión con OpenAI, la cuota del proyecto y la configuración del backend.
+          <div style={{
+            borderRadius: 14,
+            border: is429 ? "1px solid rgba(251,146,60,0.35)" : "1px solid rgba(254,202,202,0.9)",
+            background: is429 ? "rgba(255,247,237,0.95)" : "rgba(254,226,226,0.95)",
+            borderLeft: is429 ? "4px solid #f97316" : "4px solid #dc2626",
+            padding: "14px 16px",
+            display: "grid",
+            gap: 10,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <Icon name="warn" size="sm" style={{ color: is429 ? "#c2410c" : "#991b1b", flexShrink: 0, marginTop: 1 }} />
+              <div>
+                <div style={{ fontWeight: 950, fontSize: 13, color: is429 ? "#9a3412" : "#991b1b" }}>
+                  {is429 ? "Límite de solicitudes alcanzado (429)" : "Error al generar resumen"}
+                </div>
+                <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b", lineHeight: 1.5 }}>
+                  {is429
+                    ? "OpenAI aplica límites por minuto independientemente del crédito disponible. Tener saldo no garantiza disponibilidad inmediata — el límite se recupera automáticamente."
+                    : err}
+                </div>
+              </div>
             </div>
+
+            {is429 && (
+              <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={onGenerate}
+                    disabled={retryCountdown > 0}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      padding: "8px 16px", borderRadius: 10, fontWeight: 950, fontSize: 13,
+                      cursor: retryCountdown > 0 ? "not-allowed" : "pointer",
+                      background: retryCountdown > 0 ? "rgba(241,245,249,0.9)" : "#0f172a",
+                      color: retryCountdown > 0 ? "#94a3b8" : "#fff",
+                      border: "none",
+                      transition: "background 200ms ease",
+                    }}
+                  >
+                    <Icon name="refresh" size="sm" />
+                    {retryCountdown > 0 ? `Reintentar en ${retryCountdown}s` : "Reintentar ahora"}
+                  </button>
+                  {retryCountdown > 0 && (
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8" }}>
+                      {serverRetryAfter > 60
+                        ? `OpenAI indica esperar ${serverRetryAfter}s — límite de ventana larga activo.`
+                        : "Esperando a que se libere el rate limit de OpenAI…"}
+                    </span>
+                  )}
+                </div>
+                {backendDetail ? (
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#92400e", background: "rgba(255,237,213,0.7)", borderRadius: 8, padding: "6px 10px" }}>
+                    Backend: {backendDetail}
+                  </div>
+                ) : null}
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", lineHeight: 1.5 }}>
+                  Si el error persiste más de 1 minuto, el límite es de ventana larga (diaria o por hora).
+                  Revisa en <b>platform.openai.com → Usage → Rate limits</b> el tipo de límite activo y tu tier actual.
+                </div>
+              </div>
+            )}
+
+            {!is429 && (
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", background: "rgba(241,245,249,0.85)", borderRadius: 8, padding: "6px 10px" }}>
+                Detalle: {err}
+              </div>
+            )}
           </div>
         ) : summary ? (
           <div style={{ display: "grid", gap: 16 }}>
@@ -1208,6 +1364,35 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                   >
                     {renderAiEntityText(executiveCompact)}
                   </div>
+
+                  {(topOil || topGrease) && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                      {topOil?.name ? (
+                        <span style={lubChip}>
+                          <Icon name="drop" size="sm" />
+                          <span style={{ opacity: 0.55, fontSize: 10, fontWeight: 950, letterSpacing: "0.6px", textTransform: "uppercase" }}>Aceite</span>
+                          <span style={{ fontWeight: 900, color: "#f8fafc" }}>{topOil.name}</span>
+                          {topOil.totalQty != null ? (
+                            <span style={{ opacity: 0.60, fontSize: 11 }}>
+                              · {Number(topOil.totalQty).toLocaleString("es-MX", { maximumFractionDigits: 1 })} {topOil.unit || "L"}
+                            </span>
+                          ) : null}
+                        </span>
+                      ) : null}
+                      {topGrease?.name ? (
+                        <span style={lubChip}>
+                          <Icon name="drop" size="sm" />
+                          <span style={{ opacity: 0.55, fontSize: 10, fontWeight: 950, letterSpacing: "0.6px", textTransform: "uppercase" }}>Grasa</span>
+                          <span style={{ fontWeight: 900, color: "#f8fafc" }}>{topGrease.name}</span>
+                          {topGrease.totalQty != null ? (
+                            <span style={{ opacity: 0.60, fontSize: 11 }}>
+                              · {Number(topGrease.totalQty).toLocaleString("es-MX", { maximumFractionDigits: 1 })} {topGrease.unit || "kg"}
+                            </span>
+                          ) : null}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
 
                 <div
@@ -1247,7 +1432,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
 
                       <div style={{ minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 20, fontWeight: 1000, color: "#f8fafc", lineHeight: 1 }}>
+                          <span style={{ fontSize: 20, fontWeight: 900, color: "#f8fafc", lineHeight: 1 }}>
                             {item.value}
                           </span>
                           <span style={{ fontSize: 13, fontWeight: 900, color: "#f8fafc" }}>{item.title}</span>
@@ -1273,9 +1458,10 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                 style={{
                   borderRadius: 16,
                   padding: 16,
-                  background: "#ffffff",
-                  border: "1px solid rgba(226,232,240,0.95)",
-                  boxShadow: "0 12px 28px rgba(15,23,42,0.05)",
+                  background: "linear-gradient(160deg, rgba(249,115,22,0.04) 0%, rgba(255,255,255,0.98) 100%)",
+                  border: "1px solid rgba(226,232,240,0.9)",
+                  borderTop: "4px solid #f97316",
+                  boxShadow: "0 12px 28px rgba(15,23,42,0.06)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1287,7 +1473,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                       display: "grid",
                       placeItems: "center",
                       background: "rgba(249,115,22,0.10)",
-                      border: "1px solid rgba(249,115,22,0.18)",
+                      border: "1px solid rgba(249,115,22,0.22)",
                       color: "#f97316",
                       flexShrink: 0,
                     }}
@@ -1312,44 +1498,48 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                   </div>
                 </div>
 
-                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+                <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
                   {hallazgos.length ? (
-                    hallazgos.slice(0, 3).map((item, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "38px minmax(0, 1fr)",
-                          gap: 12,
-                          alignItems: "start",
-                          borderRadius: 16,
-                          padding: 14,
-                          background: "#f8fafc",
-                          border: "1px solid rgba(226,232,240,0.95)",
-                        }}
-                      >
+                    hallazgos.slice(0, 3).map((item, i) => {
+                      const hallazgoAccents = ["#dc2626", "#f97316", "#f59e0b"];
+                      const ha = hallazgoAccents[i] || "#f97316";
+                      return (
                         <div
+                          key={i}
                           style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 999,
-                            display: "grid",
-                            placeItems: "center",
-                            background: "#f97316",
-                            color: "#ffffff",
-                            fontSize: 14,
-                            fontWeight: 1000,
-                            marginTop: 2,
+                            display: "flex",
+                            gap: 12,
+                            alignItems: "flex-start",
+                            borderRadius: 14,
+                            padding: "12px 14px",
+                            background: `linear-gradient(135deg, rgba(249,115,22,0.05) 0%, rgba(255,255,255,0.97) 100%)`,
+                            border: "1px solid rgba(226,232,240,0.9)",
+                            borderLeft: `4px solid ${ha}`,
                           }}
                         >
-                          {i + 1}
+                          <div
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 999,
+                              flexShrink: 0,
+                              display: "grid",
+                              placeItems: "center",
+                              background: ha,
+                              color: "#fff",
+                              fontSize: 13,
+                              fontWeight: 900,
+                              marginTop: 1,
+                            }}
+                          >
+                            {i + 1}
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.5 }}>
+                            {renderAiEntityText(item)}
+                          </div>
                         </div>
-
-                        <div style={{ fontSize: 14, fontWeight: 850, color: "#0f172a", lineHeight: 1.45 }}>
-                          {renderAiEntityText(item)}
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div style={{ fontSize: 12, fontWeight: 850, color: "#64748b" }}>
                       Sin hallazgos disponibles.
@@ -1362,9 +1552,10 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                 style={{
                   borderRadius: 16,
                   padding: 16,
-                  background: "#ffffff",
-                  border: "1px solid rgba(226,232,240,0.95)",
-                  boxShadow: "0 12px 28px rgba(15,23,42,0.05)",
+                  background: "linear-gradient(160deg, rgba(34,197,94,0.04) 0%, rgba(255,255,255,0.98) 100%)",
+                  border: "1px solid rgba(226,232,240,0.9)",
+                  borderTop: "4px solid #16a34a",
+                  boxShadow: "0 12px 28px rgba(15,23,42,0.06)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1376,7 +1567,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                       display: "grid",
                       placeItems: "center",
                       background: "rgba(34,197,94,0.10)",
-                      border: "1px solid rgba(34,197,94,0.18)",
+                      border: "1px solid rgba(34,197,94,0.22)",
                       color: "#16a34a",
                       flexShrink: 0,
                     }}
@@ -1401,7 +1592,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                   </div>
                 </div>
 
-                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+                <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
                   {acciones.length ? (
                     acciones.slice(0, 3).map((item, i) => {
                       const iconName = i === 0 ? "tool" : i === 1 ? "user" : "calendar";
@@ -1409,33 +1600,33 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                         <div
                           key={i}
                           style={{
-                            display: "grid",
-                            gridTemplateColumns: "44px minmax(0, 1fr)",
+                            display: "flex",
                             gap: 12,
-                            alignItems: "start",
-                            borderRadius: 16,
-                            padding: 14,
-                            background: "#f8fafc",
-                            border: "1px solid rgba(226,232,240,0.95)",
+                            alignItems: "flex-start",
+                            borderRadius: 14,
+                            padding: "12px 14px",
+                            background: "linear-gradient(135deg, rgba(34,197,94,0.05) 0%, rgba(255,255,255,0.97) 100%)",
+                            border: "1px solid rgba(226,232,240,0.9)",
+                            borderLeft: "4px solid #16a34a",
                           }}
                         >
                           <div
                             style={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: 12,
+                              width: 34,
+                              height: 34,
+                              borderRadius: 10,
+                              flexShrink: 0,
                               display: "grid",
                               placeItems: "center",
                               background: "rgba(34,197,94,0.10)",
-                              border: "1px solid rgba(34,197,94,0.16)",
+                              border: "1px solid rgba(34,197,94,0.18)",
                               color: "#16a34a",
                               marginTop: 1,
                             }}
                           >
-                            <Icon name={iconName} size="md" />
+                            <Icon name={iconName} size="sm" />
                           </div>
-
-                          <div style={{ fontSize: 14, fontWeight: 850, color: "#0f172a", lineHeight: 1.45 }}>
+                          <div style={{ fontSize: 13, fontWeight: 850, color: "#0f172a", lineHeight: 1.5 }}>
                             {renderAiEntityText(item)}
                           </div>
                         </div>
@@ -1524,7 +1715,7 @@ function MiniLines({ title, subtitle, series = [] }) {
               <div style={{ fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "capitalize" }}>{p.label}</div>
             </div>
 
-            <div style={{ marginTop: 8, fontSize: 22, fontWeight: 1000, color: "#0f172a" }}>{Number(p.valuePct || 0)}%</div>
+            <div style={{ marginTop: 8, fontSize: 22, fontWeight: 900, color: "#0f172a" }}>{Number(p.valuePct || 0)}%</div>
 
             <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: "#e5e7eb", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${Math.min(100, Math.max(0, Number(p.valuePct || 0)))}%`, background: "#f97316" }} />
@@ -1669,7 +1860,7 @@ function AlertMetricCard({
         </div>
 
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 1000, color: palette.title, lineHeight: 1.15 }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: palette.title, lineHeight: 1.15 }}>
             {title}
           </div>
           <div
@@ -1697,7 +1888,7 @@ function AlertMetricCard({
             display: "grid",
             placeItems: "center",
             fontSize: 18,
-            fontWeight: 1000,
+            fontWeight: 900,
             lineHeight: 1,
             boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
           }}
@@ -1740,6 +1931,7 @@ function AlertClusterPanel({
     <div
       style={{
         border: "1px solid rgba(226,232,240,0.95)",
+        borderTop: "4px solid #f97316",
         borderRadius: 20,
         background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
         boxShadow: "0 14px 28px rgba(15,23,42,0.045)",
@@ -1774,7 +1966,7 @@ function AlertClusterPanel({
             </div>
 
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 1000, color: "#0f172a", lineHeight: 1.15 }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#0f172a", lineHeight: 1.15 }}>
                 {title}
               </div>
               <div style={{ marginTop: 4, fontSize: 13, fontWeight: 800, color: "#64748b" }}>
@@ -1802,6 +1994,7 @@ function AlertClusterPanel({
         {error ? <div style={{ marginTop: 12, ...miniError }}>{error}</div> : null}
 
         <div
+          className="lp-stagger"
           style={{
             marginTop: 14,
             display: "grid",
@@ -2031,7 +2224,7 @@ function WeeklyPlanInsightCard({ weeklyPlan, fallbackItems = [], fallbackSummary
   const miniValueStyle = {
     fontSize: 28,
     lineHeight: 1,
-    fontWeight: 1000,
+    fontWeight: 900,
     color: "#0f172a",
     fontFamily: EXEC_DISPLAY_FONT,
   };
@@ -2059,7 +2252,7 @@ function WeeklyPlanInsightCard({ weeklyPlan, fallbackItems = [], fallbackSummary
     alignItems: "center",
     justifyContent: "center",
     fontSize: 12,
-    fontWeight: 1000,
+    fontWeight: 900,
     border: "1px solid rgba(148,163,184,0.22)",
   };
 
@@ -2079,7 +2272,7 @@ function WeeklyPlanInsightCard({ weeklyPlan, fallbackItems = [], fallbackSummary
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "start" }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 950, color: accent, textTransform: "uppercase", letterSpacing: ".12em" }}>Plan semanal inteligente</div>
-          <div style={{ marginTop: 4, fontSize: 28, lineHeight: 1, fontWeight: 1000, color: "#0f172a", fontFamily: EXEC_DISPLAY_FONT }}>
+          <div style={{ marginTop: 4, fontSize: 28, lineHeight: 1, fontWeight: 900, color: "#0f172a", fontFamily: EXEC_DISPLAY_FONT }}>
             {overdueCount > 0 ? `${overdueCount} frente(s) urgentes` : `${dueNext7DaysCount} actividad(es) en 7 dias`}
           </div>
           <div style={{ marginTop: 6, fontSize: 13, lineHeight: 1.5, fontWeight: 800, color: "#475569" }}>
@@ -2617,7 +2810,7 @@ function AdminPanel({
                 background: "rgba(15,23,42,0.08)",
                 border: "1px solid rgba(15,23,42,0.12)",
                 fontSize: 15,
-                fontWeight: 1000,
+                fontWeight: 900,
                 color: "#0f172a",
                 letterSpacing: ".03em",
               }}
@@ -2638,7 +2831,7 @@ function AdminPanel({
   };
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div style={{ display: "grid", gap: 14 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12 }}>
         {kpis.map((k) => (
           <KpiCard key={k.title} title={k.title} value={k.value} sub={k.sub} tone={k.tone} iconName={k.iconName} executive />
@@ -2667,7 +2860,7 @@ function AdminPanel({
             <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontWeight: 1000, color: "#991b1b", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontWeight: 900, color: "#991b1b", display: "inline-flex", alignItems: "center", gap: 8 }}>
                     <Icon name="clock" size="sm" />
                     Atrasadas ({operationalBuckets.overdue.length})
                   </div>
@@ -2691,7 +2884,7 @@ function AdminPanel({
             <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontWeight: 1000, color: "#b45309", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontWeight: 900, color: "#b45309", display: "inline-flex", alignItems: "center", gap: 8 }}>
                     <Icon name="alert" size="sm" />
                     Pendientes hoy ({operationalBuckets.today.length})
                   </div>
@@ -2713,7 +2906,7 @@ function AdminPanel({
             <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontWeight: 1000, color: "#166534", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontWeight: 900, color: "#166534", display: "inline-flex", alignItems: "center", gap: 8 }}>
                     <Icon name="calendar" size="sm" />
                     Próximas ({operationalBuckets.upcoming.length})
                   </div>
@@ -2763,7 +2956,7 @@ function AdminPanel({
 
             <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.94)", display: "grid", gap: 10 }}>
               <div>
-                <div style={{ fontWeight: 1000, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <div style={{ fontWeight: 900, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <Icon name="tool" size="sm" />
                   Acciones rápidas
                 </div>
@@ -3382,30 +3575,80 @@ function SupervisorPriorityTodayPanel({ month, navigate, canSeePriorityQueue, pq
                 : "1fr",
           }}
         >
-          {priorityItems.map((x, i) => (
-            <div key={x.key || i} style={cardRow}>
-              <div style={{ height: 6, background: x.stripeColor || "#f59e0b" }} />
-              <div style={cardRowBody}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 950, color: "#0f172a" }}>{x.title || priorityTypeLabel(x.type)}</div>
-                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 850, color: "#475569", lineHeight: 1.45 }}>{x.reason || "Sin detalle adicional."}</div>
+          {priorityItems.map((x, i) => {
+            const isHigh = x.severity === "CRITICAL" || x.severity === "HIGH";
+            const accent = x.stripeColor || "#f59e0b";
+            return (
+              <div key={x.key || i} style={{
+                ...cardRow,
+                borderTop: `4px solid ${accent}`,
+                borderLeft: `5px solid ${accent}`,
+                background: isHigh
+                  ? "linear-gradient(160deg, rgba(254,226,226,0.40) 0%, rgba(255,255,255,0.97) 100%)"
+                  : "linear-gradient(160deg, rgba(255,251,235,0.45) 0%, rgba(255,255,255,0.97) 100%)",
+              }}>
+                <div style={{ ...cardRowBody, flexDirection: "column", alignItems: "stretch", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+                      display: "grid", placeItems: "center",
+                      background: isHigh ? "rgba(220,38,38,0.10)" : "rgba(245,158,11,0.10)",
+                      border: `1px solid ${accent}44`,
+                      color: accent,
+                    }}>
+                      <Icon name={priorityTypeIcon(x.type)} size="sm" />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 950, fontSize: 14, color: "#0f172a", lineHeight: 1.3 }}>
+                        {x.title || priorityTypeLabel(x.type)}
+                      </div>
+                      <div style={{ marginTop: 3, fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        {x.categoryLabel || priorityTypeLabel(x.type)}
+                      </div>
+                    </div>
+                    <span style={{ ...pqBadge, ...(isHigh ? pqBadgeHigh : pqBadgeWarn), flexShrink: 0 }}>
+                      {x.priorityLabel}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: 12, fontWeight: 850, color: "#475569", lineHeight: 1.5, paddingLeft: 48 }}>
+                    {x.reason || "Sin detalle adicional."}
+                  </div>
+
                   {Array.isArray(x.metaBadges) && x.metaBadges.length ? (
-                    <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingLeft: 48 }}>
                       {x.metaBadges.map((meta, idx) => (
                         <span key={`${x.key || i}-meta-${idx}`} style={{ ...pqBadge, ...pqBadgeInfo }}>{meta}</span>
                       ))}
                     </div>
                   ) : null}
-                  <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ ...pqBadge, ...(x.severity === "CRITICAL" || x.severity === "HIGH" ? pqBadgeHigh : pqBadgeWarn) }}>{x.priorityLabel}</span>
-                    <span style={{ ...pqBadge, ...pqBadgeInfo }}>{x.categoryLabel || priorityTypeLabel(x.type)}</span>
-                    <span style={{ ...pqBadge, ...pqBadgeInfo }}>Responsable: {x.ownerLabel || "Equipo"}</span>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, paddingTop: 4, borderTop: "1px solid rgba(226,232,240,0.7)" }}>
+                    <span style={{ ...pqBadge, ...pqBadgeInfo }}>
+                      <Icon name="user" size="sm" />
+                      {x.ownerLabel || "Equipo"}
+                    </span>
+                    <button
+                      type="button"
+                      style={{
+                        background: "#0f172a",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 10,
+                        padding: "7px 14px",
+                        fontWeight: 900,
+                        fontSize: 12,
+                        cursor: "pointer",
+                      }}
+                      onClick={() => navigate(x.link)}
+                    >
+                      Abrir →
+                    </button>
                   </div>
                 </div>
-                <button type="button" style={btnAdminGhost} onClick={() => navigate(x.link)}>Abrir</button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </PanelCard>
@@ -3624,7 +3867,7 @@ function TechnicianPerfectPanel(props) {
   ];
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div style={{ display: "grid", gap: 14 }}>
       <TechnicianActivitiesFocusCard
         month={month}
         navigate={navigate}
@@ -3655,6 +3898,7 @@ function TechnicianPerfectPanel(props) {
             sub={k.sub}
             tone={k.tone}
             iconName={k.iconName}
+            executive
           />
         ))}
       </div>
@@ -4319,16 +4563,12 @@ export default function Dashboard() {
             },
           });
         } catch (e) {
-          const msg =
-            e?.status === 429 || String(e?.message || "").includes("429")
-              ? "Se alcanzó el límite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
-              : e?.response?.data?.error ||
-                e?.message ||
-                "Error cargando resumen IA";
-
+          const is429e = e?.status === 429 || String(e?.message || "").includes("429");
           setAiState({
             loading: false,
-            error: msg,
+            error: is429e ? "429" : (e?.data?.error || e?.data?.message || e?.message || "Error cargando resumen IA"),
+            retryAfter: is429e ? (e?.retryAfter || 0) : 0,
+            backendDetail: is429e ? (e?.data?.error || e?.data?.message || e?.data?.detail || "") : "",
             data: null,
           });
         }
@@ -4356,22 +4596,17 @@ export default function Dashboard() {
         setAiState({
           loading: false,
           error: "",
-          data: {
-            ...res,
-            cached: false,
-          },
+          retryAfter: 0,
+          backendDetail: "",
+          data: { ...res, cached: false },
         });
       } catch (e) {
-        const msg =
-          e?.status === 429 || String(e?.message || "").includes("429")
-            ? "Se alcanzó el límite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
-            : e?.response?.data?.error ||
-              e?.message ||
-              "Error cargando resumen IA";
-
+        const is429e = e?.status === 429 || String(e?.message || "").includes("429");
         setAiState({
           loading: false,
-          error: msg,
+          error: is429e ? "429" : (e?.data?.error || e?.data?.message || e?.message || "Error cargando resumen IA"),
+          retryAfter: is429e ? (e?.retryAfter || 0) : 0,
+          backendDetail: is429e ? (e?.data?.error || e?.data?.message || e?.data?.detail || "") : "",
           data: null,
         });
       } finally {
@@ -4511,16 +4746,12 @@ export default function Dashboard() {
       });
       await loadAiSummary({ force: true });
     } catch (e) {
-      const msg =
-        e?.status === 429 || String(e?.message || "").includes("429")
-          ? "Se alcanzó el límite temporal de solicitudes de IA. Espera unos segundos e intenta de nuevo."
-          : e?.response?.data?.error ||
-            e?.message ||
-            "Error regenerando resumen IA";
-
+      const is429e = e?.status === 429 || String(e?.message || "").includes("429");
       setAiState({
         loading: false,
-        error: msg,
+        error: is429e ? "429" : (e?.data?.error || e?.data?.message || e?.message || "Error regenerando resumen IA"),
+        retryAfter: is429e ? (e?.retryAfter || 0) : 0,
+        backendDetail: is429e ? (e?.data?.error || e?.data?.message || e?.data?.detail || "") : "",
         data: null,
       });
     }
@@ -5047,12 +5278,133 @@ loadTechDashboardActivities,
 
 /* ================= VISTAS POR ROL ================= */
 
+function FocusZoneBar({ navigate, month, overdueCount = 0, lowStockCount = 0, unassignedPending = 0, conditionReportsOpen = 0, criticalExecutions = 0, equipmentsWithoutRoutes = 0 }) {
+  const items = [
+    overdueCount > 0 && { count: overdueCount, label: "Actividades vencidas", color: "#991b1b", bg: "rgba(239,68,68,0.09)", border: "rgba(239,68,68,0.28)", onClick: () => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`) },
+    criticalExecutions > 0 && { count: criticalExecutions, label: "Ejecuciones críticas", color: "#991b1b", bg: "rgba(239,68,68,0.09)", border: "rgba(239,68,68,0.28)", onClick: () => navigate(`/activities?month=${encodeURIComponent(month)}`) },
+    conditionReportsOpen > 0 && { count: conditionReportsOpen, label: "Reportes abiertos", color: "#92400e", bg: "rgba(245,158,11,0.09)", border: "rgba(245,158,11,0.28)", onClick: () => navigate("/reports/monthly") },
+    unassignedPending > 0 && { count: unassignedPending, label: "Sin técnico asignado", color: "#1e40af", bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.22)", onClick: () => navigate(`/activities?filter=unassigned&month=${encodeURIComponent(month)}`) },
+    lowStockCount > 0 && { count: lowStockCount, label: "Bajo stock mínimo", color: "#78350f", bg: "rgba(245,158,11,0.09)", border: "rgba(245,158,11,0.28)", onClick: () => navigate("/inventory?stock=LOW") },
+    equipmentsWithoutRoutes > 0 && { count: equipmentsWithoutRoutes, label: "Equipos sin rutas", color: "#334155", bg: "rgba(15,23,42,0.05)", border: "rgba(15,23,42,0.14)", onClick: () => navigate("/equipments?filter=without-routes") },
+  ].filter(Boolean);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div style={focusZoneWrap}>
+      <div style={focusZoneLeft}>
+        <span style={focusZoneDot} />
+        <span style={focusZoneTitle}>Requiere atención</span>
+        <span style={focusZoneCount}>{items.length} {items.length === 1 ? "alerta" : "alertas"}</span>
+      </div>
+      <div style={focusZoneItems}>
+        {items.map((item, i) => (
+          <button key={i} type="button" style={{ ...focusZoneItem, background: item.bg, borderColor: item.border, color: item.color }} onClick={item.onClick}>
+            <span style={focusZoneNum}>{item.count}</span>
+            <span style={focusZoneItemLabel}>{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const focusZoneWrap = {
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+  flexWrap: "wrap",
+  padding: "12px 16px",
+  borderRadius: 18,
+  background: "linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "5px solid #ef4444",
+  boxShadow: "0 10px 24px rgba(2,6,23,0.07)",
+};
+
+const focusZoneLeft = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  flexShrink: 0,
+};
+
+const focusZoneDot = {
+  display: "inline-block",
+  width: 8,
+  height: 8,
+  borderRadius: 999,
+  background: "#ef4444",
+  boxShadow: "0 0 0 3px rgba(239,68,68,0.18)",
+  flexShrink: 0,
+};
+
+const focusZoneTitle = {
+  fontSize: 12,
+  fontWeight: 950,
+  color: "#0f172a",
+  letterSpacing: 0.3,
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+};
+
+const focusZoneCount = {
+  display: "inline-flex",
+  padding: "2px 8px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 950,
+  background: "rgba(239,68,68,0.10)",
+  color: "#991b1b",
+  border: "1px solid rgba(239,68,68,0.22)",
+};
+
+const focusZoneItems = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  flex: 1,
+};
+
+const focusZoneItem = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 12px",
+  borderRadius: 10,
+  border: "1px solid",
+  cursor: "pointer",
+  fontFamily: "inherit",
+};
+
+const focusZoneNum = {
+  fontSize: 16,
+  fontWeight: 900,
+  lineHeight: 1,
+};
+
+const focusZoneItemLabel = {
+  fontSize: 12,
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+};
+
 function AdminDashboard(props) {
   const { month, donutTotals, donutLoading, navigate, overdueCount, unassignedPending, lowStockCount, adminCounts, loadMonthlyActivities, overload } =
     props;
 
   return (
-    <>
+    <div className="lp-fade-in" style={{ display: "grid", gap: 14 }}>
+      <FocusZoneBar
+        navigate={navigate}
+        month={month}
+        overdueCount={props.overdueCount}
+        lowStockCount={props.lowStockCount}
+        unassignedPending={props.unassignedPending}
+        conditionReportsOpen={props.conditionReportsOpen}
+        criticalExecutions={props.criticalExecutions}
+        equipmentsWithoutRoutes={props.equipmentsWithoutRoutes}
+      />
       <DashTop {...props} title="Panel de Control" executive />
 
       <AdminPanel
@@ -5102,7 +5454,7 @@ function AdminDashboard(props) {
 
       <AdminMainGrid {...props} />
       <AdminBottomGrid {...props} />
-    </>
+    </div>
   );
 }
 
@@ -5220,10 +5572,10 @@ function SupervisorExecutivePanel({
   });
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div style={{ display: "grid", gap: 14 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12 }}>
         {kpis.map((k) => (
-          <KpiCard key={k.title} title={k.title} value={k.value} sub={k.sub} tone={k.tone} iconName={k.iconName} />
+          <KpiCard key={k.title} title={k.title} value={k.value} sub={k.sub} tone={k.tone} iconName={k.iconName} executive />
         ))}
       </div>
 
@@ -5437,11 +5789,21 @@ function SupervisorExecutivePanel({
   );
 }
 function SupervisorDashboard(props) {
-  const { month, upcomingActivities, loading, onOpenScheduleActivity, onOpenEmergencyActivity } = props;
+  const { month, upcomingActivities, loading, onOpenScheduleActivity, onOpenEmergencyActivity, navigate } = props;
 
   return (
-    <>
-      <DashTop {...props} title="Dashboard · Supervisor" />
+    <div className="lp-fade-in" style={{ display: "grid", gap: 14 }}>
+      <FocusZoneBar
+        navigate={navigate}
+        month={month}
+        overdueCount={props.overdueCount}
+        lowStockCount={props.lowStockCount}
+        unassignedPending={props.unassignedPending}
+        conditionReportsOpen={props.conditionReportsOpen}
+        criticalExecutions={props.criticalExecutions}
+        equipmentsWithoutRoutes={props.equipmentsWithoutRoutes}
+      />
+      <DashTop {...props} title="Dashboard · Supervisor" executive />
 
       <SupervisorExecutivePanel
         {...props}
@@ -5459,14 +5821,14 @@ function SupervisorDashboard(props) {
       />
 
       <SupervisorBottomGrid {...props} />
-    </>
+    </div>
   );
 }
 function TechnicianDashboard(props) {
   const myTechId = props.user?.technicianId != null ? Number(props.user.technicianId) : null;
 
   return (
-    <>
+    <div className="lp-fade-in" style={{ display: "grid", gap: 14 }}>
       <DashTop {...props} title="Dashboard · Técnico" />
       <TechnicianPerfectPanel
         {...props}
@@ -5475,7 +5837,7 @@ function TechnicianDashboard(props) {
         activities={props.techDashboardActivities}
         loading={props.techDashboardLoading}
       />
-    </>
+    </div>
   );
 }
 
@@ -5615,37 +5977,58 @@ function normalizeExecutionToActivity(ex, todayYMD) {
 /* ================= BLOQUES REUSABLES ================= */
 
 function DashTop({ user, role, summary, month, setMonth, load, loading, connected, title, executive = false }) {
+  const ROLE_BADGE = {
+    ADMIN:      { bg: "rgba(249,115,22,0.14)", fg: "#c2410c", bd: "rgba(249,115,22,0.30)" },
+    SUPERVISOR: { bg: "rgba(59,130,246,0.12)",  fg: "#1d4ed8", bd: "rgba(59,130,246,0.28)" },
+    TECHNICIAN: { bg: "rgba(22,163,74,0.12)",   fg: "#166534", bd: "rgba(22,163,74,0.28)" },
+  };
+  const rBadge = ROLE_BADGE[String(role || "").toUpperCase()] || ROLE_BADGE.TECHNICIAN;
+
   const h1View = executive
     ? { ...h1, fontFamily: EXEC_DISPLAY_FONT, fontWeight: 700, letterSpacing: "-.03em" }
     : h1;
   const subView = executive
     ? { ...sub, fontFamily: EXEC_TEXT_FONT, letterSpacing: ".01em" }
     : sub;
-  const headerView = executive
-    ? { ...header, fontFamily: EXEC_TEXT_FONT }
-    : header;
 
   return (
-    <div style={headerView}>
-      <div style={{ minWidth: 0 }}>
-        <div style={h1View}>{title}</div>
+    <div style={{ ...header, position: "relative", overflow: "hidden", marginBottom: 2 }}>
+      {/* Accent stripe: orange top → dark navy bottom */}
+      <div style={{
+        position: "absolute", top: 0, bottom: 0, left: 0, width: 5,
+        background: "linear-gradient(180deg, #f97316 0%, #0f172a 100%)",
+      }} />
+
+      <div style={{ paddingLeft: 14, minWidth: 0, flex: 1 }}>
+        {/* Title row + role badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={h1View}>{title}</div>
+          <span style={{
+            display: "inline-flex", alignItems: "center",
+            padding: "3px 9px", borderRadius: 999, fontSize: 10,
+            fontWeight: 900, lineHeight: 1,
+            background: rBadge.bg, color: rBadge.fg, border: `1px solid ${rBadge.bd}`,
+            textTransform: "uppercase", letterSpacing: ".12em",
+          }}>{roleLabel(role)}</span>
+        </div>
 
         <div style={subView}>
-          Bienvenido, <b>{user?.name || "—"}</b> · Rol: <b>{roleLabel(role)}</b> · <b>Actualizado:</b> {fmtDateTimeLocal(summary?.updatedAt)}
+          <b>{user?.name || "—"}</b>
+          {" · Actualizado: "}
+          {fmtDateTimeLocal(summary?.updatedAt)}
           {" · "}
-          <span style={{ fontWeight: 900, color: connected ? "#166534" : "#b45309", display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 999, background: connected ? "#22c55e" : "#f59e0b", display: "inline-block" }} />
-            {connected ? "En vivo" : "reconectando"}
+          <span style={{ fontWeight: 900, color: connected ? "#166534" : "#b45309", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span className={connected ? "lp-dot-live" : undefined} style={{ width: 7, height: 7, borderRadius: 999, background: connected ? "#22c55e" : "#f59e0b", display: "inline-block" }} />
+            {connected ? "En vivo" : "Reconectando"}
           </span>
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", flexShrink: 0 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <span style={miniLbl}>Mes</span>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={select} />
         </div>
-
         <button onClick={load} style={btnGhost} disabled={loading}>
           <span style={btnRow}>
             <Icon name="refresh" size="sm" />
@@ -5747,7 +6130,7 @@ function MiniStatCard({ label, value, valueColor = "#0f172a" }) {
         style={{
           marginTop: 6,
           fontSize: 22,
-          fontWeight: 1000,
+          fontWeight: 900,
           color: valueColor,
         }}
       >
@@ -5906,6 +6289,7 @@ function UpcomingBlock({
 }
 
 function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) {
+  const [hover, setHover] = useState(false);
   const title = activity?.isManual
     ? activity?.activityName || activity?.title || "Actividad"
     : formatRouteDisplayName(
@@ -5998,12 +6382,18 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
 
   return (
     <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         borderRadius: 18,
         border: `1px solid ${statusTone.badgeBorder}`,
         borderLeft: `6px solid ${statusTone.accent}`,
         background: statusTone.bg,
-        boxShadow: "0 12px 28px rgba(15,23,42,0.06)",
+        boxShadow: hover
+          ? "0 20px 48px rgba(15,23,42,0.13), 0 4px 12px rgba(15,23,42,0.07)"
+          : "0 12px 28px rgba(15,23,42,0.06)",
+        transform: hover ? "translateY(-3px)" : "translateY(0)",
+        transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms ease",
         padding: isMobile ? "14px 14px 16px" : "18px",
         display: "grid",
         gap: 10,
@@ -6071,7 +6461,7 @@ function DashboardUpcomingCard({ activity, month, navigate, isMobile = false }) 
           }
         >
           <div style={{ display: "grid", gap: 12, minWidth: 0, ...(compactDesktopLayout ? { gridColumn: "1 / -1" } : null) }}>
-            <div style={{ fontSize: isMobile ? 26 : 28, lineHeight: 1.02, fontWeight: 1000, color: "#0f172a", letterSpacing: "-0.04em" }}>
+            <div style={{ fontSize: isMobile ? 26 : 28, lineHeight: 1.02, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em" }}>
               {title}
             </div>
           </div>
@@ -6248,25 +6638,26 @@ const centerOverlay = {
 
 const centerCard = {
   width: "min(340px, 90vw)",
-  borderRadius: 16,
-  border: "2px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.96)",
-  boxShadow: "0 26px 56px rgba(2,6,23,0.22)",
-  padding: "14px 14px 12px",
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
+  background: "#ffffff",
+  boxShadow: "0 30px 60px rgba(2,6,23,0.25)",
+  padding: "20px 20px 16px",
   textAlign: "center",
-  animation: "lpPulse 260ms ease-out",
+  animation: "lpPulse 280ms cubic-bezier(0.34,1.56,0.64,1)",
 };
 
 const centerIconWrap = {
-  width: 50,
-  height: 50,
-  borderRadius: 16,
-  margin: "0 auto 8px",
+  width: 54,
+  height: 54,
+  borderRadius: 18,
+  margin: "0 auto 12px",
   display: "grid",
   placeItems: "center",
-  background: "rgba(249,115,22,0.92)",
-  border: "1px solid rgba(251,146,60,0.85)",
-  boxShadow: "inset 0 -6px 12px rgba(255,255,255,0.2)",
+  background: "linear-gradient(135deg, #fb923c 0%, #f97316 100%)",
+  border: "1px solid rgba(251,146,60,0.70)",
+  boxShadow: "0 10px 24px rgba(249,115,22,0.30), inset 0 1px 0 rgba(255,255,255,0.35)",
 };
 
 function Toast({ message, tone = "blue" }) {
@@ -6325,13 +6716,13 @@ function Chip({ children, tone = "gray" }) {
   justifyContent: "space-between",
   gap: 12,
   flexWrap: "wrap",
-  alignItems: "flex-start",
-  marginBottom: 18,
-  padding: "16px 18px",
-  borderRadius: 22,
+  alignItems: "center",
+  padding: "18px 20px",
+  borderRadius: 20,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 56%, rgba(255,247,237,0.76) 100%)",
-  boxShadow: "0 20px 40px rgba(2,6,23,0.06)",
+  borderTop: "3px solid #0f172a",
+  background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 55%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 16px 36px rgba(2,6,23,0.07)",
 };
 
   const h1 = { fontSize: 28, fontWeight: 950, color: "#0f172a" };
@@ -6365,6 +6756,7 @@ function Chip({ children, tone = "gray" }) {
 
   const panel = {
     border: "1px solid rgba(226,232,240,0.95)",
+    borderTop: "3px solid #0f172a",
     borderRadius: 18,
     padding: 14,
     background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 100%)",
@@ -6511,6 +6903,7 @@ const btnAdminGhostMini = {
 const adminInventoryMiniStat = {
   borderRadius: 14,
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #334155",
   background: "rgba(255,255,255,0.92)",
   padding: "10px 12px",
   display: "grid",
@@ -6526,7 +6919,7 @@ const adminInventoryMiniLabel = {
 const adminInventoryMiniValue = {
   fontSize: 24,
   lineHeight: 1,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
 };
 
@@ -6606,16 +6999,17 @@ const seeAllBtn = {
   };
 
   const cardRow = {
-    background: "rgba(255,255,255,0.8)",
-    border: "1px solid #e5e7eb",
-    borderRadius: 14,
+    border: "1px solid rgba(226,232,240,0.95)",
+    borderRadius: 16,
     overflow: "hidden",
     display: "grid",
     gap: 0,
+    boxShadow: "0 8px 20px rgba(2,6,23,0.05)",
+    transition: "box-shadow 180ms ease",
   };
 
   const cardRowBody = {
-    padding: 12,
+    padding: 14,
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -6708,14 +7102,15 @@ const seeAllBtn = {
 
   const panelAdminCard = {
     border: "1px solid rgba(226,232,240,0.95)",
+    borderLeft: "3px solid #f97316",
     borderRadius: 18,
     overflow: "hidden",
-    background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
-    boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
+    background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+    boxShadow: "0 14px 32px rgba(2,6,23,0.07)",
   };
 
   const panelAdminHeader = {
-    background: "#0f172a",
+    background: "linear-gradient(90deg, #0f172a 0%, #1e293b 100%)",
     padding: 12,
     color: "#fff",
   };
@@ -6728,7 +7123,7 @@ const seeAllBtn = {
     alignItems: "center",
   };
 
-  const panelTitleAdmin = { fontWeight: 1000, color: "#fff" };
+  const panelTitleAdmin = { fontWeight: 900, color: "#fff" };
 
   const panelSubtitleAdmin = {
     marginTop: 4,
@@ -6740,23 +7135,28 @@ const seeAllBtn = {
   
 
   const btnAdminPrimary = {
-    background: "#0f172a",
+    background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
     color: "#fff",
-    border: "1px solid #0f172a",
+    border: "1px solid #1e293b",
     borderRadius: 12,
-    padding: "10px 12px",
+    padding: "10px 14px",
     cursor: "pointer",
-    fontWeight: 950,
+    fontWeight: 900,
+    boxShadow: "0 6px 16px rgba(2,6,23,0.18)",
+    display: "inline-flex",
+    alignItems: "center",
   };
 
   const btnAdminGhost = {
     border: "1px solid rgba(226,232,240,0.95)",
-    background: "rgba(255,255,255,0.85)",
+    background: "rgba(255,255,255,0.90)",
     borderRadius: 12,
-    padding: "10px 12px",
+    padding: "10px 14px",
     cursor: "pointer",
-    fontWeight: 950,
+    fontWeight: 900,
     color: "#0f172a",
+    display: "inline-flex",
+    alignItems: "center",
   };
 
   const btnAdminChip = {
@@ -6788,8 +7188,9 @@ const seeAllBtn = {
 
 const aiWrapCard = {
   border: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "3px solid #f97316",
   borderRadius: 22,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
   boxShadow: "0 16px 36px rgba(15,23,42,0.08)",
   overflow: "hidden",
 };
@@ -7012,7 +7413,7 @@ const aiActionIndex = {
   alignItems: "center",
   justifyContent: "center",
   fontSize: 12,
-  fontWeight: 1000,
+  fontWeight: 900,
   flex: "0 0 auto",
 };
 
@@ -7068,6 +7469,20 @@ const aiErrorBox = {
   fontSize: 12,
   fontWeight: 900,
   color: "#991b1b",
+};
+
+const lubChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  color: "#cbd5e1",
+  backdropFilter: "blur(4px)",
+  whiteSpace: "nowrap",
 };
   
   const alertsPremiumHead = {
@@ -7424,7 +7839,7 @@ const dashboardCompactInstructionText = {
     padding: "6px 10px",
     borderRadius: 999,
     fontSize: 11,
-    fontWeight: 1000,
+    fontWeight: 900,
     border: "1px solid rgba(0,0,0,0.06)",
     lineHeight: 1,
     whiteSpace: "nowrap",

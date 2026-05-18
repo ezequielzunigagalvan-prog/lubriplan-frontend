@@ -145,6 +145,10 @@ function ConditionReportsPage() {
               <Icon name="warn" size="sm" weight="bold" />
             </div>
             <div style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
+                <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+                REPORTES · CONDICIÓN
+              </div>
               <h1 style={h1}>Reportes de condición</h1>
               <div style={subTitle}>
                 {role === "TECHNICIAN"
@@ -236,11 +240,20 @@ function ConditionReportsPage() {
       </div>
 
       {loading ? (
-        <div style={muted}><Icon name="refresh" size="sm" /> Cargando?</div>
+        <div style={loadingBox}>
+          <Icon name="refresh" style={{ width: 18, height: 18, color: "#f97316", flexShrink: 0 }} />
+          Cargando reportes…
+        </div>
       ) : null}
 
       {!loading && items.length === 0 ? (
-        <div style={muted}><Icon name="info" size="sm" /> No hay reportes.</div>
+        <div style={emptyBox}>
+          <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(15,23,42,0.06)", display: "grid", placeItems: "center" }}>
+            <Icon name="warn" style={{ width: 22, height: 22, color: "#94a3b8" }} />
+          </div>
+          <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 15 }}>Sin reportes</div>
+          <div style={{ fontWeight: 850, color: "#64748b", fontSize: 13 }}>No hay reportes de condición para el rango y filtros seleccionados.</div>
+        </div>
       ) : null}
 
       {/* List */}
@@ -252,8 +265,14 @@ function ConditionReportsPage() {
 
           const detected = r?.detectedAt ? toYMD(r.detectedAt) : "?";
 
+          const statusBorderColor =
+            s === "OPEN" ? "rgba(239,68,68,0.55)"
+            : s === "IN_PROGRESS" ? "rgba(245,158,11,0.55)"
+            : s === "RESOLVED" ? "rgba(34,197,94,0.50)"
+            : "rgba(148,163,184,0.45)";
+
           return (
-            <div key={r.id} style={rowCard}>
+            <div key={r.id} style={{ ...rowCard, borderLeft: `4px solid ${statusBorderColor}` }}>
               {/* Left */}
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={rowTop}>
@@ -463,11 +482,13 @@ const headerWrap = {
   gap: 12,
   flexWrap: "wrap",
   alignItems: "flex-start",
-  padding: 14,
-  borderRadius: 18,
+  padding: "14px 16px",
+  borderRadius: 20,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.9) 100%)",
-  boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 55%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
 const titleRow = { display: "flex", alignItems: "center", gap: 12 };
@@ -483,7 +504,7 @@ const titleIcon = {
   boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
 };
 
-const h1 = { margin: 0, fontSize: 26, fontWeight: 1000, color: "#0f172a", lineHeight: 1.05 };
+const h1 = { margin: "6px 0 0", fontSize: 26, fontWeight: 900, color: "#0f172a", lineHeight: 1.05 };
 const subTitle = { marginTop: 6, color: "#64748b", fontWeight: 850, fontSize: 13 };
 
 const metaRow = { marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" };
@@ -546,6 +567,7 @@ const errorIcon = {
 const filtersCard = {
   marginTop: 12,
   border: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "3px solid rgba(249,115,22,0.45)",
   borderRadius: 18,
   padding: 14,
   background: "rgba(255,255,255,0.9)",
@@ -585,6 +607,33 @@ const muted = {
   display: "inline-flex",
   alignItems: "center",
   gap: 8,
+};
+
+const loadingBox = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  padding: "18px 16px",
+  borderRadius: 16,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.88)",
+  fontWeight: 900,
+  color: "#475569",
+  marginTop: 12,
+};
+
+const emptyBox = {
+  padding: "32px 18px",
+  borderRadius: 18,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.90)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 10,
+  textAlign: "center",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.04)",
+  marginTop: 12,
 };
 
 const rowCard = {
@@ -683,7 +732,7 @@ const pill = (s) => ({
   padding: "6px 10px",
   borderRadius: 999,
   fontSize: 12,
-  fontWeight: 1000,
+  fontWeight: 900,
   border: "1px solid rgba(0,0,0,0.06)",
   background:
     s === "OPEN"
@@ -710,7 +759,7 @@ const btnPrimaryMini = {
   borderRadius: 14,
   padding: "10px 12px",
   cursor: "pointer",
-  fontWeight: 1000,
+  fontWeight: 900,
   boxShadow: "0 12px 28px rgba(2,6,23,0.12)",
   width: "100%",
 };
@@ -722,7 +771,7 @@ const btnDangerMini = {
   borderRadius: 14,
   padding: "10px 12px",
   cursor: "pointer",
-  fontWeight: 1000,
+  fontWeight: 900,
   boxShadow: "0 12px 28px rgba(153,27,27,0.10)",
   width: "100%",
 };

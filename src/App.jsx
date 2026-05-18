@@ -33,6 +33,7 @@ import MonthlyIntelligentReport from "./pages/reports/MonthlyIntelligentReport";
 import SettingsPage from "./pages/SettingsPage";
 import AdminOnboardingPage from "./pages/AdminOnboardingPage";
 import TechnicalAssistantPage from "./pages/TechnicalAssistantPage";
+import CorporateDashboard from "./pages/CorporateDashboard";
 
 function NotFoundRedirect() {
   const { isAuthenticated } = useAuth();
@@ -259,6 +260,15 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/corporate"
+        element={
+          <ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}>
+            <CorporateDashboard />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );

@@ -93,8 +93,6 @@ export default function ExecutionsKpis({ days = 180, techId }) {
       <div style={grid}>
         {cards.map((card) => (
           <div key={card.key} className="lpKpiCard" style={{ ...kpiCard, ...toneCard(card.tone) }}>
-            <div style={topAccent(card.tone)} />
-
             <div style={kpiHeader}>
               <div style={kpiLabel}>{card.label}</div>
               <span style={iconWrap(card.tone)}>
@@ -119,6 +117,7 @@ function toneCard(tone) {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #fff7f7 100%)",
       border: "1px solid rgba(248,113,113,0.24)",
+      borderTop: "4px solid #dc2626",
     };
   }
 
@@ -126,6 +125,7 @@ function toneCard(tone) {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #f7fff9 100%)",
       border: "1px solid rgba(74,222,128,0.24)",
+      borderTop: "4px solid #16a34a",
     };
   }
 
@@ -133,6 +133,7 @@ function toneCard(tone) {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)",
       border: "1px solid rgba(96,165,250,0.24)",
+      borderTop: "4px solid #2563eb",
     };
   }
 
@@ -140,12 +141,14 @@ function toneCard(tone) {
     return {
       background: "linear-gradient(180deg, #ffffff 0%, #fbfaff 100%)",
       border: "1px solid rgba(167,139,250,0.24)",
+      borderTop: "4px solid #7c3aed",
     };
   }
 
   return {
     background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
     border: "1px solid rgba(226,232,240,0.95)",
+    borderTop: "4px solid #334155",
   };
 }
 
@@ -226,11 +229,9 @@ const grid = {
 };
 
 const kpiCard = {
-  position: "relative",
   borderRadius: 16,
   padding: 14,
   boxShadow: "0 10px 24px rgba(2,6,23,0.05)",
-  overflow: "hidden",
   minHeight: 118,
 };
 
@@ -239,7 +240,6 @@ const kpiHeader = {
   justifyContent: "space-between",
   alignItems: "center",
   gap: 10,
-  marginTop: 4,
 };
 
 const kpiLabel = {
@@ -253,7 +253,7 @@ const kpiLabel = {
 const kpiValue = {
   marginTop: 12,
   fontSize: 28,
-  fontWeight: 1000,
+  fontWeight: 900,
   lineHeight: 1,
 };
 

@@ -1253,10 +1253,13 @@ useEffect(() => {
         </div>
       ) : null}
 
-      <div style={pageShell}>
+      <div className="lp-fade-in" style={pageShell}>
         <div style={topBar}>
           <div>
-            <div style={kicker}>  </div>
+            <div style={kicker}>
+              <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+              ACTIVIDADES · EJECUCIÓN
+            </div>
             <h1 style={title}>Actividades</h1>
             <div style={subtitle}>
               {cleanUiText("Gestión diaria de ejecución, asignación y control")}
@@ -1751,19 +1754,24 @@ useEffect(() => {
         </div>
 
         {loading ? (
-          <p style={{ marginTop: 14, fontWeight: 900, color: "#475569" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "18px 16px", borderRadius: 16, border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.88)", fontWeight: 900, color: "#475569", boxShadow: "0 10px 22px rgba(2,6,23,0.04)" }}>
+            <Icon name="refresh" style={{ width: 18, height: 18, color: "#f97316", flexShrink: 0 }} />
             {cleanUiText("Cargando actividades...")}
-          </p>
+          </div>
         ) : null}
 
         {!loading && filtered.length === 0 ? (
-          <p style={{ marginTop: 14, fontWeight: 900, color: "#475569" }}>
-            {cleanUiText("No hay actividades.")}
-          </p>
+          <div style={{ marginTop: 14, padding: "32px 18px", borderRadius: 18, border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.90)", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center", boxShadow: "0 12px 28px rgba(2,6,23,0.04)" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(15,23,42,0.06)", display: "grid", placeItems: "center" }}>
+              <Icon name="doc" style={{ width: 22, height: 22, color: "#94a3b8" }} />
+            </div>
+            <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 15 }}>{cleanUiText("Sin actividades")}</div>
+            <div style={{ fontWeight: 850, color: "#64748b", fontSize: 13 }}>{cleanUiText("No hay actividades en el filtro seleccionado.")}</div>
+          </div>
         ) : null}
 
         <div style={list}>
-          {suggestedActivities.map((a, index) => {
+          {filtered.map((a, index) => {
   const isHighlighted = Number(a.id) === Number(highlightExecutionId);
   const suggestedLabel = index === 0 && a.computedStatus !== "Completada" ? "Atender primero" : "";
 
@@ -1799,18 +1807,19 @@ useEffect(() => {
 
 function KpiCard({ title, value, icon, tone }) {
   const toneMap = {
-    warn: { dot: "#f59e0b" },
-    danger: { dot: "#ef4444" },
-    success: { dot: "#22c55e" },
+    warn:    { dot: "#f59e0b", bar: "#d97706", iconBg: "rgba(245,158,11,0.12)", iconFg: "#92400e", iconBd: "rgba(217,119,6,0.30)" },
+    danger:  { dot: "#ef4444", bar: "#dc2626", iconBg: "rgba(220,38,38,0.12)",  iconFg: "#991b1b", iconBd: "rgba(220,38,38,0.30)" },
+    success: { dot: "#22c55e", bar: "#16a34a", iconBg: "rgba(34,197,94,0.12)",  iconFg: "#166534", iconBd: "rgba(22,163,74,0.28)" },
   };
   const t = toneMap[tone] || toneMap.warn;
 
   return (
     <div style={kpiCard}>
       <div style={kpiStripe} />
+      <div style={{ ...kpiSideStripe, background: t.bar }} />
       <div style={kpiBody}>
-        <div style={kpiIconWrap}>
-          <Icon name={icon} style={{ width: 20, height: 20, color: "#0b1220" }} />
+        <div style={{ ...kpiIconWrap, background: t.iconBg, border: `1px solid ${t.iconBd}` }}>
+          <Icon name={icon} style={{ width: 20, height: 20, color: t.iconFg }} />
         </div>
 
         <div style={{ minWidth: 0 }}>
@@ -2939,6 +2948,9 @@ const pageShell = {
 };
 
 const kicker = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
   fontSize: 11,
   fontWeight: 950,
   letterSpacing: 1.2,
@@ -2970,8 +2982,10 @@ const topBar = {
   padding: "14px 16px",
   borderRadius: 20,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.92) 52%, rgba(255,247,237,0.72) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.06)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
 const topActions = {
@@ -3106,27 +3120,33 @@ const kpiStripe = {
   top: 0,
   left: 0,
   right: 0,
-  height: 14,
-  background: "rgba(15,23,42,0.82)",
+  height: 5,
+  background: "#0f172a",
+};
+
+const kpiSideStripe = {
+  position: "absolute",
+  top: 5,
+  left: 0,
+  bottom: 0,
+  width: 4,
 };
 
 const kpiBody = {
-  padding: "18px 14px 14px",
+  padding: "14px 14px 14px 18px",
   display: "flex",
   alignItems: "center",
   gap: 10,
 };
 
 const kpiIconWrap = {
-  width: 44,
-  height: 44,
-  borderRadius: 14,
+  width: 40,
+  height: 40,
+  borderRadius: 13,
   display: "grid",
   placeItems: "center",
-  background: "rgba(249,115,22,0.92)",
-  border: "1px solid rgba(251,146,60,0.85)",
-  boxShadow: "0 12px 26px rgba(249,115,22,0.16)",
   flex: "0 0 auto",
+  border: "1px solid rgba(0,0,0,0.08)",
 };
 
 const kpiValue = {
@@ -3246,6 +3266,7 @@ const filtersWrap = {
   padding: 12,
   borderRadius: 20,
   border: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "3px solid rgba(249,115,22,0.45)",
   background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.86) 100%)",
   boxShadow: "0 16px 30px rgba(2,6,23,0.05)",
   backdropFilter: "blur(8px)",
@@ -3394,13 +3415,13 @@ const technicianStatusPill = {
 const technicianStatusPillCompact = {
   padding: "10px 16px",
   fontSize: 15,
-  fontWeight: 1000,
+  fontWeight: 900,
 };
 
 const technicianTaskTitleDesktop = {
   fontSize: 26,
   lineHeight: 1.02,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   letterSpacing: -0.6,
 };
@@ -3408,7 +3429,7 @@ const technicianTaskTitleDesktop = {
 const technicianTaskTitleMobile = {
   fontSize: 20,
   lineHeight: 1.05,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   letterSpacing: -0.4,
 };
@@ -3724,7 +3745,7 @@ const technicianCompleteBtnDesktop = {
   justifyContent: "center",
   gap: 10,
   fontSize: 17,
-  fontWeight: 1000,
+  fontWeight: 900,
   cursor: "pointer",
   boxShadow: "0 16px 28px rgba(34,197,94,0.20)",
 };
@@ -3939,7 +3960,7 @@ const suggestedPriorityPill = {
   color: "#9a3412",
   border: "1px solid rgba(249,115,22,0.34)",
   fontSize: 12,
-  fontWeight: 1000,
+  fontWeight: 900,
   letterSpacing: 0.2,
   boxShadow: "0 8px 18px rgba(249,115,22,0.10)",
 };
@@ -4170,7 +4191,9 @@ const modalCard = {
   width: "min(560px, 100%)",
   background: "#fff",
   borderRadius: 16,
-  border: "2px solid rgba(226,232,240,0.95)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
+  overflow: "hidden",
   padding: 14,
   boxShadow: "0 22px 46px rgba(2,6,23,0.22)",
 };
@@ -4180,20 +4203,24 @@ const modalHeader = {
   justifyContent: "space-between",
   alignItems: "flex-start",
   gap: 10,
-  marginBottom: 10,
+  margin: "-14px -14px 12px",
+  padding: "14px 14px",
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  borderRadius: "16px 16px 0 0",
 };
 
 const modalKicker = {
   fontSize: 11,
   fontWeight: 980,
   letterSpacing: 1.1,
-  color: "#64748b",
+  color: "rgba(249,115,22,0.90)",
 };
 
 const modalTitle = {
   marginTop: 4,
   fontWeight: 980,
-  color: "#0f172a",
+  color: "#fff",
   fontSize: 16,
 };
 

@@ -203,19 +203,20 @@ export default function TechnicalConverterTool() {
 
 const card = {
   border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   borderRadius: 22,
   padding: 18,
-  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   boxShadow: "0 18px 34px rgba(15,23,42,0.08)",
 };
-const kicker = { fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 };
-const title = { marginTop: 4, fontSize: 21, fontWeight: 1000, color: "#0f172a" };
+const kicker = { fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2 };
+const title = { marginTop: 4, fontSize: 21, fontWeight: 900, color: "#0f172a" };
 const subtitle = { marginTop: 6, fontSize: 13, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };
 const formGrid = { marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 };
 const label = { display: "grid", gap: 6, fontSize: 12, fontWeight: 950, color: "#475569" };
 const input = { border: "1px solid rgba(226,232,240,0.95)", borderRadius: 12, padding: "10px 12px", fontWeight: 900, background: "#fff", color: "#0f172a" };
 const resultBox = { marginTop: 14, borderRadius: 16, padding: 14, background: "rgba(248,250,252,0.95)", border: "1px solid rgba(226,232,240,0.95)" };
 const resultLabel = { fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" };
-const resultValue = { marginTop: 6, fontSize: 24, fontWeight: 1000, color: "#0f172a", lineHeight: 1.1 };
+const resultValue = { marginTop: 6, fontSize: 24, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 };
 const fractionBox = { marginTop: 10, padding: "10px 12px", borderRadius: 12, background: "#fef3c7", color: "#92400e", fontSize: 13, fontWeight: 850 };
 const note = { marginTop: 12, fontSize: 12, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };

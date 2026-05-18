@@ -252,8 +252,6 @@ export default function FailuresByEquipment() {
 
   return (
     <div className="lpCard" style={panel}>
-      <div style={accentBarOrange} />
-
       <div style={topRow}>
         <div>
           <div style={panelTitle}>Fallas por equipo</div>
@@ -366,24 +364,12 @@ export default function FailuresByEquipment() {
 }
 
 const panel = {
-  position: "relative",
-  border: "1px solid rgba(148,163,184,0.55)",
-  borderRadius: 14,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #f97316",
+  borderRadius: 16,
   padding: 14,
-  background: "rgba(255,255,255,0.96)",
-  boxShadow: "0 10px 26px rgba(2,6,23,0.08)",
-  outline: "1px solid rgba(255,255,255,0.9)",
-  outlineOffset: -2,
-  overflow: "hidden",
-};
-
-const accentBarOrange = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 8,
-  background: "#f97316",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.07)",
 };
 
 const topRow = {
@@ -396,7 +382,7 @@ const topRow = {
 
 const panelTitle = {
   fontSize: 22,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.05,
 };
@@ -485,7 +471,7 @@ const summaryLbl = {
 const summaryVal = {
   marginTop: 8,
   fontSize: 28,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1,
 };
@@ -493,7 +479,7 @@ const summaryVal = {
 const summaryValSm = {
   marginTop: 8,
   fontSize: 18,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.2,
 };
@@ -538,7 +524,7 @@ const riskHead = {
 
 const riskTitle = {
   fontSize: 18,
-  fontWeight: 1000,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1.15,
 };
@@ -552,7 +538,7 @@ const riskCounter = {
   display: "grid",
   placeItems: "center",
   fontSize: 22,
-  fontWeight: 1000,
+  fontWeight: 900,
 };
 
 const riskMeta = {
@@ -572,17 +558,17 @@ const loadingText = {
 };
 
 const tooltip = {
-  background: "#fff",
-  border: "1px solid rgba(226,232,240,0.95)",
+  background: "#0f172a",
+  border: "1px solid rgba(249,115,22,0.35)",
   borderRadius: 14,
   padding: 12,
-  boxShadow: "0 18px 34px rgba(2,6,23,0.14)",
+  boxShadow: "0 18px 34px rgba(2,6,23,0.32)",
   minWidth: 220,
 };
 
 const tooltipTitle = {
   fontWeight: 950,
-  color: "#0f172a",
+  color: "#f8fafc",
 };
 
 const tooltipGrid = {
@@ -591,7 +577,7 @@ const tooltipGrid = {
   gap: 6,
   fontSize: 12,
   fontWeight: 850,
-  color: "#334155",
+  color: "#94a3b8",
 };
 
 const errorBox = {

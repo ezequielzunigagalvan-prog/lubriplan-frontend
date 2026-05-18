@@ -15,6 +15,7 @@ import {
 } from "../services/equipmentAreasService";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { CardSkeleton } from "../components/ui/CardSkeleton";
 import {
   Settings,
   Eye,
@@ -24,6 +25,7 @@ import {
   Route,
   MapPin,
   AlertTriangle,
+  Tag,
 } from "lucide-react";
 import { Power } from "lucide-react";
 import { Lock } from "lucide-react";
@@ -498,17 +500,13 @@ setShowEquipmentModal(false);
 };
 
   if (loading) {
-   return (
-  <MainLayout>
-    <div style={pageShell}>
-          <div style={panel}>
-            <p style={{ margin: 0, fontWeight: 900, color: "#0f172a" }}>
-              Cargando…
-            </p>
-          </div>
+    return (
+      <MainLayout>
+        <div style={pageShell}>
+          <CardSkeleton count={3} columns="repeat(auto-fit, minmax(150px, 1fr))" gap={12} />
+          <CardSkeleton count={9} columns="repeat(auto-fill, minmax(240px, 1fr))" gap={10} />
         </div>
-        {/* ✅ Toast global de confirmación */}
-<Toast toast={toast} onClose={hideToast} />
+        <Toast toast={toast} onClose={hideToast} />
       </MainLayout>
     );
   }
@@ -521,6 +519,10 @@ setShowEquipmentModal(false);
 {/* HEADER */}
 <div style={headerRow}>
   <div style={headerLeft}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
+      <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+      EQUIPOS · PLANTA
+    </div>
     <h1 style={title}>Equipos</h1>
     <div style={subtitle}>
   Gestiona tus equipos de planta por áreas
@@ -545,51 +547,30 @@ setShowEquipmentModal(false);
 
       <div>
 
-        {onlyWithoutRoutes || isNoActivitiesFilter || areaFilter ? (
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 12,
-              fontWeight: 900,
-              color: "#b45309",
-            }}
-          >
-            🧩 Filtro activo:{" "}
-            <b>
-              {onlyWithoutRoutes
-                ? "Equipos sin rutas"
-                : isNoActivitiesFilter
-                ? "Equipos sin actividades"
-                : "Área"}
-            </b>
-
-            {isNoActivitiesFilter ? (
-              <>
-                {" "}
-                · Últimos <b>{daysParam}</b> días (solo equipos con rutas)
-              </>
-            ) : null}
-
-            {areaFilter ? (
-              <span style={{ marginLeft: 10, fontWeight: 900, color: "#334155" }}>
-                · Área:{" "}
-                <b>
-                  {areaFilter === "_no_area"
-                    ? "Sin área"
-                    : areas.find((a) => String(a.id) === String(areaFilter))?.name || "—"}
-                </b>
-              </span>
-            ) : null}
-
+        {(onlyWithoutRoutes || isNoActivitiesFilter || areaFilter) ? (
+          <div style={activeFiltersRow}>
+            <span style={activeFiltersLabel}>Filtros activos:</span>
+            {onlyWithoutRoutes && (
+              <button type="button" className="lpFilterChip" onClick={() => navigate("/equipments")}>
+                Sin rutas ✕
+              </button>
+            )}
+            {isNoActivitiesFilter && (
+              <button type="button" className="lpFilterChip" onClick={() => navigate("/equipments")}>
+                Sin actividades · {daysParam}d ✕
+              </button>
+            )}
+            {areaFilter && (
+              <button type="button" className="lpFilterChip" onClick={() => setAreaFilter("")}>
+                Área: {areaFilter === "_no_area" ? "Sin área" : areas.find((a) => String(a.id) === String(areaFilter))?.name || "—"} ✕
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => {
-                setAreaFilter("");
-                navigate("/equipments");
-              }}
-              style={{ marginLeft: 10, ...btnGhost, padding: "6px 10px" }}
+              onClick={() => { setAreaFilter(""); navigate("/equipments"); }}
+              style={clearAllFiltersBtn}
             >
-              Quitar filtro
+              Limpiar todos
             </button>
           </div>
         ) : null}
@@ -601,11 +582,10 @@ setShowEquipmentModal(false);
   <div style={summaryCard}>
     <div style={summaryMetrics4}>
       {/* EQUIPOS */}
-      <div style={{ ...kpiCard, ...kpiEquip }}>
-        <div style={kpiAccent} />
+      <div style={{ ...kpiCard, borderTop: "4px solid #0f172a" }} className="lpKpiCard">
         <div style={kpiInner}>
-          <div style={kpiIconBox}>
-            <Settings size={18} strokeWidth={1.8} />
+          <div style={{ ...kpiIconBox, background: "rgba(15,23,42,0.06)", border: "1px solid rgba(15,23,42,0.12)", color: "#334155" }}>
+            <Settings size={20} strokeWidth={1.8} />
           </div>
           <div style={kpiRight}>
             <div style={kpiValue}>{stats.totalEquipments}</div>
@@ -615,11 +595,10 @@ setShowEquipmentModal(false);
       </div>
 
       {/* ÁREAS */}
-      <div style={{ ...kpiCard, ...kpiAreas }}>
-        <div style={kpiAccent} />
+      <div style={{ ...kpiCard, borderTop: "4px solid #3b82f6" }} className="lpKpiCard">
         <div style={kpiInner}>
-          <div style={kpiIconBox}>
-            <MapPin size={18} strokeWidth={1.8} />
+          <div style={{ ...kpiIconBox, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.22)", color: "#1e40af" }}>
+            <MapPin size={20} strokeWidth={1.8} />
           </div>
           <div style={kpiRight}>
             <div style={kpiValue}>{stats.totalAreas}</div>
@@ -629,28 +608,26 @@ setShowEquipmentModal(false);
       </div>
 
       {/* CRÍTICOS */}
-      <div style={{ ...kpiCard, ...kpiCritical }}>
-        <div style={kpiAccent} />
+      <div style={{ ...kpiCard, borderTop: "4px solid #ef4444" }} className="lpKpiCard">
         <div style={kpiInner}>
-          <div style={kpiIconBox}>
-            <AlertTriangle size={18} strokeWidth={1.8} />
+          <div style={{ ...kpiIconBox, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)", color: "#991b1b" }}>
+            <AlertTriangle size={20} strokeWidth={1.8} />
           </div>
           <div style={kpiRight}>
-            <div style={kpiValue}>{stats.critical}</div>
+            <div style={{ ...kpiValue, color: stats.critical > 0 ? "#991b1b" : "#0f172a" }}>{stats.critical}</div>
             <div style={kpiLabel}>Críticos</div>
           </div>
         </div>
       </div>
 
       {/* INACTIVOS */}
-      <div style={{ ...kpiCard, ...kpiInactive }}>
-        <div style={kpiAccent} />
+      <div style={{ ...kpiCard, borderTop: "4px solid #f59e0b" }} className="lpKpiCard">
         <div style={kpiInner}>
-          <div style={kpiIconBox}>
-            <Power size={18} strokeWidth={1.8} />
+          <div style={{ ...kpiIconBox, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.25)", color: "#78350f" }}>
+            <Power size={20} strokeWidth={1.8} />
           </div>
           <div style={kpiRight}>
-            <div style={kpiValue}>{stats.inactive}</div>
+            <div style={{ ...kpiValue, color: stats.inactive > 0 ? "#92400e" : "#0f172a" }}>{stats.inactive}</div>
             <div style={kpiLabel}>Inactivos</div>
           </div>
         </div>
@@ -1334,184 +1311,148 @@ function Modal({ title, subtitle, icon, onClose, children, footer, size = "md" }
   );
 }
 
+const EQ_CRIT_TONE = {
+  CRITICA:       { border: "rgba(239,68,68,0.70)",  bg: "rgba(239,68,68,0.10)",  color: "#991b1b", label: "Crítica" },
+  "CRÍTICA":     { border: "rgba(239,68,68,0.70)",  bg: "rgba(239,68,68,0.10)",  color: "#991b1b", label: "Crítica" },
+  "MUY CRÍTICA": { border: "rgba(239,68,68,0.70)",  bg: "rgba(239,68,68,0.10)",  color: "#991b1b", label: "Crítica" },
+  ALTA:          { border: "rgba(245,158,11,0.65)", bg: "rgba(245,158,11,0.12)", color: "#92400e", label: "Alta" },
+  MEDIA:         { border: "rgba(59,130,246,0.40)", bg: "rgba(59,130,246,0.09)", color: "#1e40af", label: "Media" },
+  BAJA:          { border: "rgba(34,197,94,0.40)",  bg: "rgba(34,197,94,0.09)",  color: "#166534", label: "Baja" },
+};
+const getEqCritTone = (c) =>
+  EQ_CRIT_TONE[String(c || "").toUpperCase().trim()] ||
+  { border: "rgba(15,23,42,0.10)", bg: "rgba(15,23,42,0.04)", color: "#475569", label: null };
+
 function EquipmentCard({ eq, onOpen, onEdit, onAssign, onDelete, onNewRoute, readOnly }) {
   const [hovered, setHovered] = useState(false);
   const status = String(eq?.status || "").toUpperCase();
-  const crit = String(eq?.criticality || "MEDIA").toUpperCase();
+  const crit   = String(eq?.criticality || "MEDIA").toUpperCase().trim();
+  const tone   = getEqCritTone(crit);
 
   const routesCount =
     Number(eq?.routesCount ?? eq?._count?.routes ?? 0) ||
     (Array.isArray(eq?.routes) ? eq.routes.length : 0);
 
   const assignedTechnician = eq?.assignedTechnician || eq?.technician || null;
-  const assignedTechName = assignedTechnician?.name || "";
-  const assignedTechCode = assignedTechnician?.code || "";
+  const assignedTechName   = assignedTechnician?.name || "";
+  const assignedTechCode   = assignedTechnician?.code || "";
 
   const canManageActions =
     !readOnly &&
     (typeof onEdit === "function" || typeof onAssign === "function" || typeof onDelete === "function");
 
   const isActive = status === "ACTIVO" || status === "ACTIVE";
+  const code     = eq?.code     || "";
+  const location = eq?.location || "";
+  const type     = eq?.type     || eq?.equipmentType || "";
 
   return (
     <div
       style={{
         ...eqCardRef,
-        ...(hovered ? eqCardHover : null),
+        borderLeft: `5px solid ${tone.border}`,
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hovered
+          ? "0 20px 44px rgba(2,6,23,0.13), 0 4px 12px rgba(2,6,23,0.07)"
+          : "0 10px 24px rgba(2,6,23,0.07)",
       }}
       role="button"
       tabIndex={0}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onOpen?.();
-      }}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen?.(); }}
     >
-      {/* Barra superior naranja */}
-      <div style={eqTopAccent} />
-
-      {/* Header */}
-      <div style={eqHeaderWrap}>
-        <div style={eqIconBox} aria-hidden>
+      {/* ── TOP: icono criticidad-tinted + nombre + badge + status ── */}
+      <div style={eqTopRow}>
+        <div style={eqIconBox(tone)} aria-hidden>
           <Settings size={20} strokeWidth={1.8} />
         </div>
 
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={eqTitleRowRef}>
-            <div style={eqTitleRef} title={eq?.name || ""}>
-              {eq?.name || "—"}
-            </div>
+          <div style={eqTitleRef} title={eq?.name || ""}>{eq?.name || "—"}</div>
+          {type ? <div style={eqTypeText}>{type}</div> : null}
+        </div>
 
-            <div style={routesPill} title={`${routesCount} ruta(s)`}>
-              {routesCount} ruta{routesCount === 1 ? "" : "s"}
-            </div>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+          {tone.label ? (
+            <span style={{ ...eqCritBadge, background: tone.bg, color: tone.color }}>{tone.label}</span>
+          ) : null}
+          <div style={statusDotInHeader(isActive)} title={isActive ? "Activo" : "Inactivo"} />
+        </div>
+      </div>
 
-          <div style={eqCodeRef}>{eq?.code || "—"}</div>
-
-          {assignedTechnician ? (
-            <div
-              style={{
-                marginTop: 10,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-                padding: "7px 10px",
-                borderRadius: 999,
-                border: "1px solid rgba(14,116,144,0.18)",
-                background: "linear-gradient(135deg, rgba(236,254,255,0.96), rgba(224,242,254,0.92))",
-                color: "#0f172a",
-                maxWidth: "100%",
-              }}
-              title={`Técnico asignado por equipo: ${assignedTechName}${assignedTechCode ? ` (${assignedTechCode})` : ""}`}
-            >
-              <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.3, color: "#0f766e", textTransform: "uppercase" }}>
-                Técnico
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  minWidth: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {assignedTechName}
-              </span>
-              {assignedTechCode ? (
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "3px 8px",
-                    borderRadius: 999,
-                    background: "rgba(15,23,42,0.08)",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    color: "#155e75",
-                  }}
-                >
-                  {assignedTechCode}
-                </span>
-              ) : null}
-            </div>
+      {/* ── META: código + ubicación ── */}
+      {(code || location) ? (
+        <div style={eqMetaRow}>
+          {code ? (
+            <span style={eqMetaPill} title="Código / TAG">
+              <Tag size={11} strokeWidth={2} />
+              {code}
+            </span>
+          ) : null}
+          {location ? (
+            <span style={eqMetaPill} title="Ubicación">
+              <MapPin size={11} strokeWidth={1.8} />
+              {location}
+            </span>
           ) : null}
         </div>
+      ) : null}
 
-        {/* ✅ status dot pegado adentro de la card */}
-        <div style={statusDotInHeader(isActive)} title={isActive ? "Activo" : "Inactivo"} />
-      </div>
+      {/* ── TÉCNICO ASIGNADO ── */}
+      {assignedTechnician ? (
+        <div
+          style={eqTechChip}
+          title={`Técnico: ${assignedTechName}${assignedTechCode ? ` (${assignedTechCode})` : ""}`}
+        >
+          <UserCog size={13} strokeWidth={2} style={{ flexShrink: 0, color: "#0f766e" }} />
+          <span style={eqTechName}>{assignedTechName}</span>
+          {assignedTechCode ? <span style={eqTechCode}>{assignedTechCode}</span> : null}
+        </div>
+      ) : null}
 
-      {/* Criticidad (banda) */}
-      <div style={{ ...critBar, ...(isCrit(crit) ? critBarCritical : null) }}>
-        <div style={critLeft}>CRITICIDAD</div>
-        <div style={{ ...critRight, ...(isCrit(crit) ? critRightCritical : null) }}>
-          {formatCrit(crit)}
+      {/* ── FOOTER: rutas + acciones ── */}
+      <div style={eqFooter} onClick={(e) => e.stopPropagation()}>
+        <span style={routesPill} title={`${routesCount} ruta(s)`}>
+          <Route size={12} strokeWidth={2} />
+          {routesCount}&nbsp;ruta{routesCount === 1 ? "" : "s"}
+        </span>
+
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button type="button" style={iconSquareBtn} title="Ver detalle" onClick={onOpen}>
+            <Eye size={15} />
+          </button>
+          {canManageActions ? (
+            <>
+              <button type="button" style={iconSquareBtn} title="Asignar técnico" onClick={onAssign}>
+                <UserCog size={15} />
+              </button>
+              <button type="button" style={iconSquareBtn} title="Editar" onClick={onEdit}>
+                <Pencil size={15} />
+              </button>
+              <button type="button" style={iconSquareBtnDanger} title="Borrar" onClick={onDelete}>
+                <Trash2 size={15} />
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
 
-      {/* Ubicación */}
-      <div style={eqLocationRow}>
-        <MapPin size={14} strokeWidth={1.8} style={{ color: "#475569" }} />
-        <span style={eqLocationText}>{eq?.location || "—"}</span>
-      </div>
-
-      {/* Acciones */}
-      <div style={eqActionsRef} onClick={(e) => e.stopPropagation()}>
-        <button type="button" style={btnLight} onClick={onOpen}>
-          <Eye size={16} />&nbsp;Detalle
-        </button>
-
-        {canManageActions ? (
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" style={iconSquareBtn} title="Asignar técnico" onClick={onAssign}>
-              <UserCog size={16} />
-            </button>
-            <button type="button" style={iconSquareBtn} title="Editar" onClick={onEdit}>
-              <Pencil size={16} />
-            </button>
-            <button type="button" style={iconSquareBtnDanger} title="Borrar" onClick={onDelete}>
-              <Trash2 size={16} />
-            </button>
-          </div>
-        ) : (
-          <div />
-        )}
-      </div>
-
-      {/* CTA Nueva Ruta */}
+      {/* ── CTA Nueva Ruta ── */}
       {!readOnly && typeof onNewRoute === "function" ? (
         <button
           type="button"
           style={btnDarkFull}
-          onClick={(e) => {
-            e.stopPropagation();
-            onNewRoute();
-          }}
+          onClick={(e) => { e.stopPropagation(); onNewRoute(); }}
         >
-          <Route size={16} />&nbsp;Nueva Ruta
+          <Route size={15} />&nbsp;Nueva Ruta
         </button>
       ) : null}
     </div>
   );
 }
 
-function formatCrit(crit) {
-  const v = String(crit || "").toUpperCase();
-  if (v === "CRITICA" || v === "CRÍTICA") return "Crítica";
-  if (v === "ALTA") return "Alta";
-  if (v === "BAJA") return "Baja";
-  return "Media";
-}
-
-function isCrit(crit) {
-  const v = String(crit || "").toUpperCase();
-  return v === "CRITICA" || v === "CRÍTICA";
-}
 
 /* ================= STYLES ================= */
 const btnPrimaryBase = {
@@ -1549,6 +1490,40 @@ const btnGhost = {
   justifyContent: "center",
   gap: 8,
 };
+
+const activeFiltersRow = {
+  display: "flex",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: 8,
+  marginTop: 10,
+  padding: "10px 14px",
+  borderRadius: 14,
+  background: "rgba(249,115,22,0.05)",
+  border: "1px solid rgba(249,115,22,0.18)",
+};
+
+const activeFiltersLabel = {
+  fontSize: 11,
+  fontWeight: 950,
+  color: "#92400e",
+  letterSpacing: 0.4,
+  textTransform: "uppercase",
+  marginRight: 4,
+};
+
+const clearAllFiltersBtn = {
+  marginLeft: "auto",
+  padding: "5px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 950,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.90)",
+  color: "#334155",
+  cursor: "pointer",
+};
+
 const kpiRow = {
   marginTop: 14,
   width: "100%",
@@ -1641,7 +1616,7 @@ const btnPrimaryLg = {
   padding: "14px 20px",
   borderRadius: 14,
   border: "1px solid #fb923c",
-  fontWeight: 1000,
+  fontWeight: 900,
   fontSize: 14,
   cursor: "pointer",
   boxShadow: "0 14px 30px rgba(249,115,22,0.28)",
@@ -1658,10 +1633,9 @@ const btnPrimaryLgGhost = {
   cursor: "pointer",
 };
 const pageShell = {
-  padding: 16,
-  background: "linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%)",
-  borderRadius: 16,
-  border: "1px solid #e5e7eb",
+  paddingTop: 6,
+  display: "grid",
+  gap: 14,
 };
 const headerRow = {
   width: "100%",              // ✅ clave
@@ -1687,11 +1661,16 @@ const headerRight = {
 
 const topBar = {
   display: "flex",
-  flexDirection: "column",   // 🔥 importante
+  flexDirection: "column",
   alignItems: "flex-start",
   gap: 12,
-  paddingBottom: 12,
-  borderBottom: "1px solid #e5e7eb",
+  padding: "14px 16px",
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 const topBarActionsLeft = {
   display: "flex",
@@ -1875,110 +1854,67 @@ const areaNameBadge = (areaId) => {
 };
 
 /* ===== KPI (cards arriba) ===== */
-const kpiInactive = { background: "rgba(15,23,42,0.04)" };
 const summaryCard = {
   marginTop: 14,
   width: "100%",
   maxWidth: "100%",
   boxSizing: "border-box",
-  overflow: "hidden",
-
-  background: "rgba(255,255,255,0.75)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 18,
-  padding: 14,
-
-  display: "flex",
-  flexDirection: "column",     // ✅ clave
-  gap: 12,
-
-  backdropFilter: "blur(6px)",
-  boxShadow: "0 16px 30px rgba(15, 23, 42, 0.06)",
 };
 const summaryMetrics4 = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
   gap: 12,
   width: "100%",
 };
 const kpiCard = {
-  background: "#f97316", 
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 16,
-  padding: 12,
-  boxShadow: "0 10px 18px rgba(2,6,23,0.06)",
-  overflow: "hidden",
-  position: "relative",
-  minHeight: 74,
-};
-const kpiAccent = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 12,
-  borderTopLeftRadius: 18,
-  borderTopRightRadius: 18,
-  background: "linear-gradient(180deg, #374151 0%, #1f2937 100%)",
+  borderRadius: 18,
+  padding: 16,
+  boxShadow: "0 10px 24px rgba(2,6,23,0.07)",
+  minHeight: 80,
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
 };
 const kpiInner = {
   display: "flex",
   alignItems: "center",
-  justifyContent: "space-between",
-  gap: 12,
+  gap: 14,
 };
-
 const kpiIconBox = {
-  width: 52,
-  height: 52,
-  borderRadius: 16,
+  width: 48,
+  height: 48,
+  borderRadius: 14,
   display: "grid",
   placeItems: "center",
-
-  background: "linear-gradient(180deg, #fb923c 0%, #f97316 100%)", // 🟧 naranja de fondo
-  border: "1px solid #fb923c",
-
-  color: "#0f172a",              // ⚫ icono negro (se hereda al SVG)
-  boxShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 14px rgba(249,115,22,0.35)",
+  flexShrink: 0,
 };
 const kpiRight = {
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-end",
+  flex: 1,
   lineHeight: 1.05,
 };
-
 const kpiValue = {
-  fontSize: 36,        // ⬆️ antes 22 → ahora más protagonista
-  fontWeight: 1000,
+  fontSize: 38,
+  fontWeight: 900,
   color: "#0f172a",
   lineHeight: 1,
-  letterSpacing: -0.5,
+  letterSpacing: -1,
 };
-
 const kpiLabel = {
-  marginTop: 6,
+  marginTop: 5,
   fontSize: 11,
   fontWeight: 950,
-  color: "#334155",
-  letterSpacing: 0.6,
+  color: "#64748b",
+  letterSpacing: 0.7,
   textTransform: "uppercase",
 };
 
-/* Variantes (solo cambia la barra superior y el tinte) */
-const kpiEquip = {
-  background: "rgba(255,255,255,0.92)",
-};
-const kpiCritical = {
-  background: "rgba(254,242,242,0.55)",
-};
-const kpiAreas = {
-  background: "rgba(248,250,252,0.85)",
-};
-
 const summaryLeft = { minWidth: 220 };
-const summaryTitle = { fontWeight: 1000, color: "#0f172a", fontSize: 14, letterSpacing: 0.2 };
+const summaryTitle = { fontWeight: 900, color: "#0f172a", fontSize: 14, letterSpacing: 0.2 };
 const summarySubtitle = { marginTop: 4, color: "#64748b", fontWeight: 800, fontSize: 12 };
 
 const summaryMetrics = {
@@ -2010,7 +1946,7 @@ const metricLabel = {
   textTransform: "uppercase",
 };
 
-const metricValue = { marginTop: 4, fontSize: 18, fontWeight: 1000, color: "#0f172a" };
+const metricValue = { marginTop: 4, fontSize: 18, fontWeight: 900, color: "#0f172a" };
 
 const summaryRight = { minWidth: 140, textAlign: "right" };
 
@@ -2022,210 +1958,200 @@ const metricRed = { background: "rgba(239,68,68,0.10)" };
 
 /* ===== Card equipo ===== */
 const eqCardRef = {
-  position: "relative",
-  background: "#fff",
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "#e5e7eb",
-  borderRadius: 14,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "4px solid #0f172a",
+  borderRadius: 18,
   padding: 14,
-  display: "grid",
-  gap: 12,
-  boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
-  transition: "transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
-  overflow: "hidden",
-};
-
-const eqCardHover = {
-  transform: "translateY(-4px)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.14)",
-  borderColor: "#cbd5e1",
-};
-
-const critBarCritical = {
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "rgba(239,68,68,0.55)",
-  background: "rgba(254,242,242,0.85)",
-};
-
-const critRightCritical = {
-  color: "#991b1b",
-};
-
-const eqTopAccent = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 6,
-  borderTopLeftRadius: 14,
-  borderTopRightRadius: 14,
-  background: "#f97316",
-};
-
-const eqIconBox = {
-  width: 44,
-  height: 44,
-  borderRadius: 12,
-  background: "#1f2933", // gris industrial (no negro puro)
-  color: "#f8fafc",
-  display: "grid",
-  placeItems: "center",
-  fontSize: 18,
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
-};
-
-const eqTitleRowRef = {
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
+  flexDirection: "column",
+  gap: 10,
+  transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms ease",
+  overflow: "hidden",
+  cursor: "pointer",
+};
+
+const eqTopRow = {
+  display: "flex",
+  alignItems: "flex-start",
   gap: 10,
 };
 
+const eqIconBox = (tone) => ({
+  width: 42,
+  height: 42,
+  borderRadius: 12,
+  background: tone.bg,
+  border: `1px solid ${tone.border}`,
+  color: tone.color,
+  display: "grid",
+  placeItems: "center",
+  flexShrink: 0,
+});
+
 const eqTitleRef = {
-  fontWeight: 950,
+  fontWeight: 900,
   color: "#0f172a",
   fontSize: 15,
+  lineHeight: 1.25,
+  display: "-webkit-box",
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+};
+
+const eqTypeText = {
+  marginTop: 3,
+  fontSize: 11,
+  fontWeight: 900,
+  color: "#64748b",
+  textTransform: "uppercase",
+  letterSpacing: 0.4,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const eqCritBadge = {
+  padding: "4px 9px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 950,
+  letterSpacing: 0.3,
+  whiteSpace: "nowrap",
+};
+
+const eqMetaRow = {
+  display: "flex",
+  gap: 6,
+  flexWrap: "wrap",
+};
+
+const eqMetaPill = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "5px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 900,
+  color: "#334155",
+  background: "rgba(15,23,42,0.04)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  whiteSpace: "nowrap",
+  maxWidth: 160,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const eqTechChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 7,
+  padding: "6px 10px",
+  borderRadius: 999,
+  border: "1px solid rgba(14,116,144,0.20)",
+  background: "linear-gradient(135deg, rgba(236,254,255,0.95), rgba(224,242,254,0.90))",
+  maxWidth: "100%",
+  overflow: "hidden",
+};
+
+const eqTechName = {
+  fontSize: 12,
+  fontWeight: 800,
+  color: "#0f172a",
   minWidth: 0,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
 };
 
-const eqCodeRef = {
-  marginTop: 4,
-  fontSize: 12,
-  fontWeight: 800,
-  color: "#6b7280",
+const eqTechCode = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "2px 7px",
+  borderRadius: 999,
+  background: "rgba(15,23,42,0.08)",
+  fontSize: 10,
+  fontWeight: 900,
+  color: "#155e75",
+  flexShrink: 0,
+};
+
+const eqFooter = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 8,
+  borderTop: "1px solid rgba(226,232,240,0.80)",
+  paddingTop: 10,
+  marginTop: 2,
 };
 
 const routesPill = {
-  padding: "6px 10px",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "5px 10px",
   borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 900,
-  background: "#eef2ff",
-  border: "1px solid #e0e7ff",
-  color: "#3730a3",
+  fontSize: 11,
+  fontWeight: 950,
+  background: "rgba(59,130,246,0.09)",
+  border: "1px solid rgba(59,130,246,0.20)",
+  color: "#1e40af",
   whiteSpace: "nowrap",
-  maxWidth: 140,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-const critBar = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: 10,
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #e5e7eb",
-  background: "#f8fafc",
-};
-
-const critLeft = {
-  fontSize: 12,
-  fontWeight: 950,
-  color: "#334155",
-  letterSpacing: 0.4,
-};
-
-const critRight = {
-  fontSize: 13,
-  fontWeight: 950,
-  color: "#0f172a",
-};
-
-const eqLocationRow = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  fontSize: 13,
-  color: "#475569",
-  fontWeight: 800,
-};
-
-const eqLocationText = {
-  minWidth: 0,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-};
-
-const eqActionsRef = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 10,
-};
-
-const btnLight = {
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  borderRadius: 12,
-  padding: "10px 12px",
-  fontWeight: 950,
-  cursor: "pointer",
-  width: "100%",
-};
-
-const btnDarkFull = {
-  border: "1px solid #374151",
-  background: "linear-gradient(180deg, #374151 0%, #1f2937 100%)",
-  color: "#f9fafb",
-  borderRadius: 12,
-  padding: "11px 12px",
-  fontWeight: 950,
-  cursor: "pointer",
-  width: "100%",
-  boxShadow: "0 8px 18px rgba(31,41,55,0.35)",
-};
-
-const eqHeaderWrap = {
-  display: "flex",
-  alignItems: "flex-start",
-  gap: 12,
-  flexWrap: "wrap",
-  marginTop: 2,
-  position: "relative",
-  paddingRight: 16,
-  minWidth: 0,
 };
 
 const statusDotInHeader = (active) => ({
-  position: "absolute",
-  top: 6,
-  right: 6,
   width: 10,
   height: 10,
   borderRadius: 999,
   background: active ? "#16a34a" : "#9ca3af",
   boxShadow: active ? "0 0 0 3px rgba(22,163,74,0.14)" : "0 0 0 3px rgba(156,163,175,0.14)",
+  flexShrink: 0,
 });
 
-const iconSquareBtn = {
-  border: "1px solid #e5e7eb",
-  background: "#fff",
+const btnDarkFull = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 6,
+  border: "1px solid #374151",
+  background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
+  color: "#f97316",
   borderRadius: 12,
   padding: "10px 12px",
-  cursor: "pointer",
   fontWeight: 950,
+  fontSize: 13,
+  cursor: "pointer",
+  width: "100%",
+  boxShadow: "0 8px 18px rgba(2,6,23,0.30)",
+};
+
+const iconSquareBtn = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.90)",
+  borderRadius: 10,
+  padding: "7px 9px",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#334155",
 };
 
 const iconSquareBtnDanger = {
   ...iconSquareBtn,
-  border: "1px solid #fecaca",
-  background: "#fff1f2",
+  border: "1px solid rgba(254,202,202,0.90)",
+  background: "rgba(255,241,242,0.80)",
+  color: "#b91c1c",
 };
 
 const chipBase = {
   padding: "6px 10px",
   borderRadius: 999,
   fontSize: 11,
-  fontWeight: 1000,
+  fontWeight: 900,
   border: "1px solid rgba(226,232,240,1)",
   lineHeight: 1,
   textTransform: "uppercase",
@@ -2348,7 +2274,7 @@ const areaTopIcon = {
 
 const areaTopTitle = {
   fontSize: 18,
-  fontWeight: 1000,
+  fontWeight: 900,
   letterSpacing: 0.6,
   lineHeight: 1.1,
   whiteSpace: "normal",

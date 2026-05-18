@@ -316,13 +316,13 @@ export default function ReportConditionModal({ open, onClose, onSaved, defaultEq
 }
 
 const overlay = { position: "fixed", inset: 0, background: "rgba(2,6,23,0.56)", display: "grid", placeItems: "center", padding: 14, zIndex: 60 };
-const modal = { width: "min(720px, calc(100vw - 24px))", maxHeight: "calc(100vh - 24px)", overflow: "auto", background: "rgba(255,255,255,0.97)", borderRadius: 24, border: "1px solid rgba(226,232,240,0.95)", boxShadow: "0 24px 60px rgba(2,6,23,0.25)", backdropFilter: "blur(8px)" };
-const modalHeader = { position: "sticky", top: 0, zIndex: 1, background: "rgba(255,255,255,0.96)", borderBottom: "1px solid #eef2f7", padding: 14, display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", flexWrap: "wrap" };
-const headerIcon = { width: 42, height: 42, borderRadius: 14, background: "linear-gradient(135deg, #fee2e2, #ffedd5)", display: "grid", placeItems: "center", color: "#b91c1c", border: "1px solid rgba(248,113,113,0.18)" };
-const kicker = { fontSize: 11, letterSpacing: "0.14em", fontWeight: 900, color: "#92400e" };
-const modalTitle = { margin: "2px 0 0", fontSize: 20, fontWeight: 980, color: "#0f172a" };
-const modalSub = { marginTop: 6, color: "#64748b", fontWeight: 850, fontSize: 13 };
-const xBtn = { border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.9)", borderRadius: 12, width: 40, height: 40, display: "grid", placeItems: "center", cursor: "pointer" };
+const modal = { width: "min(720px, calc(100vw - 24px))", maxHeight: "calc(100vh - 24px)", overflow: "auto", background: "rgba(255,255,255,0.97)", borderRadius: 24, border: "1px solid rgba(226,232,240,0.95)", boxShadow: "0 24px 60px rgba(2,6,23,0.25)", backdropFilter: "blur(8px)", borderTop: "4px solid #f97316" };
+const modalHeader = { position: "sticky", top: 0, zIndex: 1, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", borderBottom: "1px solid rgba(249,115,22,0.20)", borderLeft: "3px solid rgba(249,115,22,0.55)", padding: 14, display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", flexWrap: "wrap" };
+const headerIcon = { width: 42, height: 42, borderRadius: 14, background: "rgba(249,115,22,0.15)", display: "grid", placeItems: "center", color: "rgba(249,115,22,0.90)", border: "1px solid rgba(249,115,22,0.30)" };
+const kicker = { fontSize: 11, letterSpacing: "0.14em", fontWeight: 900, color: "rgba(249,115,22,0.90)" };
+const modalTitle = { margin: "2px 0 0", fontSize: 20, fontWeight: 980, color: "#fff" };
+const modalSub = { marginTop: 6, color: "rgba(255,255,255,0.65)", fontWeight: 850, fontSize: 13 };
+const xBtn = { border: "1px solid rgba(255,255,255,0.20)", background: "rgba(255,255,255,0.10)", borderRadius: 12, width: 40, height: 40, display: "grid", placeItems: "center", cursor: "pointer", color: "#fff" };
 const body = { padding: 14, display: "grid", gap: 14 };
 const sectionBox = { display: "grid", gap: 12, padding: 14, borderRadius: 18, border: "1px solid #e5e7eb", background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))" };
 const sectionTitle = { fontWeight: 950, color: "#0f172a", fontSize: 14 };

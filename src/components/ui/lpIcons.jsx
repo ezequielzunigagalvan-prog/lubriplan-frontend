@@ -274,6 +274,24 @@ export function Icon({
         </svg>
       );
 
+    case "chevRight":
+    case "chevronRight":
+      return (
+        <svg {...props}>
+          <T />
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      );
+
+    case "chevLeft":
+    case "chevronLeft":
+      return (
+        <svg {...props}>
+          <T />
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      );
+
     case "chevronDown":
       return (
         <svg {...props}>
@@ -294,22 +312,6 @@ export function Icon({
       <line x1="19" y1="14" x2="22" y2="14" />
     </svg>
   );
-
-    case "chevronLeft":
-      return (
-        <svg {...props}>
-          <T />
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      );
-
-    case "chevronRight":
-      return (
-        <svg {...props}>
-          <T />
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      );
 
     case "logout":
       return (
@@ -529,6 +531,51 @@ export function Icon({
           <path d="M7 18h2" />
           <path d="M16 14h2" />
           <path d="M16 18h2" />
+        </svg>
+      );
+
+    case "arrowLeft":
+      return (
+        <svg {...props}>
+          <T />
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
+        </svg>
+      );
+
+    case "arrowRight":
+      return (
+        <svg {...props}>
+          <T />
+          <path d="M5 12h14" />
+          <path d="M12 5l7 7-7 7" />
+        </svg>
+      );
+
+    case "pin":
+      return (
+        <svg {...props}>
+          <T />
+          <path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z" />
+          <circle cx="12" cy="10" r="2.5" />
+        </svg>
+      );
+
+    case "dot":
+      return (
+        <svg {...props}>
+          <T />
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+      );
+
+    case "export":
+      return (
+        <svg {...props}>
+          <T />
+          <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+          <path d="M12 3v12" />
+          <path d="M8 7l4-4 4 4" />
         </svg>
       );
 

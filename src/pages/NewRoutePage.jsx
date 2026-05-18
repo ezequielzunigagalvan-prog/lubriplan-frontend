@@ -222,7 +222,10 @@ export default function NewRoutePage() {
       <div style={pageShell}>
         <div style={topBar}>
           <div>
-            <div style={kicker}>LUBRIPLAN · RUTAS</div>
+            <div style={kicker}>
+              <span style={{ width: 18, height: 2, background: "rgba(249,115,22,0.90)", display: "inline-block", borderRadius: 2, flexShrink: 0 }} />
+              RUTAS · NUEVA
+            </div>
             <h1 style={title}>Nueva ruta</h1>
             <div style={subtitle}>Crea una nueva ruta operativa</div>
           </div>
@@ -448,18 +451,27 @@ const topBar = {
   alignItems: "flex-end",
   gap: 12,
   flexWrap: "wrap",
-  paddingBottom: 12,
-  borderBottom: "1px solid #e5e7eb",
+  padding: "14px 16px",
+  marginBottom: 14,
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
+  borderRadius: 16,
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 10px 28px rgba(2,6,23,0.06)",
 };
 
-const kicker = { fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 };
+const kicker = {
+  fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2,
+  display: "flex", alignItems: "center", gap: 8,
+};
 const title = { margin: "6px 0 0", fontSize: 28, fontWeight: 950, color: "#0f172a" };
 const subtitle = { marginTop: 6, color: "#64748b", fontWeight: 800, fontSize: 12 };
 
 const panel = {
-  marginTop: 14,
-  background: "#fff",
-  border: "1px solid #e5e7eb",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
   borderRadius: 16,
   padding: 16,
   boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
