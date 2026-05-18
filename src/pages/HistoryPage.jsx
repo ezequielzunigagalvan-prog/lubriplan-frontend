@@ -68,7 +68,7 @@ const conditionChip = (conditionRaw) => {
   if (c === "REGULAR") return { bg: "#e0e7ff", bd: "#c7d2fe", fg: "#3730a3", label: "Regular", icon: "dot" };
   if (c === "MALO") return { bg: "#fef3c7", bd: "#fde68a", fg: "#92400e", label: "Malo", icon: "warn" };
   if (c === "CRITICO" || c === "CRITICO")
-    return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Crí­tico", icon: "alert" };
+    return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Crítico", icon: "alert" };
   return { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: conditionRaw || "-", icon: "dot" };
 };
 
@@ -399,8 +399,12 @@ export default function HistoryPage() {
       {/* HEADER */}
       <div style={compactHeaderRow}>
         <div>
-          <h1 style={{ margin: 0 }}>Historial</h1>
-          <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 800 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
+            <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+            HISTORIAL · EJECUCIONES
+          </div>
+          <h1 style={{ margin: "6px 0 0", fontSize: 26, fontWeight: 950, color: "#0f172a" }}>Historial</h1>
+          <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 800, fontSize: 13 }}>
             Registro de actividades completadas y movimientos de lubricantes
           </p>
         </div>
@@ -432,7 +436,7 @@ export default function HistoryPage() {
               <span style={miniOrange}>
                 <Icon name="warn" />
               </span>
-              Condición mala/crí­tica (Historial)
+              Condición mala/crítica (Historial)
             </div>
 
             <div style={warnBannerText}>
@@ -458,10 +462,10 @@ export default function HistoryPage() {
 
       {/* KPIs */}
       <div style={statsGrid}>
-        <KpiCard title="Equipos" value={scopedTotals.total} icon="list" />
-        <KpiCard title="Crí­ticos" value={scopedTotals.CRITICO} icon="warn" />
-        <KpiCard title="Malos" value={scopedTotals.MALO} icon="alert" />
-        <KpiCard title="Buenos" value={scopedTotals.BUENO} icon="check" />
+        <KpiCard title="Registros" value={scopedTotals.total} icon="list" accent="#0f172a" />
+        <KpiCard title="Críticos" value={scopedTotals.CRITICO} icon="warn" accent="#dc2626" />
+        <KpiCard title="Malos" value={scopedTotals.MALO} icon="alert" accent="#f59e0b" />
+        <KpiCard title="Buenos" value={scopedTotals.BUENO} icon="check" accent="#16a34a" />
       </div>
 
       {/* FILTROS EJECUCIONES */}
@@ -475,7 +479,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-                {meta ? `P?gina ${meta.page} de ${meta.pages} ? ${meta.total} registros` : ""}
+                {meta ? `Página ${meta.page} de ${meta.pages} · ${meta.total} registros` : ""}
           </div>
         </div>
 
@@ -497,7 +501,7 @@ export default function HistoryPage() {
               <option value="BUENO">Bueno</option>
               <option value="REGULAR">Regular</option>
               <option value="MALO">Malo</option>
-              <option value="CRITICO">Crí­tico</option>
+              <option value="CRITICO">Crítico</option>
             </select>
           </div>
 
@@ -547,9 +551,9 @@ export default function HistoryPage() {
       </div>
 
       {/* LISTADO EJECUCIONES */}
-      {loading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando historial</p>}
+      {loading && <div style={inlineLoadingBox}>Cargando historial…</div>}
       {!loading && items.length === 0 && (
-        <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>No hay registros en este rango.</p>
+        <div style={inlineEmptyBox}>No hay registros en este rango de fechas.</div>
       )}
 
       <div style={list}>
@@ -597,7 +601,7 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-                {mvMeta ? `P?gina ${mvMeta.page} de ${mvMeta.pages} ? ${mvMeta.total} movimientos` : ""}
+                {mvMeta ? `Página ${mvMeta.page} de ${mvMeta.pages} · ${mvMeta.total} movimientos` : ""}
           </div>
         </div>
 
@@ -647,11 +651,9 @@ export default function HistoryPage() {
 
         {mvErr && <div style={errorBox}>{mvErr}</div>}
 
-        {mvLoading && <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>Cargando movimientos</p>}
+        {mvLoading && <div style={inlineLoadingBox}>Cargando movimientos…</div>}
         {!mvLoading && mvFilteredItems.length === 0 && (
-          <p style={{ marginTop: 14, color: "#64748b", fontWeight: 850 }}>
-            No hay movimientos en este rango / filtro.
-          </p>
+          <div style={inlineEmptyBox}>No hay movimientos en este rango / filtro.</div>
         )}
 
         <div style={{ ...list, marginTop: 14 }}>
@@ -719,12 +721,13 @@ function usePageMobile(breakpoint = 820) {
   return isMobile;
 }
 
-function KpiCard({ title, value, icon }) {
+function KpiCard({ title, value, icon, accent = "#0f172a" }) {
   return (
-    <div className="lpCard" style={kpiCard}>
-      <div style={kpiTopBandDarkThin} />
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
-        <MiniIconBox name={icon} />
+    <div className="lpCard lpKpiCard" style={{ ...kpiCard, borderTop: `4px solid ${accent}` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, paddingLeft: 4 }}>
+        <span style={{ ...kpiIconBox, background: `${accent}18`, border: `1px solid ${accent}30`, color: accent }}>
+          <Icon name={icon} />
+        </span>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontWeight: 950, color: "#0f172a" }}>{title}</div>
           <div style={{ fontSize: 30, fontWeight: 980, color: "#0f172a", marginTop: 6 }}>{value}</div>
@@ -785,51 +788,91 @@ function HistoryCard({ ex, onOpen }) {
   const eq = route?.equipment || ex?.equipment || {};
   const tech = ex?.technician || {};
   const dateLabel = safeDateLabel(ex?.executedAt);
-  const activityName = ex?.manualTitle || route?.name || "";
+  const activityName = ex?.manualTitle || route?.name || "—";
+  const routeKind = String(route?.routeKind || "LUBRICATION").trim().toUpperCase();
+  const isInspection = routeKind === "INSPECTION";
+  const cInfo = conditionChip(ex?.condition);
+
+  const condAccent =
+    cInfo.fg === "#991b1b" ? "#dc2626" :
+    cInfo.fg === "#92400e" ? "#f59e0b" :
+    cInfo.fg === "#166534" ? "#16a34a" :
+    cInfo.fg === "#3730a3" ? "#4f46e5" : "#0f172a";
+
+  const tintBg =
+    cInfo.fg === "#991b1b" ? "rgba(254,242,242,0.50)" :
+    cInfo.fg === "#92400e" ? "rgba(255,251,235,0.50)" :
+    cInfo.fg === "#166534" ? "rgba(240,253,244,0.50)" :
+    "rgba(248,250,252,0.50)";
 
   return (
-    <div className="lpCard lpPress" style={{ ...card, cursor: "pointer" }} onClick={onOpen} title="Ver detalle">
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <strong style={{ fontSize: 14, letterSpacing: 0.2 }}>{activityName}</strong>
-            <ConditionChip value={ex?.condition} />
-            {ex?.evidenceImage ? (
-              <span style={{ ...chipBase, background: "#ecfccb", borderColor: "#d9f99d", color: "#365314" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="camera" />
-                  Evidencia
-                </span>
-              </span>
-            ) : null}
-          </div>
-
-          <div style={metaRow}>
-            <span style={metaItem}>
-                          <Icon name="pin" /> {eq?.name || "-"}
-              {eq?.code ? ` · ${eq.code}` : eq?.tag ? ` · ${eq.tag}` : ""}
-            </span>
-
-            <span style={metaItem}>
-              <Icon name="calendar" /> {dateLabel}
-            </span>
-
-            {tech?.name ? (
-              <span style={metaItem}>
-                <Icon name="user" /> {tech.name}
-              </span>
-            ) : null}
-          </div>
-
-          {ex?.observations ? (
-            <div style={{ ...notes, marginTop: 10 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="doc" />
-                <b>Observación:</b> {ex.observations}
-              </span>
-            </div>
-          ) : null}
+    <div
+      className="lpCard lpPress"
+      style={{
+        padding: 14,
+        borderRadius: 18,
+        borderTop: `4px solid ${condAccent}`,
+        borderRight: "1px solid rgba(226,232,240,0.80)",
+        borderBottom: "1px solid rgba(226,232,240,0.80)",
+        borderLeft: `5px solid ${condAccent}88`,
+        background: `linear-gradient(160deg, ${tintBg} 0%, rgba(248,250,252,0.92) 100%)`,
+        boxShadow: "0 14px 30px rgba(2,6,23,0.07)",
+        transition: "transform 160ms ease, box-shadow 160ms ease",
+        cursor: "pointer",
+      }}
+      onClick={onOpen}
+    >
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+          background: isInspection ? "rgba(59,130,246,0.12)" : "rgba(249,115,22,0.12)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <Icon name={isInspection ? "search" : "drop"} style={{ color: isInspection ? "#1d4ed8" : "#c2410c" }} />
         </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: 14, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {activityName}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#334155" }}>{eq?.name || "—"}</span>
+            {(eq?.code || eq?.tag) && (
+              <span style={hEqPill}>{eq?.code || eq?.tag}</span>
+            )}
+            {eq?.location && <span style={hEqPill}>{eq.location}</span>}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+          <ConditionChip value={ex?.condition} />
+          {ex?.evidenceImage && (
+            <span style={evidencePill}>
+              <Icon name="camera" size="sm" /> Evidencia
+            </span>
+          )}
+        </div>
+      </div>
+
+      {ex?.observations && (
+        <div style={{ ...notes, marginTop: 10, borderLeft: `3px solid ${condAccent}40` }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <Icon name="doc" style={{ flexShrink: 0 }} />
+            {ex.observations}
+          </span>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <span style={dateChipStyle}><Icon name="calendar" size="sm" /> {dateLabel}</span>
+          {tech?.name && <span style={techChipStyle}><Icon name="user" size="sm" /> {tech.name}</span>}
+        </div>
+        <button type="button" style={detailBtn} onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+          Ver detalle →
+        </button>
       </div>
     </div>
   );
@@ -839,106 +882,82 @@ function MovementCard({ m }) {
   const b = moveBadge(m?.type);
   const lub = m?.lubricant || {};
   const ex = m?.execution || null;
-
   const route = ex?.route || {};
   const eq = route?.equipment || ex?.equipment || {};
   const tech = ex?.technician || {};
 
   const qty = m?.quantity != null ? Number(m.quantity) : null;
   const qtyLabel = qty == null || !Number.isFinite(qty) ? "?" : qty % 1 === 0 ? String(qty) : qty.toFixed(2);
-  const capturedQty = m?.inputQuantity != null ? Number(m.inputQuantity) : null;
-  const capturedQtyLabel = capturedQty == null || !Number.isFinite(capturedQty) ? "?" : capturedQty % 1 === 0 ? String(capturedQty) : capturedQty.toFixed(2);
-
   const unit = lub?.unit || "?";
-  const capturedUnit = m?.inputUnit || "?";
   const lubLabel = lub?.name ? `${lub.name}${lub.code ? ` (${lub.code})` : ""}` : "?";
 
+  const moveAccent = b.fg === "#166534" ? "#16a34a" : b.fg === "#991b1b" ? "#dc2626" : "#4f46e5";
+  const moveTint = b.fg === "#166534" ? "rgba(240,253,244,0.50)" : b.fg === "#991b1b" ? "rgba(254,242,242,0.50)" : "rgba(238,242,255,0.50)";
+
   return (
-    <div className="lpCard" style={{ ...card, gap: 14 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 160 }}>
-        <span
-          style={{
-            ...chipBase,
-            background: b.bg,
-            borderColor: b.bd,
-            color: b.fg,
-            width: "fit-content",
-          }}
-        >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Icon name={b.icon} />
-            {b.label}
-          </span>
-        </span>
-
-        <div style={{ color: "#64748b", fontWeight: 850, fontSize: 12, display: "inline-flex", gap: 8, alignItems: "center" }}>
-          <Icon name="calendar" />
-          {safeDateTimeLabel(m?.createdAt)}
+    <div className="lpCard" style={{
+      padding: 14,
+      borderRadius: 18,
+      borderTop: `4px solid ${moveAccent}`,
+      borderRight: "1px solid rgba(226,232,240,0.80)",
+      borderBottom: "1px solid rgba(226,232,240,0.80)",
+      borderLeft: `5px solid ${moveAccent}88`,
+      background: `linear-gradient(160deg, ${moveTint} 0%, rgba(248,250,252,0.92) 100%)`,
+      boxShadow: "0 14px 30px rgba(2,6,23,0.07)",
+      transition: "transform 160ms ease, box-shadow 160ms ease",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+          background: b.bg, border: `1px solid ${b.bd}`,
+          display: "flex", alignItems: "center", justifyContent: "center", color: b.fg,
+        }}>
+          <Icon name={b.icon} />
         </div>
 
-        <div style={{ fontWeight: 980, color: "#0f172a" }}>
-          {qtyLabel} {unit}
-        </div>
-
-        {m?.inputQuantity != null ? (
-          <div style={{ color: "#64748b", fontWeight: 850, fontSize: 12 }}>
-            Captura: {capturedQtyLabel} {capturedUnit}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: 14, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {lubLabel}
           </div>
-        ) : null}
-      </div>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 980, color: "#0f172a" }}>{lubLabel}</div>
-
-        <div style={{ ...metaRow, marginTop: 8 }}>
-          {m?.reason ? (
-            <span style={metaItem}>
-              <Icon name="doc" /> {m.reason}
+          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ ...chipBase, background: b.bg, borderColor: b.bd, color: b.fg }}>
+              <Icon name={b.icon} style={{ width: 13, height: 13 }} /> {b.label}
             </span>
-          ) : null}
+            <span style={dateChipStyle}><Icon name="calendar" size="sm" /> {safeDateTimeLabel(m?.createdAt)}</span>
+          </div>
+        </div>
 
-          {ex?.id ? (
-            <span style={metaItem}>
-              <Icon name="link" /> Ejecución #{ex.id}
-            </span>
-          ) : (
-            <span style={metaItem}>
-              <Icon name="dot" /> Movimiento manual
-            </span>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
+          <div style={{ fontWeight: 980, fontSize: 18, color: "#0f172a" }}>{qtyLabel} {unit}</div>
+          {m?.inputQuantity != null && (
+            <div style={{ fontSize: 11, color: "#64748b", fontWeight: 800, marginTop: 2 }}>
+              Cap: {m.inputQuantity} {m.inputUnit || ""}
+            </div>
           )}
         </div>
-
-        {ex?.id ? (
-          <div style={{ ...metaRow, marginTop: 8 }}>
-            {route?.name || ex?.manualTitle ? (
-              <span style={metaItem}>
-                <Icon name="route" /> {route?.name || ex?.manualTitle}
-              </span>
-            ) : null}
-
-            {eq?.name ? (
-              <span style={metaItem}>
-                <Icon name="pin" /> {eq.name}
-              </span>
-            ) : null}
-
-            {tech?.name ? (
-              <span style={metaItem}>
-                <Icon name="user" /> {tech.name}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-
-        {m?.note ? (
-          <div style={{ ...notes, marginTop: 10 }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <Icon name="doc" />
-              {m.note}
-            </span>
-          </div>
-        ) : null}
       </div>
+
+      {/* Context */}
+      {(ex?.id || m?.reason || eq?.name || tech?.name) && (
+        <div style={{ ...metaRow, marginTop: 10 }}>
+          {ex?.id
+            ? <span style={metaItem}><Icon name="link" /> Ejecución #{ex.id}</span>
+            : <span style={metaItem}><Icon name="dot" /> Movimiento manual</span>}
+          {m?.reason && <span style={metaItem}><Icon name="doc" /> {m.reason}</span>}
+          {(route?.name || ex?.manualTitle) && <span style={metaItem}><Icon name="route" /> {route?.name || ex?.manualTitle}</span>}
+          {eq?.name && <span style={metaItem}><Icon name="pin" /> {eq.name}</span>}
+          {tech?.name && <span style={metaItem}><Icon name="user" /> {tech.name}</span>}
+        </div>
+      )}
+
+      {m?.note && (
+        <div style={{ ...notes, marginTop: 10 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <Icon name="doc" /> {m.note}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1108,8 +1127,10 @@ const compactHeaderRow = {
   padding: "14px 16px",
   borderRadius: 20,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.92) 55%, rgba(239,246,255,0.78) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.06)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 55%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
 const compactFiltersHeader = {
@@ -1144,8 +1165,10 @@ const headerRow = {
   padding: "14px 16px",
   borderRadius: 20,
   border: "1px solid rgba(226,232,240,0.95)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.92) 55%, rgba(239,246,255,0.78) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.06)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 55%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
 const statsGrid = {
@@ -1170,23 +1193,30 @@ const kpiTopBandDarkThin = {
   left: 0,
   right: 0,
   top: 0,
-  height: 6, // m?s delgada (como Equipos)
+  height: 5,
+  background: "#0f172a",
+};
+
+const kpiSideStripe = {
+  position: "absolute",
+  top: 5,
+  left: 0,
+  bottom: 0,
+  width: 4,
   background: "#334155",
-  borderTopLeftRadius: 14,
-  borderTopRightRadius: 14,
 };
 
 const kpiIconBox = {
-  width: 44,
-  height: 44,
-  borderRadius: 14,
-  background: "#f97316", // naranja
+  width: 40,
+  height: 40,
+  borderRadius: 13,
+  background: "rgba(249,115,22,0.13)",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#0f172a", // icono negro
-  border: "1px solid rgba(2,6,23,0.10)",
-  boxShadow: "0 10px 20px rgba(249,115,22,0.18)",
+  color: "#9a3412",
+  border: "1px solid rgba(249,115,22,0.30)",
+  flexShrink: 0,
 };
 
 const filtersWrap = {
@@ -1194,6 +1224,7 @@ const filtersWrap = {
   padding: 14,
   borderRadius: 18,
   border: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "3px solid rgba(249,115,22,0.45)",
   background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.86) 100%)",
   boxShadow: "0 16px 30px rgba(2,6,23,0.05)",
   backdropFilter: "blur(8px)",
@@ -1522,9 +1553,89 @@ const btnKpiGray = {
   transition: "all 160ms ease",
 };
 
+const inlineLoadingBox = {
+  marginTop: 14,
+  padding: "14px 16px",
+  borderRadius: 14,
+  background: "rgba(255,255,255,0.80)",
+  border: "1px solid rgba(226,232,240,0.95)",
+  color: "#64748b",
+  fontWeight: 800,
+  fontSize: 13,
+  animation: "pulse 1.8s ease infinite",
+};
 
+const inlineEmptyBox = {
+  marginTop: 14,
+  padding: "16px 18px",
+  borderRadius: 14,
+  border: "1px dashed rgba(203,213,225,0.95)",
+  background: "rgba(248,250,252,0.85)",
+  color: "#64748b",
+  fontWeight: 700,
+  fontSize: 13,
+  textAlign: "center",
+};
 
+const dateChipStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  fontSize: 12,
+  fontWeight: 700,
+  color: "#64748b",
+};
 
+const techChipStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  fontSize: 11,
+  fontWeight: 800,
+  color: "#0f766e",
+  background: "rgba(13,148,136,0.10)",
+  border: "1px solid rgba(13,148,136,0.20)",
+  borderRadius: 999,
+  padding: "3px 10px",
+};
+
+const detailBtn = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 900,
+  background: "rgba(15,23,42,0.92)",
+  color: "#fff",
+  border: "1px solid rgba(15,23,42,0.80)",
+  cursor: "pointer",
+  boxShadow: "0 4px 10px rgba(2,6,23,0.18)",
+};
+
+const evidencePill = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "3px 8px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 800,
+  background: "rgba(236,252,203,0.9)",
+  border: "1px solid rgba(217,249,157,0.9)",
+  color: "#365314",
+};
+
+const hEqPill = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: "#64748b",
+  background: "rgba(15,23,42,0.06)",
+  borderRadius: 6,
+  padding: "2px 7px",
+  border: "1px solid rgba(226,232,240,0.8)",
+};
 
 
 

@@ -199,6 +199,16 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
     route?.nextExecutionTechnician?.code ||
     "";
 
+  const cardBorderLeft = nextInfo.tone === "danger"
+    ? "5px solid rgba(239,68,68,0.65)"
+    : nextInfo.tone === "warn"
+    ? "5px solid rgba(245,158,11,0.65)"
+    : "4px solid rgba(15,23,42,0.08)";
+
+  const cardBorderTop = isInspectionRoute
+    ? "4px solid #2563eb"
+    : "4px solid #f97316";
+
   const goDetail = () => {
     if (!canOpenDetails) return;
     if (routeId == null) return;
@@ -224,6 +234,8 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
     <div
       style={{
         ...card,
+        borderTop: cardBorderTop,
+        borderLeft: cardBorderLeft,
         cursor: canOpenDetails ? "pointer" : "default",
         opacity: isReadOnly ? 0.985 : 1,
       }}
@@ -470,17 +482,15 @@ const nextInfo = useMemo(() => buildNextInfo(nextAtRaw), [nextAtRaw]);
 ========================= */
 
 const card = {
-  border: "2.6px solid rgba(226,232,240,0.98)",
+  border: "1px solid rgba(226,232,240,0.95)",
   borderRadius: 18,
-  background: "rgba(255,255,255,0.90)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
   padding: 14,
   position: "relative",
   overflow: "hidden",
   boxShadow: "0 12px 32px rgba(2,6,23,0.08)",
   transform: "translateY(0px)",
   transition: "transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
-  outline: "2px solid rgba(2,6,23,0.07)",
-  outlineOffset: -2,
 };
 
 const head = {
@@ -623,12 +633,13 @@ const miniChipMuted = {
 };
 
 const miniValue = {
-  fontSize: 16,
+  fontSize: 14,
   fontWeight: 990,
   color: "#0f172a",
-  lineHeight: 1.12,
+  lineHeight: 1.25,
   whiteSpace: "normal",
-  wordBreak: "break-word",
+  overflowWrap: "break-word",
+  wordBreak: "normal",
 };
 
 const miniSub = {
@@ -637,7 +648,8 @@ const miniSub = {
   color: "#64748b",
   lineHeight: 1.25,
   whiteSpace: "normal",
-  wordBreak: "break-word",
+  overflowWrap: "break-word",
+  wordBreak: "normal",
 };
 
 const miniSubMuted = {

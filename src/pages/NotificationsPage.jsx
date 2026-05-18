@@ -50,6 +50,24 @@ function getNotifMeta(type) {
   }
 }
 
+const NOTIF_ACCENT = { red: "#dc2626", amber: "#d97706", steel: "#64748b" };
+const NOTIF_TINT = {
+  red: "rgba(254,242,242,0.55)",
+  amber: "rgba(255,251,235,0.55)",
+  steel: "rgba(248,250,252,0.55)",
+};
+
+function relativeTime(iso) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 0) return new Date(iso).toLocaleDateString("es-MX");
+  if (diff < 60000) return "ahora";
+  if (diff < 3600000) return `hace ${Math.floor(diff / 60000)} min`;
+  if (diff < 86400000) return `hace ${Math.floor(diff / 3600000)} h`;
+  if (diff < 604800000) return `hace ${Math.floor(diff / 86400000)} d`;
+  return new Date(iso).toLocaleDateString("es-MX");
+}
+
 /**
  * Quita emojis / pictogramas al inicio o dentro del texto para que
  * la UI quede limpia aunque backend los siga mandando.
@@ -353,9 +371,19 @@ export default function NotificationsPage() {
 
   return (
     <MainLayout>
+      <style>{`
+        @keyframes lp-pulse-dot {
+          0%, 100% { box-shadow: 0 0 0 3px rgba(249,115,22,0.18); }
+          50% { box-shadow: 0 0 0 6px rgba(249,115,22,0.10); }
+        }
+      `}</style>
       <div style={headerRow}>
         <div>
-          <h1 style={{ margin: 0 }}>{title}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
+            <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
+            NOTIFICACIONES · BANDEJA
+          </div>
+          <h1 style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 950, color: "#0f172a" }}>{title}</h1>
           <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 900 }}>
             Bandeja de eventos (condición, correctivas, alertas, sistema)
           </p>
@@ -409,40 +437,58 @@ export default function NotificationsPage() {
       {error ? <div style={errorBox}>{error}</div> : null}
 
       {loading ? (
-        <div style={{ marginTop: 14, color: "#64748b", fontWeight: 900 }}>Cargando</div>
+        <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="lpShimmer" style={{ height: 96, borderRadius: 14, borderTop: "4px solid rgba(226,232,240,0.9)" }} />
+          ))}
+        </div>
       ) : (
         <>
           {items.length === 0 ? (
-            <div style={emptyTxt}>Sin notificaciones</div>
+            <div style={emptyTxt}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(15,23,42,0.06)", display: "grid", placeItems: "center" }}>
+                <Icon name="alert" style={{ width: 22, height: 22, color: "#94a3b8" }} />
+              </div>
+              <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 15 }}>Sin notificaciones</div>
+              <div style={{ fontWeight: 850, color: "#64748b", fontSize: 13 }}>No hay notificaciones para mostrar.</div>
+            </div>
           ) : (
             <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-              {items.map((n) => {
+              {items.map((n, idx) => {
                 const meta = getNotifMeta(n.type);
                 const unread = !n.readAt;
-
                 const safeTitle = stripEmojiText(n.title || "Notificación");
                 const safeMessage = stripEmojiText(n.message || "");
                 const target = resolveNotificationTarget(n);
 
+                const accent = NOTIF_ACCENT[meta.tone] || "#64748b";
+                const tintBg = NOTIF_TINT[meta.tone] || "rgba(248,250,252,0.55)";
+                const sideBorder = meta.tone === "red"
+                  ? "4px solid rgba(239,68,68,0.65)"
+                  : meta.tone === "amber"
+                  ? "4px solid rgba(249,115,22,0.65)"
+                  : "4px solid rgba(148,163,184,0.45)";
+
                 return (
                   <button
                     key={n.id}
-                    className="lpPress"
+                    className="lpPress lpKpiCard"
                     style={{
                       ...notifCard,
-                      border: unread
-                        ? "1px solid rgba(249,115,22,0.40)"
-                        : "1px solid rgba(226,232,240,0.90)",
-                      background: unread ? "rgba(255,247,237,0.70)" : "rgba(248,250,252,0.85)",
-                      opacity: unread ? 1 : 0.72,
+                      borderTop: `4px solid ${accent}`,
+                      borderRight: `1px solid ${unread ? "rgba(249,115,22,0.22)" : "rgba(226,232,240,0.90)"}`,
+                      borderBottom: `1px solid ${unread ? "rgba(249,115,22,0.22)" : "rgba(226,232,240,0.90)"}`,
+                      borderLeft: sideBorder,
+                      background: unread
+                        ? `linear-gradient(160deg, ${tintBg} 0%, rgba(248,250,252,0.92) 100%)`
+                        : "linear-gradient(160deg, rgba(248,250,252,0.55) 0%, rgba(255,255,255,0.92) 100%)",
+                      opacity: unread ? 1 : 0.74,
+                      animationDelay: `${Math.min(idx, 9) * 40}ms`,
                     }}
                     onClick={async () => {
                       if (unread) {
-                        try {
-                          await markRead(n.id);
-                        } catch {}
+                        try { await markRead(n.id); } catch {}
                       }
-
                       if (target?.pathname) {
                         navigate(target.pathname, { state: target.state });
                       }
@@ -450,69 +496,53 @@ export default function NotificationsPage() {
                     type="button"
                     title={safeMessage || safeTitle}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0 }}>
-                        <span
-                          style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 12,
-                            display: "grid",
-                            placeItems: "center",
-                            background:
-                              meta.tone === "red"
-                                ? "rgba(254,226,226,0.9)"
-                                : meta.tone === "amber"
-                                ? "rgba(254,243,199,0.9)"
-                                : "rgba(226,232,240,0.9)",
-                            border: "1px solid rgba(226,232,240,0.9)",
-                            flex: "0 0 auto",
-                          }}
-                        >
-                          <Icon name={meta.icon} />
-                        </span>
+                    {/* Header */}
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <span style={{
+                        width: 38, height: 38, borderRadius: 12, flexShrink: 0,
+                        display: "grid", placeItems: "center",
+                        background: meta.tone === "red" ? "rgba(254,226,226,0.9)"
+                          : meta.tone === "amber" ? "rgba(254,243,199,0.9)"
+                          : "rgba(226,232,240,0.9)",
+                        border: `1px solid ${accent}33`,
+                        color: accent,
+                      }}>
+                        <Icon name={meta.icon} size="sm" />
+                      </span>
 
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontWeight: 1000,
-                              color: "#0f172a",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {safeTitle}
-                          </div>
-
-                          {safeMessage ? <div style={notifMsg}>{safeMessage}</div> : null}
-
-                          <div
-                            style={{
-                              marginTop: 6,
-                              display: "flex",
-                              gap: 8,
-                              flexWrap: "wrap",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Tag tone={meta.tone}>{meta.label}</Tag>
-                            {unread ? (
-                              <span style={dotLive} title="Nuevo" />
-                            ) : (
-                              <span style={dotOff} title="Leído" />
-                            )}
-                          </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 900, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {safeTitle}
+                        </div>
+                        {safeMessage ? <div style={notifMsg}>{safeMessage}</div> : null}
+                        <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                          <Tag tone={meta.tone}>{meta.label}</Tag>
+                          {unread
+                            ? <span style={dotLive} title="Nuevo" />
+                            : <span style={dotOff} title="Leído" />}
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                        <div style={notifMeta}>
-                          {n.createdAt ? new Date(n.createdAt).toLocaleString("es-MX") : ""}
-                        </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
+                        <div style={notifMeta}>{relativeTime(n.createdAt)}</div>
                         {unread ? <Tag tone="amber">Nuevo</Tag> : <Tag tone="steel">Leído</Tag>}
                       </div>
                     </div>
+
+                    {/* Footer go-button */}
+                    {target?.pathname && (
+                      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          padding: "5px 12px", borderRadius: 999,
+                          fontSize: 12, fontWeight: 900,
+                          background: accent, color: "#fff",
+                          boxShadow: `0 4px 12px ${accent}44`,
+                        }}>
+                          Ver →
+                        </span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -548,6 +578,13 @@ const headerRow = {
   alignItems: "flex-end",
   gap: 12,
   flexWrap: "wrap",
+  padding: "14px 16px",
+  borderRadius: 20,
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderTop: "3px solid #0f172a",
+  borderLeft: "3px solid rgba(249,115,22,0.55)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
+  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
 const toggleWrap = {
@@ -614,8 +651,9 @@ const dotLive = {
   borderRadius: 999,
   background: "rgba(249,115,22,0.95)",
   border: "1px solid rgba(251,146,60,0.85)",
-  boxShadow: "0 10px 22px rgba(249,115,22,0.18)",
+  boxShadow: "0 0 0 3px rgba(249,115,22,0.18)",
   flex: "0 0 auto",
+  animation: "lp-pulse-dot 1.8s ease-in-out infinite",
 };
 
 const dotOff = {
@@ -627,7 +665,32 @@ const dotOff = {
   flex: "0 0 auto",
 };
 
-const emptyTxt = { marginTop: 14, color: "#64748b", fontWeight: 900 };
+const emptyTxt = {
+  marginTop: 14,
+  padding: "32px 18px",
+  borderRadius: 18,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.90)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 10,
+  textAlign: "center",
+  boxShadow: "0 12px 28px rgba(2,6,23,0.04)",
+};
+
+const loadingBox = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  marginTop: 14,
+  padding: "18px 16px",
+  borderRadius: 16,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.88)",
+  fontWeight: 900,
+  color: "#475569",
+};
 
 const errorBox = {
   marginTop: 12,
