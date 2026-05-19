@@ -987,6 +987,7 @@ function monthToDays(month) {
 }
 
 function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi = false }) {
+  const isMobile = useIsMobile(700);
   const { currentPlantId } = usePlant();
   const loading = !!aiState?.loading;
   const err = aiState?.error;
@@ -1231,7 +1232,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                 overflow: "hidden",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 24,
-                padding: 18,
+                padding: isMobile ? "14px 12px" : 18,
                 background:
                   "radial-gradient(circle at 8% 16%, rgba(249,115,22,0.18), transparent 20%), linear-gradient(180deg, #1b2234 0%, #121a29 100%)",
                 boxShadow: "0 22px 48px rgba(15,23,42,0.18)",
@@ -1280,7 +1281,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                   position: "relative",
                   zIndex: 1,
                   display: "grid",
-                  gridTemplateColumns: "minmax(0, 1.2fr) minmax(280px, 0.85fr)",
+                  gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.2fr) minmax(280px, 0.85fr)",
                   gap: 22,
                   alignItems: "stretch",
                 }}
@@ -1354,7 +1355,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
 
                   <div
                     style={{
-                      fontSize: 23,
+                      fontSize: isMobile ? 17 : 23,
                       lineHeight: 1.28,
                       color: "#f8fafc",
                       fontWeight: 980,
@@ -1401,8 +1402,10 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                     display: "grid",
                     gap: 10,
                     alignContent: "start",
-                    borderLeft: "1px solid rgba(148,163,184,0.24)",
-                    paddingLeft: 18,
+                    borderLeft: isMobile ? "none" : "1px solid rgba(148,163,184,0.24)",
+                    paddingLeft: isMobile ? 0 : 18,
+                    paddingTop: isMobile ? 16 : 0,
+                    borderTop: isMobile ? "1px solid rgba(148,163,184,0.18)" : "none",
                   }}
                 >
                   {heroSignals.map((item) => (
@@ -1450,7 +1453,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(280px, 1fr))",
                 gap: 12,
               }}
             >
