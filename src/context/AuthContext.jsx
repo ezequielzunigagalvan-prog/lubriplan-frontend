@@ -261,7 +261,12 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // Throttle: fire at most once per 500ms to avoid calling on every mousemove
+    let lastFired = 0;
     const onUserActivity = () => {
+      const now = Date.now();
+      if (now - lastFired < 500) return;
+      lastFired = now;
       resetInactivityTimer();
     };
 
