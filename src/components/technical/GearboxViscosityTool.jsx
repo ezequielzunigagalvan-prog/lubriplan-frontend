@@ -1,5 +1,7 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { Icon } from "../ui/lpIcons";
 
+const ACCENT = "#d97706";
 const viscositySteps = [68, 100, 150, 220, 320, 460, 680];
 
 function nearestStep(value) {
@@ -32,33 +34,43 @@ export default function GearboxViscosityTool() {
   }, [speedBand, loadLevel, oilTemp, shockLoad]);
 
   return (
-    <div style={card}>
-      <div style={eyebrow}>REDUCTORES</div>
-      <div style={title}>Viscosidad para cajas y reductores</div>
-      <div style={subtitle}>Sugerencia inicial de ISO VG segun velocidad, carga, temperatura y choque operativo.</div>
+    <div className="lpCard" style={card}>
+      <div style={header}>
+        <div style={{ ...iconBox, background: `${ACCENT}18`, border: `1px solid ${ACCENT}30`, color: ACCENT }}>
+          <Icon name="equipment" size="md" />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={eyebrow}>REDUCTORES</div>
+          <div style={title}>Viscosidad para cajas y reductores</div>
+        </div>
+      </div>
+
+      <div style={subtitle}>
+        Sugerencia inicial de ISO VG según velocidad, carga, temperatura y choque operativo.
+      </div>
 
       <div style={grid}>
         <Field label="Velocidad relativa">
-          <select value={speedBand} onChange={(e) => setSpeedBand(e.target.value)} style={input}>
+          <select className="lp-select" value={speedBand} onChange={(e) => setSpeedBand(e.target.value)} style={input}>
             <option value="FAST">Alta</option>
             <option value="MEDIUM">Media</option>
             <option value="SLOW">Baja</option>
           </select>
         </Field>
         <Field label="Nivel de carga">
-          <select value={loadLevel} onChange={(e) => setLoadLevel(e.target.value)} style={input}>
+          <select className="lp-select" value={loadLevel} onChange={(e) => setLoadLevel(e.target.value)} style={input}>
             <option value="LIGHT">Ligera</option>
             <option value="NORMAL">Normal</option>
             <option value="HEAVY">Alta</option>
           </select>
         </Field>
-        <Field label="Temperatura del aceite (C)">
-          <input type="number" value={oilTemp} onChange={(e) => setOilTemp(e.target.value)} style={input} />
+        <Field label="Temperatura del aceite (°C)">
+          <input className="lp-input" type="number" value={oilTemp} onChange={(e) => setOilTemp(e.target.value)} style={input} />
         </Field>
         <Field label="Choque o impacto">
-          <select value={shockLoad} onChange={(e) => setShockLoad(e.target.value)} style={input}>
+          <select className="lp-select" value={shockLoad} onChange={(e) => setShockLoad(e.target.value)} style={input}>
             <option value="NO">No</option>
-            <option value="YES">Si</option>
+            <option value="YES">Sí</option>
           </select>
         </Field>
       </div>
@@ -66,11 +78,33 @@ export default function GearboxViscosityTool() {
       <div style={highlightBox}>
         <div style={highlightLabel}>ISO VG sugerido</div>
         <div style={highlightValue}>{result.suggested}</div>
-        <div style={highlightText}>Referencia inicial para aceites de engranes industriales en servicio general.</div>
+
+        {/* ISO VG scale */}
+        <div style={scaleRow}>
+          {viscositySteps.map((step) => (
+            <span
+              key={step}
+              style={{
+                ...scalePill,
+                background: step === result.suggested ? ACCENT : "rgba(255,255,255,0.08)",
+                color: step === result.suggested ? "#0f172a" : "rgba(255,255,255,0.40)",
+                fontWeight: step === result.suggested ? 950 : 700,
+                transform: step === result.suggested ? "scale(1.14)" : "scale(1)",
+                boxShadow: step === result.suggested ? `0 4px 12px ${ACCENT}55` : "none",
+              }}
+            >
+              {step}
+            </span>
+          ))}
+        </div>
+
+        <div style={highlightText}>
+          Referencia inicial para aceites de engranes industriales en servicio general.
+        </div>
       </div>
 
       <div style={note}>
-        Nota tecnica: confirma viscosidad final con OEM, AGMA, tipo de engrane, temperatura estable de operacion y sistema de lubricacion.
+        Nota técnica: confirma viscosidad final con OEM, AGMA, tipo de engrane, temperatura estable de operación y sistema de lubricación.
       </div>
     </div>
   );
@@ -79,28 +113,108 @@ export default function GearboxViscosityTool() {
 function Field({ label, children }) {
   return (
     <label style={field}>
-      {label}
+      <span style={{ fontSize: 11, fontWeight: 950, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
       {children}
     </label>
   );
 }
 
 const card = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
   borderRadius: 22,
-  padding: 18,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  borderTop: `4px solid ${ACCENT}`,
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  padding: "18px 18px 16px",
+  background: `linear-gradient(160deg, ${ACCENT}07 0%, rgba(248,250,252,0.97) 100%)`,
   boxShadow: "0 18px 34px rgba(15,23,42,0.08)",
+  display: "grid",
+  gap: 14,
 };
-const eyebrow = { fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2 };
-const title = { fontSize: 21, fontWeight: 900, color: "#0f172a", marginTop: 4 };
-const subtitle = { fontSize: 13, fontWeight: 800, color: "#64748b", marginTop: 6, lineHeight: 1.45, marginBottom: 14 };
-const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 };
-const field = { display: "grid", gap: 6, fontSize: 12, fontWeight: 950, color: "#475569" };
-const input = { border: "1px solid rgba(226,232,240,0.95)", borderRadius: 12, padding: "10px 12px", fontWeight: 900, color: "#0f172a", background: "#fff" };
-const highlightBox = { marginTop: 14, borderRadius: 16, padding: 16, background: "linear-gradient(135deg, #0f172a 0%, #172554 100%)", color: "#fff" };
-const highlightLabel = { fontSize: 12, fontWeight: 950, textTransform: "uppercase", letterSpacing: 0.8, color: "#93c5fd" };
-const highlightValue = { fontSize: 34, fontWeight: 900, marginTop: 8 };
-const highlightText = { fontSize: 12, fontWeight: 800, color: "#dbeafe", marginTop: 6, lineHeight: 1.45 };
-const note = { marginTop: 12, fontSize: 12, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };
+
+const header = { display: "flex", gap: 12, alignItems: "flex-start" };
+const iconBox = {
+  width: 42,
+  height: 42,
+  borderRadius: 13,
+  display: "grid",
+  placeItems: "center",
+  flexShrink: 0,
+};
+const eyebrow = { fontSize: 10, fontWeight: 950, color: ACCENT, letterSpacing: 1.4, textTransform: "uppercase" };
+const title = { fontSize: 18, fontWeight: 900, color: "#0f172a", marginTop: 3 };
+const subtitle = { fontSize: 13, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };
+
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 12,
+};
+
+const field = { display: "grid", gap: 6 };
+
+const input = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderRadius: 12,
+  padding: "10px 12px",
+  fontWeight: 900,
+  color: "#0f172a",
+  background: "#fff",
+  width: "100%",
+};
+
+const highlightBox = {
+  borderRadius: 18,
+  padding: "18px 20px 16px",
+  background: "linear-gradient(135deg, #0f172a 0%, #1c2d4a 100%)",
+  boxShadow: `0 16px 32px ${ACCENT}22`,
+  display: "grid",
+  gap: 12,
+};
+
+const highlightLabel = {
+  fontSize: 11,
+  fontWeight: 950,
+  textTransform: "uppercase",
+  letterSpacing: 1,
+  color: ACCENT,
+};
+
+const highlightValue = {
+  fontSize: 48,
+  fontWeight: 900,
+  color: "#f8fafc",
+  lineHeight: 1,
+  letterSpacing: "-0.03em",
+};
+
+const scaleRow = {
+  display: "flex",
+  gap: 6,
+  flexWrap: "wrap",
+};
+
+const scalePill = {
+  padding: "5px 10px",
+  borderRadius: 8,
+  fontSize: 12,
+  fontWeight: 700,
+  transition: "all 200ms ease",
+  letterSpacing: 0.3,
+};
+
+const highlightText = {
+  fontSize: 12,
+  fontWeight: 800,
+  color: "#94a3b8",
+  lineHeight: 1.45,
+};
+
+const note = {
+  fontSize: 11,
+  fontWeight: 800,
+  color: "#94a3b8",
+  lineHeight: 1.45,
+  borderTop: "1px solid rgba(226,232,240,0.7)",
+  paddingTop: 12,
+};

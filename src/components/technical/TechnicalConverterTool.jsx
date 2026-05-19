@@ -1,4 +1,7 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { Icon } from "../ui/lpIcons";
+
+const ACCENT = "#0891b2";
 
 const categories = {
   length: {
@@ -68,15 +71,15 @@ function inchFraction(decimalInches, denominator = 64) {
 
   let numerator = Math.round(frac * denominator);
 
-  if (numerator === denominator) return `${sign}${whole + 1}\"`;
-  if (numerator === 0) return `${sign}${whole}\"`;
+  if (numerator === denominator) return `${sign}${whole + 1}"`;
+  if (numerator === 0) return `${sign}${whole}"`;
 
   const div = gcd(numerator, denominator);
   numerator = numerator / div;
   const den = denominator / div;
 
-  if (whole === 0) return `${sign}${numerator}/${den}\"`;
-  return `${sign}${whole} ${numerator}/${den}\"`;
+  if (whole === 0) return `${sign}${numerator}/${den}"`;
+  return `${sign}${whole} ${numerator}/${den}"`;
 }
 
 function formatNumber(n) {
@@ -127,21 +130,27 @@ export default function TechnicalConverterTool() {
   }
 
   return (
-    <div style={card}>
-      <div style={kicker}>CONVERSOR</div>
-      <div style={title}>Conversor tecnico</div>
+    <div className="lpCard" style={card}>
+      <div style={header}>
+        <div style={{ ...iconBox, background: `${ACCENT}18`, border: `1px solid ${ACCENT}30`, color: ACCENT }}>
+          <Icon name="refresh" size="md" />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={kicker}>CONVERSOR</div>
+          <div style={title}>Conversor técnico</div>
+        </div>
+      </div>
+
       <div style={subtitle}>
-        Conversiones rapidas para campo: distancia, volumen, presion, temperatura y viscosidad.
+        Conversiones rápidas para campo: distancia, volumen, presión, temperatura y viscosidad.
       </div>
 
       <div style={formGrid}>
         <label style={label}>
-          Categoria
-          <select value={category} onChange={(e) => changeCategory(e.target.value)} style={input}>
+          Categoría
+          <select className="lp-select" value={category} onChange={(e) => changeCategory(e.target.value)} style={input}>
             {Object.entries(categories).map(([key, item]) => (
-              <option key={key} value={key}>
-                {item.label}
-              </option>
+              <option key={key} value={key}>{item.label}</option>
             ))}
           </select>
         </label>
@@ -149,6 +158,7 @@ export default function TechnicalConverterTool() {
         <label style={label}>
           Valor
           <input
+            className="lp-input"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             type="number"
@@ -160,22 +170,18 @@ export default function TechnicalConverterTool() {
 
         <label style={label}>
           De
-          <select value={from} onChange={(e) => setFrom(e.target.value)} style={input}>
+          <select className="lp-select" value={from} onChange={(e) => setFrom(e.target.value)} style={input}>
             {Object.entries(config.units).map(([key, item]) => (
-              <option key={key} value={key}>
-                {item.label}
-              </option>
+              <option key={key} value={key}>{item.label}</option>
             ))}
           </select>
         </label>
 
         <label style={label}>
           A
-          <select value={to} onChange={(e) => setTo(e.target.value)} style={input}>
+          <select className="lp-select" value={to} onChange={(e) => setTo(e.target.value)} style={input}>
             {Object.entries(config.units).map(([key, item]) => (
-              <option key={key} value={key}>
-                {item.label}
-              </option>
+              <option key={key} value={key}>{item.label}</option>
             ))}
           </select>
         </label>
@@ -184,39 +190,122 @@ export default function TechnicalConverterTool() {
       <div style={resultBox}>
         <div style={resultLabel}>Resultado</div>
         <div style={resultValue}>
-          {result == null ? "-" : formatNumber(result)} {config.units[to]?.label || ""}
+          {result == null ? "—" : formatNumber(result)}{" "}
+          <span style={{ fontSize: 16, fontWeight: 800, color: `${ACCENT}CC` }}>
+            {config.units[to]?.label || ""}
+          </span>
         </div>
 
         {fractionalInches ? (
           <div style={fractionBox}>
-            <b>Equivalente en fraccion:</b> {fractionalInches}
+            <span style={{ color: "#fde68a", flexShrink: 0 }}><Icon name="info" size="sm" /></span>
+            <span><b>Fracción equivalente:</b> {fractionalInches}</span>
           </div>
         ) : null}
       </div>
 
       <div style={note}>
-        Nota: las conversiones son de referencia operativa. Para especificaciones criticas, valida con ficha tecnica o norma aplicable.
+        Nota: las conversiones son de referencia operativa. Para especificaciones críticas, valida con ficha técnica o norma aplicable.
       </div>
     </div>
   );
 }
 
 const card = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
   borderRadius: 22,
-  padding: 18,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
+  borderTop: `4px solid ${ACCENT}`,
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  padding: "18px 18px 16px",
+  background: `linear-gradient(160deg, ${ACCENT}07 0%, rgba(248,250,252,0.97) 100%)`,
   boxShadow: "0 18px 34px rgba(15,23,42,0.08)",
+  display: "grid",
+  gap: 14,
 };
-const kicker = { fontSize: 11, fontWeight: 950, color: "rgba(249,115,22,0.90)", letterSpacing: 1.2 };
-const title = { marginTop: 4, fontSize: 21, fontWeight: 900, color: "#0f172a" };
-const subtitle = { marginTop: 6, fontSize: 13, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };
-const formGrid = { marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 };
-const label = { display: "grid", gap: 6, fontSize: 12, fontWeight: 950, color: "#475569" };
-const input = { border: "1px solid rgba(226,232,240,0.95)", borderRadius: 12, padding: "10px 12px", fontWeight: 900, background: "#fff", color: "#0f172a" };
-const resultBox = { marginTop: 14, borderRadius: 16, padding: 14, background: "rgba(248,250,252,0.95)", border: "1px solid rgba(226,232,240,0.95)" };
-const resultLabel = { fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase" };
-const resultValue = { marginTop: 6, fontSize: 24, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 };
-const fractionBox = { marginTop: 10, padding: "10px 12px", borderRadius: 12, background: "#fef3c7", color: "#92400e", fontSize: 13, fontWeight: 850 };
-const note = { marginTop: 12, fontSize: 12, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };
+
+const header = { display: "flex", gap: 12, alignItems: "flex-start" };
+const iconBox = {
+  width: 42,
+  height: 42,
+  borderRadius: 13,
+  display: "grid",
+  placeItems: "center",
+  flexShrink: 0,
+};
+const kicker = { fontSize: 10, fontWeight: 950, color: ACCENT, letterSpacing: 1.4, textTransform: "uppercase" };
+const title = { fontSize: 18, fontWeight: 900, color: "#0f172a", marginTop: 3 };
+const subtitle = { fontSize: 13, fontWeight: 800, color: "#64748b", lineHeight: 1.45 };
+
+const formGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 12,
+};
+
+const label = {
+  display: "grid",
+  gap: 6,
+  fontSize: 11,
+  fontWeight: 950,
+  color: "#64748b",
+  textTransform: "uppercase",
+  letterSpacing: 0.5,
+};
+
+const input = {
+  border: "1px solid rgba(226,232,240,0.95)",
+  borderRadius: 12,
+  padding: "10px 12px",
+  fontWeight: 900,
+  background: "#fff",
+  color: "#0f172a",
+  width: "100%",
+};
+
+const resultBox = {
+  borderRadius: 16,
+  padding: "18px 20px",
+  background: "linear-gradient(135deg, #0f172a 0%, #0c1a35 100%)",
+  boxShadow: `0 16px 32px ${ACCENT}22`,
+  display: "grid",
+  gap: 8,
+};
+
+const resultLabel = {
+  fontSize: 11,
+  fontWeight: 950,
+  textTransform: "uppercase",
+  letterSpacing: 1,
+  color: ACCENT,
+};
+
+const resultValue = {
+  fontSize: 28,
+  fontWeight: 900,
+  color: "#f8fafc",
+  lineHeight: 1.1,
+  wordBreak: "break-all",
+};
+
+const fractionBox = {
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+  marginTop: 4,
+  padding: "8px 12px",
+  borderRadius: 10,
+  background: "rgba(245,158,11,0.14)",
+  color: "#fde68a",
+  fontSize: 13,
+  fontWeight: 850,
+};
+
+const note = {
+  fontSize: 11,
+  fontWeight: 800,
+  color: "#94a3b8",
+  lineHeight: 1.45,
+  borderTop: "1px solid rgba(226,232,240,0.7)",
+  paddingTop: 12,
+};
