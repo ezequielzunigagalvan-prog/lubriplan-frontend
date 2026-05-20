@@ -321,15 +321,23 @@ function ConditionMetricCard({ title, value, subtitle, tone = "steel", icon }) {
   const theme = toneMap[tone] || toneMap.steel;
 
   return (
-    <div className="lpCard" style={{ ...conditionMetricCard, borderColor: theme.border }}>
-      <div style={{ ...conditionMetricAccent, background: theme.accent }} />
+    <div
+      className="lpCard"
+      style={{
+        ...conditionMetricCard,
+        borderTop: `4px solid ${theme.accent}`,
+        borderRight: `1px solid ${theme.border}`,
+        borderBottom: `1px solid ${theme.border}`,
+        borderLeft: `1px solid ${theme.border}`,
+      }}
+    >
       <div style={conditionMetricHeader}>
         <span style={{ ...conditionMetricIcon, background: theme.iconBg, color: theme.iconFg }}>
           {icon}
         </span>
-        <div style={conditionMetricTitle}>{title}</div>
+        <div style={{ ...conditionMetricTitle, color: theme.accent }}>{title}</div>
       </div>
-      <div style={conditionMetricValue}>{value}</div>
+      <div style={{ ...conditionMetricValue, color: "#0f172a" }}>{value}</div>
       <div style={conditionMetricSubtitle}>{subtitle}</div>
     </div>
   );
@@ -764,63 +772,70 @@ export default function AnalysisPage() {
         }
       `}</style>
 
-      <div style={headerRow}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
-            <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
-            ANÁLISIS · TENDENCIAS
+      {/* ── Hero ── */}
+      <div style={headerRow} className="lp-enter">
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, minWidth: 0, flex: 1 }}>
+          <div style={heroIconBox}>
+            <Icon name="trendUp" size="md" />
           </div>
-          <h1 style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 950, color: "#0f172a" }}>Análisis</h1>
-          <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 900 }}>
-            Tendencias y estadisticas de lubricacion
-            {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
-          </p>
+          <div style={{ minWidth: 0 }}>
+            <div style={heroKicker}>ANÁLISIS · TENDENCIAS</div>
+            <h1 style={heroH1}>Análisis</h1>
+            <p style={heroSub}>
+              Tendencias y estadísticas de lubricación
+              {currentPlant?.name ? ` · ${currentPlant.name}` : ""}
+            </p>
+            <div style={heroMetaRow}>
+              {currentPlant?.name ? (
+                <span style={heroMetaChip}>
+                  <Icon name="building" size="sm" />
+                  {currentPlant.name}
+                </span>
+              ) : null}
+              {tab === "consumo" ? (
+                <span style={heroMetaChip}>
+                  <Icon name="calendar" size="sm" />
+                  {days} días
+                </span>
+              ) : null}
+              {tab === "actividades" ? (
+                <span style={heroMetaChip}>
+                  <Icon name="calendar" size="sm" />
+                  Año {year}
+                </span>
+              ) : null}
+              {tab === "condicion" ? (
+                <span style={heroMetaChip}>
+                  <Icon name="calendar" size="sm" />
+                  {crRange}
+                </span>
+              ) : null}
+              {tab === "ole" ? (
+                <span style={heroMetaChip}>
+                  <Icon name="trendUp" size="sm" />
+                  OLE · {oleDays} días
+                </span>
+              ) : null}
+            </div>
+          </div>
         </div>
 
-                  <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Tag tone="steel">Pestana: {tab}</Tag>
-            {currentPlant?.name ? <Tag tone="blue">Planta: {currentPlant.name}</Tag> : null}
-            {tab === "consumo" ? <Tag tone="amber">Rango: {days} dias</Tag> : null}
-            {tab === "actividades" ? <Tag tone="amber">Ano: {year}</Tag> : null}
-            {tab === "condicion" ? <Tag tone="amber">Rango condicion: {crRange}</Tag> : null}
-          </div>
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <button
-            onClick={handleReset}
-            className="lpPress"
-            style={btnGhost}
-            disabled={busy}
-            type="button"
-          >
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", flexShrink: 0 }}>
+          <button onClick={handleReset} className="lpPress" style={btnGhost} disabled={busy} type="button">
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="reset" />
-              Reset filtros
+              Reset
             </span>
           </button>
 
-          <button
-            onClick={() => loadAll({ hard: false })}
-            className="lpPress"
-            style={btnGhost}
-            disabled={busy}
-            title="Actualizar"
-            type="button"
-          >
+          <button onClick={() => loadAll({ hard: false })} className="lpPress" style={btnGhost} disabled={busy} type="button">
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <Icon name="reset" />
-              {busy ? "Actualizando..." : "Actualizar"}
+              <Icon name="refresh" size="sm" />
+              {busy ? "Actualizando…" : "Actualizar"}
             </span>
           </button>
 
-          <button
-            onClick={handleExport}
-            className="lpPress"
-            style={btnPrimary}
-            disabled={busy}
-            title={exportLabel}
-            type="button"
-          >
+          <button onClick={handleExport} className="lpPress" style={btnPrimary} disabled={busy} type="button">
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Icon name="doc" />
               {exportLabel}
@@ -829,16 +844,16 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 12 }} className="lp-enter">
         <SegmentedTabs
           value={tab}
           onChange={setTab}
           items={[
-            { value: "consumo", label: "Consumo", icon: <Icon name="drop" /> },
-            { value: "actividades", label: "Actividades", icon: <Icon name="route" /> },
-            { value: "fallas", label: "Fallas", icon: <Icon name="warn" /> },
-            { value: "condicion", label: "Condicion", icon: <Icon name="warn" /> },
-            { value: "ole", label: "KPI OLE", icon: <Icon name="trendUp" /> },
+            { value: "consumo",     label: "Consumo",      icon: <Icon name="drop" /> },
+            { value: "actividades", label: "Actividades",   icon: <Icon name="route" /> },
+            { value: "fallas",      label: "Fallas",        icon: <Icon name="warn" /> },
+            { value: "condicion",   label: "Condición",     icon: <Icon name="warn" /> },
+            { value: "ole",         label: "KPI OLE",       icon: <Icon name="trendUp" /> },
           ]}
         />
       </div>
@@ -1643,10 +1658,9 @@ function SimpleBars({ labels, values, valueFmt }) {
 
             <div
               style={{
-                height: 12,
+                height: 10,
                 borderRadius: 999,
                 background: "rgba(226,232,240,0.95)",
-                border: "1px solid rgba(148,163,184,0.45)",
                 overflow: "hidden",
               }}
             >
@@ -1654,7 +1668,9 @@ function SimpleBars({ labels, values, valueFmt }) {
                 style={{
                   height: "100%",
                   width: `${pct}%`,
-                  background: "rgba(15,23,42,0.86)",
+                  background: "linear-gradient(90deg, rgba(249,115,22,0.92) 0%, rgba(251,146,60,0.80) 100%)",
+                  borderRadius: 999,
+                  transition: "width 500ms ease",
                 }}
               />
             </div>
@@ -1714,21 +1730,54 @@ function OleGauge({ value, label, subtitle, color = "#f97316", benchmark }) {
     barColor = pct >= target ? "#16a34a" : pct >= good ? "#d97706" : "#dc2626";
   }
 
+  const isMain = label === "OLE";
+
   return (
-    <div className="lpCard" style={{
-      ...panel,
-      display: "flex",
-      flexDirection: "column",
-      gap: 10,
-      alignItems: "flex-start",
-    }}>
+    <div
+      className="lpCard"
+      style={{
+        ...panel,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        alignItems: "flex-start",
+        borderTop: `4px solid ${barColor}`,
+        borderRight: "1px solid rgba(226,232,240,0.95)",
+        borderBottom: "1px solid rgba(226,232,240,0.95)",
+        borderLeft: "1px solid rgba(226,232,240,0.95)",
+      }}
+    >
       <div style={accentBarOrange} />
-      <div style={{ marginTop: 6, fontSize: 12, fontWeight: 950, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 40, fontWeight: 980, color: barColor, lineHeight: 1 }}>{pct.toFixed(1)}<span style={{ fontSize: 22 }}>%</span></div>
-      <div style={{ fontSize: 12, color: "#64748b", fontWeight: 850 }}>{subtitle}</div>
-      <div style={{ width: "100%", height: 10, borderRadius: 999, background: "rgba(226,232,240,0.95)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 999, transition: "width 600ms ease" }} />
+      <div style={{ marginTop: 4, fontSize: 11, fontWeight: 950, color: barColor, textTransform: "uppercase", letterSpacing: 1 }}>
+        {label}
       </div>
+      <div style={{ fontSize: isMain ? 52 : 40, fontWeight: 900, color: barColor, lineHeight: 1, letterSpacing: "-0.04em" }}>
+        {pct.toFixed(1)}
+        <span style={{ fontSize: isMain ? 24 : 18, fontWeight: 800, opacity: 0.75 }}>%</span>
+      </div>
+      <div style={{ fontSize: 12, color: "#64748b", fontWeight: 850, lineHeight: 1.4 }}>{subtitle}</div>
+      <div style={{ width: "100%", height: 8, borderRadius: 999, background: "rgba(226,232,240,0.95)", overflow: "hidden", marginTop: 2 }}>
+        <div
+          style={{
+            height: "100%",
+            width: `${pct}%`,
+            background: barColor,
+            borderRadius: 999,
+            transition: "width 700ms cubic-bezier(0.22,1,0.36,1)",
+            boxShadow: `0 0 8px ${barColor}66`,
+          }}
+        />
+      </div>
+      {isMain && benchmark ? (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 2 }}>
+          <span style={{ fontSize: 11, fontWeight: 950, color: "#16a34a", padding: "3px 8px", borderRadius: 6, background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.22)" }}>
+            Meta {benchmark.target}%
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 950, color: "#d97706", padding: "3px 8px", borderRadius: 6, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.22)" }}>
+            Aceptable {benchmark.good}%
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1739,14 +1788,15 @@ const headerRow = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
-  gap: 12,
+  gap: 14,
   flexWrap: "wrap",
-  padding: "14px 16px",
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
+  padding: "18px 20px 16px",
+  borderRadius: 22,
+  borderTop: "4px solid #0f172a",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "4px solid rgba(249,115,22,0.80)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 55%, rgba(255,247,237,0.65) 100%)",
   boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
 };
 
@@ -1773,11 +1823,12 @@ const tabBtn = {
 };
 
 const tabBtnActive = {
-  background: "rgba(15,23,42,0.92)",
+  background: "#0f172a",
   borderWidth: 1,
   borderStyle: "solid",
-  borderColor: "rgba(15,23,42,0.92)",
-  color: "white",
+  borderColor: "#0f172a",
+  color: "#fff",
+  boxShadow: "0 4px 12px rgba(2,6,23,0.20)",
 };
 
 const stickyFilters = {
@@ -1822,15 +1873,14 @@ const twoCols = {
 const panel = {
   position: "relative",
   minWidth: 0,
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "rgba(148,163,184,0.55)",
-  borderRadius: 14,
-  padding: 14,
-  background: "rgba(255,255,255,0.96)",
-  boxShadow: "0 10px 26px rgba(2,6,23,0.08)",
-  outline: "1px solid rgba(255,255,255,0.9)",
-  outlineOffset: -2,
+  borderTop: "1px solid rgba(226,232,240,0.95)",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  borderRadius: 18,
+  padding: 16,
+  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.93) 100%)",
+  boxShadow: "0 10px 26px rgba(2,6,23,0.07)",
   overflow: "hidden",
 };
 
@@ -1839,8 +1889,8 @@ const accentBarOrange = {
   left: 0,
   right: 0,
   top: 0,
-  height: 5,
-  background: "#0f172a",
+  height: 4,
+  background: "linear-gradient(90deg, rgba(249,115,22,0.95) 0%, rgba(251,146,60,0.60) 60%, transparent 100%)",
 };
 
 const panelHeaderRow = {
@@ -1877,43 +1927,29 @@ const kpiGrid = {
 const kpiCard = {
   position: "relative",
   minWidth: 0,
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "rgba(148,163,184,0.55)",
+  borderTop: "4px solid rgba(249,115,22,0.90)",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
   borderRadius: 14,
   padding: 14,
-  background: "rgba(255,255,255,0.98)",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.06)",
+  background: "#fff",
+  boxShadow: "0 8px 20px rgba(2,6,23,0.06)",
   overflow: "hidden",
 };
 
-const kpiTopBarDark = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 5,
-  background: "#0f172a",
-};
-
-const kpiSideStripe = {
-  position: "absolute",
-  top: 5,
-  left: 0,
-  bottom: 0,
-  width: 4,
-  background: "#334155",
-};
+const kpiTopBarDark = { display: "none" };
+const kpiSideStripe = { display: "none" };
 
 const kpiLbl = {
-  fontSize: 12,
+  fontSize: 11,
   color: "#64748b",
   fontWeight: 950,
-  marginTop: 10,
-  paddingLeft: 4,
+  textTransform: "uppercase",
+  letterSpacing: 0.5,
 };
-const kpiVal = { marginTop: 6, fontSize: 18, fontWeight: 980, color: "#0f172a" };
-const kpiSub = { marginTop: 6, fontSize: 12, color: "#475569", fontWeight: 850 };
+const kpiVal = { marginTop: 8, fontSize: 17, fontWeight: 900, color: "#0f172a", lineHeight: 1.2 };
+const kpiSub = { marginTop: 6, fontSize: 12, color: "#94a3b8", fontWeight: 850, lineHeight: 1.4 };
 
 const conditionMetricGrid = {
   marginTop: 12,
@@ -1925,27 +1961,14 @@ const conditionMetricGrid = {
 const conditionMetricCard = {
   position: "relative",
   minWidth: 0,
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "rgba(148,163,184,0.45)",
   borderRadius: 16,
   padding: 16,
-  paddingTop: 18,
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)",
   boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
   overflow: "hidden",
 };
 
-const conditionMetricAccent = {
-  position: "absolute",
-  left: 0,
-  top: 0,
-  bottom: 0,
-  width: 6,
-  borderTopLeftRadius: 16,
-  borderBottomLeftRadius: 16,
-};
+const conditionMetricAccent = { display: "none" };
 
 const conditionMetricHeader = {
   display: "flex",
@@ -2081,6 +2104,64 @@ const tagBase = {
 };
 
 const tagWrapFix = { display: "inline-flex", alignItems: "center" };
+
+/* ── Hero sub-elements ── */
+const heroIconBox = {
+  width: 46,
+  height: 46,
+  borderRadius: 15,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(249,115,22,0.14)",
+  border: "1px solid rgba(249,115,22,0.25)",
+  color: "#f97316",
+  flexShrink: 0,
+};
+
+const heroKicker = {
+  fontSize: 10,
+  fontWeight: 950,
+  color: "#f97316",
+  letterSpacing: 1.4,
+  textTransform: "uppercase",
+};
+
+const heroH1 = {
+  margin: "4px 0 0",
+  fontSize: 24,
+  fontWeight: 900,
+  color: "#0f172a",
+  lineHeight: 1.1,
+  letterSpacing: "-0.03em",
+};
+
+const heroSub = {
+  margin: "6px 0 0",
+  color: "#64748b",
+  fontWeight: 850,
+  fontSize: 13,
+  lineHeight: 1.45,
+};
+
+const heroMetaRow = {
+  marginTop: 10,
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+};
+
+const heroMetaChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  borderRadius: 999,
+  padding: "5px 10px",
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.85)",
+  fontWeight: 900,
+  fontSize: 12,
+  color: "#334155",
+};
 
 
 
