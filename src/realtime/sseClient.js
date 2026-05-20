@@ -1,4 +1,4 @@
-﻿// src/realtime/sseClient.js
+// src/realtime/sseClient.js
 import { API_URL } from "../services/api";
 import { getToken } from "../auth/auth.js";
 
@@ -72,7 +72,6 @@ export function startSSE({ onStatus, onEvent, onUnauthorized } = {}) {
       onStatus?.("connected");
     },
     onError: (err) => {
-      console.warn("[SSE] error", err);
       onStatus?.("error");
 
       const stillHasToken = !!getToken();
@@ -86,9 +85,8 @@ export function startSSE({ onStatus, onEvent, onUnauthorized } = {}) {
 }
 
 /**
- * Abre SSE con EventSource.
- * URL final:
- *   /realtime/stream?token=...&plantId=...
+ * Abre SSE con EventSource y reconexión exponencial automática.
+ * Delays: 2s → 4s → 8s → … → 60s máx.
  */
 export function openSSE({
   token,
@@ -105,13 +103,18 @@ export function openSSE({
   }
 
   const base = String(API_URL || "").replace(/\/+$/, "");
-  const qs = new URLSearchParams();
-  qs.set("token", safeToken);
-  qs.set("plantId", safePlantId);
+  const buildUrl = () => {
+    const qs = new URLSearchParams();
+    qs.set("token", getToken() || safeToken);
+    qs.set("plantId", safePlantId);
+    return `${base}/realtime/stream?${qs.toString()}`;
+  };
 
-  const url = `${base}/realtime/stream?${qs.toString()}`;
-  const es = new EventSource(url);
-  eventSourceRef = es;
+  let closed = false;
+  let currentEs = null;
+  let retryDelay = 2000;
+  const MAX_RETRY_DELAY = 60000;
+  let retryTimer = null;
 
   const safeJson = (raw) => {
     try {
@@ -121,56 +124,74 @@ export function openSSE({
     }
   };
 
-  es.onopen = () => {
-    onOpen?.();
-  };
+  function connect() {
+    if (closed) return;
 
-  es.addEventListener("hello", (ev) =>
-    onEvent?.("hello", safeJson(ev.data))
-  );
+    const es = new EventSource(buildUrl());
+    currentEs = es;
+    eventSourceRef = es;
 
-  es.addEventListener("ping", (ev) =>
-    onEvent?.("ping", safeJson(ev.data ?? "{}"))
-  );
+    es.onopen = () => {
+      retryDelay = 2000; // reset backoff on successful connection
+      onOpen?.();
+    };
 
-  es.addEventListener("notification.created", (ev) =>
-    onEvent?.("notification.created", safeJson(ev.data))
-  );
+    es.addEventListener("hello", (ev) =>
+      onEvent?.("hello", safeJson(ev.data))
+    );
 
-  es.addEventListener("execution.critical", (ev) =>
-    onEvent?.("execution.critical", safeJson(ev.data))
-  );
+    es.addEventListener("ping", (ev) =>
+      onEvent?.("ping", safeJson(ev.data ?? "{}"))
+    );
 
-  es.addEventListener("condition-report.created", (ev) =>
-    onEvent?.("condition-report.created", safeJson(ev.data))
-  );
+    es.addEventListener("notification.created", (ev) =>
+      onEvent?.("notification.created", safeJson(ev.data))
+    );
 
-  es.addEventListener("condition-report.dismissed", (ev) =>
-    onEvent?.("condition-report.dismissed", safeJson(ev.data))
-  );
+    es.addEventListener("execution.critical", (ev) =>
+      onEvent?.("execution.critical", safeJson(ev.data))
+    );
 
-  es.addEventListener("condition-report.corrective-scheduled", (ev) =>
-    onEvent?.("condition-report.corrective-scheduled", safeJson(ev.data))
-  );
+    es.addEventListener("condition-report.created", (ev) =>
+      onEvent?.("condition-report.created", safeJson(ev.data))
+    );
 
-  es.onmessage = (ev) => {
-    onEvent?.("message", safeJson(ev.data));
-  };
+    es.addEventListener("condition-report.dismissed", (ev) =>
+      onEvent?.("condition-report.dismissed", safeJson(ev.data))
+    );
 
-  es.onerror = (e) => {
-    onError?.(e);
-  };
+    es.addEventListener("condition-report.corrective-scheduled", (ev) =>
+      onEvent?.("condition-report.corrective-scheduled", safeJson(ev.data))
+    );
+
+    es.onmessage = (ev) => {
+      onEvent?.("message", safeJson(ev.data));
+    };
+
+    es.onerror = (e) => {
+      onError?.(e);
+
+      if (closed) return;
+
+      // No reintentar si el usuario cerró sesión
+      if (!getToken()) return;
+
+      try { es.close(); } catch {}
+      if (eventSourceRef === es) eventSourceRef = null;
+
+      retryTimer = setTimeout(() => {
+        retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
+        connect();
+      }, retryDelay);
+    };
+  }
+
+  connect();
 
   return () => {
-    try {
-      es.close();
-    } catch {
-      // noop
-    }
-
-    if (eventSourceRef === es) {
-      eventSourceRef = null;
-    }
+    closed = true;
+    clearTimeout(retryTimer);
+    try { currentEs?.close(); } catch {}
+    if (eventSourceRef === currentEs) eventSourceRef = null;
   };
 }
-

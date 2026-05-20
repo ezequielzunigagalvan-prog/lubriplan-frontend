@@ -585,8 +585,28 @@ export async function syncOfflineExecutionQueue() {
         }
       }
 
+      // Errores transitorios (red, 5xx, timeout): reintentar hasta 3 veces
+      // antes de marcar como fallida. Errores de conflicto/validación fallan de inmediato.
+      const isConflict = /conflicto|conflict|ya fue completada/i.test(message);
+      const isValidation = error?.status >= 400 && error?.status < 500 && !alreadyCompleted;
+      const isTransient = !isConflict && !isValidation;
+      const retryCount = Number(item.retryCount || 0);
+      const MAX_RETRIES = 3;
+
+      if (isTransient && retryCount < MAX_RETRIES) {
+        await updateQueueItem(item.clientActionId, {
+          status: "pending",
+          retryCount: retryCount + 1,
+          updatedAt: new Date().toISOString(),
+          errorMessage: message,
+        });
+        // No cuenta como fallo hasta agotar reintentos
+        continue;
+      }
+
       await updateQueueItem(item.clientActionId, {
         status: "failed",
+        retryCount: retryCount + 1,
         updatedAt: new Date().toISOString(),
         errorMessage: message || "Error sincronizando",
       });

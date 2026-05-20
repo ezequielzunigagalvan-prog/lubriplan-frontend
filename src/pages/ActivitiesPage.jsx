@@ -594,6 +594,30 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
     };
   }, [isTech, refreshOfflineInfo]);
 
+  // Auto-prepare offline cache in background — fires 4s after page load,
+  // only if data is stale (>4h). Never blocks the UI, fails silently.
+  const autoPreparedRef = useRef(false);
+  useEffect(() => {
+    if (!isTech || autoPreparedRef.current) return;
+
+    const timer = setTimeout(async () => {
+      if (!navigator.onLine || autoPreparedRef.current) return;
+      try {
+        const status = await getExecutionOfflineStatus();
+        const lastPrepared = status?.lastPreparedAt ? new Date(status.lastPreparedAt) : null;
+        const isStale = !lastPrepared || Date.now() - lastPrepared.getTime() > 4 * 60 * 60 * 1000;
+        if (!isStale) return;
+        autoPreparedRef.current = true;
+        await prepareTechnicianOffline({ futureDays: 7, limit: 200 });
+        refreshOfflineInfo();
+      } catch {
+        // silent — don't interrupt the user
+      }
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [isTech, refreshOfflineInfo]);
+
  // inicial + deep-links
 useEffect(() => {
   if (deep.filter === "overdue") setFilter("Atrasada");
