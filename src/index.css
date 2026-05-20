@@ -447,3 +447,45 @@ body {
   opacity: 1;
   transform: translateX(-50%) scale(1);
 }
+
+/* ============================================================
+   Dark mode overrides for inline-styled cards and inputs
+   ============================================================ */
+
+[data-theme="dark"] .lpCard {
+  background: linear-gradient(160deg, #1e293b 0%, #162032 100%) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 18px 34px rgba(0,0,0,0.35) !important;
+}
+
+[data-theme="dark"] .lpCard:hover {
+  box-shadow: 0 22px 44px rgba(0,0,0,0.45) !important;
+}
+
+[data-theme="dark"] .lp-input,
+[data-theme="dark"] .lp-select {
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+[data-theme="dark"] .lpSkeletonCard {
+  background: linear-gradient(180deg, #1e293b 0%, #162032 100%) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+[data-theme="dark"] .lpShimmer {
+  background: linear-gradient(
+    90deg,
+    #1e293b 25%,
+    #273549 50%,
+    #1e293b 75%
+  ) !important;
+  background-size: 600px 100% !important;
+}
+
+[data-theme="dark"] .lpFilterChip {
+  color: #fb923c !important;
+  background: rgba(249,115,22,0.12) !important;
+  border-color: rgba(249,115,22,0.28) !important;
+}

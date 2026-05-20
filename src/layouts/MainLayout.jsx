@@ -10,6 +10,8 @@ import PlantSwitcher from "../components/plants/PlantSwitcher";
 import lubriPlanMark from "../assets/lubriplan-menu-icon.png";
 import { usePlant } from "../context/PlantContext";
 import useInstallPrompt from "../hooks/useInstallPrompt";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -19,6 +21,9 @@ export default function MainLayout({ children }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { currentPlant, currentPlantId, plants } = usePlant();
+
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
   const displayName = String(user?.name || "?").trim();
@@ -200,6 +205,7 @@ export default function MainLayout({ children }) {
 
   const navLinkStyle = (path) => ({
     ...sideItem,
+    color: isDark ? "#e2e8f0" : sideItem.color,
     ...(isActive(path) ? sideItemActive : null),
   });
 
@@ -341,6 +347,50 @@ export default function MainLayout({ children }) {
             display: none !important;
           }
         }
+
+        [data-theme="dark"] .lpSidebar {
+          background: linear-gradient(180deg, #111827 0%, #0b1120 100%) !important;
+          border-right-color: rgba(255,255,255,0.07) !important;
+        }
+
+        [data-theme="dark"] .lpTopbar {
+          background: linear-gradient(180deg, #111827 0%, #0f1629 100%) !important;
+          border-bottom-color: rgba(255,255,255,0.07) !important;
+        }
+
+        [data-theme="dark"] .lpSideLink:not([data-active="true"]):hover {
+          background: rgba(255,255,255,0.05) !important;
+          border-color: rgba(255,255,255,0.08) !important;
+          box-shadow: none !important;
+        }
+
+        [data-theme="dark"] .lpLogoutBtn {
+          background: rgba(255,255,255,0.05) !important;
+          border-color: rgba(255,255,255,0.10) !important;
+          color: #94a3b8 !important;
+        }
+
+        [data-theme="dark"] .lpLogoutBtn:hover {
+          background: rgba(239,68,68,0.12) !important;
+          border-color: rgba(239,68,68,0.28) !important;
+          color: #fca5a5 !important;
+          box-shadow: none !important;
+        }
+
+        [data-theme="dark"] .lpNotifDrop {
+          background: linear-gradient(180deg, #1e293b 0%, #162032 100%) !important;
+          border-color: rgba(255,255,255,0.10) !important;
+        }
+
+        [data-theme="dark"] .lpTopPlantWrap {
+          background: rgba(255,255,255,0.05) !important;
+          border-color: rgba(255,255,255,0.10) !important;
+        }
+
+        [data-theme="dark"] .lpBellBtn:hover {
+          background: rgba(255,255,255,0.06) !important;
+          box-shadow: none !important;
+        }
       `}</style>
 
       {isMobile && mobileMenuOpen ? (
@@ -362,7 +412,7 @@ export default function MainLayout({ children }) {
           <img src={lubriPlanMark} alt="LubriPlan" style={brandLogoImg} />
 
           <div style={{ minWidth: 0 }}>
-            <div style={brandTitle}>LubriPlan</div>
+            <div style={{ ...brandTitle, color: isDark ? "#f1f5f9" : brandTitle.color }}>LubriPlan</div>
             <div style={brandSub}>Gestión de lubricación</div>
           </div>
 
@@ -378,9 +428,13 @@ export default function MainLayout({ children }) {
           ) : null}
         </div>
 
-        <div style={who}>
+        <div style={{
+          ...who,
+          background: isDark ? "rgba(255,255,255,0.05)" : who.background,
+          border: isDark ? "1px solid rgba(255,255,255,0.09)" : who.border,
+        }}>
           <div style={{ minWidth: 0 }}>
-            <div style={whoName}>{displayName}</div>
+            <div style={{ ...whoName, color: isDark ? "#e2e8f0" : whoName.color }}>{displayName}</div>
             {showRoleText ? <div style={whoRole}>{roleText}</div> : null}
           </div>
 
@@ -609,6 +663,9 @@ export default function MainLayout({ children }) {
         <div style={{ flex: 1 }} />
 
         <div style={sideFooter}>
+          <div style={{ marginBottom: 8 }}>
+            <ThemeToggle />
+          </div>
           <button onClick={onLogout} className="lpLogoutBtn" style={logoutBtn} title="Cerrar sesión" type="button">
             Cerrar sesión
           </button>
@@ -616,7 +673,7 @@ export default function MainLayout({ children }) {
       </aside>
 
       <div style={{ ...main, ...(isMobile ? mainMobile : {}) }}>
-        <header style={{ ...topbar, ...(isMobile ? topbarMobile : {}) }}>
+        <header className="lpTopbar" style={{ ...topbar, ...(isMobile ? topbarMobile : {}) }}>
           <div style={topbarAccent} />
 
           <div style={topbarLeft}>
@@ -689,6 +746,8 @@ export default function MainLayout({ children }) {
               <div style={plantDot} />
               <PlantSwitcher compact />
             </div>
+
+            <ThemeToggle compact />
 
             <div ref={notifRef} style={{ position: "relative" }}>
               <button
