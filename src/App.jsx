@@ -35,6 +35,7 @@ const SettingsPage            = lazy(() => import("./pages/SettingsPage"));
 const AdminOnboardingPage     = lazy(() => import("./pages/AdminOnboardingPage"));
 const TechnicalAssistantPage  = lazy(() => import("./pages/TechnicalAssistantPage"));
 const CorporateDashboard      = lazy(() => import("./pages/CorporateDashboard"));
+const LubricationCardPage     = lazy(() => import("./pages/LubricationCardPage"));
 
 function PageLoader() {
   return (
@@ -78,6 +79,7 @@ export default function App() {
 
         <Route path="/equipments" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><EquipmentsPage /></ProtectedRoute>} />
         <Route path="/equipments/:id" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><EquipmentDetailPage /></ProtectedRoute>} />
+        <Route path="/equipments/:id/lubrication-card" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><LubricationCardPage /></ProtectedRoute>} />
         <Route path="/activities" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivitiesPage /></ProtectedRoute>} />
         <Route path="/activities/:id/complete" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><CompleteExecutionModal /></ProtectedRoute>} />
         <Route path="/routes/:routeId/activities" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivitiesDetailPage /></ProtectedRoute>} />

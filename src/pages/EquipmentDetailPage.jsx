@@ -290,14 +290,25 @@ export default function EquipmentDetailPage() {
             Volver a equipos
           </button>
 
-          <button
-            type="button"
-            onClick={() => loadEquipment({ silent: true })}
-            style={btnGhost}
-            disabled={reloading}
-          >
-            {reloading ? "Actualizando..." : "Actualizar"}
-          </button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              type="button"
+              onClick={() => navigate(`/equipments/${id}/lubrication-card`)}
+              style={{ ...btnGhost, background: "rgba(249,115,22,0.08)", borderColor: "rgba(249,115,22,0.3)", color: "#9a3412" }}
+            >
+              <Wrench size={16} />
+              Carta de Lubricación
+            </button>
+
+            <button
+              type="button"
+              onClick={() => loadEquipment({ silent: true })}
+              style={btnGhost}
+              disabled={reloading}
+            >
+              {reloading ? "Actualizando..." : "Actualizar"}
+            </button>
+          </div>
         </div>
 
         <div style={heroCard}>
