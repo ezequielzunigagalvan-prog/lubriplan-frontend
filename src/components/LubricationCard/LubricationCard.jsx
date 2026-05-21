@@ -1,8 +1,9 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { btnPrimary, btnGhost } from "../ui/styles";
 import { Icon } from "../ui/lpIcons";
 import PointMarker from "./PointMarker";
 import PointDetailPanel from "./PointDetailPanel";
+import { getLubricants } from "../../services/lubricantsService";
 
 const FREQUENCIES = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"];
 const FREQ_LABEL = { DAILY: "Diaria", WEEKLY: "Semanal", MONTHLY: "Mensual", QUARTERLY: "Trimestral", ANNUAL: "Anual" };
@@ -44,7 +45,57 @@ export default function LubricationCard({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
 
+  const [lubricants, setLubricants] = useState([]);
+  const [lubricantMode, setLubricantMode] = useState("select"); // "select" | "manual"
+  const [selectedLubricantId, setSelectedLubricantId] = useState("");
+
   const points = localPoints ?? card?.points ?? [];
+
+  // ── Load lubricants from inventory when edit mode opens ──────────────────
+  useEffect(() => {
+    if (!isEditing) return;
+    getLubricants()
+      .then((data) => { setLubricants(Array.isArray(data) ? data : []); })
+      .catch(() => { setLubricantMode("manual"); });
+  }, [isEditing]);
+
+  // ── Lubricant select ─────────────────────────────────────────────────────
+  const handleLubricantSelect = useCallback((e) => {
+    const val = e.target.value;
+    if (val === "__manual__") {
+      setLubricantMode("manual");
+      setSelectedLubricantId("__manual__");
+      setForm((f) => ({ ...f, lubricant: "" }));
+      return;
+    }
+    setSelectedLubricantId(val);
+    if (!val) { setForm((f) => ({ ...f, lubricant: "" })); return; }
+    const found = lubricants.find((l) => String(l.id) === val);
+    if (found) setForm((f) => ({ ...f, lubricant: found.name, unit: found.unit || "ml" }));
+  }, [lubricants]);
+
+  const resetLubricantState = useCallback(() => {
+    setLubricantMode("select");
+    setSelectedLubricantId("");
+  }, []);
+
+  // ── Duplicate point ───────────────────────────────────────────────────────
+  const handleDuplicatePoint = useCallback(async (point) => {
+    try {
+      await onAddPoint?.({
+        x: parseFloat(Math.min(100, point.x + 3).toFixed(2)),
+        y: parseFloat(Math.min(100, point.y + 3).toFixed(2)),
+        label: `${point.label} (copia)`,
+        lubricant: point.lubricant,
+        quantity: point.quantity,
+        unit: point.unit,
+        frequency: point.frequency,
+        method: point.method,
+        notes: point.notes,
+      });
+      setSelectedPoint(null);
+    } catch {}
+  }, [onAddPoint]);
 
   // ── Image click → add point in edit mode ────────────────────────────────
   const handleContainerClick = useCallback((e) => {
@@ -112,6 +163,14 @@ export default function LubricationCard({
 
   const handleEditPoint = useCallback((point) => {
     setEditingPoint(point);
+    if (point.lubricant) {
+      const found = lubricants.find((l) => l.name === point.lubricant);
+      if (found) { setLubricantMode("select"); setSelectedLubricantId(String(found.id)); }
+      else { setLubricantMode("manual"); setSelectedLubricantId("__manual__"); }
+    } else {
+      setLubricantMode("select");
+      setSelectedLubricantId("");
+    }
     setForm({
       label: point.label || "",
       lubricant: point.lubricant || "",
@@ -124,7 +183,7 @@ export default function LubricationCard({
     setFormError("");
     setSelectedPoint(null);
     setPendingPos({ x: point.x, y: point.y });
-  }, []);
+  }, [lubricants]);
 
   const handleDeletePoint = useCallback(async (pointId) => {
     if (!window.confirm("¿Eliminar este punto?")) return;
@@ -405,7 +464,38 @@ export default function LubricationCard({
 
               <div>
                 <label style={{ fontSize: 11, fontWeight: 850, color: "#64748b", display: "block", marginBottom: 3 }}>Lubricante</label>
-                <input style={inputStyle} value={form.lubricant} onChange={(e) => setForm((f) => ({ ...f, lubricant: e.target.value }))} placeholder="Ej: Grasa SKF LGEP 2" />
+                {lubricantMode === "select" ? (
+                  <select style={selectStyle} value={selectedLubricantId} onChange={handleLubricantSelect}>
+                    <option value="">Sin lubricante</option>
+                    {lubricants.map((l) => (
+                      <option key={l.id} value={String(l.id)}>
+                        {l.name}{l.brand ? ` · ${l.brand}` : ""}
+                      </option>
+                    ))}
+                    <option value="__manual__">Otro (ingresar manualmente)</option>
+                  </select>
+                ) : (
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <input
+                      style={{ ...inputStyle, flex: 1 }}
+                      value={form.lubricant}
+                      onChange={(e) => setForm((f) => ({ ...f, lubricant: e.target.value }))}
+                      placeholder="Nombre del lubricante"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      style={{ ...btnGhost, padding: "7px 10px", fontSize: 11, whiteSpace: "nowrap" }}
+                      onClick={() => {
+                        const found = lubricants.find((l) => l.name === form.lubricant);
+                        setLubricantMode("select");
+                        setSelectedLubricantId(found ? String(found.id) : "");
+                      }}
+                    >
+                      ← Lista
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", gap: 6 }}>
@@ -447,7 +537,7 @@ export default function LubricationCard({
               <button type="submit" style={{ ...btnPrimary, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 13 }} disabled={saving}>
                 <Icon name="check" size="sm" />{saving ? "Guardando…" : editingPoint ? "Actualizar" : "Agregar punto"}
               </button>
-              <button type="button" style={{ ...btnGhost, padding: "10px 14px" }} onClick={() => { setPendingPos(null); setEditingPoint(null); setForm(EMPTY_FORM); }}>
+              <button type="button" style={{ ...btnGhost, padding: "10px 14px" }} onClick={() => { setPendingPos(null); setEditingPoint(null); setForm(EMPTY_FORM); resetLubricantState(); }}>
                 <Icon name="close" size="sm" />
               </button>
             </div>
@@ -480,6 +570,7 @@ export default function LubricationCard({
           isEditing={isEditing}
           onEdit={handleEditPoint}
           onDelete={handleDeletePoint}
+          onDuplicate={handleDuplicatePoint}
           onClose={() => setSelectedPoint(null)}
         />
       )}

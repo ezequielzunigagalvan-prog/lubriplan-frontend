@@ -22,7 +22,7 @@ const METHOD_LABEL = {
   MANUAL: "Manual", AUTO: "Automático", GREASE_GUN: "Pistola de grasa", OIL_CAN: "Aceitera",
 };
 
-export default function PointDetailPanel({ point, index, isEditing, onEdit, onDelete, onClose }) {
+export default function PointDetailPanel({ point, index, isEditing, onEdit, onDelete, onDuplicate, onClose }) {
   if (!point) return null;
 
   const color = FREQ_COLOR[point.frequency] ?? "#64748b";
@@ -123,13 +123,17 @@ export default function PointDetailPanel({ point, index, isEditing, onEdit, onDe
 
         {/* Footer actions */}
         {isEditing && (
-          <div style={{ padding: "16px 20px", borderTop: "1px solid #e2e8f0", display: "flex", gap: 8 }}>
-            <button type="button" style={{ ...btnGhost, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          <div style={{ padding: "16px 20px", borderTop: "1px solid #e2e8f0", display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" style={{ ...btnGhost, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minWidth: 80 }}
               onClick={() => onEdit?.(point)}>
               <Icon name="edit" size="sm" /> Editar
             </button>
+            <button type="button" style={{ ...btnGhost, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minWidth: 80, color: "#0369a1", borderColor: "#bae6fd" }}
+              onClick={() => onDuplicate?.(point)}>
+              <Icon name="copy" size="sm" /> Duplicar
+            </button>
             <button type="button"
-              style={{ ...btnGhost, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: "#dc2626", borderColor: "#fca5a5" }}
+              style={{ ...btnGhost, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minWidth: 80, color: "#dc2626", borderColor: "#fca5a5" }}
               onClick={() => onDelete?.(point.id)}>
               <Icon name="trash" size="sm" /> Eliminar
             </button>

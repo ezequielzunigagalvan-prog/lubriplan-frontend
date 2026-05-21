@@ -38,10 +38,21 @@ export default function LubricationCardPage() {
             <ArrowLeft size={16} />
             Volver al equipo
           </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Wrench size={16} color="#f97316" />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+            <Wrench size={16} color="#f97316" style={{ flexShrink: 0 }} />
             <span style={pageTitle}>Carta de Lubricación — {equipmentName}</span>
           </div>
+
+          {canEdit && !loading && (
+            <button
+              type="button"
+              onClick={() => setIsEditing((v) => !v)}
+              style={isEditing ? btnEditActive : btnGhost}
+            >
+              {isEditing ? "✓ Finalizar edición" : "Editar carta"}
+            </button>
+          )}
         </div>
 
         {error && (
@@ -102,6 +113,15 @@ const btnGhost = {
   padding: "10px 14px",
   fontWeight: 900,
   cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+const btnEditActive = {
+  ...btnGhost,
+  background: "rgba(249,115,22,0.12)",
+  border: "1px solid rgba(249,115,22,0.4)",
+  color: "#9a3412",
+  fontWeight: 950,
 };
 
 const statusBox = {
