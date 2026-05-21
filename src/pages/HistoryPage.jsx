@@ -166,6 +166,7 @@ export default function HistoryPage() {
   const [mvPage, setMvPage] = useState(1);
   const [mvPageSize, setMvPageSize] = useState(10);
   const [mvLubQ, setMvLubQ] = useState(""); // filtro por nombre/codigo (client-side)
+  const [filterEvidence, setFilterEvidence] = useState(false);
 
   /* =========================
      LOADERS
@@ -327,6 +328,11 @@ export default function HistoryPage() {
     return t;
   }, [items]);
 
+  const filteredItems = useMemo(() => {
+    if (!filterEvidence) return items;
+    return items.filter((x) => x.evidenceImage);
+  }, [items, filterEvidence]);
+
   /* =========================
      DRAWER
   ========================= */
@@ -396,33 +402,32 @@ export default function HistoryPage() {
         }
       `}</style>
 
-      {/* HEADER */}
-      <div style={compactHeaderRow}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
-            <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
-            HISTORIAL · EJECUCIONES
+      {/* HERO */}
+      <div style={heroWrap} className="lp-enter">
+        <div style={heroLeft}>
+          <div style={heroIconBox}>
+            <Icon name="list" style={{ width: 26, height: 26, color: "#f97316" }} />
           </div>
-          <h1 style={{ margin: "6px 0 0", fontSize: 26, fontWeight: 950, color: "#0f172a" }}>Historial</h1>
-          <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 800, fontSize: 13 }}>
-            Registro de actividades completadas y movimientos de lubricantes
-          </p>
+          <div>
+            <div style={heroKicker}>HISTORIAL · EJECUCIONES Y CONSUMOS</div>
+            <h1 style={heroH1}>Historial</h1>
+            <div style={heroSub}>Consulta ejecuciones, consumos, fallas y evidencias por equipo o ruta</div>
+            <div style={heroMetaRow}>
+              <span style={heroMetaChip}><Icon name="list" style={{ width: 12, height: 12 }} /> {scopedTotals.total} registros</span>
+              {scopedTotals.CRITICO > 0 && <span style={{ ...heroMetaChip, background: "rgba(220,38,38,0.13)", color: "#b91c1c", borderColor: "rgba(220,38,38,0.30)" }}><Icon name="warn" style={{ width: 12, height: 12 }} /> {scopedTotals.CRITICO} críticos</span>}
+              {scopedTotals.MALO > 0 && <span style={{ ...heroMetaChip, background: "rgba(245,158,11,0.13)", color: "#92400e", borderColor: "rgba(245,158,11,0.30)" }}><Icon name="alert" style={{ width: 12, height: 12 }} /> {scopedTotals.MALO} malos</span>}
+            </div>
+          </div>
         </div>
 
         <button
           className="lpPress"
-          onClick={() => {
-            load({ page });
-            loadMovements({ page: mvPage });
-          }}
-          style={isMobile ? { ...btnGhost, width: "100%" } : btnGhost}
+          onClick={() => { load({ page }); loadMovements({ page: mvPage }); }}
+          style={btnRefresh}
           disabled={loading || mvLoading}
-          title="Actualizar"
         >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Icon name="reset" />
-                  {loading || mvLoading ? "Actualizando..." : "Actualizar"}
-          </span>
+          <Icon name="reset" style={{ width: 16, height: 16 }} />
+          {loading || mvLoading ? "Actualizando..." : "Actualizar"}
         </button>
       </div>
 
@@ -462,10 +467,55 @@ export default function HistoryPage() {
 
       {/* KPIs */}
       <div style={statsGrid}>
-        <KpiCard title="Registros" value={scopedTotals.total} icon="list" accent="#0f172a" />
-        <KpiCard title="Críticos" value={scopedTotals.CRITICO} icon="warn" accent="#dc2626" />
-        <KpiCard title="Malos" value={scopedTotals.MALO} icon="alert" accent="#f59e0b" />
-        <KpiCard title="Buenos" value={scopedTotals.BUENO} icon="check" accent="#16a34a" />
+        <KpiCard title="Registros" value={scopedTotals.total} icon="list" accent="#0f172a"
+          active={condition === "ALL"} onClick={() => setCondition("ALL")} hint="Ver todos" />
+        <KpiCard title="Críticos" value={scopedTotals.CRITICO} icon="warn" accent="#dc2626"
+          active={condition === "CRITICO"} onClick={() => setCondition(condition === "CRITICO" ? "ALL" : "CRITICO")} hint="Filtrar críticos" />
+        <KpiCard title="Malos" value={scopedTotals.MALO} icon="alert" accent="#f59e0b"
+          active={condition === "MALO"} onClick={() => setCondition(condition === "MALO" ? "ALL" : "MALO")} hint="Filtrar malos" />
+        <KpiCard title="Buenos" value={scopedTotals.BUENO} icon="check" accent="#16a34a"
+          active={condition === "BUENO"} onClick={() => setCondition(condition === "BUENO" ? "ALL" : "BUENO")} hint="Filtrar buenos" />
+      </div>
+
+      {/* QUICK CHIPS */}
+      <div style={quickChipsRow}>
+        <button
+          className="lpPress"
+          style={filterEvidence ? { ...quickChip, ...quickChipActive } : quickChip}
+          onClick={() => setFilterEvidence((f) => !f)}
+        >
+          <Icon name="camera" style={{ width: 13, height: 13 }} /> Con evidencia
+        </button>
+        <button
+          className="lpPress"
+          style={(condition === "MALO" || condition === "CRITICO") ? { ...quickChip, ...quickChipDanger } : quickChip}
+          onClick={() => setCondition((condition === "MALO" || condition === "CRITICO") ? "ALL" : "MALO")}
+        >
+          <Icon name="warn" style={{ width: 13, height: 13 }} /> Solo fallas
+        </button>
+        <button
+          className="lpPress"
+          style={quickChip}
+          onClick={() => { setFrom(toYMD(new Date())); setTo(toYMD(new Date())); }}
+        >
+          Hoy
+        </button>
+        <button
+          className="lpPress"
+          style={quickChip}
+          onClick={() => { setFrom(toYMD(startOfMonthLocal())); setTo(toYMD(endOfMonthLocal())); }}
+        >
+          Este mes
+        </button>
+        {(condition !== "ALL" || filterEvidence) && (
+          <button
+            className="lpPress"
+            style={{ ...quickChip, color: "#dc2626", borderColor: "rgba(220,38,38,0.30)" }}
+            onClick={() => { setCondition("ALL"); setFilterEvidence(false); }}
+          >
+            ✕ Limpiar filtros
+          </button>
+        )}
       </div>
 
       {/* FILTROS EJECUCIONES */}
@@ -545,19 +595,21 @@ export default function HistoryPage() {
           </div>
 
           <div style={{ marginLeft: "auto", color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {meta ? `Mostrando ${items.length} en el filtro actual` : ""}
+            {meta ? `Mostrando ${filteredItems.length}${filteredItems.length !== items.length ? ` de ${items.length}` : ""} registros` : ""}
           </div>
         </div>
       </div>
 
       {/* LISTADO EJECUCIONES */}
       {loading && <div style={inlineLoadingBox}>Cargando historial…</div>}
-      {!loading && items.length === 0 && (
-        <div style={inlineEmptyBox}>No hay registros en este rango de fechas.</div>
+      {!loading && filteredItems.length === 0 && (
+        <div style={inlineEmptyBox}>
+          {items.length > 0 ? "Ningún registro coincide con el filtro activo." : "No hay registros en este rango de fechas."}
+        </div>
       )}
 
       <div style={list}>
-        {items.map((ex) => (
+        {filteredItems.map((ex) => (
           <HistoryCard key={ex.id} ex={ex} onOpen={() => openDetail(ex)} />
         ))}
       </div>
@@ -721,16 +773,30 @@ function usePageMobile(breakpoint = 820) {
   return isMobile;
 }
 
-function KpiCard({ title, value, icon, accent = "#0f172a" }) {
+function KpiCard({ title, value, icon, accent = "#0f172a", onClick, active = false, hint }) {
   return (
-    <div className="lpCard lpKpiCard" style={{ ...kpiCard, borderTop: `4px solid ${accent}` }}>
+    <div
+      className="lpCard lpKpiCard lpPress"
+      title={hint}
+      onClick={onClick}
+      style={{
+        ...kpiCard,
+        borderTop: `4px solid ${accent}`,
+        cursor: "pointer",
+        outline: active ? `2px solid ${accent}` : "none",
+        outlineOffset: 2,
+        transform: active ? "translateY(-2px)" : undefined,
+        boxShadow: active ? `0 0 0 3px ${accent}22, 0 14px 30px rgba(2,6,23,0.10)` : kpiCard.boxShadow,
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 12, paddingLeft: 4 }}>
         <span style={{ ...kpiIconBox, background: `${accent}18`, border: `1px solid ${accent}30`, color: accent }}>
           <Icon name={icon} />
         </span>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 950, color: "#0f172a" }}>{title}</div>
+          <div style={{ fontWeight: 950, color: active ? accent : "#0f172a" }}>{title}</div>
           <div style={{ fontSize: 30, fontWeight: 980, color: "#0f172a", marginTop: 6 }}>{value}</div>
+          {active && <div style={{ fontSize: 11, fontWeight: 900, color: accent, marginTop: 2 }}>Activo ✓</div>}
         </div>
       </div>
     </div>
@@ -866,9 +932,16 @@ function HistoryCard({ ex, onOpen }) {
 
       {/* Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <span style={dateChipStyle}><Icon name="calendar" size="sm" /> {dateLabel}</span>
           {tech?.name && <span style={techChipStyle}><Icon name="user" size="sm" /> {tech.name}</span>}
+          {(ex?.usedInputQuantity != null || ex?.usedQuantity != null) && (
+            <span style={qtyChipStyle}>
+              <Icon name="drop" size="sm" />
+              {ex.usedInputQuantity ?? ex.usedQuantity}
+              {" "}{ex.usedInputUnit || ex.route?.unit || ""}
+            </span>
+          )}
         </div>
         <button type="button" style={detailBtn} onClick={(e) => { e.stopPropagation(); onOpen(); }}>
           Ver detalle →
@@ -993,86 +1066,139 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
   const tech = ex?.technician || {};
   const executedAt = safeDateLabel(ex?.executedAt);
   const evidenceUrl = buildImgUrl(ex?.evidenceImage);
+  const routeRefUrl = buildImgUrl(route?.imageUrl);
   const activityName = ex?.manualTitle || route?.name || "?";
+
+  const cInfo = conditionChip(ex?.condition);
+  const condAccent =
+    cInfo.fg === "#991b1b" ? "#dc2626" :
+    cInfo.fg === "#92400e" ? "#f59e0b" :
+    cInfo.fg === "#166534" ? "#16a34a" :
+    cInfo.fg === "#3730a3" ? "#4f46e5" : "#0f172a";
 
   return (
     <>
       <div style={drawerOverlay} onClick={onClose} />
       <div style={drawerPanel} role="dialog" aria-modal="true">
-        <div style={drawerHeader}>
-          <div>
-            <div style={{ fontWeight: 980, fontSize: 16, color: "#0f172a" }}>Detalle de actividad</div>
-            <div style={{ marginTop: 4, color: "#64748b", fontWeight: 850, fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
-              <Icon name="calendar" /> Ejecutada: {executedAt}
+
+        {/* DRAWER HEADER */}
+        <div style={{ ...drawerHeader, borderLeft: `4px solid ${condAccent}` }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 950, color: condAccent, letterSpacing: 1.1, textTransform: "uppercase", marginBottom: 2 }}>
+              {activityName}
+            </div>
+            <div style={{ fontWeight: 980, fontSize: 17, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {eq?.name || "Equipo"}
+            </div>
+            <div style={{ marginTop: 4, color: "#64748b", fontWeight: 850, fontSize: 12, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <Icon name="calendar" /> {executedAt}
+              </span>
+              {tech?.name && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <Icon name="user" /> {tech.name}
+                </span>
+              )}
             </div>
           </div>
-
-          <button style={drawerCloseBtn} className="lpPress" onClick={onClose} aria-label="Cerrar">
-            Cerrar
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", flexShrink: 0 }}>
+            <button style={drawerCloseBtn} className="lpPress" onClick={onClose} aria-label="Cerrar">✕</button>
+            <ConditionChip value={ex?.condition} />
+          </div>
         </div>
 
-        {loading && <div style={{ padding: 14, color: "#64748b", fontWeight: 900 }}>Cargando detalle</div>}
+        {loading && <div style={{ padding: 14, color: "#64748b", fontWeight: 900 }}>Cargando detalle…</div>}
         {error && <div style={{ ...errorBox, margin: 14 }}>{error}</div>}
 
         {!loading && !error && (
           <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={sectionCard}>
-              <div style={sectionTitle}>Información</div>
-              <div style={kvGrid}>
-                <KV label="Condición" value={<ConditionChip value={ex?.condition} />} />
-                <KV label="Técnico" value={tech?.name || "?"} />
-                <KV label="Equipo" value={eq?.name || "?"} />
-                <KV label="Actividad" value={activityName} />
+
+            {/* ROUTE REFERENCE IMAGE */}
+            {routeRefUrl && (
+              <div style={drawerRefImgWrap}>
+                <div style={drawerRefBadge}>
+                  <Icon name="camera" style={{ width: 12, height: 12, color: "#0b1220" }} />
+                  <span>Referencia del punto</span>
+                </div>
+                <img src={routeRefUrl} alt="Referencia del punto" style={drawerRefImg} onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} />
+              </div>
+            )}
+
+            {/* EQUIPMENT + ROUTE ROW */}
+            <div style={drawerEquipRow}>
+              <div style={drawerEquipCard}>
+                <div style={drawerEquipLabel}>Equipo</div>
+                <div style={drawerEquipValue}>{eq?.name || "—"}</div>
+                {(eq?.code || eq?.tag) && <div style={drawerEquipSub}>TAG: {eq?.code || eq?.tag}</div>}
+                {eq?.location && <div style={drawerEquipSub}>{eq.location}</div>}
+              </div>
+              <div style={drawerEquipCard}>
+                <div style={drawerEquipLabel}>Ruta / Actividad</div>
+                <div style={drawerEquipValue}>{activityName}</div>
+                <div style={drawerEquipSub}>{ex?.manualTitle ? "Actividad manual" : "Ruta recurrente"}</div>
               </div>
             </div>
 
+            {/* CONSUMO */}
             <div style={sectionCard}>
-              <div style={sectionTitle}>Consumo</div>
+              <div style={{ ...sectionTitle, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ ...kpiIconBox, width: 28, height: 28, background: "rgba(249,115,22,0.12)", color: "#c2410c", border: "1px solid rgba(249,115,22,0.25)" }}>
+                  <Icon name="drop" />
+                </span>
+                Consumo de lubricante
+              </div>
               <div style={kvGrid}>
+                <KV label="Lubricante" value={lub?.name || route?.lubricantType || "—"} />
                 <KV
-                  label="Cantidad capturada"
+                  label="Cantidad registrada"
                   value={
                     ex?.usedInputQuantity != null
-                      ? `${ex.usedInputQuantity}${ex?.usedInputUnit ? ` ${ex.usedInputUnit}` : ""}`
+                      ? `${ex.usedInputQuantity} ${ex?.usedInputUnit || ""}`
                       : ex?.usedQuantity != null
-                      ? `${ex.usedQuantity}${ex?.usedInputUnit ? ` ${ex.usedInputUnit}` : route?.unit ? ` ${route.unit}` : ""}`
-                      : "?"
+                      ? `${ex.usedQuantity} ${route?.unit || ""}`
+                      : "—"
                   }
                 />
                 <KV
                   label="Descuento inventario"
-                  value={
-                    ex?.usedConvertedQuantity != null
-                      ? `${ex.usedConvertedQuantity}${ex?.usedConvertedUnit ? ` ${ex.usedConvertedUnit}` : ""}`
-                      : "?"
-                  }
+                  value={ex?.usedConvertedQuantity != null ? `${ex.usedConvertedQuantity} ${ex?.usedConvertedUnit || ""}` : "—"}
                 />
-                <KV label="Lubricante" value={lub?.name || route?.lubricantType || "?"} />
-                <KV label="Unidad inventario" value={ex?.usedConvertedUnit || lub?.unit || "?"} />
+                <KV label="Unidad stock" value={lub?.unit || ex?.usedConvertedUnit || "—"} />
               </div>
+            </div>
 
-              {route?.instructions || ex?.manualInstructions ? (
-                <div style={{ marginTop: 10, ...noteBox }}>
-                  <div style={{ fontWeight: 950, marginBottom: 6 }}>Instrucciones</div>
-                  <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap" }}>
+            {/* OBSERVACIONES */}
+            {ex?.observations ? (
+              <div style={{ ...sectionCard, borderLeft: `3px solid ${condAccent}55` }}>
+                <div style={{ ...sectionTitle, color: condAccent }}>Observaciones del técnico</div>
+                <div style={{ ...noteBox, background: `${cInfo.bg}`, borderColor: cInfo.bd }}>
+                  <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                    {ex.observations}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* INSTRUCCIONES */}
+            {(route?.instructions || ex?.manualInstructions) ? (
+              <div style={sectionCard}>
+                <div style={sectionTitle}>Instrucciones de la ruta</div>
+                <div style={{ ...noteBox, background: "rgba(220,252,231,0.60)", borderColor: "rgba(34,197,94,0.25)" }}>
+                  <div style={{ fontWeight: 850, color: "#14532d", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
                     {route?.instructions || ex?.manualInstructions}
                   </div>
                 </div>
-              ) : null}
-            </div>
-
-            <div style={sectionCard}>
-              <div style={sectionTitle}>Observaciones</div>
-              <div style={{ ...noteBox, marginTop: 8 }}>
-                <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap" }}>
-                    {ex?.observations || "-"}
-                </div>
               </div>
-            </div>
+            ) : null}
 
+            {/* EVIDENCIA */}
             <div style={sectionCard}>
-              <div style={sectionTitle}>Evidencia</div>
+              <div style={{ ...sectionTitle, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ ...kpiIconBox, width: 28, height: 28, background: "rgba(15,23,42,0.07)", color: "#0f172a", border: "1px solid rgba(226,232,240,0.95)" }}>
+                  <Icon name="camera" />
+                </span>
+                Evidencia fotográfica
+              </div>
               {!evidenceUrl ? (
                 <div style={{ ...noteBox, marginTop: 8, color: "#64748b", fontWeight: 900 }}>
                   No hay evidencia cargada.
@@ -1083,16 +1209,12 @@ function HistoryDrawer({ open, loading, error, ex, onClose }) {
                     src={evidenceUrl}
                     alt="Evidencia"
                     style={evidenceImg}
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
                   {ex?.evidenceNote ? (
                     <div style={{ ...noteBox, marginTop: 10 }}>
-                      <div style={{ fontWeight: 950, marginBottom: 6 }}>Nota</div>
-                      <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap" }}>
-                        {ex.evidenceNote}
-                      </div>
+                      <div style={{ fontWeight: 950, marginBottom: 4, fontSize: 12 }}>Nota de evidencia</div>
+                      <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap" }}>{ex.evidenceNote}</div>
                     </div>
                   ) : null}
                 </div>
@@ -1635,6 +1757,243 @@ const hEqPill = {
   borderRadius: 6,
   padding: "2px 7px",
   border: "1px solid rgba(226,232,240,0.8)",
+};
+
+/* --- Hero --- */
+const heroWrap = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: 16,
+  flexWrap: "wrap",
+  padding: "20px 22px",
+  borderRadius: 20,
+  borderTop: "4px solid #0f172a",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "4px solid rgba(249,115,22,0.75)",
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, rgba(30,41,59,0.96) 100%)",
+  boxShadow: "0 20px 44px rgba(2,6,23,0.18)",
+};
+
+const heroLeft = { display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" };
+
+const heroIconBox = {
+  width: 52,
+  height: 52,
+  borderRadius: 16,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(249,115,22,0.15)",
+  borderTop: "1px solid rgba(249,115,22,0.40)",
+  borderRight: "1px solid rgba(249,115,22,0.20)",
+  borderBottom: "1px solid rgba(249,115,22,0.20)",
+  borderLeft: "1px solid rgba(249,115,22,0.20)",
+  flexShrink: 0,
+};
+
+const heroKicker = {
+  fontSize: 11,
+  fontWeight: 950,
+  color: "rgba(249,115,22,0.90)",
+  letterSpacing: 1.4,
+  textTransform: "uppercase",
+};
+
+const heroH1 = {
+  margin: "6px 0 4px",
+  fontSize: 28,
+  fontWeight: 980,
+  color: "#fff",
+};
+
+const heroSub = {
+  color: "rgba(255,255,255,0.60)",
+  fontWeight: 800,
+  fontSize: 13,
+  lineHeight: 1.4,
+};
+
+const heroMetaRow = {
+  marginTop: 10,
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+};
+
+const heroMetaChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "4px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 950,
+  background: "rgba(255,255,255,0.10)",
+  borderTop: "1px solid rgba(255,255,255,0.18)",
+  borderRight: "1px solid rgba(255,255,255,0.18)",
+  borderBottom: "1px solid rgba(255,255,255,0.18)",
+  borderLeft: "1px solid rgba(255,255,255,0.18)",
+  color: "rgba(255,255,255,0.80)",
+};
+
+const btnRefresh = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "10px 16px",
+  borderRadius: 12,
+  borderTop: "1px solid rgba(255,255,255,0.18)",
+  borderRight: "1px solid rgba(255,255,255,0.18)",
+  borderBottom: "1px solid rgba(255,255,255,0.18)",
+  borderLeft: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(255,255,255,0.10)",
+  color: "rgba(255,255,255,0.85)",
+  cursor: "pointer",
+  fontWeight: 950,
+  fontSize: 13,
+  flexShrink: 0,
+  alignSelf: "flex-start",
+};
+
+/* --- Quick filter chips --- */
+const quickChipsRow = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  alignItems: "center",
+};
+
+const quickChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "7px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 950,
+  cursor: "pointer",
+  borderTop: "1px solid rgba(203,213,225,0.90)",
+  borderRight: "1px solid rgba(203,213,225,0.90)",
+  borderBottom: "1px solid rgba(203,213,225,0.90)",
+  borderLeft: "1px solid rgba(203,213,225,0.90)",
+  background: "rgba(248,250,252,0.92)",
+  color: "#475569",
+  transition: "all 120ms ease",
+};
+
+const quickChipActive = {
+  background: "rgba(249,115,22,0.13)",
+  borderTop: "1px solid rgba(249,115,22,0.45)",
+  borderRight: "1px solid rgba(249,115,22,0.45)",
+  borderBottom: "1px solid rgba(249,115,22,0.45)",
+  borderLeft: "1px solid rgba(249,115,22,0.45)",
+  color: "#c2410c",
+};
+
+const quickChipDanger = {
+  background: "rgba(220,38,38,0.10)",
+  borderTop: "1px solid rgba(220,38,38,0.40)",
+  borderRight: "1px solid rgba(220,38,38,0.40)",
+  borderBottom: "1px solid rgba(220,38,38,0.40)",
+  borderLeft: "1px solid rgba(220,38,38,0.40)",
+  color: "#b91c1c",
+};
+
+/* --- Qty chip in HistoryCard --- */
+const qtyChipStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  fontSize: 11,
+  fontWeight: 850,
+  color: "#c2410c",
+  background: "rgba(249,115,22,0.10)",
+  borderTop: "1px solid rgba(249,115,22,0.25)",
+  borderRight: "1px solid rgba(249,115,22,0.25)",
+  borderBottom: "1px solid rgba(249,115,22,0.25)",
+  borderLeft: "1px solid rgba(249,115,22,0.25)",
+  borderRadius: 999,
+  padding: "3px 9px",
+};
+
+/* --- Drawer redesign extras --- */
+const drawerRefImgWrap = {
+  position: "relative",
+  borderRadius: 14,
+  overflow: "hidden",
+  borderTop: "1px solid rgba(226,232,240,0.95)",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  background: "#0f172a",
+};
+
+const drawerRefBadge = {
+  position: "absolute",
+  top: 8,
+  left: 8,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "4px 9px",
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.92)",
+  borderTop: "1px solid rgba(251,146,60,0.65)",
+  borderRight: "1px solid rgba(251,146,60,0.65)",
+  borderBottom: "1px solid rgba(251,146,60,0.65)",
+  borderLeft: "1px solid rgba(251,146,60,0.65)",
+  color: "#0b1220",
+  fontWeight: 980,
+  fontSize: 11,
+  zIndex: 1,
+};
+
+const drawerRefImg = {
+  width: "100%",
+  maxHeight: 220,
+  objectFit: "cover",
+  display: "block",
+};
+
+const drawerEquipRow = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 10,
+};
+
+const drawerEquipCard = {
+  borderRadius: 14,
+  padding: "12px 14px",
+  background: "rgba(248,250,252,0.85)",
+  borderTop: "3px solid #0f172a",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 8px 18px rgba(2,6,23,0.05)",
+};
+
+const drawerEquipLabel = {
+  fontSize: 11,
+  fontWeight: 950,
+  color: "#64748b",
+  textTransform: "uppercase",
+  letterSpacing: 0.9,
+  marginBottom: 6,
+};
+
+const drawerEquipValue = {
+  fontWeight: 980,
+  color: "#0f172a",
+  fontSize: 14,
+  lineHeight: 1.25,
+};
+
+const drawerEquipSub = {
+  marginTop: 4,
+  fontSize: 12,
+  color: "#64748b",
+  fontWeight: 850,
 };
 
 
