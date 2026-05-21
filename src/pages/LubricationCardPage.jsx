@@ -63,6 +63,7 @@ export default function LubricationCardPage() {
           <LubricationCard
             card={card}
             isEditing={isEditing && canEdit}
+            canEdit={canEdit}
             equipmentName={equipmentName}
             onToggleEdit={() => { if (canEdit) setIsEditing((v) => !v); }}
             onAddPoint={addPoint}

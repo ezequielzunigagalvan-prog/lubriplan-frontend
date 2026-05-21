@@ -17,6 +17,7 @@ const EMPTY_FORM = { label: "", lubricant: "", quantity: "", unit: "ml", frequen
 export default function LubricationCard({
   card,
   isEditing,
+  canEdit = false,
   equipmentName = "Equipo",
   onToggleEdit,
   onAddPoint,
@@ -27,10 +28,20 @@ export default function LubricationCard({
   const containerRef = useRef(null);
   const fileInputRef = useRef(null);
   const exportRef = useRef(null);
+  const pointerDownRef = useRef(null);
 
   const setRefs = useCallback((node) => {
     containerRef.current = node;
     exportRef.current = node;
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= 560 : false
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const [selectedPoint, setSelectedPoint] = useState(null);
@@ -115,6 +126,7 @@ export default function LubricationCard({
     if (!isEditing) return;
     e.stopPropagation();
     e.preventDefault();
+    pointerDownRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
     setDraggingId(pointId);
     setLocalPoints(points.map((p) => ({ ...p })));
     containerRef.current?.setPointerCapture?.(e.pointerId);
@@ -128,15 +140,27 @@ export default function LubricationCard({
     setLocalPoints((prev) => prev.map((p) => (p.id === draggingId ? { ...p, x, y } : p)));
   }, [draggingId, isEditing]);
 
-  const handleContainerPointerUp = useCallback(async () => {
+  const handleContainerPointerUp = useCallback(async (e) => {
     if (!draggingId) return;
-    const moved = (localPoints ?? []).find((p) => p.id === draggingId);
-    if (moved) {
-      try { await onUpdatePoint?.(draggingId, { x: moved.x, y: moved.y }); } catch {}
+    const down = pointerDownRef.current;
+    const isTap = down &&
+      Math.abs(e.clientX - down.x) < 8 &&
+      Math.abs(e.clientY - down.y) < 8 &&
+      Date.now() - down.t < 400;
+
+    if (isTap) {
+      const tapped = (card?.points ?? []).find((p) => p.id === draggingId);
+      if (tapped) setSelectedPoint(tapped);
+    } else {
+      const moved = (localPoints ?? []).find((p) => p.id === draggingId);
+      if (moved) {
+        try { await onUpdatePoint?.(draggingId, { x: moved.x, y: moved.y }); } catch {}
+      }
     }
+    pointerDownRef.current = null;
     setDraggingId(null);
     setLocalPoints(null);
-  }, [draggingId, localPoints, onUpdatePoint]);
+  }, [draggingId, localPoints, onUpdatePoint, card?.points]);
 
   // ── Add / Edit form submit ────────────────────────────────────────────────
   const handleFormSubmit = useCallback(async (e) => {
@@ -286,7 +310,7 @@ export default function LubricationCard({
   };
 
   const toolbar = {
-    padding: "12px 16px",
+    padding: isMobile ? "10px 12px" : "12px 16px",
     borderBottom: "1px solid #e2e8f0",
     display: "flex",
     alignItems: "center",
@@ -302,6 +326,7 @@ export default function LubricationCard({
     background: "#f1f5f9",
     cursor: isEditing ? "crosshair" : "default",
     userSelect: "none",
+    touchAction: "none",
     overflow: "hidden",
   };
 
@@ -351,14 +376,16 @@ export default function LubricationCard({
           {exportingPdf ? "Generando…" : "Exportar PDF"}
         </button>
 
-        <button
-          type="button"
-          style={{ ...btnPrimary, display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", fontSize: 12 }}
-          onClick={onToggleEdit}
-        >
-          <Icon name={isEditing ? "check" : "edit"} size="sm" />
-          {isEditing ? "Finalizar edición" : "Editar carta"}
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            style={{ ...btnPrimary, display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", fontSize: 12 }}
+            onClick={onToggleEdit}
+          >
+            <Icon name={isEditing ? "check" : "edit"} size="sm" />
+            {isEditing ? "Finalizar" : "Editar carta"}
+          </button>
+        )}
       </div>
 
       {/* Image area with point markers */}
@@ -456,7 +483,7 @@ export default function LubricationCard({
           </div>
 
           <form onSubmit={handleFormSubmit}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 10 }}>
               <div style={{ gridColumn: "1/-1" }}>
                 <label style={{ fontSize: 11, fontWeight: 850, color: "#64748b", display: "block", marginBottom: 3 }}>Nombre del punto *</label>
                 <input style={inputStyle} value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder="Ej: Rodamiento principal" />
@@ -498,12 +525,12 @@ export default function LubricationCard({
                 )}
               </div>
 
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6, gridColumn: isMobile ? "1/-1" : undefined }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 11, fontWeight: 850, color: "#64748b", display: "block", marginBottom: 3 }}>Cantidad</label>
                   <input style={inputStyle} type="number" min="0" step="any" value={form.quantity} onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))} placeholder="0" />
                 </div>
-                <div style={{ width: 68 }}>
+                <div style={{ width: 80 }}>
                   <label style={{ fontSize: 11, fontWeight: 850, color: "#64748b", display: "block", marginBottom: 3 }}>Unidad</label>
                   <select style={selectStyle} value={form.unit} onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))}>
                     {UNITS.map((u) => <option key={u}>{u}</option>)}
