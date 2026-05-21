@@ -553,7 +553,38 @@ setForm((prev) => ({
           )}
 
           {!loading && execution && (
-            <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+              {!isManual && routePreviewUrl ? (
+                <div style={routeHeroWrap}>
+                  <div style={routeHeroBadge}>
+                    <Icon name="camera" style={{ width: 13, height: 13, color: "#0b1220" }} />
+                    <span>Referencia del punto</span>
+                  </div>
+                  <img
+                    src={routePreviewUrl}
+                    alt="Referencia de la ruta"
+                    style={routeHeroImg}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                </div>
+              ) : null}
+
+              {String(instructions || "").trim() && instructions !== "—" ? (
+                <div style={instructionsCard}>
+                  <div style={instructionsCardHead}>
+                    <div style={instructionsCardIcon}>
+                      <Icon name="doc" style={{ width: 20, height: 20, color: "#fff" }} />
+                    </div>
+                    <div>
+                      <div style={instructionsCardTitle}>Instrucciones</div>
+                      <div style={instructionsCardSub}>Lee antes de registrar</div>
+                    </div>
+                  </div>
+                  <div style={instructionsCardText}>{instructions}</div>
+                </div>
+              ) : null}
+
               <div style={metaGrid}>
                 <MiniInfoCard
                   icon="settings"
@@ -593,56 +624,49 @@ setForm((prev) => ({
                 />
               </div>
 
-              {!isManual && routePreviewUrl ? (
-                <div style={assetCard}>
-                  <div style={assetHeader}>
-                    <div style={assetTitleWrap}>
-                      <span style={assetIconWrap}>
-                        <Icon name="camera" style={{ width: 16, height: 16, color: "#0b1220" }} />
-                      </span>
-                      <div>
-                        <div style={assetTitle}>Referencia visual del punto</div>
-                        <div style={assetSub}>Imagen cargada al crear la ruta</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={assetImageWrap}>
-                    <img
-                      src={routePreviewUrl}
-                      alt="Referencia de la ruta"
-                      style={routeReferenceImg}
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  </div>
-                </div>
-              ) : null}
-
-              {String(instructions || "").trim() && instructions !== "—" ? (
-                <div style={instructionsHero}>
-                  <div style={instructionsHeroHead}>
-                    <span style={instructionsIconWrap}>
-                      <Icon name="doc" style={{ width: 18, height: 18, color: "#052e16" }} />
-                    </span>
-                    <div>
-                      <div style={instructionsHeroTitle}>Instrucciones de ejecución</div>
-                      <div style={instructionsHeroSub}>Visible antes de registrar la actividad</div>
-                    </div>
-                  </div>
-
-                  <div style={instructionsText}>
-                    {instructions}
-                  </div>
-                </div>
-              ) : null}
-
               {isFutureExecution ? (
                 <div style={warnBox}>
                   <b>Programada para:</b> {scheduledLabel}. No se puede completar aún.
                 </div>
               ) : null}
+
+              <div>
+                <div style={conditionGroupLabel}>Condición del equipo *</div>
+                <div style={conditionBtnRow}>
+                  {[
+                    { value: "BUENO",   label: "Bueno",   emoji: "✓", color: "#15803d", bg: "rgba(22,163,74,0.13)",  border: "rgba(22,163,74,0.55)"  },
+                    { value: "REGULAR", label: "Regular", emoji: "≈", color: "#b45309", bg: "rgba(217,119,6,0.13)", border: "rgba(217,119,6,0.55)"  },
+                    { value: "MALO",    label: "Malo",    emoji: "!", color: "#c2410c", bg: "rgba(234,88,12,0.13)", border: "rgba(234,88,12,0.55)"  },
+                    { value: "CRITICO", label: "Crítico", emoji: "⚠", color: "#b91c1c", bg: "rgba(220,38,38,0.13)", border: "rgba(220,38,38,0.55)"  },
+                  ].map(({ value, label, emoji, color, bg, border }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setForm((p) => ({ ...p, condition: value }))}
+                      disabled={saving || isCompleted}
+                      style={
+                        form.condition === value
+                          ? { ...conditionBtn, background: bg, borderTop: `3px solid ${border}`, borderRight: `1px solid ${border}`, borderBottom: `1px solid ${border}`, borderLeft: `1px solid ${border}`, color, boxShadow: `0 8px 22px ${bg}`, transform: "translateY(-2px)" }
+                          : conditionBtn
+                      }
+                    >
+                      <span style={{ fontSize: 22, lineHeight: 1 }}>{emoji}</span>
+                      <span style={{ fontWeight: 980, fontSize: 13 }}>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Field label="Observaciones">
+                <textarea
+                  name="observations"
+                  value={form.observations}
+                  onChange={handleChange}
+                  rows={2}
+                  style={textarea}
+                  disabled={saving || isCompleted}
+                />
+              </Field>
 
               <div style={formGrid2}>
                 <Field label="Fecha de realización *">
@@ -825,34 +849,6 @@ setForm((prev) => ({
                 </Field>
               )}
 
-              <div style={formGrid2}>
-                <Field label="Condición del equipo *">
-                  <select
-                    name="condition"
-                    value={form.condition}
-                    onChange={handleChange}
-                    style={input}
-                    disabled={saving || isCompleted}
-                  >
-                    <option value="BUENO">Bueno</option>
-                    <option value="REGULAR">Regular</option>
-                    <option value="MALO">Malo</option>
-                    <option value="CRITICO">Crítico</option>
-                  </select>
-                </Field>
-
-                <Field label="Observaciones">
-                  <textarea
-                    name="observations"
-                    value={form.observations}
-                    onChange={handleChange}
-                    rows={3}
-                    style={textarea}
-                    disabled={saving || isCompleted}
-                  />
-                </Field>
-              </div>
-
               <div style={evidenceCard}>
                 <div style={evidenceCardHead}>
                   <div>
@@ -988,8 +984,8 @@ setForm((prev) => ({
                 <button type="button" onClick={onClose} style={btnGhost} disabled={saving}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={!canSave || saving} style={btnOrange}>
-                  {saving ? "Guardando..." : "Completar"}
+                <button type="submit" disabled={!canSave || saving} style={btnOrangeBig}>
+                  {saving ? "Guardando..." : "✓  Completar actividad"}
                 </button>
               </div>
             </form>
@@ -1624,6 +1620,161 @@ const inputLocked = {
   color: "#334155",
   cursor: "not-allowed",
   border: "1px solid rgba(148,163,184,0.35)",
+};
+
+/* --- Route hero image --- */
+const routeHeroWrap = {
+  borderRadius: 18,
+  overflow: "hidden",
+  position: "relative",
+  boxShadow: "0 20px 40px rgba(2,6,23,0.14)",
+  borderTop: "1px solid rgba(226,232,240,0.95)",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  background: "#0f172a",
+  minHeight: 120,
+};
+
+const routeHeroBadge = {
+  position: "absolute",
+  top: 10,
+  left: 10,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "5px 10px",
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.92)",
+  borderTop: "1px solid rgba(251,146,60,0.70)",
+  borderRight: "1px solid rgba(251,146,60,0.70)",
+  borderBottom: "1px solid rgba(251,146,60,0.70)",
+  borderLeft: "1px solid rgba(251,146,60,0.70)",
+  color: "#0b1220",
+  fontWeight: 980,
+  fontSize: 11,
+  letterSpacing: 0.5,
+  boxShadow: "0 4px 12px rgba(249,115,22,0.26)",
+  zIndex: 1,
+};
+
+const routeHeroImg = {
+  width: "100%",
+  maxHeight: 320,
+  objectFit: "cover",
+  display: "block",
+};
+
+/* --- Instructions card (redesigned) --- */
+const instructionsCard = {
+  borderRadius: 18,
+  overflow: "hidden",
+  boxShadow: "0 16px 36px rgba(22,163,74,0.12)",
+  borderTop: "4px solid rgba(22,163,74,0.80)",
+  borderRight: "1px solid rgba(34,197,94,0.28)",
+  borderBottom: "1px solid rgba(34,197,94,0.28)",
+  borderLeft: "1px solid rgba(34,197,94,0.28)",
+};
+
+const instructionsCardHead = {
+  padding: "14px 16px 12px",
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+  background: "linear-gradient(135deg, rgba(21,128,61,0.96) 0%, rgba(22,163,74,0.90) 100%)",
+};
+
+const instructionsCardIcon = {
+  width: 46,
+  height: 46,
+  borderRadius: 14,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(255,255,255,0.20)",
+  borderTop: "1px solid rgba(255,255,255,0.38)",
+  borderRight: "1px solid rgba(255,255,255,0.38)",
+  borderBottom: "1px solid rgba(255,255,255,0.38)",
+  borderLeft: "1px solid rgba(255,255,255,0.38)",
+  flexShrink: 0,
+};
+
+const instructionsCardTitle = {
+  fontWeight: 980,
+  color: "#fff",
+  fontSize: 16,
+};
+
+const instructionsCardSub = {
+  marginTop: 2,
+  fontSize: 12,
+  color: "rgba(255,255,255,0.78)",
+  fontWeight: 850,
+};
+
+const instructionsCardText = {
+  padding: "16px 18px",
+  whiteSpace: "pre-wrap",
+  color: "#14532d",
+  fontWeight: 900,
+  lineHeight: 1.7,
+  fontSize: 15,
+  background: "linear-gradient(180deg, rgba(220,252,231,0.96) 0%, rgba(187,247,208,0.82) 100%)",
+};
+
+/* --- Condition button group --- */
+const conditionGroupLabel = {
+  fontWeight: 950,
+  color: "#0f172a",
+  marginBottom: 10,
+  fontSize: 14,
+};
+
+const conditionBtnRow = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))",
+  gap: 10,
+};
+
+const conditionBtn = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 6,
+  padding: "16px 8px",
+  borderRadius: 16,
+  borderTop: "2px solid rgba(226,232,240,0.95)",
+  borderRight: "1px solid rgba(226,232,240,0.95)",
+  borderBottom: "1px solid rgba(226,232,240,0.95)",
+  borderLeft: "1px solid rgba(226,232,240,0.95)",
+  background: "rgba(255,255,255,0.92)",
+  color: "#475569",
+  cursor: "pointer",
+  transition: "all 140ms ease",
+  boxShadow: "0 6px 16px rgba(2,6,23,0.05)",
+  fontWeight: 950,
+};
+
+/* --- Big submit button --- */
+const btnOrangeBig = {
+  background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
+  color: "#0b1220",
+  padding: "14px 24px",
+  borderRadius: 16,
+  borderTop: "1px solid #fb923c",
+  borderRight: "1px solid #fb923c",
+  borderBottom: "1px solid #f97316",
+  borderLeft: "1px solid #fb923c",
+  fontWeight: 980,
+  fontSize: 16,
+  cursor: "pointer",
+  boxShadow: "0 14px 30px rgba(249,115,22,0.30)",
+  flex: "2 1 280px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  letterSpacing: 0.3,
 };
 
 
