@@ -370,10 +370,10 @@ export default function LubricationCard({
           style={{ ...btnGhost, display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", fontSize: 12 }}
           onClick={handleExportPdf}
           disabled={exportingPdf || !card?.imageUrl}
-          title={!card?.imageUrl ? "Sube una imagen primero" : ""}
+          title={!card?.imageUrl ? "Sube una imagen primero" : "Exportar PDF"}
         >
           <Icon name="download" size="sm" />
-          {exportingPdf ? "Generando…" : "Exportar PDF"}
+          {!isMobile && (exportingPdf ? "Generando…" : "Exportar PDF")}
         </button>
 
         {canEdit && (
@@ -383,7 +383,7 @@ export default function LubricationCard({
             onClick={onToggleEdit}
           >
             <Icon name={isEditing ? "check" : "edit"} size="sm" />
-            {isEditing ? "Finalizar" : "Editar carta"}
+            {!isMobile && (isEditing ? "Finalizar" : "Editar carta")}
           </button>
         )}
       </div>
@@ -453,8 +453,9 @@ export default function LubricationCard({
             background: "rgba(15,23,42,0.75)", color: "#fff",
             borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 850,
             pointerEvents: "none", whiteSpace: "nowrap",
+            maxWidth: "calc(100% - 24px)", textAlign: "center",
           }}>
-            Toca la imagen para agregar un punto · Arrastra para mover
+            {isMobile ? "Toca para agregar · Arrastra para mover" : "Toca la imagen para agregar un punto · Arrastra para mover"}
           </div>
         )}
       </div>
