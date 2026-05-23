@@ -9,6 +9,7 @@ const SUGGESTIONS = [
   { icon: "🎯", label: "¿Cómo solicitar una demo?" },
   { icon: "📦", label: "¿Qué módulos incluye?" },
   { icon: "📱", label: "¿Qué es LubriPlan Card?" },
+  { icon: "🔍", label: "Quiero conocer LubriPlan" },
 ];
 
 export default function LandingChatWidget() {
@@ -216,18 +217,21 @@ export default function LandingChatWidget() {
 
                 <div style={suggestLabel}>Preguntas frecuentes</div>
                 <div style={suggestGrid}>
-                  {SUGGESTIONS.map(({ icon, label }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      className="lp-lc-sgbtn"
-                      style={suggestBtn}
-                      onClick={() => sendMessage(label)}
-                    >
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>
-                      <span style={suggestBtnText}>{label}</span>
-                    </button>
-                  ))}
+                  {SUGGESTIONS.map(({ icon, label }, i) => {
+                    const isFullWidth = SUGGESTIONS.length % 2 !== 0 && i === SUGGESTIONS.length - 1;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        className="lp-lc-sgbtn"
+                        style={{ ...suggestBtn, ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }}
+                        onClick={() => sendMessage(label)}
+                      >
+                        <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>
+                        <span style={suggestBtnText}>{label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div style={demoNudge}>
