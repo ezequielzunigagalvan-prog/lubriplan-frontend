@@ -12,6 +12,7 @@ import { usePlant } from "../context/PlantContext";
 import useInstallPrompt from "../hooks/useInstallPrompt";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+import ChatWidget from "../components/chat/ChatWidget";
 
 const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -874,6 +875,7 @@ export default function MainLayout({ children }) {
           {children}
         </main>
       </div>
+      <ChatWidget />
     </div>
   );
 }
