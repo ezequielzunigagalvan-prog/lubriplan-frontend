@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -6,46 +6,14 @@ import lubriPlanLogo from "../assets/lubriplan-logo.png.png";
 import landingDashboardCover from "../assets/landing-dashboard-cover.png";
 import landingAlerts from "../assets/landing-alerts.png";
 import landingAiSummary from "../assets/landing-ai-summary.png";
+import LandingChatWidget from "../components/chat/LandingChatWidget";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const DEMO_URL = "https://www.hidrolub.com/lubriplan";
 const CONTACT_EMAIL = "lubriplan@hidrolub.com";
-const LUBRIPLAN_CHATBOT_SCRIPT_ID = "lubriplan-autochat-widget-script";
-const LUBRIPLAN_CHATBOT_SCRIPT_VERSION = "20260511b";
-
-function removeLubriPlanChatbot() {
-  if (typeof document === "undefined") return;
-
-  document
-    .querySelectorAll(
-      `#${LUBRIPLAN_CHATBOT_SCRIPT_ID}, script[data-lubriplan-chatbot="autochatmx"]`
-    )
-    .forEach((node) => node.parentNode?.removeChild(node));
-
-  document.getElementById("autochat-widget-root")?.remove();
-}
 
 export default function LubriPlanLanding() {
   const { isAuthenticated } = useAuth();
-  useEffect(() => {
-    if (typeof document === "undefined") return undefined;
-    removeLubriPlanChatbot();
-
-    if (isAuthenticated) {
-      return removeLubriPlanChatbot;
-    }
-
-    const script = document.createElement("script");
-    script.id = LUBRIPLAN_CHATBOT_SCRIPT_ID;
-    script.src = `https://api.autochatmx.com/public/widget.js?v=${LUBRIPLAN_CHATBOT_SCRIPT_VERSION}`;
-    script.async = true;
-    script.dataset.apiUrl = "https://api.autochatmx.com";
-    script.dataset.businessId = "cmoyi5hsk0005nd4f32980jsq";
-    script.dataset.lubriplanChatbot = "autochatmx";
-    document.body.appendChild(script);
-
-    return removeLubriPlanChatbot;
-  }, [isAuthenticated]);
 
   const signals = useMemo(
     () => [
@@ -596,6 +564,8 @@ export default function LubriPlanLanding() {
           </div>
         </div>
       </section>
+
+      <LandingChatWidget />
     </div>
   );
 }
