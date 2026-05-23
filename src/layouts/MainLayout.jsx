@@ -875,7 +875,7 @@ export default function MainLayout({ children }) {
           {children}
         </main>
       </div>
-      <ChatWidget />
+      {(role === "ADMIN" || role === "SUPERVISOR") && <ChatWidget />}
     </div>
   );
 }
