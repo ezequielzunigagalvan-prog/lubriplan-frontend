@@ -412,6 +412,138 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
+      {/* ── LubriPlan Card ── */}
+      <section style={section}>
+        <div style={twoCol}>
+          <div style={cardProductBlock}>
+            <div style={sectionKicker}>
+              <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
+              LUBRIPLAN CARD
+            </div>
+            <h2 style={sectionTitle}>La carta de lubricación en el bolsillo del técnico</h2>
+            <p style={sectionText}>
+              LubriPlan Card lleva los puntos de lubricación de cada equipo directo al campo.
+              El técnico escanea el código QR del equipo y accede en segundos a la imagen con
+              los puntos marcados, lubricante, cantidad, frecuencia y método — sin login, sin instalación.
+            </p>
+
+            <div style={cardFeatureList}>
+              {[
+                "Acceso por QR — escanear y listo, sin credenciales",
+                "Imagen del equipo con puntos numerados y coloreados por frecuencia",
+                "Lubricante, cantidad, unidad y método por punto",
+                "Diseñado para pantallas con guantes en planta industrial",
+                "El administrador gestiona las cartas desde el panel web",
+              ].map((f) => (
+                <div key={f} style={cardFeatureLine}>
+                  <span style={cardFeatureDot} />
+                  <span>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <a
+                href="https://card.lubriplan.com"
+                target="_blank"
+                rel="noreferrer"
+                style={btnPrimary}
+              >
+                Abrir LubriPlan Card
+              </a>
+              <a href="#contacto" style={btnGhost}>Solicitar acceso</a>
+            </div>
+          </div>
+
+          <div style={cardVisualBlock}>
+            <div style={cardMockHeader}>
+              <div style={cardMockLogo}>
+                <svg viewBox="0 0 64 64" fill="none" style={{ width: 28, height: 28 }}>
+                  <rect width="64" height="64" rx="10" fill="#f97316" />
+                  <path d="M16 48V20h10c4 0 7 1 9 3s3 5 3 9c0 4-1 7-3 9s-5 3-9 3H16z" fill="#080e1a" />
+                  <path d="M22 42V26h4c2 0 3 .5 4 1.5S31 30 31 32c0 3-.5 5-1.5 6.5S27 40 25 40h-1v2h-2z" fill="#f97316" />
+                  <rect x="38" y="20" width="6" height="28" fill="#080e1a" />
+                </svg>
+              </div>
+              <div>
+                <div style={cardMockTitle}>LubriPlan Card</div>
+                <div style={cardMockSub}>Cartas de lubricación</div>
+              </div>
+              <span style={cardMockBadge}>Campo</span>
+            </div>
+
+            <div style={cardMockEquipo}>
+              <div style={cardMockEquipoCode}>CMP-001</div>
+              <div style={cardMockEquipoName}>Compresor de tornillo KAESER SK-19</div>
+              <div style={cardMockEquipoArea}>Sala de compresores</div>
+            </div>
+
+            <div style={cardMockImageArea}>
+              <div style={cardMockImagePlaceholder}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(249,115,22,0.4)" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 11, marginTop: 8 }}>Imagen con puntos marcados</span>
+              </div>
+              {[
+                { n: 1, color: "#ef4444", x: "22%", y: "38%" },
+                { n: 2, color: "#f97316", x: "62%", y: "38%" },
+                { n: 3, color: "#eab308", x: "48%", y: "65%" },
+                { n: 4, color: "#22c55e", x: "78%", y: "52%" },
+              ].map(({ n, color, x, y }) => (
+                <div key={n} style={{
+                  position: "absolute", left: x, top: y,
+                  transform: "translate(-50%,-50%)",
+                  width: 26, height: 26, borderRadius: "50%",
+                  background: color, border: "2px solid rgba(0,0,0,0.4)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 900, color: "#080e1a",
+                  boxShadow: `0 0 10px ${color}80`,
+                }}>
+                  {n}
+                </div>
+              ))}
+            </div>
+
+            <div style={cardMockPoints}>
+              {[
+                { n: 1, nombre: "Cojinete delantero rotor", frec: "Diaria", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+                { n: 2, nombre: "Cojinete trasero rotor", frec: "Semanal", color: "#f97316", bg: "rgba(249,115,22,0.12)" },
+                { n: 3, nombre: "Caja de engranajes", frec: "Mensual", color: "#eab308", bg: "rgba(234,179,8,0.12)" },
+              ].map(({ n, nombre, frec, color, bg }) => (
+                <div key={n} style={cardMockPoint}>
+                  <div style={{ ...cardMockPointNum, background: color }}>{n}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={cardMockPointName}>{nombre}</div>
+                  </div>
+                  <span style={{ ...cardMockPointFrec, color, background: bg }}>{frec}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={cardMockQRRow}>
+              <div style={cardMockQRBox}>
+                <svg viewBox="0 0 21 21" width="48" height="48" fill="none">
+                  <rect x="1" y="1" width="8" height="8" rx="1" fill="#f97316"/>
+                  <rect x="3" y="3" width="4" height="4" fill="#080e1a"/>
+                  <rect x="12" y="1" width="8" height="8" rx="1" fill="#f97316"/>
+                  <rect x="14" y="3" width="4" height="4" fill="#080e1a"/>
+                  <rect x="1" y="12" width="8" height="8" rx="1" fill="#f97316"/>
+                  <rect x="3" y="14" width="4" height="4" fill="#080e1a"/>
+                  <rect x="12" y="12" width="2" height="2" fill="#f97316"/>
+                  <rect x="15" y="12" width="2" height="2" fill="#f97316"/>
+                  <rect x="18" y="12" width="2" height="2" fill="#f97316"/>
+                  <rect x="12" y="15" width="2" height="2" fill="#f97316"/>
+                  <rect x="15" y="15" width="5" height="5" rx="0.5" fill="#f97316"/>
+                </svg>
+              </div>
+              <div>
+                <div style={cardMockQRLabel}>Escanear para acceder</div>
+                <div style={cardMockQRSub}>card.lubriplan.com?equipo=CMP-001</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Para quién / industrias / módulos (combinado) ── */}
       <section style={sectionAlt}>
         <div style={sectionHead}>
@@ -969,6 +1101,100 @@ const contactMailText = {
 };
 const contactMailStrong = { color: "#fdba74", fontWeight: 900 };
 const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
+
+/* ── LubriPlan Card section ── */
+const cardProductBlock = {
+  padding: 28, borderRadius: 24,
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.09)",
+  borderTop: "2px solid rgba(249,115,22,0.28)",
+  display: "flex", flexDirection: "column", justifyContent: "center",
+};
+const cardFeatureList = { marginTop: 22, display: "flex", flexDirection: "column", gap: 10 };
+const cardFeatureLine = {
+  display: "flex", alignItems: "flex-start", gap: 12,
+  color: "#cbd5e1", fontSize: 14, fontWeight: 700, lineHeight: 1.5,
+};
+const cardFeatureDot = {
+  width: 8, height: 8, borderRadius: "50%",
+  background: "#f97316", flexShrink: 0, marginTop: 6,
+  boxShadow: "0 0 0 3px rgba(249,115,22,0.18)",
+};
+const cardVisualBlock = {
+  borderRadius: 24, padding: 20,
+  background: "linear-gradient(165deg, rgba(249,115,22,0.07) 0%, rgba(8,14,26,0.90) 100%)",
+  border: "1px solid rgba(249,115,22,0.20)",
+  borderTop: "2px solid rgba(249,115,22,0.45)",
+  boxShadow: "0 30px 80px rgba(2,6,23,0.40)",
+  display: "flex", flexDirection: "column", gap: 14,
+};
+const cardMockHeader = {
+  display: "flex", alignItems: "center", gap: 12,
+  paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.07)",
+};
+const cardMockLogo = {
+  width: 44, height: 44, borderRadius: 12,
+  background: "rgba(249,115,22,0.12)",
+  display: "grid", placeItems: "center", flexShrink: 0,
+};
+const cardMockTitle = { fontSize: 15, fontWeight: 900, color: "#f8fafc" };
+const cardMockSub = { fontSize: 11, color: "#94a3b8", marginTop: 2, fontWeight: 700, letterSpacing: "0.05em" };
+const cardMockBadge = {
+  marginLeft: "auto",
+  padding: "5px 12px", borderRadius: 999,
+  background: "rgba(249,115,22,0.14)", color: "#fdba74",
+  border: "1px solid rgba(249,115,22,0.28)",
+  fontSize: 11, fontWeight: 900,
+};
+const cardMockEquipo = {
+  padding: "12px 14px", borderRadius: 14,
+  background: "rgba(8,14,26,0.60)",
+  border: "1px solid rgba(255,255,255,0.07)",
+};
+const cardMockEquipoCode = {
+  fontFamily: "monospace", fontSize: 13, fontWeight: 900,
+  color: "#f97316", letterSpacing: 2, marginBottom: 4,
+};
+const cardMockEquipoName = { fontSize: 14, fontWeight: 900, color: "#f8fafc", lineHeight: 1.3 };
+const cardMockEquipoArea = { fontSize: 12, color: "#64748b", marginTop: 3, fontWeight: 700 };
+const cardMockImageArea = {
+  position: "relative", borderRadius: 16, overflow: "hidden",
+  background: "rgba(8,14,26,0.80)", border: "1px solid rgba(255,255,255,0.08)",
+  height: 140, display: "flex", alignItems: "center", justifyContent: "center",
+  flexDirection: "column",
+};
+const cardMockImagePlaceholder = {
+  display: "flex", flexDirection: "column", alignItems: "center",
+  justifyContent: "center",
+};
+const cardMockPoints = { display: "flex", flexDirection: "column", gap: 8 };
+const cardMockPoint = {
+  display: "flex", alignItems: "center", gap: 10,
+  padding: "10px 12px", borderRadius: 12,
+  background: "rgba(8,14,26,0.55)", border: "1px solid rgba(255,255,255,0.06)",
+};
+const cardMockPointNum = {
+  width: 24, height: 24, borderRadius: "50%",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  fontSize: 11, fontWeight: 900, color: "#080e1a", flexShrink: 0,
+};
+const cardMockPointName = { fontSize: 13, fontWeight: 800, color: "#e2e8f0" };
+const cardMockPointFrec = {
+  padding: "3px 9px", borderRadius: 6,
+  fontSize: 11, fontWeight: 900, flexShrink: 0,
+};
+const cardMockQRRow = {
+  display: "flex", alignItems: "center", gap: 14,
+  padding: "12px 14px", borderRadius: 14,
+  background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.18)",
+};
+const cardMockQRBox = {
+  width: 64, height: 64, borderRadius: 10,
+  background: "rgba(8,14,26,0.80)", border: "1px solid rgba(249,115,22,0.25)",
+  display: "grid", placeItems: "center", flexShrink: 0,
+};
+const cardMockQRLabel = { fontSize: 12, fontWeight: 900, color: "#fdba74" };
+const cardMockQRSub = { fontSize: 10, color: "#64748b", marginTop: 4, wordBreak: "break-all", fontFamily: "monospace" };
 
 
 
