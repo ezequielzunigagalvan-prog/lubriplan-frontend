@@ -329,7 +329,7 @@ export default function LubriPlanLanding() {
           <div style={videoGlowRing} />
           <div style={videoWrap}>
             <video
-              src="/lubriplan-demo.mp4"
+              src="/lubriplan-demo.mp4?v=2"
               playsInline
               controls
               style={videoEl}
