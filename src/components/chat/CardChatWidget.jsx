@@ -1,6 +1,6 @@
-// src/components/chat/LandingChatWidget.jsx
+// src/components/chat/CardChatWidget.jsx
 import { useState, useEffect, useRef, useCallback } from "react";
-import { sendLandingChatMessage } from "../../services/landingChatService.js";
+import { sendCardChatMessage } from "../../services/landingChatService.js";
 import { submitLandingLead } from "../../services/landingLeadsService.js";
 
 function isLeadRequest(text) {
@@ -11,18 +11,17 @@ function isLeadRequest(text) {
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 const SUGGESTIONS = [
-  { icon: "🏭", label: "¿Qué es LubriPlan?" },
-  { icon: "🎯", label: "¿Cómo solicitar una demo?" },
-  { icon: "📦", label: "¿Qué módulos incluye?" },
-  { icon: "📱", label: "¿Qué es LubriPlan Card?" },
-  { icon: "🔍", label: "Quiero conocer LubriPlan" },
+  { icon: "📇", label: "¿Qué es LubriPlan Card?" },
+  { icon: "🔍", label: "¿Cómo funciona el acceso QR?" },
+  { icon: "💰", label: "¿Cuánto cuesta?" },
+  { icon: "🎯", label: "Quiero solicitar una demo" },
 ];
 
 function genSessionId() {
-  return `lc_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  return `cc_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export default function LandingChatWidget() {
+export default function CardChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [value, setValue] = useState("");
@@ -42,7 +41,6 @@ export default function LandingChatWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Cerrar con Escape
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
@@ -50,11 +48,10 @@ export default function LandingChatWidget() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // Cerrar al clic fuera
   useEffect(() => {
     if (!open) return;
     const onDoc = (e) => {
-      const btn = document.getElementById("lp-landing-fab");
+      const btn = document.getElementById("lp-card-fab");
       if (btn?.contains(e.target)) return;
       if (!panelRef.current?.contains(e.target)) setOpen(false);
     };
@@ -71,7 +68,7 @@ export default function LandingChatWidget() {
     setLoading(true);
     setError(null);
     try {
-      const data = await sendLandingChatMessage(outbound, sessionIdRef.current);
+      const data = await sendCardChatMessage(outbound, sessionIdRef.current);
       if (data?.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
         if (!leadSubmitted && isLeadRequest(data.reply)) setShowLeadForm(true);
@@ -81,7 +78,7 @@ export default function LandingChatWidget() {
     } finally {
       setLoading(false);
     }
-  }, [messages, loading]);
+  }, [messages, loading, leadSubmitted]);
 
   const submit = () => {
     if (!canSend) return;
@@ -109,73 +106,72 @@ export default function LandingChatWidget() {
   return (
     <>
       <style>{`
-        @keyframes lpLandingPop {
+        @keyframes lpCardPop {
           0%  { opacity: 0; transform: scale(0.88) translateY(18px); }
           100%{ opacity: 1; transform: scale(1) translateY(0); }
         }
-        @keyframes lpLandingFabPulse {
-          0%,100%{ box-shadow: 0 8px 28px rgba(249,115,22,0.45), 0 0 0 0 rgba(249,115,22,0.22); }
-          50%    { box-shadow: 0 12px 36px rgba(249,115,22,0.65), 0 0 0 8px rgba(249,115,22,0); }
+        @keyframes lpCardFabPulse {
+          0%,100%{ box-shadow: 0 8px 28px rgba(99,102,241,0.45), 0 0 0 0 rgba(99,102,241,0.22); }
+          50%    { box-shadow: 0 12px 36px rgba(99,102,241,0.65), 0 0 0 8px rgba(99,102,241,0); }
         }
-        @keyframes lpLandingDot {
+        @keyframes lpCardDot {
           0%,80%,100%{ opacity:0.25; transform:translateY(0); }
           40%        { opacity:1; transform:translateY(-4px); }
         }
-        @keyframes lpLandingSpin {
+        @keyframes lpCardSpin {
           to { transform: rotate(360deg); }
         }
-        @keyframes lpLandingBadge {
+        @keyframes lpCardBadge {
           0%  { transform: scale(0); }
           60% { transform: scale(1.3); }
           100%{ transform: scale(1); }
         }
-        #lp-landing-fab {
+        #lp-card-fab {
           transition: transform 150ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 150ms ease;
         }
-        #lp-landing-fab:hover {
+        #lp-card-fab:hover {
           transform: scale(1.10) !important;
         }
-        #lp-landing-fab:active {
+        #lp-card-fab:active {
           transform: scale(0.93) !important;
         }
-        .lp-lc-sgbtn:hover {
-          background: rgba(249,115,22,0.12) !important;
-          border-color: rgba(249,115,22,0.42) !important;
-          color: #fdba74 !important;
+        .lp-cc-sgbtn:hover {
+          background: rgba(99,102,241,0.12) !important;
+          border-color: rgba(99,102,241,0.42) !important;
+          color: #a5b4fc !important;
           transform: translateY(-1px);
         }
-        .lp-lc-icobtn:hover {
+        .lp-cc-icobtn:hover {
           background: rgba(255,255,255,0.10) !important;
         }
-        .lp-lc-textarea:focus {
+        .lp-cc-textarea:focus {
           outline: none;
-          border-color: rgba(249,115,22,0.50) !important;
-          box-shadow: 0 0 0 3px rgba(249,115,22,0.12) !important;
+          border-color: rgba(99,102,241,0.50) !important;
+          box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
         }
       `}</style>
 
-      {/* Panel */}
       {open && (
-        <div ref={panelRef} style={panel} role="dialog" aria-label="Asistente LubriPlan">
-          {/* Header */}
+        <div ref={panelRef} style={panel} role="dialog" aria-label="Asistente LubriPlan Card">
           <div style={header}>
             <div style={headerGlow} />
             <div style={headerLeft}>
               <div style={avatarWrap}>
                 <div style={avatarInner}>
-                  <svg viewBox="0 0 64 64" fill="none" style={{ width: 22, height: 22 }}>
-                    <rect width="64" height="64" rx="10" fill="#f97316" />
-                    <path d="M16 48V20h10c4 0 7 1 9 3s3 5 3 9c0 4-1 7-3 9s-5 3-9 3H16z" fill="#080e1a" />
-                    <path d="M22 42V26h4c2 0 3 .5 4 1.5S31 30 31 32c0 3-.5 5-1.5 6.5S27 40 25 40h-1v2h-2z" fill="#f97316" />
-                    <rect x="38" y="20" width="6" height="28" fill="#080e1a" />
+                  <svg viewBox="0 0 32 32" fill="none" style={{ width: 20, height: 20 }}>
+                    <rect width="32" height="32" rx="8" fill="#6366f1" />
+                    <rect x="4" y="10" width="24" height="14" rx="3" fill="#fff" fillOpacity="0.15" />
+                    <rect x="4" y="10" width="24" height="5" rx="2" fill="#fff" fillOpacity="0.30" />
+                    <rect x="6" y="18" width="8" height="2" rx="1" fill="#fff" fillOpacity="0.60" />
+                    <circle cx="24" cy="19" r="2" fill="#818cf8" />
                   </svg>
                 </div>
                 <div style={avatarOnline} />
               </div>
               <div>
-                <div style={headerTitle}>Asistente LubriPlan</div>
+                <div style={headerTitle}>Asistente LubriPlan Card</div>
                 <div style={headerSub}>
-                  {loading ? "Procesando consulta…" : "Preguntas sobre el producto · IA"}
+                  {loading ? "Procesando…" : "Preguntas sobre la tarjeta digital · IA"}
                 </div>
               </div>
             </div>
@@ -183,8 +179,8 @@ export default function LandingChatWidget() {
               {messages.length > 0 && (
                 <button
                   type="button"
-                  className="lp-lc-icobtn"
-                  onClick={() => { setMessages([]); setError(null); }}
+                  className="lp-cc-icobtn"
+                  onClick={() => { setMessages([]); setError(null); setShowLeadForm(false); }}
                   style={iconBtn}
                   title="Limpiar"
                 >
@@ -197,7 +193,7 @@ export default function LandingChatWidget() {
               )}
               <button
                 type="button"
-                className="lp-lc-icobtn"
+                className="lp-cc-icobtn"
                 onClick={() => setOpen(false)}
                 style={iconBtn}
                 title="Cerrar (Esc)"
@@ -210,22 +206,22 @@ export default function LandingChatWidget() {
             </div>
           </div>
 
-          {/* Mensajes */}
           <div style={msgArea}>
             {isEmpty ? (
               <div style={emptyWrap}>
                 <div style={emptyCard}>
                   <div style={emptyLogo}>
-                    <svg viewBox="0 0 64 64" fill="none" style={{ width: 30, height: 30 }}>
-                      <rect width="64" height="64" rx="12" fill="rgba(249,115,22,0.18)" />
-                      <path d="M16 48V20h10c4 0 7 1 9 3s3 5 3 9c0 4-1 7-3 9s-5 3-9 3H16z" fill="rgba(249,115,22,0.7)" />
-                      <path d="M22 42V26h4c2 0 3 .5 4 1.5S31 30 31 32c0 3-.5 5-1.5 6.5S27 40 25 40h-1v2h-2z" fill="#f97316" />
-                      <rect x="38" y="20" width="6" height="28" fill="rgba(249,115,22,0.7)" />
+                    <svg viewBox="0 0 32 32" fill="none" style={{ width: 28, height: 28 }}>
+                      <rect width="32" height="32" rx="8" fill="rgba(99,102,241,0.18)" />
+                      <rect x="4" y="10" width="24" height="14" rx="3" fill="rgba(99,102,241,0.5)" />
+                      <rect x="4" y="10" width="24" height="5" rx="2" fill="rgba(99,102,241,0.8)" />
+                      <rect x="6" y="18" width="8" height="2" rx="1" fill="#a5b4fc" />
+                      <circle cx="24" cy="19" r="2" fill="#818cf8" />
                     </svg>
                   </div>
-                  <div style={emptyTitle}>Hola, soy el asistente de LubriPlan</div>
+                  <div style={emptyTitle}>Hola, soy el asistente de LubriPlan Card</div>
                   <div style={emptyText}>
-                    Pregúntame sobre funcionalidades, cómo funciona, para quién es o cómo solicitar una demo.
+                    Pregúntame sobre la tarjeta digital de lubricación: acceso QR, planes, características y cómo implementarla en tu planta.
                   </div>
                 </div>
 
@@ -237,7 +233,7 @@ export default function LandingChatWidget() {
                       <button
                         key={label}
                         type="button"
-                        className="lp-lc-sgbtn"
+                        className="lp-cc-sgbtn"
                         style={{ ...suggestBtn, ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }}
                         onClick={() => sendMessage(label)}
                       >
@@ -246,21 +242,6 @@ export default function LandingChatWidget() {
                       </button>
                     );
                   })}
-                </div>
-
-                <div style={demoNudge}>
-                  <span style={demoNudgeDot} />
-                  <span>
-                    Demo disponible en{" "}
-                    <a
-                      href="https://www.hidrolub.com/lubriplan"
-                      target="_blank"
-                      rel="noreferrer"
-                      style={demoLink}
-                    >
-                      hidrolub.com/lubriplan
-                    </a>
-                  </span>
                 </div>
               </div>
             ) : (
@@ -271,7 +252,7 @@ export default function LandingChatWidget() {
                     <div key={i} style={{ ...msgRow, ...(isUser ? msgRowUser : msgRowBot) }}>
                       {!isUser && <div style={botAvatar}>LP</div>}
                       <div style={{ ...bubble, ...(isUser ? bubbleUser : bubbleBot) }}>
-                        {!isUser && <div style={botLabel}>LubriPlan</div>}
+                        {!isUser && <div style={botLabel}>LubriPlan Card</div>}
                         <BotText text={m.content} isUser={isUser} />
                       </div>
                       {isUser && <div style={userAvatar}>Tú</div>}
@@ -283,7 +264,7 @@ export default function LandingChatWidget() {
                   <div style={{ ...msgRow, ...msgRowBot }}>
                     <div style={botAvatar}>LP</div>
                     <div style={{ ...bubble, ...bubbleBot }}>
-                      <div style={botLabel}>LubriPlan</div>
+                      <div style={botLabel}>LubriPlan Card</div>
                       <div style={typingRow}>
                         <span style={dot} />
                         <span style={{ ...dot, animationDelay: "0.18s" }} />
@@ -302,11 +283,11 @@ export default function LandingChatWidget() {
                 {showLeadForm && !leadSubmitted && (
                   <InlineLeadForm
                     sessionId={sessionIdRef.current}
-                    source="landing"
+                    source="card"
                     onSuccess={() => {
                       setLeadSubmitted(true);
                       setShowLeadForm(false);
-                      setMessages((prev) => [...prev, { role: "assistant", content: "¡Listo! Recibimos tus datos. El equipo de LubriPlan se pondrá en contacto contigo a la brevedad para agendar tu demo. 🎉" }]);
+                      setMessages((prev) => [...prev, { role: "assistant", content: "¡Listo! Recibimos tus datos. El equipo de LubriPlan se pondrá en contacto contigo a la brevedad para agendar tu demo de LubriPlan Card. 🎉" }]);
                     }}
                   />
                 )}
@@ -317,7 +298,6 @@ export default function LandingChatWidget() {
             {!isEmpty && <div ref={bottomRef} />}
           </div>
 
-          {/* Input */}
           <div style={inputWrap}>
             <div style={inputInner}>
               <textarea
@@ -326,10 +306,10 @@ export default function LandingChatWidget() {
                 onInput={onInput}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder={loading ? "Procesando…" : "Pregunta sobre LubriPlan…"}
+                placeholder={loading ? "Procesando…" : "Pregunta sobre LubriPlan Card…"}
                 disabled={loading}
                 rows={1}
-                className="lp-lc-textarea"
+                className="lp-cc-textarea"
                 style={{ ...textarea, opacity: loading ? 0.55 : 1 }}
               />
               <button
@@ -359,24 +339,23 @@ export default function LandingChatWidget() {
         </div>
       )}
 
-      {/* FAB */}
       <button
-        id="lp-landing-fab"
+        id="lp-card-fab"
         type="button"
         onClick={() => setOpen((v) => !v)}
         style={{
           ...fab,
           background: open
-            ? "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
-            : "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+            ? "linear-gradient(135deg, #1e1b4b 0%, #0f0a2e 100%)"
+            : "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
           animation: !open && messages.length === 0
-            ? "lpLandingFabPulse 2.6s ease-in-out infinite"
+            ? "lpCardFabPulse 2.6s ease-in-out infinite"
             : "none",
           border: open
-            ? "1px solid rgba(249,115,22,0.25)"
-            : "1px solid rgba(251,146,60,0.40)",
+            ? "1px solid rgba(99,102,241,0.25)"
+            : "1px solid rgba(129,140,248,0.40)",
         }}
-        title={open ? "Cerrar asistente" : "Hablar con el asistente LubriPlan"}
+        title={open ? "Cerrar asistente" : "Hablar con el asistente de LubriPlan Card"}
         aria-label={open ? "Cerrar asistente" : "Abrir asistente"}
         aria-expanded={open}
       >
@@ -386,22 +365,20 @@ export default function LandingChatWidget() {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         ) : (
-          <svg viewBox="0 0 64 64" fill="none" style={{ width: 26, height: 26 }}>
-            <rect width="64" height="64" rx="10" fill="transparent" />
-            <path d="M16 48V20h10c4 0 7 1 9 3s3 5 3 9c0 4-1 7-3 9s-5 3-9 3H16z" fill="white" />
-            <path d="M22 42V26h4c2 0 3 .5 4 1.5S31 30 31 32c0 3-.5 5-1.5 6.5S27 40 25 40h-1v2h-2z" fill="rgba(249,115,22,0.85)" />
-            <rect x="38" y="20" width="6" height="28" fill="white" />
+          <svg viewBox="0 0 32 32" fill="none" style={{ width: 26, height: 26 }}>
+            <rect x="2" y="8" width="28" height="17" rx="3" fill="white" fillOpacity="0.9" />
+            <rect x="2" y="8" width="28" height="6" rx="2" fill="white" />
+            <rect x="5" y="19" width="9" height="2" rx="1" fill="rgba(99,102,241,0.7)" />
+            <circle cx="26" cy="20" r="2.5" fill="#a5b4fc" />
           </svg>
         )}
 
-        {/* Badge nuevo mensaje */}
         {hasNewMsg && (
           <span style={badge} aria-label="Nuevo mensaje" />
         )}
 
-        {/* Label */}
         {!open && messages.length === 0 && (
-          <div style={fabLabel}>¿Tienes dudas sobre LubriPlan?</div>
+          <div style={fabLabel}>¿Preguntas sobre LubriPlan Card?</div>
         )}
       </button>
     </>
@@ -409,7 +386,6 @@ export default function LandingChatWidget() {
 }
 
 function InlineLeadForm({ sessionId, source, onSuccess }) {
-  const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   const [form, setForm] = useState({ nombre: "", email: "", telefono: "", empresa: "" });
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState(null);
@@ -435,8 +411,8 @@ function InlineLeadForm({ sessionId, source, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handle} style={{ background: "rgba(249,115,22,0.07)", border: "1px solid rgba(249,115,22,0.25)", borderRadius: 16, padding: "14px 14px 12px", margin: "4px 0", fontFamily: FONT }}>
-      <div style={{ fontSize: 11, fontWeight: 900, color: "#fb923c", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Tus datos de contacto</div>
+    <form onSubmit={handle} style={{ background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 16, padding: "14px 14px 12px", margin: "4px 0", fontFamily: FONT }}>
+      <div style={{ fontSize: 11, fontWeight: 900, color: "#818cf8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Tus datos de contacto</div>
       {[
         { key: "nombre", placeholder: "Nombre completo *", type: "text" },
         { key: "email", placeholder: "Correo electrónico *", type: "email" },
@@ -450,11 +426,11 @@ function InlineLeadForm({ sessionId, source, onSuccess }) {
           value={form[key]}
           onChange={set(key)}
           disabled={submitting}
-          style={{ display: "block", width: "100%", boxSizing: "border-box", marginBottom: 7, padding: "8px 11px", borderRadius: 10, border: "1px solid rgba(249,115,22,0.28)", background: "rgba(8,14,26,0.70)", color: "#e2e8f0", fontSize: 12, fontWeight: 700, fontFamily: FONT, outline: "none" }}
+          style={{ display: "block", width: "100%", boxSizing: "border-box", marginBottom: 7, padding: "8px 11px", borderRadius: 10, border: "1px solid rgba(99,102,241,0.28)", background: "rgba(15,10,46,0.70)", color: "#e2e8f0", fontSize: 12, fontWeight: 700, fontFamily: FONT, outline: "none" }}
         />
       ))}
       {err && <div style={{ color: "#f87171", fontSize: 11, fontWeight: 700, marginBottom: 6 }}>{err}</div>}
-      <button type="submit" disabled={submitting} style={{ width: "100%", padding: "9px", borderRadius: 10, border: "none", background: submitting ? "rgba(249,115,22,0.45)" : "linear-gradient(135deg,#f97316,#fb923c)", color: "#0b1220", fontWeight: 900, fontSize: 13, cursor: submitting ? "default" : "pointer", fontFamily: FONT }}>
+      <button type="submit" disabled={submitting} style={{ width: "100%", padding: "9px", borderRadius: 10, border: "none", background: submitting ? "rgba(99,102,241,0.45)" : "linear-gradient(135deg,#6366f1,#818cf8)", color: "#fff", fontWeight: 900, fontSize: 13, cursor: submitting ? "default" : "pointer", fontFamily: FONT }}>
         {submitting ? "Enviando…" : "Solicitar demo →"}
       </button>
     </form>
@@ -484,16 +460,16 @@ const panel = {
   right: 20,
   width: "min(400px, calc(100vw - 24px))",
   height: "min(540px, calc(100dvh - 112px))",
-  background: "linear-gradient(180deg, #0f172a 0%, #0b1220 100%)",
-  border: "1px solid rgba(249,115,22,0.20)",
-  borderTop: "2px solid rgba(249,115,22,0.40)",
+  background: "linear-gradient(180deg, #0f0a2e 0%, #0c0a1e 100%)",
+  border: "1px solid rgba(99,102,241,0.20)",
+  borderTop: "2px solid rgba(99,102,241,0.40)",
   borderRadius: 24,
-  boxShadow: "0 40px 100px rgba(2,6,23,0.65), 0 0 0 1px rgba(249,115,22,0.08)",
+  boxShadow: "0 40px 100px rgba(2,2,20,0.65), 0 0 0 1px rgba(99,102,241,0.08)",
   display: "flex",
   flexDirection: "column",
   overflow: "hidden",
   zIndex: 9999,
-  animation: "lpLandingPop 240ms cubic-bezier(0.22,1,0.36,1) both",
+  animation: "lpCardPop 240ms cubic-bezier(0.22,1,0.36,1) both",
   fontFamily: FONT,
 };
 
@@ -503,8 +479,8 @@ const header = {
   alignItems: "center",
   justifyContent: "space-between",
   padding: "12px 14px 11px",
-  background: "rgba(8,14,26,0.85)",
-  borderBottom: "1px solid rgba(249,115,22,0.16)",
+  background: "rgba(10,8,30,0.85)",
+  borderBottom: "1px solid rgba(99,102,241,0.16)",
   flexShrink: 0,
   overflow: "hidden",
 };
@@ -516,7 +492,7 @@ const headerGlow = {
   width: 140,
   height: 140,
   borderRadius: 999,
-  background: "rgba(249,115,22,0.15)",
+  background: "rgba(99,102,241,0.15)",
   filter: "blur(36px)",
   pointerEvents: "none",
 };
@@ -529,8 +505,8 @@ const avatarInner = {
   width: 38,
   height: 38,
   borderRadius: 12,
-  background: "rgba(249,115,22,0.15)",
-  border: "1.5px solid rgba(249,115,22,0.38)",
+  background: "rgba(99,102,241,0.15)",
+  border: "1.5px solid rgba(99,102,241,0.38)",
   display: "grid",
   placeItems: "center",
 };
@@ -543,7 +519,7 @@ const avatarOnline = {
   height: 10,
   borderRadius: 999,
   background: "#22c55e",
-  border: "2px solid #0b1220",
+  border: "2px solid #0c0a1e",
 };
 
 const headerTitle = {
@@ -567,8 +543,8 @@ const headerRight = { display: "flex", gap: 6, zIndex: 1 };
 const iconBtn = {
   width: 28,
   height: 28,
-  border: "1px solid rgba(249,115,22,0.18)",
-  background: "rgba(249,115,22,0.06)",
+  border: "1px solid rgba(99,102,241,0.18)",
+  background: "rgba(99,102,241,0.06)",
   borderRadius: 9,
   cursor: "pointer",
   color: "#64748b",
@@ -595,7 +571,7 @@ const emptyWrap = {
 const emptyCard = {
   width: "100%",
   background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(249,115,22,0.18)",
+  border: "1px solid rgba(99,102,241,0.18)",
   borderRadius: 18,
   padding: "16px 14px",
   display: "flex",
@@ -609,11 +585,11 @@ const emptyLogo = {
   width: 52,
   height: 52,
   borderRadius: 14,
-  background: "rgba(249,115,22,0.12)",
-  border: "1.5px solid rgba(249,115,22,0.30)",
+  background: "rgba(99,102,241,0.12)",
+  border: "1.5px solid rgba(99,102,241,0.30)",
   display: "grid",
   placeItems: "center",
-  boxShadow: "0 0 0 6px rgba(249,115,22,0.06)",
+  boxShadow: "0 0 0 6px rgba(99,102,241,0.06)",
 };
 
 const emptyTitle = {
@@ -653,9 +629,9 @@ const suggestBtn = {
   alignItems: "center",
   gap: 8,
   padding: "10px 11px",
-  border: "1px solid rgba(249,115,22,0.18)",
+  border: "1px solid rgba(99,102,241,0.18)",
   borderRadius: 13,
-  background: "rgba(249,115,22,0.06)",
+  background: "rgba(99,102,241,0.06)",
   cursor: "pointer",
   textAlign: "left",
   color: "#94a3b8",
@@ -666,35 +642,6 @@ const suggestBtnText = {
   fontSize: 11,
   fontWeight: 800,
   lineHeight: 1.3,
-};
-
-const demoNudge = {
-  display: "flex",
-  alignItems: "center",
-  gap: 7,
-  fontSize: 11,
-  fontWeight: 700,
-  color: "#475569",
-  padding: "6px 10px",
-  borderRadius: 10,
-  background: "rgba(34,197,94,0.06)",
-  border: "1px solid rgba(34,197,94,0.14)",
-  width: "100%",
-};
-
-const demoNudgeDot = {
-  width: 6,
-  height: 6,
-  borderRadius: 999,
-  background: "#22c55e",
-  flexShrink: 0,
-  boxShadow: "0 0 0 3px rgba(34,197,94,0.18)",
-};
-
-const demoLink = {
-  color: "#22c55e",
-  textDecoration: "none",
-  fontWeight: 800,
 };
 
 const msgList = {
@@ -712,13 +659,13 @@ const botAvatar = {
   width: 26,
   height: 26,
   borderRadius: 999,
-  background: "linear-gradient(135deg, rgba(249,115,22,0.25) 0%, rgba(251,146,60,0.15) 100%)",
-  border: "1px solid rgba(249,115,22,0.35)",
+  background: "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(129,140,248,0.15) 100%)",
+  border: "1px solid rgba(99,102,241,0.35)",
   display: "grid",
   placeItems: "center",
   fontSize: 8,
   fontWeight: 900,
-  color: "#f97316",
+  color: "#818cf8",
   flexShrink: 0,
   alignSelf: "flex-start",
   marginTop: 16,
@@ -729,13 +676,13 @@ const userAvatar = {
   width: 26,
   height: 26,
   borderRadius: 999,
-  background: "rgba(249,115,22,0.10)",
-  border: "1px solid rgba(249,115,22,0.22)",
+  background: "rgba(99,102,241,0.10)",
+  border: "1px solid rgba(99,102,241,0.22)",
   display: "grid",
   placeItems: "center",
   fontSize: 8,
   fontWeight: 900,
-  color: "#fb923c",
+  color: "#a5b4fc",
   flexShrink: 0,
   alignSelf: "flex-start",
   letterSpacing: 0,
@@ -746,8 +693,8 @@ const bubbleUser = { alignItems: "flex-end" };
 const bubbleBot = { alignItems: "flex-start" };
 
 const bubbleTextUser = {
-  background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
-  color: "#0b1220",
+  background: "linear-gradient(135deg, #6366f1 0%, #818cf8 100%)",
+  color: "#fff",
   padding: "9px 13px",
   borderRadius: 15,
   borderBottomRightRadius: 4,
@@ -755,12 +702,12 @@ const bubbleTextUser = {
   fontWeight: 800,
   lineHeight: 1.55,
   wordBreak: "break-word",
-  boxShadow: "0 4px 16px rgba(249,115,22,0.30)",
+  boxShadow: "0 4px 16px rgba(99,102,241,0.30)",
 };
 
 const bubbleTextBot = {
   background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(249,115,22,0.16)",
+  border: "1px solid rgba(99,102,241,0.16)",
   color: "#e2e8f0",
   padding: "9px 13px",
   borderRadius: 15,
@@ -774,7 +721,7 @@ const bubbleTextBot = {
 const botLabel = {
   fontSize: 9,
   fontWeight: 900,
-  color: "#f97316",
+  color: "#818cf8",
   letterSpacing: 0.8,
   textTransform: "uppercase",
   paddingLeft: 2,
@@ -786,7 +733,7 @@ const typingRow = {
   gap: 5,
   padding: "11px 14px",
   background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(249,115,22,0.16)",
+  border: "1px solid rgba(99,102,241,0.16)",
   borderRadius: 15,
   borderBottomLeftRadius: 4,
   alignItems: "center",
@@ -796,9 +743,9 @@ const dot = {
   width: 7,
   height: 7,
   borderRadius: 999,
-  background: "#f97316",
+  background: "#6366f1",
   display: "inline-block",
-  animation: "lpLandingDot 1.1s ease-in-out infinite",
+  animation: "lpCardDot 1.1s ease-in-out infinite",
 };
 
 const errorChip = {
@@ -817,8 +764,8 @@ const errorChip = {
 
 const inputWrap = {
   padding: "9px 11px 8px",
-  borderTop: "1px solid rgba(249,115,22,0.12)",
-  background: "rgba(8,14,26,0.80)",
+  borderTop: "1px solid rgba(99,102,241,0.12)",
+  background: "rgba(10,8,30,0.80)",
   flexShrink: 0,
 };
 
@@ -827,7 +774,7 @@ const inputInner = { display: "flex", alignItems: "flex-end", gap: 7 };
 const textarea = {
   flex: 1,
   resize: "none",
-  border: "1px solid rgba(249,115,22,0.22)",
+  border: "1px solid rgba(99,102,241,0.22)",
   borderRadius: 13,
   padding: "9px 12px",
   fontSize: 13,
@@ -848,11 +795,11 @@ const sendBtn = {
   flexShrink: 0,
   border: "none",
   borderRadius: 13,
-  background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
-  color: "#0b1220",
+  background: "linear-gradient(135deg, #6366f1 0%, #818cf8 100%)",
+  color: "#fff",
   display: "grid",
   placeItems: "center",
-  boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
+  boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
   transition: "opacity 140ms ease, transform 140ms ease",
   cursor: "pointer",
 };
@@ -861,10 +808,10 @@ const spinner = {
   display: "inline-block",
   width: 14,
   height: 14,
-  border: "2.5px solid rgba(8,14,26,0.30)",
-  borderTopColor: "#0b1220",
+  border: "2.5px solid rgba(255,255,255,0.30)",
+  borderTopColor: "#fff",
   borderRadius: "50%",
-  animation: "lpLandingSpin 0.7s linear infinite",
+  animation: "lpCardSpin 0.7s linear infinite",
 };
 
 const inputHint = {
@@ -899,8 +846,8 @@ const badge = {
   height: 12,
   borderRadius: 999,
   background: "#22c55e",
-  border: "2px solid #080e1a",
-  animation: "lpLandingBadge 380ms cubic-bezier(0.22,1,0.36,1) both",
+  border: "2px solid #0c0a1e",
+  animation: "lpCardBadge 380ms cubic-bezier(0.22,1,0.36,1) both",
 };
 
 const fabLabel = {
@@ -908,15 +855,15 @@ const fabLabel = {
   right: "calc(100% + 12px)",
   top: "50%",
   transform: "translateY(-50%)",
-  background: "#0f172a",
+  background: "#0f0a2e",
   color: "#e2e8f0",
   fontSize: 12,
   fontWeight: 800,
   padding: "7px 13px",
   borderRadius: 10,
   whiteSpace: "nowrap",
-  boxShadow: "0 8px 28px rgba(2,6,23,0.40)",
-  border: "1px solid rgba(249,115,22,0.20)",
+  boxShadow: "0 8px 28px rgba(2,2,20,0.40)",
+  border: "1px solid rgba(99,102,241,0.20)",
   pointerEvents: "none",
   letterSpacing: 0.1,
 };

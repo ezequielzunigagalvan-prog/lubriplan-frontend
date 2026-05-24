@@ -198,6 +198,7 @@ export default function LubriPlanLanding() {
             <a href="#como-funciona" style={navLink}>Cómo funciona</a>
             <a href="#capacidades" style={navLink}>Capacidades</a>
             <a href="#contacto" style={navLink}>Contacto</a>
+            <Link to="/card" style={navBtnCard}>LubriPlan Card</Link>
             <Link to="/login" style={navBtn}>Entrar</Link>
           </div>
         </header>
@@ -790,6 +791,16 @@ const navBtn = {
   border: "1px solid rgba(251,146,60,0.60)",
   fontWeight: 900, fontSize: 13,
   boxShadow: "0 8px 20px rgba(249,115,22,0.22)",
+};
+
+const navBtnCard = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  textDecoration: "none",
+  background: "rgba(99,102,241,0.12)",
+  color: "#a5b4fc",
+  padding: "10px 18px", borderRadius: 10,
+  border: "1px solid rgba(99,102,241,0.30)",
+  fontWeight: 900, fontSize: 13,
 };
 
 /* ── Hero content ── */

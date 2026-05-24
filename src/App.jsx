@@ -34,6 +34,8 @@ const MonthlyIntelligentReport = lazy(() => import("./pages/reports/MonthlyIntel
 const SettingsPage            = lazy(() => import("./pages/SettingsPage"));
 const AdminOnboardingPage     = lazy(() => import("./pages/AdminOnboardingPage"));
 const LandingChatLogsPage     = lazy(() => import("./pages/admin/LandingChatLogsPage"));
+const LandingLeadsPage        = lazy(() => import("./pages/admin/LandingLeadsPage"));
+const LubriPlanCardLanding    = lazy(() => import("./pages/LubriPlanCardLanding"));
 const TechnicalAssistantPage  = lazy(() => import("./pages/TechnicalAssistantPage"));
 const CorporateDashboard      = lazy(() => import("./pages/CorporateDashboard"));
 const LubricationCardPage     = lazy(() => import("./pages/LubricationCardPage"));
@@ -57,6 +59,7 @@ export default function App() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<LubriPlanLanding />} />
+        <Route path="/card" element={<LubriPlanCardLanding />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
@@ -65,6 +68,7 @@ export default function App() {
         <Route path="/admin/links/technicians" element={<ProtectedRoute roles={["ADMIN"]}><AdminTechLinksPage /></ProtectedRoute>} />
         <Route path="/admin/onboarding" element={<ProtectedRoute roles={["ADMIN"]}><AdminOnboardingPage /></ProtectedRoute>} />
         <Route path="/admin/landing-leads" element={<ProtectedRoute roles={["ADMIN"]}><LandingChatLogsPage /></ProtectedRoute>} />
+        <Route path="/admin/leads" element={<ProtectedRoute roles={["ADMIN"]}><LandingLeadsPage /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute roles={["ADMIN"]}><UsersPage /></ProtectedRoute>} />
 
         <Route path="/inventory" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><InventoryPage /></ProtectedRoute>} />
