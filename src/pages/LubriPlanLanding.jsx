@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -460,92 +460,7 @@ export default function LubriPlanLanding() {
             </div>
           </div>
 
-          <div style={cardVisualBlock}>
-            <div style={cardMockHeader}>
-              <div style={cardMockLogo}>
-                <svg viewBox="0 0 64 64" fill="none" style={{ width: 28, height: 28 }}>
-                  <rect width="64" height="64" rx="10" fill="#f97316" />
-                  <path d="M16 48V20h10c4 0 7 1 9 3s3 5 3 9c0 4-1 7-3 9s-5 3-9 3H16z" fill="#080e1a" />
-                  <path d="M22 42V26h4c2 0 3 .5 4 1.5S31 30 31 32c0 3-.5 5-1.5 6.5S27 40 25 40h-1v2h-2z" fill="#f97316" />
-                  <rect x="38" y="20" width="6" height="28" fill="#080e1a" />
-                </svg>
-              </div>
-              <div>
-                <div style={cardMockTitle}>LubriPlan Card</div>
-                <div style={cardMockSub}>Cartas de lubricación</div>
-              </div>
-              <span style={cardMockBadge}>Campo</span>
-            </div>
-
-            <div style={cardMockEquipo}>
-              <div style={cardMockEquipoCode}>CMP-001</div>
-              <div style={cardMockEquipoName}>Compresor de tornillo KAESER SK-19</div>
-              <div style={cardMockEquipoArea}>Sala de compresores</div>
-            </div>
-
-            <div style={cardMockImageArea}>
-              <div style={cardMockImagePlaceholder}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(249,115,22,0.4)" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-                <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 11, marginTop: 8 }}>Imagen con puntos marcados</span>
-              </div>
-              {[
-                { n: 1, color: "#ef4444", x: "22%", y: "38%" },
-                { n: 2, color: "#f97316", x: "62%", y: "38%" },
-                { n: 3, color: "#eab308", x: "48%", y: "65%" },
-                { n: 4, color: "#22c55e", x: "78%", y: "52%" },
-              ].map(({ n, color, x, y }) => (
-                <div key={n} style={{
-                  position: "absolute", left: x, top: y,
-                  transform: "translate(-50%,-50%)",
-                  width: 26, height: 26, borderRadius: "50%",
-                  background: color, border: "2px solid rgba(0,0,0,0.4)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 900, color: "#080e1a",
-                  boxShadow: `0 0 10px ${color}80`,
-                }}>
-                  {n}
-                </div>
-              ))}
-            </div>
-
-            <div style={cardMockPoints}>
-              {[
-                { n: 1, nombre: "Cojinete delantero rotor", frec: "Diaria", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
-                { n: 2, nombre: "Cojinete trasero rotor", frec: "Semanal", color: "#f97316", bg: "rgba(249,115,22,0.12)" },
-                { n: 3, nombre: "Caja de engranajes", frec: "Mensual", color: "#eab308", bg: "rgba(234,179,8,0.12)" },
-              ].map(({ n, nombre, frec, color, bg }) => (
-                <div key={n} style={cardMockPoint}>
-                  <div style={{ ...cardMockPointNum, background: color }}>{n}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={cardMockPointName}>{nombre}</div>
-                  </div>
-                  <span style={{ ...cardMockPointFrec, color, background: bg }}>{frec}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={cardMockQRRow}>
-              <div style={cardMockQRBox}>
-                <svg viewBox="0 0 21 21" width="48" height="48" fill="none">
-                  <rect x="1" y="1" width="8" height="8" rx="1" fill="#f97316"/>
-                  <rect x="3" y="3" width="4" height="4" fill="#080e1a"/>
-                  <rect x="12" y="1" width="8" height="8" rx="1" fill="#f97316"/>
-                  <rect x="14" y="3" width="4" height="4" fill="#080e1a"/>
-                  <rect x="1" y="12" width="8" height="8" rx="1" fill="#f97316"/>
-                  <rect x="3" y="14" width="4" height="4" fill="#080e1a"/>
-                  <rect x="12" y="12" width="2" height="2" fill="#f97316"/>
-                  <rect x="15" y="12" width="2" height="2" fill="#f97316"/>
-                  <rect x="18" y="12" width="2" height="2" fill="#f97316"/>
-                  <rect x="12" y="15" width="2" height="2" fill="#f97316"/>
-                  <rect x="15" y="15" width="5" height="5" rx="0.5" fill="#f97316"/>
-                </svg>
-              </div>
-              <div>
-                <div style={cardMockQRLabel}>Escanear para acceder</div>
-                <div style={cardMockQRSub}>card.lubriplan.com?equipo=CMP-001</div>
-              </div>
-            </div>
-          </div>
+          <InteractiveCardMock />
         </div>
       </section>
 
@@ -740,6 +655,223 @@ function ScreenshotCard({ image, alt, kicker, title, text }) {
       </div>
     </div>
   );
+}
+
+const CARD_PUNTOS = [
+  {
+    n: 1, color: "#ef4444", bg: "rgba(239,68,68,0.12)", x: "22%", y: "38%",
+    nombre: "Cojinete delantero rotor", lubricante: "Shell Omala S2 G 220",
+    cantidad: "15 ml", frecuencia: "Diaria", metodo: "Aceitera",
+  },
+  {
+    n: 2, color: "#f97316", bg: "rgba(249,115,22,0.12)", x: "62%", y: "38%",
+    nombre: "Cojinete trasero rotor", lubricante: "Mobil SHC 220",
+    cantidad: "15 ml", frecuencia: "Semanal", metodo: "Aceitera",
+  },
+  {
+    n: 3, color: "#eab308", bg: "rgba(234,179,8,0.12)", x: "48%", y: "65%",
+    nombre: "Caja de engranajes", lubricante: "Castrol Tribol 1100/220",
+    cantidad: "250 ml", frecuencia: "Mensual", metodo: "Manual",
+  },
+  {
+    n: 4, color: "#22c55e", bg: "rgba(34,197,94,0.12)", x: "78%", y: "52%",
+    nombre: "Sistema de válvulas", lubricante: "Aeroshell Grease 7",
+    cantidad: "5 g", frecuencia: "Trimestral", metodo: "Pistola de engrase",
+  },
+]
+
+function InteractiveCardMock() {
+  const [hovered, setHovered] = useState(null)
+
+  return (
+    <div style={cardVisualBlock}>
+      {/* Header */}
+      <div style={cardMockHeader}>
+        <div style={cardMockLogo}>
+          <svg viewBox="0 0 64 64" fill="none" style={{ width: 28, height: 28 }}>
+            <rect width="64" height="64" rx="10" fill="#f97316" />
+            <path d="M16 48V20h10c4 0 7 1 9 3s3 5 3 9c0 4-1 7-3 9s-5 3-9 3H16z" fill="#080e1a" />
+            <path d="M22 42V26h4c2 0 3 .5 4 1.5S31 30 31 32c0 3-.5 5-1.5 6.5S27 40 25 40h-1v2h-2z" fill="#f97316" />
+            <rect x="38" y="20" width="6" height="28" fill="#080e1a" />
+          </svg>
+        </div>
+        <div>
+          <div style={cardMockTitle}>LubriPlan Card</div>
+          <div style={cardMockSub}>Cartas de lubricación</div>
+        </div>
+        <span style={cardMockBadge}>Campo</span>
+      </div>
+
+      {/* Equipment */}
+      <div style={cardMockEquipo}>
+        <div style={cardMockEquipoCode}>CMP-001</div>
+        <div style={cardMockEquipoName}>Compresor de tornillo KAESER SK-19</div>
+        <div style={cardMockEquipoArea}>Sala de compresores</div>
+      </div>
+
+      {/* Interactive image area — overflow visible so tooltips can escape */}
+      <div style={{ ...cardMockImageArea, overflow: "visible" }}>
+        {/* Inner visual layer with overflow hidden for rounded corners */}
+        <div style={{
+          position: "absolute", inset: 0, borderRadius: 16, overflow: "hidden",
+          background: "rgba(8,14,26,0.80)", border: "1px solid rgba(255,255,255,0.08)",
+          display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column",
+        }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(249,115,22,0.4)" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+          <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 11, marginTop: 8 }}>
+            Pasá el mouse sobre los puntos
+          </span>
+        </div>
+
+        {/* Interactive dots */}
+        {CARD_PUNTOS.map((p) => {
+          const isActive = hovered === p.n
+          const yNum = parseFloat(p.y)
+          const xNum = parseFloat(p.x)
+          const showAbove = yNum > 45
+          const tipLeft = xNum < 28 ? "0" : xNum > 72 ? "auto" : "50%"
+          const tipRight = xNum > 72 ? "0" : "auto"
+          const tipTransform = xNum >= 28 && xNum <= 72 ? "translateX(-50%)" : "none"
+
+          return (
+            <div
+              key={p.n}
+              onMouseEnter={() => setHovered(p.n)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                position: "absolute",
+                left: p.x, top: p.y,
+                transform: `translate(-50%, -50%) scale(${isActive ? 1.35 : 1})`,
+                width: 26, height: 26, borderRadius: "50%",
+                background: p.color,
+                border: isActive ? "2px solid rgba(255,255,255,0.85)" : "2px solid rgba(0,0,0,0.4)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 900, color: "#080e1a",
+                boxShadow: isActive
+                  ? `0 0 0 6px ${p.color}25, 0 0 18px ${p.color}`
+                  : `0 0 10px ${p.color}80`,
+                zIndex: isActive ? 30 : 10,
+                cursor: "pointer",
+                transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+              }}
+            >
+              {p.n}
+
+              {/* Tooltip */}
+              {isActive && (
+                <div style={{
+                  position: "absolute",
+                  ...(showAbove ? { bottom: "calc(100% + 12px)" } : { top: "calc(100% + 12px)" }),
+                  left: tipLeft, right: tipRight,
+                  transform: tipTransform,
+                  width: 216,
+                  background: "linear-gradient(160deg, rgba(17,24,39,0.99), rgba(8,14,26,0.99))",
+                  border: `1px solid ${p.color}35`,
+                  borderTop: showAbove ? `2px solid ${p.color}` : "1px solid rgba(255,255,255,0.06)",
+                  borderBottom: showAbove ? "1px solid rgba(255,255,255,0.06)" : `2px solid ${p.color}`,
+                  borderRadius: 12,
+                  padding: "11px 13px",
+                  zIndex: 50,
+                  pointerEvents: "none",
+                  boxShadow: `0 20px 48px rgba(2,6,23,0.85), 0 0 0 1px rgba(255,255,255,0.03)`,
+                }}>
+                  <div style={{ color: p.color, fontSize: 9, fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+                    Punto {p.n}
+                  </div>
+                  <div style={{ color: "#f8fafc", fontSize: 13, fontWeight: 800, marginTop: 3, lineHeight: 1.3 }}>
+                    {p.nombre}
+                  </div>
+                  <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 5, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 9 }}>
+                    {[
+                      { label: "Lubricante", val: p.lubricante },
+                      { label: "Cantidad", val: p.cantidad },
+                      { label: "Método", val: p.metodo },
+                    ].map(({ label, val }) => (
+                      <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 10, color: "#64748b", fontWeight: 700, flexShrink: 0 }}>{label}</span>
+                        <span style={{ fontSize: 11, color: "#cbd5e1", fontWeight: 800, textAlign: "right" }}>{val}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 10, color: "#64748b", fontWeight: 700 }}>Frecuencia</span>
+                      <span style={{ fontSize: 10, fontWeight: 900, padding: "2px 8px", borderRadius: 5, background: p.bg, color: p.color }}>
+                        {p.frecuencia}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Points list — hover synced with dots */}
+      <div style={cardMockPoints}>
+        {CARD_PUNTOS.slice(0, 3).map((p) => {
+          const isActive = hovered === p.n
+          return (
+            <div
+              key={p.n}
+              style={{
+                ...cardMockPoint,
+                background: isActive ? p.bg : "rgba(8,14,26,0.55)",
+                border: isActive ? `1px solid ${p.color}35` : "1px solid rgba(255,255,255,0.06)",
+                transition: "background 0.18s, border-color 0.18s",
+                cursor: "default",
+              }}
+              onMouseEnter={() => setHovered(p.n)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              <div style={{
+                ...cardMockPointNum,
+                background: p.color,
+                transform: isActive ? "scale(1.18)" : "scale(1)",
+                transition: "transform 0.18s",
+              }}>
+                {p.n}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={cardMockPointName}>{p.nombre}</div>
+                {isActive && (
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 1, fontWeight: 600 }}>
+                    {p.lubricante} · {p.cantidad}
+                  </div>
+                )}
+              </div>
+              <span style={{ ...cardMockPointFrec, color: p.color, background: p.bg }}>{p.frecuencia}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* QR row */}
+      <div style={cardMockQRRow}>
+        <div style={cardMockQRBox}>
+          <svg viewBox="0 0 21 21" width="48" height="48" fill="none">
+            <rect x="1" y="1" width="8" height="8" rx="1" fill="#f97316"/>
+            <rect x="3" y="3" width="4" height="4" fill="#080e1a"/>
+            <rect x="12" y="1" width="8" height="8" rx="1" fill="#f97316"/>
+            <rect x="14" y="3" width="4" height="4" fill="#080e1a"/>
+            <rect x="1" y="12" width="8" height="8" rx="1" fill="#f97316"/>
+            <rect x="3" y="14" width="4" height="4" fill="#080e1a"/>
+            <rect x="12" y="12" width="2" height="2" fill="#f97316"/>
+            <rect x="15" y="12" width="2" height="2" fill="#f97316"/>
+            <rect x="18" y="12" width="2" height="2" fill="#f97316"/>
+            <rect x="12" y="15" width="2" height="2" fill="#f97316"/>
+            <rect x="15" y="15" width="5" height="5" rx="0.5" fill="#f97316"/>
+          </svg>
+        </div>
+        <div>
+          <div style={cardMockQRLabel}>Escanear para acceder</div>
+          <div style={cardMockQRSub}>card.lubriplan.com?equipo=CMP-001</div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /* ═══════════════════════════════════════════════
