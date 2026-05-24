@@ -33,6 +33,7 @@ const NotificationsPage       = lazy(() => import("./pages/NotificationsPage"));
 const MonthlyIntelligentReport = lazy(() => import("./pages/reports/MonthlyIntelligentReport"));
 const SettingsPage            = lazy(() => import("./pages/SettingsPage"));
 const AdminOnboardingPage     = lazy(() => import("./pages/AdminOnboardingPage"));
+const LandingChatLogsPage     = lazy(() => import("./pages/admin/LandingChatLogsPage"));
 const TechnicalAssistantPage  = lazy(() => import("./pages/TechnicalAssistantPage"));
 const CorporateDashboard      = lazy(() => import("./pages/CorporateDashboard"));
 const LubricationCardPage     = lazy(() => import("./pages/LubricationCardPage"));
@@ -63,6 +64,7 @@ export default function App() {
 
         <Route path="/admin/links/technicians" element={<ProtectedRoute roles={["ADMIN"]}><AdminTechLinksPage /></ProtectedRoute>} />
         <Route path="/admin/onboarding" element={<ProtectedRoute roles={["ADMIN"]}><AdminOnboardingPage /></ProtectedRoute>} />
+        <Route path="/admin/landing-leads" element={<ProtectedRoute roles={["ADMIN"]}><LandingChatLogsPage /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute roles={["ADMIN"]}><UsersPage /></ProtectedRoute>} />
 
         <Route path="/inventory" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><InventoryPage /></ProtectedRoute>} />

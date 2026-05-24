@@ -648,6 +648,16 @@ export default function MainLayout({ children }) {
             </NavLink>
           )}
 
+          {role === "ADMIN" && (
+            <NavLink className="lpSideLink" to="/admin/landing-leads" style={navLinkStyle("/admin/landing-leads")}>
+              <span style={sideRow}>
+                <span style={navIconStyle("/admin/landing-leads")}>
+                  <Icon name="list" />
+                </span>
+                <span style={sideText}>Leads Landing</span>
+              </span>
+            </NavLink>
+          )}
 
           {can.settings && (
             <NavLink className="lpSideLink" to="/settings" style={navLinkStyle("/settings")}>
@@ -903,6 +913,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/users")) return "Usuarios";
   if (pathname.startsWith("/admin/links")) return "Vínculos";
   if (pathname.startsWith("/admin/onboarding")) return "Alta cliente";
+  if (pathname.startsWith("/admin/landing-leads")) return "Leads Landing";
   if (pathname.startsWith("/settings")) return "Ajustes";
   if (pathname.startsWith("/notifications")) return "Notificaciones";
   if (pathname.startsWith("/technical-assistant")) return "Asistente tecnico";

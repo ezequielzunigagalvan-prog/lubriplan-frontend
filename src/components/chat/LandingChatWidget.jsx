@@ -12,6 +12,10 @@ const SUGGESTIONS = [
   { icon: "🔍", label: "Quiero conocer LubriPlan" },
 ];
 
+function genSessionId() {
+  return `lc_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export default function LandingChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -22,6 +26,7 @@ export default function LandingChatWidget() {
   const panelRef = useRef(null);
   const textareaRef = useRef(null);
   const bottomRef = useRef(null);
+  const sessionIdRef = useRef(genSessionId());
 
   const canSend = value.trim().length > 0 && !loading;
 
@@ -58,7 +63,7 @@ export default function LandingChatWidget() {
     setLoading(true);
     setError(null);
     try {
-      const data = await sendLandingChatMessage(outbound);
+      const data = await sendLandingChatMessage(outbound, sessionIdRef.current);
       if (data?.reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       }
