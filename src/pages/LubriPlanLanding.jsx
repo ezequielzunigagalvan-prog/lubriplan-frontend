@@ -263,45 +263,6 @@ export default function LubriPlanLanding() {
         <div style={signalGrid}>{signals.map((item) => <SignalCard key={item.title} {...item} />)}</div>
       </section>
 
-      {/* ── Video demo ── */}
-      <section style={videoSection}>
-        <div style={sectionHead}>
-          <div style={sectionKicker}>
-            <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
-            EL PRODUCTO EN ACCIÓN
-          </div>
-          <h2 style={sectionTitle}>Mira LubriPlan funcionando en planta</h2>
-          <p style={sectionText}>
-            Del plan a la ejecución real: rutas, condición, consumo e inventario, todo en una sola plataforma.
-          </p>
-        </div>
-
-        <div style={videoOuterWrap}>
-          <div style={videoGlowRing} />
-          <div style={videoWrap}>
-            <video
-              src="/lubriplan-demo.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-              style={videoEl}
-            />
-          </div>
-          <div style={videoBadgeRow}>
-            <span style={videoBadge}>
-              <span style={videoDot} />
-              Producto real · sin edición
-            </span>
-            <span style={videoBadge}>
-              <Icon name="drop" style={{ width: 12, height: 12 }} />
-              Gestión completa de lubricación industrial
-            </span>
-          </div>
-        </div>
-      </section>
-
       {/* ── El problema ── */}
       <section style={sectionAlt}>
         <div style={twoCol}>
@@ -348,6 +309,42 @@ export default function LubriPlanLanding() {
           <h2 style={sectionTitle}>De la planeación al control ejecutivo en cuatro pasos</h2>
         </div>
         <div style={journeyGrid}>{journey.map(([n, title, text]) => <JourneyCard key={n} n={n} title={title} text={text} />)}</div>
+      </section>
+
+      {/* ── Video demo ── */}
+      <section style={videoSection}>
+        <div style={sectionHead}>
+          <div style={sectionKicker}>
+            <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
+            EL PRODUCTO EN ACCIÓN
+          </div>
+          <h2 style={sectionTitle}>Mira LubriPlan funcionando en planta</h2>
+          <p style={sectionText}>
+            Del plan a la ejecución real: rutas, condición, consumo e inventario, todo en una sola plataforma.
+          </p>
+        </div>
+
+        <div style={videoOuterWrap}>
+          <div style={videoGlowRing} />
+          <div style={videoWrap}>
+            <video
+              src="/lubriplan-demo.mp4"
+              playsInline
+              controls
+              style={videoEl}
+            />
+          </div>
+          <div style={videoBadgeRow}>
+            <span style={videoBadge}>
+              <span style={videoDot} />
+              Producto real · sin edición
+            </span>
+            <span style={videoBadge}>
+              <Icon name="drop" style={{ width: 12, height: 12 }} />
+              Gestión completa de lubricación industrial
+            </span>
+          </div>
+        </div>
       </section>
 
       {/* ── Capacidades ── */}
@@ -1214,13 +1211,14 @@ const videoSection = {
 const videoOuterWrap = {
   position: "relative",
   marginTop: 28,
+  maxWidth: 780,
 };
 
 const videoGlowRing = {
   position: "absolute",
   inset: -2,
   borderRadius: 28,
-  background: "radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.22) 0%, transparent 65%)",
+  background: "radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.18) 0%, transparent 65%)",
   pointerEvents: "none",
   zIndex: 0,
 };
@@ -1228,20 +1226,20 @@ const videoGlowRing = {
 const videoWrap = {
   position: "relative",
   zIndex: 1,
-  borderRadius: 24,
+  borderRadius: 18,
   overflow: "hidden",
   borderTop: "3px solid rgba(249,115,22,0.65)",
   borderRight: "1px solid rgba(249,115,22,0.20)",
   borderBottom: "1px solid rgba(249,115,22,0.20)",
   borderLeft: "1px solid rgba(249,115,22,0.20)",
-  boxShadow: "0 40px 100px rgba(2,6,23,0.55), 0 0 0 1px rgba(255,255,255,0.04)",
+  boxShadow: "0 28px 70px rgba(2,6,23,0.50), 0 0 0 1px rgba(255,255,255,0.04)",
   background: "#080e1a",
 };
 
 const videoEl = {
   width: "100%",
   display: "block",
-  maxHeight: "82vh",
+  maxHeight: "60vh",
   objectFit: "contain",
   background: "#080e1a",
 };
