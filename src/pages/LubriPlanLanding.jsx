@@ -263,6 +263,45 @@ export default function LubriPlanLanding() {
         <div style={signalGrid}>{signals.map((item) => <SignalCard key={item.title} {...item} />)}</div>
       </section>
 
+      {/* ── Video demo ── */}
+      <section style={videoSection}>
+        <div style={sectionHead}>
+          <div style={sectionKicker}>
+            <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
+            EL PRODUCTO EN ACCIÓN
+          </div>
+          <h2 style={sectionTitle}>Mira LubriPlan funcionando en planta</h2>
+          <p style={sectionText}>
+            Del plan a la ejecución real: rutas, condición, consumo e inventario, todo en una sola plataforma.
+          </p>
+        </div>
+
+        <div style={videoOuterWrap}>
+          <div style={videoGlowRing} />
+          <div style={videoWrap}>
+            <video
+              src="/lubriplan-demo.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              style={videoEl}
+            />
+          </div>
+          <div style={videoBadgeRow}>
+            <span style={videoBadge}>
+              <span style={videoDot} />
+              Producto real · sin edición
+            </span>
+            <span style={videoBadge}>
+              <Icon name="drop" style={{ width: 12, height: 12 }} />
+              Gestión completa de lubricación industrial
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* ── El problema ── */}
       <section style={sectionAlt}>
         <div style={twoCol}>
@@ -1165,6 +1204,76 @@ const cardMockQRBox = {
 };
 const cardMockQRLabel = { fontSize: 12, fontWeight: 900, color: "#fdba74" };
 const cardMockQRSub = { fontSize: 10, color: "#64748b", marginTop: 4, wordBreak: "break-all", fontFamily: "monospace" };
+
+/* ── Video demo section ── */
+const videoSection = {
+  maxWidth: 1320, margin: "0 auto", padding: "48px 24px",
+  borderTop: "1px solid rgba(255,255,255,0.05)",
+};
+
+const videoOuterWrap = {
+  position: "relative",
+  marginTop: 28,
+};
+
+const videoGlowRing = {
+  position: "absolute",
+  inset: -2,
+  borderRadius: 28,
+  background: "radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.22) 0%, transparent 65%)",
+  pointerEvents: "none",
+  zIndex: 0,
+};
+
+const videoWrap = {
+  position: "relative",
+  zIndex: 1,
+  borderRadius: 24,
+  overflow: "hidden",
+  borderTop: "3px solid rgba(249,115,22,0.65)",
+  borderRight: "1px solid rgba(249,115,22,0.20)",
+  borderBottom: "1px solid rgba(249,115,22,0.20)",
+  borderLeft: "1px solid rgba(249,115,22,0.20)",
+  boxShadow: "0 40px 100px rgba(2,6,23,0.55), 0 0 0 1px rgba(255,255,255,0.04)",
+  background: "#080e1a",
+};
+
+const videoEl = {
+  width: "100%",
+  display: "block",
+  maxHeight: "82vh",
+  objectFit: "contain",
+  background: "#080e1a",
+};
+
+const videoBadgeRow = {
+  marginTop: 16,
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
+const videoBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 14px",
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.10)",
+  color: "#94a3b8",
+  fontSize: 12,
+  fontWeight: 800,
+};
+
+const videoDot = {
+  width: 7,
+  height: 7,
+  borderRadius: "50%",
+  background: "#22c55e",
+  boxShadow: "0 0 0 3px rgba(34,197,94,0.22)",
+  flexShrink: 0,
+};
 
 
 
