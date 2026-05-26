@@ -456,7 +456,7 @@ setForm((prev) => ({
         form.usedQuantity === "" || form.usedQuantity == null ? null : Number(form.usedQuantity);
 
       const payload = {
-        executedAt: form.executedAt,
+        executedAt: toLocalYMD(new Date()),
         technicianId:
   isTechUser && Number.isFinite(loggedTechId)
     ? loggedTechId
@@ -481,9 +481,9 @@ setForm((prev) => ({
         evidenceNote: form.evidenceNote?.trim() || null,
       };
 
-      await completeExecution(Number(executionId), payload);
+      const result = await completeExecution(Number(executionId), payload);
 
-      const fresh = await getExecutionById(Number(executionId));
+      const fresh = result?.item ?? execution;
       setExecution(fresh);
       onSaved?.(fresh);
       onClose?.();
@@ -669,18 +669,6 @@ setForm((prev) => ({
               </Field>
 
               <div style={formGrid2}>
-                <Field label="Fecha de realización *">
-                  <input
-                    type="date"
-                    name="executedAt"
-                    value={form.executedAt}
-                    onChange={handleChange}
-                    max={today}
-                    style={input}
-                    disabled={saving || isCompleted}
-                  />
-                </Field>
-
                 <Field label="Técnico responsable *">
                   <select
   name="technicianId"
