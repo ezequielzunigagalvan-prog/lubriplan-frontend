@@ -88,6 +88,11 @@ export default function CompleteExecutionModal({ open, executionId, onClose, onS
   const aliveRef = useRef(true);
   const today = toLocalYMD(new Date());
 
+  const recognitionRef = useRef(null);
+  const voiceBaseRef = useRef("");
+  const [isListeningObs, setIsListeningObs] = useState(false);
+  const [isListeningNote, setIsListeningNote] = useState(false);
+
   const { user } = useAuth();
 const role = String(user?.role || "").toUpperCase();
 const isTechUser = role === "TECHNICIAN";
@@ -290,6 +295,10 @@ setForm((prev) => ({
 
     return () => {
       aliveRef.current = false;
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
     };
   }, [open, executionId, today]);
 
@@ -495,6 +504,46 @@ setForm((prev) => ({
     }
   };
 
+  const toggleVoice = (field, currentValue, setListening) => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setErr("Tu navegador no soporta voz a texto. Usa Chrome o Edge.");
+      return;
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+    voiceBaseRef.current = currentValue || "";
+    const rec = new SR();
+    rec.lang = "es-MX";
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onstart = () => setListening(true);
+    rec.onresult = (e) => {
+      let finals = "";
+      let interim = "";
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finals += e.results[i][0].transcript;
+        else interim += e.results[i][0].transcript;
+      }
+      const base = voiceBaseRef.current;
+      const sep = base.trim() ? " " : "";
+      setForm((p) => ({ ...p, [field]: base + sep + finals + interim }));
+    };
+    rec.onerror = (ev) => {
+      setErr(ev.error === "not-allowed" ? "Permiso de micrófono denegado." : "Error en reconocimiento de voz.");
+      setListening(false);
+      recognitionRef.current = null;
+    };
+    rec.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+    };
+    recognitionRef.current = rec;
+    rec.start();
+  };
+
   return (
     <div style={overlay} onMouseDown={onClose}>
       <div style={modal} onMouseDown={(e) => e.stopPropagation()}>
@@ -658,14 +707,26 @@ setForm((prev) => ({
               </div>
 
               <Field label="Observaciones">
-                <textarea
-                  name="observations"
-                  value={form.observations}
-                  onChange={handleChange}
-                  rows={2}
-                  style={textarea}
-                  disabled={saving || isCompleted}
-                />
+                <div style={{ position: "relative" }}>
+                  <textarea
+                    name="observations"
+                    value={form.observations}
+                    onChange={handleChange}
+                    rows={2}
+                    style={{ ...textarea, paddingRight: 46 }}
+                    disabled={saving || isCompleted}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toggleVoice("observations", form.observations, setIsListeningObs)}
+                    disabled={saving || isCompleted}
+                    title={isListeningObs ? "Detener dictado" : "Dictar observaciones por voz"}
+                    style={isListeningObs ? micBtnActive : micBtn}
+                  >
+                    {isListeningObs ? "⏹" : "🎙"}
+                  </button>
+                </div>
+                {isListeningObs && <div style={micHint}>Escuchando... habla ahora</div>}
               </Field>
 
               <div style={formGrid2}>
@@ -958,13 +1019,25 @@ setForm((prev) => ({
 ) : null}
 
                 <Field label="Nota de evidencia (opcional)">
-                  <textarea
-                    value={form.evidenceNote || ""}
-                    onChange={(e) => setForm((p) => ({ ...p, evidenceNote: e.target.value }))}
-                    rows={2}
-                    style={textarea}
-                    disabled={saving || isCompleted}
-                  />
+                  <div style={{ position: "relative" }}>
+                    <textarea
+                      value={form.evidenceNote || ""}
+                      onChange={(e) => setForm((p) => ({ ...p, evidenceNote: e.target.value }))}
+                      rows={2}
+                      style={{ ...textarea, paddingRight: 46 }}
+                      disabled={saving || isCompleted}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleVoice("evidenceNote", form.evidenceNote, setIsListeningNote)}
+                      disabled={saving || isCompleted}
+                      title={isListeningNote ? "Detener dictado" : "Dictar nota por voz"}
+                      style={isListeningNote ? micBtnActive : micBtn}
+                    >
+                      {isListeningNote ? "⏹" : "🎙"}
+                    </button>
+                  </div>
+                  {isListeningNote && <div style={micHint}>Escuchando... habla ahora</div>}
                 </Field>
               </div>
 
@@ -1741,6 +1814,48 @@ const conditionBtn = {
   transition: "all 140ms ease",
   boxShadow: "0 6px 16px rgba(2,6,23,0.05)",
   fontWeight: 950,
+};
+
+/* --- Voice input --- */
+const micBtn = {
+  position: "absolute",
+  right: 8,
+  top: 8,
+  width: 30,
+  height: 30,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "rgba(255,255,255,0.95)",
+  cursor: "pointer",
+  display: "grid",
+  placeItems: "center",
+  fontSize: 15,
+  boxShadow: "0 2px 8px rgba(2,6,23,0.08)",
+  padding: 0,
+};
+
+const micBtnActive = {
+  position: "absolute",
+  right: 8,
+  top: 8,
+  width: 30,
+  height: 30,
+  borderRadius: 10,
+  border: "1px solid rgba(239,68,68,0.55)",
+  background: "rgba(239,68,68,0.12)",
+  cursor: "pointer",
+  display: "grid",
+  placeItems: "center",
+  fontSize: 15,
+  boxShadow: "0 2px 8px rgba(239,68,68,0.18)",
+  padding: 0,
+};
+
+const micHint = {
+  marginTop: 4,
+  fontSize: 12,
+  fontWeight: 850,
+  color: "#dc2626",
 };
 
 /* --- Big submit button --- */
