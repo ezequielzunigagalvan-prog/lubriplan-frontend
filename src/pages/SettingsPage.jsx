@@ -256,6 +256,7 @@ export default function SettingsPage() {
   const [conditionReportEmailEnabled, setConditionReportEmailEnabled] = useState(true);
   const [overdueSummaryEmailEnabled, setOverdueSummaryEmailEnabled] = useState(true);
   const [monthlyReportEmailEnabled, setMonthlyReportEmailEnabled] = useState(true);
+  const [monthlyTechSummaryEnabled, setMonthlyTechSummaryEnabled] = useState(false);
 
   // Avanzado
   const [overloadWindowDays, setOverloadWindowDays] = useState(7);
@@ -278,6 +279,7 @@ export default function SettingsPage() {
       conditionReportEmailEnabled: Boolean(conditionReportEmailEnabled),
       overdueSummaryEmailEnabled: Boolean(overdueSummaryEmailEnabled),
       monthlyReportEmailEnabled: Boolean(monthlyReportEmailEnabled),
+      monthlyTechSummaryEnabled: Boolean(monthlyTechSummaryEnabled),
       overloadWindowDays: toInt(overloadWindowDays, 1, 60),
       overloadOverdueLookbackDays: toInt(overloadOverdueLookbackDays, 1, 365),
       overloadCapacityPerDay: toInt(overloadCapacityPerDay, 1, 50),
@@ -296,6 +298,7 @@ export default function SettingsPage() {
       conditionReportEmailEnabled: Boolean(original.conditionReportEmailEnabled ?? true),
       overdueSummaryEmailEnabled: Boolean(original.overdueSummaryEmailEnabled ?? true),
       monthlyReportEmailEnabled: Boolean(original.monthlyReportEmailEnabled ?? true),
+      monthlyTechSummaryEnabled: Boolean(original.monthlyTechSummaryEnabled ?? false),
       overloadWindowDays: toInt(original.overloadWindowDays ?? 7, 1, 60),
       overloadOverdueLookbackDays: toInt(original.overloadOverdueLookbackDays ?? 30, 1, 365),
       overloadCapacityPerDay: toInt(original.overloadCapacityPerDay ?? 6, 1, 50),
@@ -308,7 +311,7 @@ export default function SettingsPage() {
     original, executionEvidenceRequired, preventNegativeStock, lowStockWarningEnabled,
     technicianOverloadEnabled, predictiveAlertsEnabled, aiSummaryEnabled,
     criticalActivityEmailEnabled, conditionReportEmailEnabled,
-    overdueSummaryEmailEnabled, monthlyReportEmailEnabled,
+    overdueSummaryEmailEnabled, monthlyReportEmailEnabled, monthlyTechSummaryEnabled,
     overloadWindowDays, overloadOverdueLookbackDays, overloadCapacityPerDay,
     overloadWarnRatio, overloadCriticalRatio,
   ]);
@@ -329,6 +332,7 @@ export default function SettingsPage() {
     setConditionReportEmailEnabled(Boolean(ss.conditionReportEmailEnabled ?? true));
     setOverdueSummaryEmailEnabled(Boolean(ss.overdueSummaryEmailEnabled ?? true));
     setMonthlyReportEmailEnabled(Boolean(ss.monthlyReportEmailEnabled ?? true));
+    setMonthlyTechSummaryEnabled(Boolean(ss.monthlyTechSummaryEnabled ?? false));
 
     setOverloadWindowDays(toInt(ss.overloadWindowDays ?? 7, 1, 60));
     setOverloadOverdueLookbackDays(toInt(ss.overloadOverdueLookbackDays ?? 30, 1, 365));
@@ -422,6 +426,7 @@ export default function SettingsPage() {
         conditionReportEmailEnabled: Boolean(conditionReportEmailEnabled),
         overdueSummaryEmailEnabled: Boolean(overdueSummaryEmailEnabled),
         monthlyReportEmailEnabled: Boolean(monthlyReportEmailEnabled),
+        monthlyTechSummaryEnabled: Boolean(monthlyTechSummaryEnabled),
         overloadWindowDays: toInt(overloadWindowDays, 1, 60),
         overloadOverdueLookbackDays: toInt(overloadOverdueLookbackDays, 1, 365),
         overloadCapacityPerDay: toInt(overloadCapacityPerDay, 1, 50),
@@ -667,6 +672,17 @@ export default function SettingsPage() {
                       <Toggle
                         checked={monthlyReportEmailEnabled}
                         onChange={setMonthlyReportEmailEnabled}
+                        disabled={!isAdmin || saving}
+                      />
+                    }
+                  />
+                  <RowItem
+                    title="Resumen mensual a técnicos"
+                    description="El último día de cada mes los técnicos reciben una notificación con su cumplimiento y un mensaje según su desempeño."
+                    right={
+                      <Toggle
+                        checked={monthlyTechSummaryEnabled}
+                        onChange={setMonthlyTechSummaryEnabled}
                         disabled={!isAdmin || saving}
                       />
                     }
