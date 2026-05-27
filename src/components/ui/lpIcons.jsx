@@ -588,6 +588,38 @@ export function Icon({
         </svg>
       );
 
+    case "mic":
+      return (
+        <svg {...props}>
+          <T />
+          <rect x="9" y="2" width="6" height="12" rx="3" />
+          <path d="M19 10a7 7 0 0 1-14 0" />
+          <path d="M12 19v3" />
+          <path d="M9 22h6" />
+        </svg>
+      );
+
+    case "micOff":
+      return (
+        <svg {...props}>
+          <T />
+          <line x1="2" y1="2" x2="22" y2="22" />
+          <path d="M18.9 10A7 7 0 0 1 12 17a7 7 0 0 1-4.7-1.8" />
+          <path d="M12 19v3" />
+          <path d="M9 22h6" />
+          <path d="M9 2a3 3 0 0 0-3 3v4" />
+          <path d="M15 9.4V5a3 3 0 0 0-6 0" />
+        </svg>
+      );
+
+    case "squareStop":
+      return (
+        <svg {...props}>
+          <T />
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+        </svg>
+      );
+
     // ===== FALLBACK =====
     default:
       return (

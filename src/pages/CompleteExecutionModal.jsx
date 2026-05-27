@@ -723,7 +723,7 @@ setForm((prev) => ({
                     title={isListeningObs ? "Detener dictado" : "Dictar observaciones por voz"}
                     style={isListeningObs ? micBtnActive : micBtn}
                   >
-                    {isListeningObs ? "⏹" : "🎙"}
+                    <Icon name={isListeningObs ? "squareStop" : "mic"} size="sm" />
                   </button>
                 </div>
                 {isListeningObs && <div style={micHint}>Escuchando... habla ahora</div>}
@@ -1034,7 +1034,7 @@ setForm((prev) => ({
                       title={isListeningNote ? "Detener dictado" : "Dictar nota por voz"}
                       style={isListeningNote ? micBtnActive : micBtn}
                     >
-                      {isListeningNote ? "⏹" : "🎙"}
+                      <Icon name={isListeningNote ? "squareStop" : "mic"} size="sm" />
                     </button>
                   </div>
                   {isListeningNote && <div style={micHint}>Escuchando... habla ahora</div>}
