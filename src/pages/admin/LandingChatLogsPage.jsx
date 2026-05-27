@@ -1,10 +1,12 @@
 // src/pages/admin/LandingChatLogsPage.jsx
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { getLandingChatLogs, deleteLandingChatLog } from "../../services/landingChatLogsService.js";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 export default function LandingChatLogsPage() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [total, setTotal] = useState(0);
   const [hotOnly, setHotOnly] = useState(false);
@@ -57,6 +59,9 @@ export default function LandingChatLogsPage() {
           </div>
         </div>
         <div style={headerActions}>
+          <button type="button" onClick={() => navigate("/dashboard")} style={backBtn}>
+            ← Regresar
+          </button>
           <button
             type="button"
             onClick={() => setHotOnly(false)}
@@ -218,6 +223,12 @@ const filterBtn = {
 const filterBtnActive = {
   background: "#0f172a", color: "#f97316",
   border: "1px solid #0f172a",
+};
+
+const backBtn = {
+  padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(226,232,240,0.95)",
+  background: "#f8fafc", cursor: "pointer", color: "#475569",
+  fontFamily: FONT, fontWeight: 700, fontSize: 13,
 };
 
 const refreshBtn = {

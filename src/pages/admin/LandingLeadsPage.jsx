@@ -1,5 +1,6 @@
 // src/pages/admin/LandingLeadsPage.jsx
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { getLandingLeads, updateLandingLead } from "../../services/landingLeadsService.js";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -16,6 +17,7 @@ function statusStyle(value) {
 }
 
 export default function LandingLeadsPage() {
+  const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
   const [total, setTotal] = useState(0);
   const [source, setSource] = useState("");
@@ -65,6 +67,9 @@ export default function LandingLeadsPage() {
           </div>
         </div>
         <div style={headerActions}>
+          <button type="button" onClick={() => navigate("/dashboard")} style={backBtn}>
+            ← Regresar
+          </button>
           {/* Source filter */}
           <div style={filterGroup}>
             <span style={filterLabel}>Origen</span>
@@ -212,6 +217,12 @@ const headerActions = { display: "flex", gap: 10, alignItems: "center", flexWrap
 const filterGroup = { display: "flex", gap: 5, alignItems: "center" };
 
 const filterLabel = { fontSize: 11, fontWeight: 800, color: "#94a3b8", marginRight: 2 };
+
+const backBtn = {
+  padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(226,232,240,0.95)",
+  background: "#f8fafc", cursor: "pointer", color: "#475569",
+  fontFamily: FONT, fontWeight: 700, fontSize: 13,
+};
 
 const filterBtn = {
   padding: "7px 13px", borderRadius: 9,
