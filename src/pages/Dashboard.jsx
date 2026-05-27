@@ -4021,6 +4021,84 @@ function TechnicianPerfectPanel(props) {
   );
 }
 
+function OfflineStatusChip({ offlineInfo, syncing }) {
+  const pending = Number(offlineInfo?.pendingCount || 0);
+  const failed  = Number(offlineInfo?.failedCount  || 0);
+  const online  = Boolean(offlineInfo?.isOnline);
+
+  let dotColor = "#22c55e";
+  let label    = "En línea";
+  let chipBg   = "rgba(34,197,94,0.10)";
+  let chipBorder = "rgba(34,197,94,0.28)";
+  let textColor = "#166534";
+
+  if (!online) {
+    dotColor   = "#f97316";
+    label      = "Sin conexión";
+    chipBg     = "rgba(249,115,22,0.10)";
+    chipBorder = "rgba(249,115,22,0.30)";
+    textColor  = "#9a3412";
+  } else if (failed > 0) {
+    dotColor   = "#ef4444";
+    label      = `${failed} error${failed > 1 ? "es" : ""}`;
+    chipBg     = "rgba(239,68,68,0.10)";
+    chipBorder = "rgba(239,68,68,0.28)";
+    textColor  = "#991b1b";
+  } else if (syncing) {
+    label = "Sincronizando...";
+  } else if (pending > 0) {
+    label = `${pending} por subir`;
+  }
+
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 6,
+      padding: "5px 10px", borderRadius: 999,
+      background: chipBg, border: `1px solid ${chipBorder}`,
+      color: textColor, fontWeight: 900, fontSize: 12,
+    }}>
+      <span style={{
+        width: 8, height: 8, borderRadius: 999,
+        background: dotColor, flexShrink: 0,
+        boxShadow: `0 0 0 2px ${dotColor}33`,
+      }} />
+      {label}
+    </span>
+  );
+}
+
+function OfflineDetailBanner({ offlineInfo, syncing }) {
+  const pending = Number(offlineInfo?.pendingCount || 0);
+  const failed  = Number(offlineInfo?.failedCount  || 0);
+  const online  = Boolean(offlineInfo?.isOnline);
+
+  const parts = [];
+  if (pending > 0) parts.push(`${pending} actividad${pending > 1 ? "es" : ""} en cola`);
+  if (failed  > 0) parts.push(`${failed} con error`);
+  if (!online)     parts.push("se subirán al reconectar");
+  else if (syncing) parts.push("sincronizando...");
+
+  return (
+    <div style={{
+      marginBottom: 12, display: "flex", alignItems: "center", gap: 10,
+      padding: "10px 14px", borderRadius: 14,
+      background: failed > 0 ? "rgba(239,68,68,0.06)" : "rgba(249,115,22,0.06)",
+      border: `1px solid ${failed > 0 ? "rgba(239,68,68,0.22)" : "rgba(249,115,22,0.22)"}`,
+    }}>
+      <span style={{
+        width: 8, height: 8, borderRadius: 999, flexShrink: 0,
+        background: failed > 0 ? "#ef4444" : online ? "#22c55e" : "#f97316",
+      }} />
+      <span style={{ fontSize: 13, fontWeight: 850, color: "#475569" }}>
+        {parts.join(" · ")}
+        {offlineInfo.lastSyncAt
+          ? <span style={{ color: "#94a3b8", marginLeft: 6 }}>· últ. sync {fmtDateTimeLocal(offlineInfo.lastSyncAt)}</span>
+          : null}
+      </span>
+    </div>
+  );
+}
+
 function TechnicianActivitiesFocusCard({
   month,
   navigate,
@@ -4141,64 +4219,20 @@ function TechnicianActivitiesFocusCard({
       title={title}
       subtitle="Primero ves lo urgente: atrasadas, pendientes y próximas"
       right={
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            <Icon name="tool" size="sm" />
-            Operación
-          </span>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           {offlineInfo?.enabled ? (
-            <>
-              <button
-                type="button"
-                style={{ ...btnAdminGhost, minHeight: 42, padding: "10px 14px" }}
-                onClick={onPrepareOffline}
-                disabled={preparingOffline || !offlineInfo.isOnline}
-                title="Guardar actividades para trabajar sin conexión"
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="download" size="sm" />
-                  {preparingOffline ? "Preparando..." : "Preparar modo offline"}
-                </span>
-              </button>
-              <button
-                type="button"
-                style={{ ...btnAdminGhost, minHeight: 42, padding: "10px 14px" }}
-                onClick={onSyncNow}
-                disabled={syncingOffline || !offlineInfo.isOnline}
-                title="Sincronizar pendientes"
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="refresh" size="sm" />
-                  {syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}
-                </span>
-              </button>
-            </>
-          ) : null}
+            <OfflineStatusChip offlineInfo={offlineInfo} syncing={syncingOffline} />
+          ) : (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
+              <Icon name="tool" size="sm" />
+              Operación
+            </span>
+          )}
         </div>
       }
     >
-      {offlineInfo?.enabled ? (
-        <div
-          style={{
-            marginBottom: 12,
-            display: "grid",
-            gap: 4,
-            padding: "12px 14px",
-            borderRadius: 16,
-            border: "1px solid rgba(226,232,240,0.95)",
-            background: "linear-gradient(180deg, rgba(248,250,252,0.96), rgba(255,255,255,0.94))",
-          }}
-        >
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 900, color: offlineInfo.isOnline ? "#166534" : "#9a3412" }}>
-            <span style={{ width: 10, height: 10, borderRadius: 999, background: offlineInfo.isOnline ? "#22c55e" : "#f97316", display: "inline-block" }} />
-            {offlineInfo.isOnline ? "En línea" : "Sin conexión"}
-          </div>
-          <div style={{ fontWeight: 800, color: "#475569", fontSize: 13 }}>
-            Pendientes por sincronizar: <b style={{ color: "#0f172a" }}>{Number(offlineInfo.pendingCount || 0)}</b>
-            {offlineInfo.failedCount ? ` · Con error: ${Number(offlineInfo.failedCount || 0)}` : ""}
-            {offlineInfo.lastSyncAt ? ` · Última sincronización: ${fmtDateTimeLocal(offlineInfo.lastSyncAt)}` : ""}
-          </div>
-        </div>
+      {offlineInfo?.enabled && (offlineInfo.pendingCount > 0 || offlineInfo.failedCount > 0 || !offlineInfo.isOnline) ? (
+        <OfflineDetailBanner offlineInfo={offlineInfo} syncing={syncingOffline} />
       ) : null}
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
