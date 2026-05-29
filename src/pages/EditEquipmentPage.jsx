@@ -1,5 +1,6 @@
 ﻿// src/pages/EditEquipmentPage.jsx
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import {
@@ -191,7 +192,7 @@ export default function EditEquipmentPage() {
 
       await updateEquipment(equipmentId, payload);
 
-      alert("Equipo actualizado ?");
+      toast.success("Equipo actualizado");
       navigate("/equipments");
     } catch (e2) {
       console.error(e2);

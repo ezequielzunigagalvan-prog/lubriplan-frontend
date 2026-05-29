@@ -1,6 +1,7 @@
 ﻿// src/pages/RouteDetailPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import NewRouteModal from "../components/routes/NewRouteModal";
 import { getRoutes, deleteRoute } from "../services/routesService";
@@ -209,8 +210,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
       navigate("/routes");
     } catch (e) {
       console.error(e);
-      // pushToast("error", "Error", "No se pudo eliminar la ruta.");
-      alert("Error eliminando ruta");
+      toast.error(e?.message || "Error eliminando ruta");
     }
   };
 

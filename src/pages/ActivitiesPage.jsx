@@ -1,5 +1,7 @@
 ﻿// src/pages/ActivitiesPage.jsx
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Virtuoso } from "react-virtuoso";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -1153,7 +1155,7 @@ useEffect(() => {
   const handlePrintActivities = useCallback(() => {
     if (!canPrintActivities) return;
     if (!printRows.length) {
-      window.alert("No hay actividades en el rango seleccionado.");
+      toast.error("No hay actividades en el rango seleccionado.");
       return;
     }
 
@@ -1794,32 +1796,32 @@ useEffect(() => {
           </div>
         ) : null}
 
-        <div style={list}>
-          {filtered.map((a, index) => {
-  const isHighlighted = Number(a.id) === Number(highlightExecutionId);
-  const suggestedLabel = index === 0 && a.computedStatus !== "Completada" ? "Atender primero" : "";
-
-  return (
-    <div
-      key={a.id}
-      ref={isHighlighted ? highlightedCardRef : null}
-    >
-      <ActivityCard
-  activity={a}
-  todayYMD={todayYMD}
-  onOpen={() => openComplete(a.id)}
-  techs={techs}
-  onAssignTech={onAssignTech}
-  assigningId={assigningId}
-  canAssignTech={canAssignTech}
-  canCompleteActivities={canCompleteActivities}
-  highlighted={isHighlighted}
-  isMobile={isMobile}
-/>
-    </div>
-  );
-})}
-        </div>
+        {filtered.length > 0 && (
+          <Virtuoso
+            useWindowScroll
+            style={{ marginTop: 14 }}
+            data={filtered}
+            itemContent={(index, a) => {
+              const isHighlighted = Number(a.id) === Number(highlightExecutionId);
+              return (
+                <div style={{ paddingBottom: 10 }} ref={isHighlighted ? highlightedCardRef : null}>
+                  <ActivityCard
+                    activity={a}
+                    todayYMD={todayYMD}
+                    onOpen={() => openComplete(a.id)}
+                    techs={techs}
+                    onAssignTech={onAssignTech}
+                    assigningId={assigningId}
+                    canAssignTech={canAssignTech}
+                    canCompleteActivities={canCompleteActivities}
+                    highlighted={isHighlighted}
+                    isMobile={isMobile}
+                  />
+                </div>
+              );
+            }}
+          />
+        )}
       </div>
     </MainLayout>
   );
@@ -3359,12 +3361,6 @@ const badgeMobile = {
 };
 
 /* ===== List / Cards ===== */
-const list = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 10,
-  marginTop: 14,
-};
 
 const supervisorActivitiesListDesktop = {
   display: "grid",

@@ -1,7 +1,9 @@
 // src/pages/admin/LandingChatLogsPage.jsx
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { getLandingChatLogs, deleteLandingChatLog } from "../../services/landingChatLogsService.js";
+import { useConfirm } from "../../components/ui/ConfirmDialog.jsx";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
@@ -13,6 +15,8 @@ export default function LandingChatLogsPage() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [deleting, setDeleting] = useState(null);
+
+  const confirm = useConfirm();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -30,15 +34,21 @@ export default function LandingChatLogsPage() {
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Eliminar esta conversación?")) return;
+    const ok = await confirm("¿Eliminar esta conversación? No se puede recuperar.", {
+      title: "Eliminar conversación",
+      confirmLabel: "Eliminar",
+      danger: true,
+    });
+    if (!ok) return;
     setDeleting(id);
     try {
       await deleteLandingChatLog(id);
       setLogs((prev) => prev.filter((l) => l.id !== id));
       setTotal((t) => t - 1);
       if (expanded === id) setExpanded(null);
+      toast.success("Conversación eliminada");
     } catch (e) {
-      alert("Error al eliminar");
+      toast.error("Error al eliminar conversación");
     } finally {
       setDeleting(null);
     }

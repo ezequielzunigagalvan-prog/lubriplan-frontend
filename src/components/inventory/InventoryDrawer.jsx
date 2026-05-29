@@ -1,5 +1,6 @@
 // src/components/inventory/InventoryDrawer.jsx
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   createLubricantMovement,
   getLubricantMovements,
@@ -298,7 +299,7 @@ export default function InventoryDrawer({
                   try {
                     await submitMove();
                   } catch (e) {
-                    alert(e?.message || "Error registrando movimiento");
+                    toast.error(e?.message || "Error registrando movimiento");
                   }
                 }}
               >

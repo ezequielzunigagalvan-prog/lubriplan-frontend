@@ -1,25 +1,37 @@
 ﻿import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
 
 import AppGate from "./AppGate";
 import { AuthProvider } from "./context/AuthContext";
 import { PlantProvider } from "./context/PlantContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { ConfirmProvider } from "./components/ui/ConfirmDialog";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { registerPwa } from "./pwa/registerPwa";
 
 registerPwa();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          <PlantProvider>
-            <AppGate />
-          </PlantProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AuthProvider>
+            <PlantProvider>
+              <ConfirmProvider>
+                <AppGate />
+                <Toaster
+                  position="bottom-right"
+                  richColors
+                  toastOptions={{ style: { fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 700, fontSize: 13 } }}
+                />
+              </ConfirmProvider>
+            </PlantProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );

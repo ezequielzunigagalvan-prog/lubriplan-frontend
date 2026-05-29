@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // ✅ Backend espera: IN | OUT | ADJUST
 const TYPES = [
@@ -49,7 +50,7 @@ export default function NewMovementModal({ open, item, onClose, onSave }) {
 
   const handleSubmit = async () => {
     const qty = Number(form.quantity);
-    if (!Number.isFinite(qty) || qty <= 0) return alert("Cantidad inválida (>0).");
+    if (!Number.isFinite(qty) || qty <= 0) { toast.error("Cantidad inválida (debe ser > 0)."); return; }
 
     // ✅ manda exactamente lo que backend valida
     await onSave({

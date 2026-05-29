@@ -1,6 +1,7 @@
 // src/pages/admin/LandingLeadsPage.jsx
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { getLandingLeads, updateLandingLead } from "../../services/landingLeadsService.js";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -46,7 +47,7 @@ export default function LandingLeadsPage() {
       await updateLandingLead(id, { status: newStatus });
       setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status: newStatus } : l));
     } catch (e) {
-      alert("Error al actualizar estado");
+      toast.error("Error al actualizar estado");
     } finally {
       setUpdating(null);
     }

@@ -1,5 +1,6 @@
 ﻿// src/components/routes/NewRouteModal.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   createRoute,
   updateRoute,
@@ -809,7 +810,7 @@ useEffect(() => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Selecciona un archivo de imagen (JPG/PNG/WEBP).");
+      toast.error("Selecciona un archivo de imagen (JPG/PNG/WEBP).");
       return;
     }
 
@@ -838,7 +839,7 @@ useEffect(() => {
     if (saving) return;
 
     if (!currentPlantId) {
-      alert("No hay planta seleccionada.");
+      toast.error("No hay planta seleccionada.");
       return;
     }
 
@@ -980,8 +981,7 @@ const payload = {
         console.warn("onSave failed:", e);
       }
     } catch (err) {
-      console.error("Error guardando ruta:", err);
-      alert(err?.message || "Error guardando ruta");
+      toast.error(err?.message || "Error guardando ruta");
     } finally {
       setSaving(false);
     }

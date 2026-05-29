@@ -1,5 +1,6 @@
 ﻿// src/pages/NewRoutePage.jsx
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 
@@ -126,12 +127,12 @@ export default function NewRoutePage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Selecciona un archivo de imagen.");
+      toast.error("Selecciona un archivo de imagen.");
       return;
     }
 
     if (file.size > 6 * 1024 * 1024) {
-      alert("La imagen excede 6MB.");
+      toast.error("La imagen excede 6 MB.");
       return;
     }
 
@@ -207,11 +208,10 @@ export default function NewRoutePage() {
         imageUrl: finalImageUrl,
       });
 
-      alert("Ruta creada");
+      toast.success("Ruta creada correctamente");
       navigate("/routes");
     } catch (err) {
-      console.error("Error creando ruta:", err);
-      alert(err?.message || "Error creando ruta");
+      toast.error(err?.message || "Error creando ruta");
     } finally {
       setSaving(false);
     }

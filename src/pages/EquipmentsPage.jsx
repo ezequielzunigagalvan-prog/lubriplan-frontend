@@ -1,5 +1,6 @@
 // src/pages/EquipmentsPage.jsx
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import {
   getEquipment,
@@ -194,8 +195,7 @@ useEffect(() => {
 
       
     } catch (e) {
-      console.error(e);
-      alert(e?.message || "Error cargando datos");
+      toast.error(e?.message || "Error cargando datos");
     } finally {
       setLoading(false);
     }
@@ -375,16 +375,13 @@ await loadAll(daysParam, query.filter);
     description: String(eqForm.description || "").trim() || null,
   };
 
-  console.log("🟧 submitEquipment CLICK", { payload });
-
   if (!payload.name || !payload.location || !payload.status) {
-    alert("Nombre, ubicación y estado son obligatorios");
+    toast.error("Nombre, ubicación y estado son obligatorios");
     return;
   }
 
   try {
     setEqSaving(true);
-    console.log("🟨 calling createEquipment()...");
     const out = await createEquipment(payload);
 
 showToast({

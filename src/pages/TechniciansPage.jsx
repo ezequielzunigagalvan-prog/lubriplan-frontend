@@ -1,5 +1,6 @@
 // src/pages/TechniciansPage.jsx
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import TechnicianCard from "../components/ui/TechnicianCard";
 import NewTechnicianModal from "../components/modals/NewTechnicianModal";
@@ -13,6 +14,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
+import { useConfirm } from "../components/ui/ConfirmDialog";
 import { CardSkeleton } from "../components/ui/CardSkeleton";
 
 export default function TechniciansPage() {
@@ -27,6 +29,7 @@ export default function TechniciansPage() {
   const { currentPlantId, currentPlant } = usePlant();
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
 
+  const confirm = useConfirm();
   const canEdit = role === "ADMIN" || role === "SUPERVISOR";
   const canDelete = role === "ADMIN"; // supervisor NO borra
 
@@ -104,8 +107,7 @@ export default function TechniciansPage() {
       setShowModal(false);
       setEditingTech(null);
     } catch (e) {
-      console.error(e);
-      alert("Error creando técnico");
+      toast.error(e?.message || "Error creando técnico");
     }
   };
 
@@ -123,21 +125,25 @@ export default function TechniciansPage() {
       setEditingTech(null);
       setShowModal(false);
     } catch (e) {
-      console.error(e);
-      alert("Error actualizando técnico");
+      toast.error(e?.message || "Error actualizando técnico");
     }
   };
 
   const handleDelete = async (id) => {
     if (!canDelete) return;
-    if (!confirm("¿Eliminar este técnico?")) return;
+    const ok = await confirm("¿Eliminar este técnico? Esta acción no se puede deshacer.", {
+      title: "Eliminar técnico",
+      confirmLabel: "Eliminar",
+      danger: true,
+    });
+    if (!ok) return;
 
     try {
       await deleteTechnician(id);
       await loadTechnicians();
+      toast.success("Técnico eliminado");
     } catch (error) {
-      console.error(error);
-      alert("Error eliminando técnico");
+      toast.error(error?.message || "Error eliminando técnico");
     }
   };
 

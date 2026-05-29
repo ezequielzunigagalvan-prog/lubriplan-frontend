@@ -1,9 +1,11 @@
 import { useRef, useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 import { btnPrimary, btnGhost } from "../ui/styles";
 import { Icon } from "../ui/lpIcons";
 import PointMarker from "./PointMarker";
 import PointDetailPanel from "./PointDetailPanel";
 import { getLubricants } from "../../services/lubricantsService";
+import { useConfirm } from "../ui/ConfirmDialog";
 
 const FREQUENCIES = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"];
 const FREQ_LABEL = { DAILY: "Diaria", WEEKLY: "Semanal", MONTHLY: "Mensual", QUARTERLY: "Trimestral", ANNUAL: "Anual" };
@@ -25,6 +27,7 @@ export default function LubricationCard({
   onDeletePoint,
   onUploadImage,
 }) {
+  const confirm = useConfirm();
   const containerRef = useRef(null);
   const fileInputRef = useRef(null);
   const exportRef = useRef(null);
@@ -210,9 +213,14 @@ export default function LubricationCard({
   }, [lubricants]);
 
   const handleDeletePoint = useCallback(async (pointId) => {
-    if (!window.confirm("¿Eliminar este punto?")) return;
+    const ok = await confirm("¿Eliminar este punto de lubricación?", {
+      title: "Eliminar punto",
+      confirmLabel: "Eliminar",
+      danger: true,
+    });
+    if (!ok) return;
     try { await onDeletePoint?.(pointId); setSelectedPoint(null); } catch {}
-  }, [onDeletePoint]);
+  }, [onDeletePoint, confirm]);
 
   // ── Image upload ──────────────────────────────────────────────────────────
   const handleFileChange = useCallback(async (e) => {
@@ -294,7 +302,7 @@ export default function LubricationCard({
       const safeName = equipmentName.replace(/[^a-zA-Z0-9\-_]/g, "_").slice(0, 30);
       pdf.save(`carta-lubricacion-${safeName}-${date}.pdf`);
     } catch (err) {
-      alert("Error generando PDF: " + (err?.message || "intenta de nuevo"));
+      toast.error("Error generando PDF: " + (err?.message || "intenta de nuevo"));
     } finally {
       setExportingPdf(false);
     }

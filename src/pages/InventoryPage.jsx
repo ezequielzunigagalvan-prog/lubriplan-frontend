@@ -1,5 +1,6 @@
 ﻿// src/pages/InventoryPage.jsx
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import InventoryDrawer from "../components/inventory/InventoryDrawer";
 import NewInventoryModal from "../components/inventory/NewInventoryModal";
@@ -752,8 +753,7 @@ const propText = propertyToText(propObj);
             setOpenModal(false);
             setEditing(null);
           } catch (e) {
-            console.error(e);
-            alert(e?.message || "Error guardando lubricante");
+            toast.error(e?.message || "Error guardando lubricante");
           }
         }}
       />

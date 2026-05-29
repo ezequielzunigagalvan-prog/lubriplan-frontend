@@ -1,5 +1,6 @@
 // src/components/inventory/NewInventoryModal.jsx
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 const LUBRICANT_TYPES = [
   "Aceite hidráulico",
@@ -178,19 +179,19 @@ export default function NewInventoryModal({ open, onClose, onSave, initialData }
       : null;
 
   const handleSave = () => {
-    if (!String(form.name ?? "").trim()) return alert("Falta el nombre del producto.");
+    if (!String(form.name ?? "").trim()) { toast.error("Falta el nombre del producto."); return; }
 
     const stock = form.stock === "" ? 0 : Number(form.stock);
-    if (!Number.isFinite(stock) || stock < 0) return alert("Stock inválido.");
+    if (!Number.isFinite(stock) || stock < 0) { toast.error("Stock inválido."); return; }
 
     const minNum = form.minStock === "" ? null : Number(form.minStock);
     if (minNum !== null && (!Number.isFinite(minNum) || minNum < 0)) {
-      return alert("Stock mínimo inválido.");
+      toast.error("Stock mínimo inválido."); return;
     }
 
     const unitCost = form.unitCost === "" ? null : Number(form.unitCost);
     if (unitCost !== null && (!Number.isFinite(unitCost) || unitCost < 0)) {
-      return alert("Costo unitario inválido.");
+      toast.error("Costo unitario inválido."); return;
     }
 
     const finalType =

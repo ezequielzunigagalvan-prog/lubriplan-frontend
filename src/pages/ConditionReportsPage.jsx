@@ -1,8 +1,10 @@
 // src/pages/ConditionReportsPage.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
+import { useConfirm } from "../components/ui/ConfirmDialog";
 import {
   getConditionReports,
   updateConditionReportStatus,
@@ -65,6 +67,7 @@ const statusColor = (s) =>
 ========================= */
 function ConditionReportsPage() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const role = safeUpper(user?.role || "TECHNICIAN");
   const canManage = role === "ADMIN" || role === "SUPERVISOR";
 
@@ -399,7 +402,12 @@ function ConditionReportsPage() {
                         type="button"
                         style={btnDanger}
                         onClick={async () => {
-                          if (!window.confirm("¿Descartar este reporte?")) return;
+                          const ok = await confirm("¿Descartar este reporte de condición?", {
+                            title: "Descartar reporte",
+                            confirmLabel: "Descartar",
+                            danger: true,
+                          });
+                          if (!ok) return;
                           await dismissConditionReport(r.id);
                           await load();
                         }}

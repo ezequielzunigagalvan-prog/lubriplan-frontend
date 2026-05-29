@@ -1,5 +1,6 @@
 // src/pages/Executions.jsx
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import StatusBadge from "../components/StatusBadge";
 import { httpGet, httpPut } from "../services/http";
 
@@ -40,8 +41,7 @@ function Executions() {
 
       await loadExecutions();
     } catch (error) {
-      console.error("Error completando ejecución:", error);
-      alert(error?.message || "Error completando ejecución");
+      toast.error(error?.message || "Error completando ejecución");
     }
   };
 
