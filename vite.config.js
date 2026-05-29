@@ -80,10 +80,20 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            if (id.includes("react-dom")) return "vendor-react";
+            // react-router primero para que no lo capture el check de /react/ abajo
             if (id.includes("react-router")) return "vendor-router";
             if (id.includes("recharts")) return "vendor-charts";
             if (id.includes("pdfkit") || id.includes("exceljs")) return "vendor-export";
+            // react core + react-dom + scheduler + react-virtuoso deben vivir en el
+            // mismo chunk — si se separan el scheduler queda en vendor genérico y
+            // al inicializarse antes que react-dom lanza "Cannot set properties of
+            // undefined (setting 'unstable_now')"
+            if (
+              id.includes("react-dom") ||
+              id.includes("/react/") ||
+              id.includes("/scheduler/") ||
+              id.includes("react-virtuoso")
+            ) return "vendor-react";
             return "vendor";
           }
         },
