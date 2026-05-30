@@ -10,7 +10,9 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { registerPwa } from "./pwa/registerPwa";
+import { initSentry } from "./config/sentry";
 
+initSentry();
 registerPwa();
 
 ReactDOM.createRoot(document.getElementById("root")).render(

@@ -53,3 +53,7 @@ export function getDashboardTechnicianEfficiencyMonthly({ month } = {}) {
 }
 
 
+
+export function getOnboardingProgress() {
+  return httpGet('/dashboard/onboarding-progress');
+}

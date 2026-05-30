@@ -2,6 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
+import WelcomeChecklist from "../components/onboarding/WelcomeChecklist";
 import {
   ActivityCard,
   toLocalYMD,
@@ -5432,6 +5433,7 @@ function AdminDashboard(props) {
 
   return (
     <div className="lp-fade-in" style={{ display: "grid", gap: 14 }}>
+      <WelcomeChecklist />
       <FocusZoneBar
         navigate={navigate}
         month={month}

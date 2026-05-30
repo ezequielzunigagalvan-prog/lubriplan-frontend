@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import SignaturePad from "../components/ui/SignaturePad";
 import { getExecutionById, completeExecution, getOfflineExecutionCatalog } from "../services/executionsService";
 import { getTechnicians } from "../services/techniciansService";
 import { getExecutionLubricants } from "../services/lubricantsService";
@@ -134,6 +135,9 @@ const loggedTechId = user?.technicianId != null ? Number(user.technicianId) : nu
 
   // consumo opcional (MANUAL o CORRECTIVA)
   const [usedLubricant, setUsedLubricant] = useState(false);
+
+  const [signatureData, setSignatureData] = useState(null);
+  const handleSignatureChange = useCallback((data) => setSignatureData(data), []);
 
   const [form, setForm] = useState({
     executedAt: "",
@@ -488,6 +492,7 @@ setForm((prev) => ({
 
         evidenceImage: form.evidenceImage || null,
         evidenceNote: form.evidenceNote?.trim() || null,
+        signatureImage: signatureData || null,
       };
 
       const result = await completeExecution(Number(executionId), payload);
@@ -1042,6 +1047,9 @@ setForm((prev) => ({
               </div>
 
               <div style={footer}>
+                {/* Firma digital del técnico */}
+                <SignaturePad onChange={handleSignatureChange} label="Firma del técnico (opcional)" />
+
                 <button type="button" onClick={onClose} style={btnGhost} disabled={saving}>
                   Cancelar
                 </button>
