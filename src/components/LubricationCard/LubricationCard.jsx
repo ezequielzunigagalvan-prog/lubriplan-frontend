@@ -276,10 +276,16 @@ export default function LubricationCard({
   // ── Sync desde rutas ─────────────────────────────────────────────────────
   const handleSync = useCallback(async (routeIds) => {
     const result = await onSyncRoutes?.(routeIds);
-    if (result?.created > 0) toast.success(result.message);
-    else toast.info("Sin puntos nuevos para crear");
+    if (result?.created > 0) {
+      toast.success(result.message);
+      // Entrar a modo edición automáticamente para que el usuario pueda
+      // arrastrar los puntos a su posición real en el diagrama de inmediato
+      if (!isEditing) onToggleEdit?.();
+    } else {
+      toast.info("Sin puntos nuevos para crear");
+    }
     return result;
-  }, [onSyncRoutes]);
+  }, [onSyncRoutes, isEditing, onToggleEdit]);
 
   // ── PDF export ─────────────────────────────────────────────────────────────
   const handleExportPdf = useCallback(async () => {
