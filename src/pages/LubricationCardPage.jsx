@@ -17,8 +17,12 @@ export default function LubricationCardPage() {
 
   const [equipmentName, setEquipmentName] = useState("Equipo");
 
-  const { card, loading, error, isEditing, setIsEditing, addPoint, updatePoint, deletePoint, uploadImage } =
-    useLubricationCard(equipmentId);
+  const {
+    card, loading, error, isEditing, setIsEditing,
+    addPoint, updatePoint, deletePoint,
+    uploadImage, addSectionImage, renameSectionImage, removeSectionImage,
+    syncRoutes,
+  } = useLubricationCard(equipmentId);
 
   useEffect(() => {
     if (!equipmentId) return;
@@ -64,12 +68,17 @@ export default function LubricationCardPage() {
             card={card}
             isEditing={isEditing && canEdit}
             canEdit={canEdit}
+            equipmentId={equipmentId}
             equipmentName={equipmentName}
             onToggleEdit={() => { if (canEdit) setIsEditing((v) => !v); }}
             onAddPoint={addPoint}
             onUpdatePoint={updatePoint}
             onDeletePoint={deletePoint}
             onUploadImage={uploadImage}
+            onAddSectionImage={addSectionImage}
+            onRenameSectionImage={renameSectionImage}
+            onRemoveSectionImage={removeSectionImage}
+            onSyncRoutes={syncRoutes}
           />
         )}
 
