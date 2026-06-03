@@ -190,6 +190,7 @@ export default function MainLayout({ children }) {
     export: role === "ADMIN" || role === "SUPERVISOR",
     reports: role === "ADMIN" || role === "SUPERVISOR",
     technicalAssistant: true,
+    preventiveOrders: true,
 
     users: role === "ADMIN",
     links: role === "ADMIN",
@@ -541,6 +542,17 @@ export default function MainLayout({ children }) {
                 {canSeeAlerts && Number(alerts.overdueActivities || 0) > 0 ? (
                   <span style={badgeRed}>{alerts.overdueActivities}</span>
                 ) : null}
+              </span>
+            </NavLink>
+          )}
+
+          {can.preventiveOrders && (
+            <NavLink className="lpSideLink" to="/preventive-orders" style={navLinkStyle("/preventive-orders")}>
+              <span style={sideRow}>
+                <span style={navIconStyle("/preventive-orders")}>
+                  ⚡
+                </span>
+                <span style={sideText}>Órdenes OLP</span>
               </span>
             </NavLink>
           )}

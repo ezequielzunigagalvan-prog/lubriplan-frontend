@@ -39,6 +39,10 @@ const LubriPlanCardLanding    = lazy(() => import("./pages/LubriPlanCardLanding"
 const TechnicalAssistantPage  = lazy(() => import("./pages/TechnicalAssistantPage"));
 const CorporateDashboard      = lazy(() => import("./pages/CorporateDashboard"));
 const LubricationCardPage     = lazy(() => import("./pages/LubricationCardPage"));
+const PreventiveOrdersList    = lazy(() => import("./pages/PreventiveOrdersList"));
+const PreventiveOrderForm     = lazy(() => import("./pages/PreventiveOrderForm"));
+const PreventiveOrderDetail   = lazy(() => import("./pages/PreventiveOrderDetail"));
+const PreventiveOrderExecution = lazy(() => import("./pages/PreventiveOrderExecution"));
 
 function PageLoader() {
   return (
@@ -95,6 +99,12 @@ export default function App() {
         <Route path="/condition-reports" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ConditionReportsPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><NotificationsPage /></ProtectedRoute>} />
         <Route path="/technical-assistant" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><TechnicalAssistantPage /></ProtectedRoute>} />
+
+        <Route path="/preventive-orders" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><PreventiveOrdersList /></ProtectedRoute>} />
+        <Route path="/preventive-orders/new" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><PreventiveOrderForm /></ProtectedRoute>} />
+        <Route path="/preventive-orders/:id" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><PreventiveOrderDetail /></ProtectedRoute>} />
+        <Route path="/preventive-orders/:id/edit" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><PreventiveOrderForm /></ProtectedRoute>} />
+        <Route path="/preventive-orders/:id/execute" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><PreventiveOrderExecution /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFoundRedirect />} />
       </Routes>
