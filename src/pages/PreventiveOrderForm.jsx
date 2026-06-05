@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
-import { httpGet } from "../services/http";
+import { getEquipment } from "../services/equipmentService";
 
 export default function PreventiveOrderForm() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const isNew = !id || id === "new";
 
   const [equipments, setEquipments] = useState([]);
   const [formData, setFormData] = useState({
@@ -15,19 +14,17 @@ export default function PreventiveOrderForm() {
     title: "",
     notes: "",
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     loadEquipments();
-    if (!isNew) {
-      loadOrder();
-    }
-  }, [id, isNew]);
+    loadOrder();
+  }, [id]);
 
   async function loadEquipments() {
     try {
-      const data = await httpGet("/equipment");
+      const data = await getEquipment();
       setEquipments(data?.data || []);
     } catch (err) {
       console.error("Error loading equipments:", err);
@@ -63,18 +60,8 @@ export default function PreventiveOrderForm() {
         return;
       }
 
-      if (isNew) {
-        const result = await preventiveOrdersService.create(
-          Number(formData.equipmentId),
-          formData.scheduledDate,
-          formData.title,
-          formData.notes
-        );
-        navigate(`/preventive-orders/${result.id}`);
-      } else {
-        await preventiveOrdersService.update(Number(id), formData);
-        navigate(`/preventive-orders/${id}`);
-      }
+      await preventiveOrdersService.update(Number(id), formData);
+      navigate(`/preventive-orders/${id}`);
     } catch (err) {
       setError(err.response?.data?.error || "Error guardando la orden");
     } finally {
@@ -82,25 +69,25 @@ export default function PreventiveOrderForm() {
     }
   }
 
-  if (loading && !isNew) {
-    return <div style={{ padding: 20, textAlign: "center" }}>Cargando…</div>;
+  if (loading) {
+    return <div style={{ padding: 20, textAlign: "center", color: "#94a3b8", minHeight: "100vh", background: "#0f172a" }}>Cargando…</div>;
   }
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto", padding: 20 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 900, color: "#0f172a", marginBottom: 30 }}>
-        {isNew ? "Nueva Orden" : "Editar Orden"}
+    <div style={{ maxWidth: 600, margin: "0 auto", padding: 20, minHeight: "100vh", background: "#0f172a" }}>
+      <h1 style={{ fontSize: 24, fontWeight: 900, color: "#f1f5f9", marginBottom: 30 }}>
+        Editar Orden
       </h1>
 
       {error && (
-        <div style={{ padding: 12, borderRadius: 8, background: "#fee2e2", color: "#dc2626", marginBottom: 20, fontWeight: 600 }}>
+        <div style={{ padding: 12, borderRadius: 8, background: "#7f1d1d", color: "#fecaca", marginBottom: 20, fontWeight: 600 }}>
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#475569", marginBottom: 6 }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#cbd5e1", marginBottom: 6 }}>
             Equipo *
           </label>
           <select
@@ -110,9 +97,11 @@ export default function PreventiveOrderForm() {
               width: "100%",
               padding: 12,
               borderRadius: 8,
-              border: "1px solid #cbd5e1",
+              border: "1px solid #334155",
               fontSize: 14,
               fontFamily: "inherit",
+              background: "#242b35",
+              color: "#f1f5f9",
             }}
           >
             <option value="">Selecciona un equipo</option>
@@ -125,7 +114,7 @@ export default function PreventiveOrderForm() {
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#475569", marginBottom: 6 }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#cbd5e1", marginBottom: 6 }}>
             Fecha Programada *
           </label>
           <input
@@ -136,16 +125,18 @@ export default function PreventiveOrderForm() {
               width: "100%",
               padding: 12,
               borderRadius: 8,
-              border: "1px solid #cbd5e1",
+              border: "1px solid #334155",
               fontSize: 14,
               fontFamily: "inherit",
               boxSizing: "border-box",
+              background: "#242b35",
+              color: "#f1f5f9",
             }}
           />
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#475569", marginBottom: 6 }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#cbd5e1", marginBottom: 6 }}>
             Título (Opcional)
           </label>
           <input
@@ -157,16 +148,18 @@ export default function PreventiveOrderForm() {
               width: "100%",
               padding: 12,
               borderRadius: 8,
-              border: "1px solid #cbd5e1",
+              border: "1px solid #334155",
               fontSize: 14,
               fontFamily: "inherit",
               boxSizing: "border-box",
+              background: "#242b35",
+              color: "#f1f5f9",
             }}
           />
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#475569", marginBottom: 6 }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#cbd5e1", marginBottom: 6 }}>
             Notas
           </label>
           <textarea
@@ -178,10 +171,12 @@ export default function PreventiveOrderForm() {
               width: "100%",
               padding: 12,
               borderRadius: 8,
-              border: "1px solid #cbd5e1",
+              border: "1px solid #334155",
               fontSize: 14,
               fontFamily: "inherit",
               boxSizing: "border-box",
+              background: "#242b35",
+              color: "#f1f5f9",
               resize: "vertical",
             }}
           />
@@ -194,11 +189,20 @@ export default function PreventiveOrderForm() {
             style={{
               padding: "10px 20px",
               borderRadius: 8,
-              border: "1px solid #cbd5e1",
-              background: "white",
-              color: "#475569",
+              border: "1px solid #334155",
+              background: "transparent",
+              color: "#cbd5e1",
               fontWeight: 700,
               cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#475569";
+              e.currentTarget.style.color = "#f1f5f9";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#334155";
+              e.currentTarget.style.color = "#cbd5e1";
             }}
           >
             Cancelar
@@ -210,10 +214,17 @@ export default function PreventiveOrderForm() {
               padding: "10px 20px",
               borderRadius: 8,
               border: "none",
-              background: loading ? "#cbd5e1" : "#f97316",
+              background: loading ? "#92400e" : "#f97316",
               color: "white",
               fontWeight: 700,
               cursor: loading ? "default" : "pointer",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) e.currentTarget.style.background = "#ea580c";
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) e.currentTarget.style.background = "#f97316";
             }}
           >
             {loading ? "Guardando…" : "Guardar"}
