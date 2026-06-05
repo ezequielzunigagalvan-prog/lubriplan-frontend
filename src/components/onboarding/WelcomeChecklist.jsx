@@ -1,6 +1,7 @@
 // src/components/onboarding/WelcomeChecklist.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Rocket, Factory, Settings, Users, MapPin, Check, X } from "lucide-react";
 import { getOnboardingProgress } from "../../services/dashboardService";
 
 const STEPS = [
@@ -8,28 +9,28 @@ const STEPS = [
     key: "areas",
     label: "Configura tus áreas",
     description: "Divide tu planta en zonas o departamentos.",
-    icon: "🏭",
+    icon: Factory,
     path: "/equipments",
   },
   {
     key: "equipments",
     label: "Registra tus equipos",
     description: "Agrega los equipos que requieren lubricación.",
-    icon: "⚙️",
+    icon: Settings,
     path: "/equipments",
   },
   {
     key: "technicians",
     label: "Crea tus técnicos",
     description: "Asigna a las personas que ejecutarán las actividades.",
-    icon: "👷",
+    icon: Users,
     path: "/technicians",
   },
   {
     key: "routes",
     label: "Define tu primera ruta",
     description: "Agrupa equipos en rutas y asigna frecuencia.",
-    icon: "🗺️",
+    icon: MapPin,
     path: "/routes/new",
   },
 ];
@@ -79,7 +80,7 @@ export default function WelcomeChecklist() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 12px", borderBottom: "1px solid rgba(226,232,240,0.8)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 22 }}>🚀</span>
+          <Rocket size={22} color="#f97316" strokeWidth={2.5} />
           <div>
             <div style={{ fontWeight: 900, fontSize: 15, color: "#0f172a" }}>¡Bienvenido a LubriPlan!</div>
             <div style={{ fontWeight: 600, fontSize: 12, color: "#64748b" }}>Completa estos pasos para tener el sistema listo</div>
@@ -87,10 +88,10 @@ export default function WelcomeChecklist() {
         </div>
         <button
           onClick={dismiss}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 18, lineHeight: 1, padding: 4 }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
           aria-label="Cerrar"
         >
-          ×
+          <X size={20} color="#94a3b8" strokeWidth={2} />
         </button>
       </div>
 
@@ -115,6 +116,7 @@ export default function WelcomeChecklist() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, padding: 16 }}>
         {STEPS.map((step) => {
           const done = (progress[step.key] ?? 0) > 0;
+          const IconComponent = step.icon;
           return (
             <button
               key={step.key}
@@ -141,9 +143,12 @@ export default function WelcomeChecklist() {
                 display: "grid",
                 placeItems: "center",
                 flexShrink: 0,
-                fontSize: 14,
               }}>
-                {done ? "✅" : step.icon}
+                {done ? (
+                  <Check size={16} color="#16a34a" strokeWidth={3} />
+                ) : (
+                  <IconComponent size={16} color="#f97316" strokeWidth={2} />
+                )}
               </div>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 13, color: done ? "#15803d" : "#0f172a" }}>{step.label}</div>
