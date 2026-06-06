@@ -1,30 +1,42 @@
 import { useEffect, useState } from "react";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { getEquipment } from "../services/equipmentService";
+import { httpGet } from "../services/http";
 
 export default function PreventiveOrderFormModal({ onClose }) {
   const [equipments, setEquipments] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [equipmentSearch, setEquipmentSearch] = useState("");
   const [formData, setFormData] = useState({
     equipmentId: "",
     scheduledDate: "",
     title: "",
     notes: "",
+    assignedTo: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     loadEquipments();
+    loadTechnicians();
   }, []);
 
   async function loadEquipments() {
     try {
       const data = await getEquipment();
-      console.log("Equipment data:", data);
       setEquipments(data?.data || data || []);
     } catch (err) {
       console.error("Error loading equipments:", err);
+    }
+  }
+
+  async function loadTechnicians() {
+    try {
+      const data = await httpGet("/technicians");
+      setTechnicians(data?.data || []);
+    } catch (err) {
+      console.error("Error loading technicians:", err);
     }
   }
 
@@ -45,12 +57,18 @@ export default function PreventiveOrderFormModal({ onClose }) {
         return;
       }
 
-      await preventiveOrdersService.create(
+      const order = await preventiveOrdersService.create(
         Number(formData.equipmentId),
         formData.scheduledDate,
         formData.title,
         formData.notes
       );
+
+      // Si se seleccionó técnico, asignarlo y cambiar estado a IN_PROGRESS
+      if (formData.assignedTo) {
+        await preventiveOrdersService.start(order.id, Number(formData.assignedTo));
+      }
+
       onClose();
     } catch (err) {
       setError(err.response?.data?.error || "Error guardando la orden");
@@ -215,6 +233,41 @@ export default function PreventiveOrderFormModal({ onClose }) {
                 color: "#f1f5f9",
               }}
             />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#cbd5e1",
+                marginBottom: 6,
+              }}
+            >
+              Técnico Asignado (Opcional)
+            </label>
+            <select
+              value={formData.assignedTo}
+              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #334155",
+                fontSize: 14,
+                fontFamily: "inherit",
+                background: "#242b35",
+                color: "#f1f5f9",
+              }}
+            >
+              <option value="">Selecciona un técnico (opcional)</option>
+              {technicians.map((tech) => (
+                <option key={tech.id} value={tech.id}>
+                  {tech.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
