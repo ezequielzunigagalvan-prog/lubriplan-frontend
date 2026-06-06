@@ -4,6 +4,7 @@ import { getEquipment } from "../services/equipmentService";
 
 export default function PreventiveOrderFormModal({ onClose }) {
   const [equipments, setEquipments] = useState([]);
+  const [equipmentSearch, setEquipmentSearch] = useState("");
   const [formData, setFormData] = useState({
     equipmentId: "",
     scheduledDate: "",
@@ -20,11 +21,17 @@ export default function PreventiveOrderFormModal({ onClose }) {
   async function loadEquipments() {
     try {
       const data = await getEquipment();
-      setEquipments(data?.data || []);
+      console.log("Equipment data:", data);
+      setEquipments(data?.data || data || []);
     } catch (err) {
       console.error("Error loading equipments:", err);
     }
   }
+
+  const filteredEquipments = equipments.filter(eq =>
+    eq.name?.toLowerCase().includes(equipmentSearch.toLowerCase()) ||
+    eq.code?.toLowerCase().includes(equipmentSearch.toLowerCase())
+  );
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -136,27 +143,48 @@ export default function PreventiveOrderFormModal({ onClose }) {
             >
               Equipo *
             </label>
-            <select
-              value={formData.equipmentId}
-              onChange={(e) => setFormData({ ...formData, equipmentId: e.target.value })}
-              style={{
-                width: "100%",
-                padding: 12,
-                borderRadius: 8,
-                border: "1px solid #334155",
-                fontSize: 14,
-                fontFamily: "inherit",
-                background: "#242b35",
-                color: "#f1f5f9",
-              }}
-            >
-              <option value="">Selecciona un equipo</option>
-              {equipments.map((eq) => (
-                <option key={eq.id} value={eq.id}>
-                  {eq.name} {eq.code && `(${eq.code})`}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                placeholder="Buscar equipo por nombre o código..."
+                value={equipmentSearch}
+                onChange={(e) => setEquipmentSearch(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 8,
+                  border: "1px solid #334155",
+                  fontSize: 14,
+                  fontFamily: "inherit",
+                  background: "#242b35",
+                  color: "#f1f5f9",
+                  marginBottom: 8,
+                  boxSizing: "border-box",
+                }}
+              />
+              <select
+                value={formData.equipmentId}
+                onChange={(e) => setFormData({ ...formData, equipmentId: e.target.value })}
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 8,
+                  border: "1px solid #334155",
+                  fontSize: 14,
+                  fontFamily: "inherit",
+                  background: "#242b35",
+                  color: "#f1f5f9",
+                  boxSizing: "border-box",
+                }}
+              >
+                <option value="">Selecciona un equipo</option>
+                {filteredEquipments.map((eq) => (
+                  <option key={eq.id} value={eq.id}>
+                    {eq.code ? `[${eq.code}] ` : ""}{eq.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
