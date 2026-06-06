@@ -16,6 +16,7 @@ export default function PreventiveOrderFormModal({ onClose }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [createdOrderId, setCreatedOrderId] = useState(null);
 
   useEffect(() => {
     loadEquipments();
@@ -69,7 +70,13 @@ export default function PreventiveOrderFormModal({ onClose }) {
         await preventiveOrdersService.start(order.id, Number(formData.assignedTo));
       }
 
-      onClose();
+      // Mostrar el número de orden creada
+      setCreatedOrderId(order.id);
+
+      // Cerrar modal después de 2 segundos mostrando el ID
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.error || "Error guardando la orden");
     } finally {
@@ -110,7 +117,7 @@ export default function PreventiveOrderFormModal({ onClose }) {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "#f1f5f9" }}>
-            Nueva Orden de Lubricación
+            {createdOrderId ? "Orden Creada" : "Nueva Orden de Lubricación"}
           </h2>
           <button
             onClick={onClose}
@@ -132,6 +139,27 @@ export default function PreventiveOrderFormModal({ onClose }) {
           </button>
         </div>
 
+        {createdOrderId && (
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 8,
+              background: "#064e3b",
+              border: "1px solid #10b981",
+              color: "#d1fae5",
+              marginBottom: 20,
+              fontWeight: 600,
+              fontSize: 14,
+              textAlign: "center",
+            }}
+          >
+            <div style={{ marginBottom: 6 }}>✓ Orden creada exitosamente</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: "#10b981" }}>
+              Orden #{createdOrderId}
+            </div>
+          </div>
+        )}
+
         {error && (
           <div
             style={{
@@ -148,7 +176,7 @@ export default function PreventiveOrderFormModal({ onClose }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {!createdOrderId && <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div>
             <label
               style={{
@@ -382,6 +410,7 @@ export default function PreventiveOrderFormModal({ onClose }) {
             </button>
           </div>
         </form>
+        }
       </div>
     </div>
   );
