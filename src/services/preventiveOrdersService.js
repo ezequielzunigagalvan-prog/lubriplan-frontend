@@ -65,4 +65,17 @@ export const preventiveOrdersService = {
   async cancel(id) {
     return httpDelete(`/preventive-orders/${id}`);
   },
+
+  // Obtener órdenes completadas para historial
+  async listCompleted(filters = {}) {
+    const { from, to, page = 1, limit = 20 } = filters;
+    const params = new URLSearchParams({
+      page,
+      limit,
+      status: 'COMPLETED',
+      ...(from && { from }),
+      ...(to && { to }),
+    });
+    return httpGet(`/preventive-orders?${params}`);
+  },
 };

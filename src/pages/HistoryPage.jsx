@@ -7,6 +7,7 @@ import {
   getHistoryLubricantMovements,
   getExecutionById,
 } from "../services/historyService";
+import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
@@ -168,6 +169,13 @@ export default function HistoryPage() {
   const [mvLubQ, setMvLubQ] = useState(""); // filtro por nombre/codigo (client-side)
   const [filterEvidence, setFilterEvidence] = useState(false);
 
+  // órdenes preventivas
+  const [olpLoading, setOlpLoading] = useState(false);
+  const [olpErr, setOlpErr] = useState("");
+  const [olpItems, setOlpItems] = useState([]);
+  const [olpMeta, setOlpMeta] = useState(null);
+  const [viewMode, setViewMode] = useState("executions"); // "executions" | "preventive"
+
   /* =========================
      LOADERS
   ========================= */
@@ -279,6 +287,44 @@ export default function HistoryPage() {
     [from, to, q, mvType, mvPage, mvPageSize, isTech, myTechId]
   );
 
+  const loadPreventiveOrders = useCallback(
+    async (opts = {}) => {
+      try {
+        setOlpErr("");
+        setOlpLoading(true);
+
+        const params = {
+          status: "COMPLETED",
+          page: opts.page ?? 1,
+          limit: 20,
+          ...(from && { from }),
+          ...(to && { to }),
+        };
+
+        const resp = await preventiveOrdersService.listCompleted(params);
+        const all = Array.isArray(resp?.data) ? resp.data : [];
+
+        // Scope técnico: solo sus órdenes asignadas
+        const scoped = isTech
+          ? all.filter((olp) => {
+              const techId = olp?.assignedTo ?? null;
+              if (!Number.isFinite(myTechId)) return false;
+              return Number(techId) === Number(myTechId);
+            })
+          : all;
+
+        setOlpItems(scoped);
+        setOlpMeta(resp?.meta || null);
+      } catch (e) {
+        console.error(e);
+        setOlpErr(e?.message || "Error cargando órdenes preventivas");
+      } finally {
+        setOlpLoading(false);
+      }
+    },
+    [from, to, isTech, myTechId]
+  );
+
   // carga inicial
   useEffect(() => {
   if (loadingPlants) return;
@@ -286,6 +332,7 @@ export default function HistoryPage() {
 
   load({ page: 1 });
   loadMovements({ page: 1 });
+  loadPreventiveOrders({ page: 1 });
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [currentPlantId, loadingPlants]);
 
@@ -301,6 +348,11 @@ export default function HistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to, mvType, mvPageSize]);
 
+  // filtros órdenes preventivas
+  useEffect(() => {
+    loadPreventiveOrders({ page: 1 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [from, to]);
 
   // deep links
   useEffect(() => {
@@ -600,22 +652,126 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* LISTADO EJECUCIONES */}
-      {loading && <div style={inlineLoadingBox}>Cargando historial…</div>}
-      {!loading && filteredItems.length === 0 && (
-        <div style={inlineEmptyBox}>
-          {items.length > 0 ? "Ningún registro coincide con el filtro activo." : "No hay registros en este rango de fechas."}
-        </div>
-      )}
-
-      <div style={list}>
-        {filteredItems.map((ex) => (
-          <HistoryCard key={ex.id} ex={ex} onOpen={() => openDetail(ex)} />
-        ))}
+      {/* SELECTOR DE VISTA */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        <button
+          onClick={() => setViewMode("executions")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: "1px solid",
+            background: viewMode === "executions" ? "#f97316" : "transparent",
+            color: viewMode === "executions" ? "white" : "#94a3b8",
+            borderColor: viewMode === "executions" ? "#f97316" : "#334155",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Ejecuciones ({items.length})
+        </button>
+        <button
+          onClick={() => setViewMode("preventive")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: "1px solid",
+            background: viewMode === "preventive" ? "#10b981" : "transparent",
+            color: viewMode === "preventive" ? "white" : "#94a3b8",
+            borderColor: viewMode === "preventive" ? "#10b981" : "#334155",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Órdenes Preventivas ({olpItems.length})
+        </button>
       </div>
 
-            {/* PAGINACION EJECUCIONES */}
-      {meta && meta.pages > 1 && (
+      {/* LISTADO EJECUCIONES */}
+      {viewMode === "executions" && (
+        <>
+          {loading && <div style={inlineLoadingBox}>Cargando historial…</div>}
+          {!loading && filteredItems.length === 0 && (
+            <div style={inlineEmptyBox}>
+              {items.length > 0 ? "Ningún registro coincide con el filtro activo." : "No hay registros en este rango de fechas."}
+            </div>
+          )}
+
+          <div style={list}>
+            {filteredItems.map((ex) => (
+              <HistoryCard key={ex.id} ex={ex} onOpen={() => openDetail(ex)} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* LISTADO ÓRDENES PREVENTIVAS */}
+      {viewMode === "preventive" && (
+        <>
+          {olpLoading && <div style={inlineLoadingBox}>Cargando órdenes preventivas…</div>}
+          {!olpLoading && olpItems.length === 0 && (
+            <div style={inlineEmptyBox}>
+              {olpErr ? olpErr : "No hay órdenes preventivas completadas en este rango de fechas."}
+            </div>
+          )}
+
+          <div style={list}>
+            {olpItems.map((olp) => (
+              <div
+                key={olp.id}
+                style={{
+                  padding: 16,
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  background: "white",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+                onClick={() => window.location.href = `/preventive-orders/${olp.id}`}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>
+                      {olp.title || `Orden #${olp.id}`}
+                    </div>
+                    <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>
+                      {olp.equipment?.name} • {new Date(olp.completedAt).toLocaleDateString()}
+                    </div>
+                    {olp.assignedToUser && (
+                      <div style={{ fontSize: 12, color: "#475569" }}>
+                        Técnico: {olp.assignedToUser.name}
+                      </div>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "inline-block",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: "4px 12px",
+                      borderRadius: 6,
+                      background: "#d1fae5",
+                      color: "#065f46",
+                    }}
+                  >
+                    Completada
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* PAGINACION EJECUCIONES */}
+      {viewMode === "executions" && meta && meta.pages > 1 && (
         <div style={pager}>
           <button
             style={pagerBtn}
