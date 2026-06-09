@@ -35,9 +35,11 @@ export default function PreventiveOrderFormModal({ onClose }) {
   async function loadTechnicians() {
     try {
       const data = await httpGet("/technicians");
-      setTechnicians(data?.data || []);
+      const techs = data?.data || data?.technicians || data || [];
+      setTechnicians(Array.isArray(techs) ? techs : []);
     } catch (err) {
       console.error("Error loading technicians:", err);
+      setTechnicians([]);
     }
   }
 
