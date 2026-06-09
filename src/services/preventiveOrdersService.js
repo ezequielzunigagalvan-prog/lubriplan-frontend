@@ -2,12 +2,13 @@ import { httpGet, httpPost, httpPut, httpDelete } from "./http";
 
 export const preventiveOrdersService = {
   // Crear nueva orden
-  async create(equipmentId, scheduledDate, title = "", notes = "") {
+  async create(equipmentId, scheduledDate, title = "", notes = "", assignedTo = null) {
     return httpPost("/preventive-orders", {
       equipmentId,
       scheduledDate,
       title,
       notes,
+      ...(assignedTo && { assignedTo }),
     });
   },
 

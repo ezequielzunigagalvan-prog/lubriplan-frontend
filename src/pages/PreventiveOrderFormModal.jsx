@@ -64,10 +64,11 @@ export default function PreventiveOrderFormModal({ onClose }) {
         Number(formData.equipmentId),
         formData.scheduledDate,
         formData.title,
-        formData.notes
+        formData.notes,
+        formData.assignedTo ? Number(formData.assignedTo) : null
       );
 
-      // Si se seleccionó técnico, asignarlo y cambiar estado a IN_PROGRESS
+      // Si se seleccionó técnico, cambiar estado a IN_PROGRESS
       if (formData.assignedTo) {
         await preventiveOrdersService.start(order.id, Number(formData.assignedTo));
       }
@@ -80,7 +81,7 @@ export default function PreventiveOrderFormModal({ onClose }) {
         onClose();
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.error || "Error guardando la orden");
+      setError(err.message || err?.data?.error || "Error guardando la orden");
     } finally {
       setLoading(false);
     }
