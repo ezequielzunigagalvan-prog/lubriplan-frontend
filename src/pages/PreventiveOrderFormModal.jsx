@@ -68,11 +68,6 @@ export default function PreventiveOrderFormModal({ onClose }) {
         formData.assignedTo ? Number(formData.assignedTo) : null
       );
 
-      // Si se seleccionó técnico, cambiar estado a IN_PROGRESS
-      if (formData.assignedTo) {
-        await preventiveOrdersService.start(order.id, Number(formData.assignedTo));
-      }
-
       // Mostrar el número de orden creada
       setCreatedOrderId(order.id);
 
