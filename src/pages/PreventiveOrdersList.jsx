@@ -12,6 +12,10 @@ export default function PreventiveOrdersList() {
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
+  const handleBackToDashboard = () => {
+    navigate("/dashboard");
+  };
+
   useEffect(() => {
     loadOrders();
   }, [status, page]);
@@ -52,6 +56,34 @@ export default function PreventiveOrdersList() {
 
   return (
     <div style={{ padding: 20, minHeight: "100vh", background: "#0f172a" }}>
+      <button
+        onClick={handleBackToDashboard}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          background: "transparent",
+          border: "1px solid #334155",
+          color: "#cbd5e1",
+          padding: "8px 16px",
+          borderRadius: 8,
+          fontWeight: 600,
+          cursor: "pointer",
+          marginBottom: 20,
+          transition: "all 0.15s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = "#475569";
+          e.currentTarget.style.color = "#f1f5f9";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "#334155";
+          e.currentTarget.style.color = "#cbd5e1";
+        }}
+      >
+        ← Dashboard
+      </button>
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
         <h1 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: "#f1f5f9" }}>
           Órdenes de Lubricación Preventiva
