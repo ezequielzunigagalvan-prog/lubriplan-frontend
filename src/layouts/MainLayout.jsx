@@ -5,6 +5,7 @@ import useDashboardAlerts from "../hooks/useDashboardAlerts";
 import { useAuth } from "../context/AuthContext";
 import useNotifications from "../hooks/useNotifications";
 import useRealtimeAlerts from "../hooks/useRealtimeAlerts";
+import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { Icon } from "../components/ui/lpIcons";
 import PlantSwitcher from "../components/plants/PlantSwitcher";
 import lubriPlanMark from "../assets/lubriplan-menu-icon.png";
@@ -131,6 +132,10 @@ export default function MainLayout({ children }) {
   const notifRef = useRef(null);
   const prevUnreadRef = useRef(Number(unreadCount || 0));
 
+  const [olpCount, setOlpCount] = useState(0);
+  const [olpPulse, setOlpPulse] = useState(false);
+  const prevOlpRef = useRef(0);
+
   useEffect(() => {
     const nextUnread = Number(unreadCount || 0);
     const prevUnread = Number(prevUnreadRef.current || 0);
@@ -169,6 +174,37 @@ export default function MainLayout({ children }) {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  // Cargar OLP pendientes para el badge del técnico
+  useEffect(() => {
+    const loadOlpCount = async () => {
+      try {
+        const data = await preventiveOrdersService.list({ status: "OPEN,IN_PROGRESS", limit: 100 });
+        const count = (data.data || []).length;
+
+        const nextOlp = Number(count || 0);
+        const prevOlp = Number(prevOlpRef.current || 0);
+
+        if (nextOlp > 0 && nextOlp > prevOlp) {
+          setOlpPulse(true);
+          const timer = window.setTimeout(() => setOlpPulse(false), 1800);
+          prevOlpRef.current = nextOlp;
+          setOlpCount(count);
+          return () => window.clearTimeout(timer);
+        }
+
+        if (nextOlp === 0) setOlpPulse(false);
+        prevOlpRef.current = nextOlp;
+        setOlpCount(count);
+      } catch (err) {
+        console.error("Error loading OLP count:", err);
+      }
+    };
+
+    if (currentPlantId) {
+      loadOlpCount();
+    }
+  }, [currentPlantId]);
 
   const { alerts: rawAlerts } = useDashboardAlerts({
     month,
@@ -549,13 +585,34 @@ export default function MainLayout({ children }) {
           {can.preventiveOrders && (
             <NavLink className="lpSideLink" to="/preventive-orders" style={navLinkStyle("/preventive-orders")}>
               <span style={sideRow}>
-                <span style={navIconStyle("/preventive-orders")}>
+                <span style={{
+                  ...navIconStyle("/preventive-orders"),
+                  animation: olpPulse ? "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
+                }}>
                   ⚡
                 </span>
                 <span style={sideText}>Órdenes OLP</span>
+                {olpCount > 0 && (
+                  <span style={{
+                    ...badgeAmber,
+                    animation: olpPulse ? "bounce 1s ease-in-out infinite" : "none",
+                  }}>
+                    {olpCount > 99 ? "99+" : olpCount}
+                  </span>
+                )}
               </span>
             </NavLink>
           )}
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+            }
+            @keyframes bounce {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.1); }
+            }
+          `}</style>
 
           {can.history && (
             <NavLink className="lpSideLink" to="/history" style={navLinkStyle("/history")}>
