@@ -158,77 +158,202 @@ export default function PreventiveOrdersList() {
           </button>
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 12 }}>
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              onClick={() => navigate(`/preventive-orders/${order.id}`)}
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                border: "1px solid #1e293b",
-                background: "#1a1f26",
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#334155";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(249,115,22,0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#1e293b";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: "#f1f5f9", marginBottom: 4 }}>
+        <div style={{ display: "grid", gap: 16 }}>
+          {orders.map((order) => {
+            const progress = order.progress?.total > 0
+              ? Math.round((order.progress.completed / order.progress.total) * 100)
+              : 0;
+            const borderColor = statusColors[order.status];
+            const bgBorderColor = statusColors[order.status] + '15';
+
+            const handleDelete = async () => {
+              if (window.confirm(`¿Seguro que deseas eliminar la orden #${order.id}?`)) {
+                try {
+                  await fetch(`${import.meta.env.VITE_API_URL}/preventive-orders/${order.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
+                      'x-plant-id': localStorage.getItem('lp_currentPlantId') || '',
+                    }
+                  });
+                  loadOrders();
+                } catch (err) {
+                  console.error('Error eliminando orden:', err);
+                }
+              }
+            };
+
+            const handleOpen = async () => {
+              try {
+                await fetch(`${import.meta.env.VITE_API_URL}/preventive-orders/${order.id}/open`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
+                    'x-plant-id': localStorage.getItem('lp_currentPlantId') || '',
+                  }
+                });
+                loadOrders();
+              } catch (err) {
+                console.error('Error abriendo orden:', err);
+              }
+            };
+
+            return (
+              <div
+                key={order.id}
+                style={{
+                  padding: 16,
+                  borderRadius: 12,
+                  border: "1px solid #334155",
+                  borderLeft: `4px solid ${borderColor}`,
+                  background: "#1a1f26",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#202732";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#1a1f26";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                {/* Encabezado con título y badge */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "#f1f5f9" }}>
                     {order.title || `Orden #${order.id}`}
+                  </h3>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      background: bgBorderColor,
+                      color: borderColor,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {statusLabels[order.status]}
                   </div>
-                  <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8 }}>
-                    {order.equipment?.name} • {new Date(order.scheduledDate).toLocaleDateString()}
-                  </div>
-                  {order.assignedToUser && (
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
-                      Asignado: {order.assignedToUser.name}
-                    </div>
-                  )}
-                  {order.progress && (
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>
-                        Progreso: {order.progress.completed}/{order.progress.total}
-                      </div>
-                      <div style={{ height: 4, background: "#334155", borderRadius: 2, overflow: "hidden" }}>
-                        <div
-                          style={{
-                            height: "100%",
-                            background: "#f97316",
-                            width: `${order.progress.total > 0 ? (order.progress.completed / order.progress.total) * 100 : 0}%`,
-                            transition: "width 0.3s ease",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
-                <div
-                  style={{
-                    display: "inline-block",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "4px 12px",
-                    borderRadius: 6,
-                    background: `${statusColors[order.status]}20`,
-                    color: statusColors[order.status],
-                    whiteSpace: "nowrap",
-                    marginLeft: 12,
-                  }}
-                >
-                  {statusLabels[order.status]}
+
+                {/* Equipo y fecha */}
+                <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 12 }}>
+                  ⚙️ {order.equipment?.name} • 📅 {new Date(order.scheduledDate).toLocaleDateString('es-MX')}
+                </div>
+
+                {/* Fila de información */}
+                <div style={{ display: "flex", gap: 16, fontSize: 12, color: "#cbd5e1", marginBottom: 12 }}>
+                  {order.assignedToUser ? (
+                    <div>👤 {order.assignedToUser.name}</div>
+                  ) : (
+                    <div style={{ color: '#64748b' }}>👤 Sin asignar</div>
+                  )}
+                  <div>📋 {order.progress?.total || 0} items</div>
+                  <div style={{ color: '#64748b' }}>Creado: {new Date(order.createdAt).toLocaleDateString('es-MX')}</div>
+                </div>
+
+                {/* Barra de progreso */}
+                {order.progress && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>
+                      {order.progress.completed}/{order.progress.total} items · {progress}%
+                    </div>
+                    <div style={{ height: 6, background: "#334155", borderRadius: 3, overflow: "hidden" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          background: borderColor,
+                          width: `${progress}%`,
+                          transition: "width 0.3s ease",
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Botones de acción */}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  {order.status === 'DRAFT' && (
+                    <>
+                      <button
+                        onClick={handleOpen}
+                        style={{
+                          padding: "8px 16px",
+                          height: 36,
+                          borderRadius: 8,
+                          border: "none",
+                          background: "#3b82f6",
+                          color: "white",
+                          fontWeight: 700,
+                          fontSize: 12,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#2563eb";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "#3b82f6";
+                        }}
+                      >
+                        Liberar al técnico
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        style={{
+                          padding: "8px 12px",
+                          height: 36,
+                          borderRadius: 8,
+                          border: "none",
+                          background: "#ef4444",
+                          color: "white",
+                          fontWeight: 700,
+                          fontSize: 12,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#dc2626";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "#ef4444";
+                        }}
+                      >
+                        🗑️
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => navigate(`/preventive-orders/${order.id}`)}
+                    style={{
+                      padding: "8px 16px",
+                      height: 36,
+                      borderRadius: 8,
+                      border: "1px solid #475569",
+                      background: "transparent",
+                      color: "#cbd5e1",
+                      fontWeight: 700,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "#64748b";
+                      e.currentTarget.style.color = "#f1f5f9";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "#475569";
+                      e.currentTarget.style.color = "#cbd5e1";
+                    }}
+                  >
+                    Ver detalle →
+                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
