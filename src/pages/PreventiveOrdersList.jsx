@@ -169,13 +169,7 @@ export default function PreventiveOrdersList() {
             const handleDelete = async () => {
               if (window.confirm(`¿Seguro que deseas eliminar la orden #${order.id}?`)) {
                 try {
-                  await fetch(`${import.meta.env.VITE_API_URL}/preventive-orders/${order.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                      'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
-                      'x-plant-id': localStorage.getItem('lp_currentPlantId') || '',
-                    }
-                  });
+                  await preventiveOrdersService.cancel(order.id);
                   loadOrders();
                 } catch (err) {
                   console.error('Error eliminando orden:', err);
@@ -185,13 +179,7 @@ export default function PreventiveOrdersList() {
 
             const handleOpen = async () => {
               try {
-                await fetch(`${import.meta.env.VITE_API_URL}/preventive-orders/${order.id}/open`, {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
-                    'x-plant-id': localStorage.getItem('lp_currentPlantId') || '',
-                  }
-                });
+                await preventiveOrdersService.open(order.id);
                 loadOrders();
               } catch (err) {
                 console.error('Error abriendo orden:', err);

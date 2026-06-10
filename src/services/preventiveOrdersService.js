@@ -34,9 +34,9 @@ export const preventiveOrdersService = {
     return httpPut(`/preventive-orders/${id}`, updates);
   },
 
-  // Cambiar estado a OPEN
+  // Cambiar estado a OPEN (liberar al técnico)
   async open(id) {
-    return httpPut(`/preventive-orders/${id}/open`, {});
+    return httpPost(`/preventive-orders/${id}/open`, {});
   },
 
   // Cambiar estado a IN_PROGRESS (asignar técnico)
