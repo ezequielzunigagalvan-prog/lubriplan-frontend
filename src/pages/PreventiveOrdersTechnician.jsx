@@ -4,6 +4,7 @@ import MainLayout from "../layouts/MainLayout";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
+import { Icon } from "../components/ui/lpIcons";
 
 export default function PreventiveOrdersTechnician() {
   const navigate = useNavigate();
@@ -60,36 +61,52 @@ export default function PreventiveOrdersTechnician() {
   }, [orders, filter]);
 
   const statusConfig = {
-    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "📝" },
-    OPEN: { color: "#3b82f6", label: "Disponible", icon: "🔓" },
-    IN_PROGRESS: { color: "#f59e0b", label: "Asignada a ti", icon: "🎯" },
-    COMPLETED: { color: "#10b981", label: "Completada", icon: "✅" },
+    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "file" },
+    OPEN: { color: "#3b82f6", label: "Disponible", icon: "unlock" },
+    IN_PROGRESS: { color: "#f59e0b", label: "Asignada a ti", icon: "target" },
+    COMPLETED: { color: "#10b981", label: "Completada", icon: "check" },
   };
 
   const filterConfig = {
-    todas: { label: "Todas", icon: "📋", count: orders.length },
-    hoy: { label: "Hoy", icon: "📅", count: orders.filter(o => {
-      const d = new Date(o.scheduledDate);
-      d.setHours(0, 0, 0, 0);
-      return d.getTime() === today.getTime();
-    }).length },
-    pendientes: { label: "Pendientes", icon: "⏳", count: orders.filter(o => {
-      const d = new Date(o.scheduledDate);
-      d.setHours(0, 0, 0, 0);
-      return d > today && o.status !== "COMPLETED";
-    }).length },
-    atrasadas: { label: "Atrasadas", icon: "⚠️", count: orders.filter(o => {
-      const d = new Date(o.scheduledDate);
-      d.setHours(0, 0, 0, 0);
-      return d < today && o.status !== "COMPLETED";
-    }).length },
-    proximas: { label: "Próximas 7 días", icon: "📈", count: orders.filter(o => {
-      const d = new Date(o.scheduledDate);
-      d.setHours(0, 0, 0, 0);
-      const nextWeek = new Date(today);
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      return d > today && d <= nextWeek && o.status !== "COMPLETED";
-    }).length },
+    todas: { label: "Todas", icon: "list", count: orders.length },
+    hoy: {
+      label: "Hoy",
+      icon: "calendar",
+      count: orders.filter((o) => {
+        const d = new Date(o.scheduledDate);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime();
+      }).length,
+    },
+    pendientes: {
+      label: "Pendientes",
+      icon: "clock",
+      count: orders.filter((o) => {
+        const d = new Date(o.scheduledDate);
+        d.setHours(0, 0, 0, 0);
+        return d > today && o.status !== "COMPLETED";
+      }).length,
+    },
+    atrasadas: {
+      label: "Atrasadas",
+      icon: "alertCircle",
+      count: orders.filter((o) => {
+        const d = new Date(o.scheduledDate);
+        d.setHours(0, 0, 0, 0);
+        return d < today && o.status !== "COMPLETED";
+      }).length,
+    },
+    proximas: {
+      label: "Próximas 7 días",
+      icon: "trendingUp",
+      count: orders.filter((o) => {
+        const d = new Date(o.scheduledDate);
+        d.setHours(0, 0, 0, 0);
+        const nextWeek = new Date(today);
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        return d > today && d <= nextWeek && o.status !== "COMPLETED";
+      }).length,
+    },
   };
 
   return (
@@ -102,8 +119,12 @@ export default function PreventiveOrdersTechnician() {
             fontSize: 32,
             fontWeight: 900,
             color: "#f1f5f9",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
           }}>
-            👋 Hola, {user?.name || "Técnico"}
+            <Icon name="user" size="lg" style={{ color: "#f97316" }} />
+            Hola, {user?.name || "Técnico"}
           </h1>
           <p style={{ margin: "0", color: "#94a3b8", fontSize: 14 }}>
             Tienes {filteredOrders.length} orden{filteredOrders.length !== 1 ? "es" : ""} en el filtro actual
@@ -118,9 +139,9 @@ export default function PreventiveOrdersTechnician() {
           marginBottom: 32,
         }}>
           {[
-            { label: "Por hacer", count: orders.filter(o => o.status === "OPEN").length, color: "#3b82f6" },
-            { label: "Asignadas", count: orders.filter(o => o.status === "IN_PROGRESS").length, color: "#f59e0b" },
-            { label: "Completadas", count: orders.filter(o => o.status === "COMPLETED").length, color: "#10b981" },
+            { label: "Por hacer", count: orders.filter((o) => o.status === "OPEN").length, color: "#3b82f6", icon: "list" },
+            { label: "Asignadas", count: orders.filter((o) => o.status === "IN_PROGRESS").length, color: "#f59e0b", icon: "target" },
+            { label: "Completadas", count: orders.filter((o) => o.status === "COMPLETED").length, color: "#10b981", icon: "check" },
           ].map((kpi, idx) => (
             <div
               key={idx}
@@ -132,6 +153,9 @@ export default function PreventiveOrdersTechnician() {
                 textAlign: "center",
               }}
             >
+              <div style={{ fontSize: 24, color: kpi.color, marginBottom: 8 }}>
+                <Icon name={kpi.icon} size="lg" />
+              </div>
               <div style={{ fontSize: 28, fontWeight: 900, color: kpi.color, marginBottom: 4 }}>
                 {kpi.count}
               </div>
@@ -164,9 +188,7 @@ export default function PreventiveOrdersTechnician() {
                   padding: "10px 16px",
                   borderRadius: 12,
                   border: "1.5px solid",
-                  background: isActive
-                    ? "linear-gradient(135deg, #f97316, #ea580c)"
-                    : "transparent",
+                  background: isActive ? "linear-gradient(135deg, #f97316, #ea580c)" : "transparent",
                   color: isActive ? "white" : "#94a3b8",
                   borderColor: isActive ? "#f97316" : "#334155",
                   fontWeight: 600,
@@ -191,15 +213,18 @@ export default function PreventiveOrdersTechnician() {
                   }
                 }}
               >
-                {config.icon} {config.label}
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  padding: "2px 6px",
-                  borderRadius: 4,
-                  background: isActive ? "rgba(255,255,255,0.2)" : "#334155",
-                  color: isActive ? "white" : "#94a3b8",
-                }}>
+                <Icon name={config.icon} size="sm" />
+                {config.label}
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "2px 6px",
+                    borderRadius: 4,
+                    background: isActive ? "rgba(255,255,255,0.2)" : "#334155",
+                    color: isActive ? "white" : "#94a3b8",
+                  }}
+                >
                   {config.count}
                 </span>
               </button>
@@ -210,20 +235,26 @@ export default function PreventiveOrdersTechnician() {
         {/* Contenido */}
         {loading ? (
           <div style={{ textAlign: "center", padding: 60, color: "#64748b" }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>
+              <Icon name="loader" size="xl" />
+            </div>
             <div style={{ fontWeight: 600, fontSize: 16, color: "#cbd5e1" }}>
               Cargando tus órdenes…
             </div>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div style={{
-            textAlign: "center",
-            padding: 80,
-            background: "linear-gradient(135deg, #1e293b20, #10b96120)",
-            borderRadius: 20,
-            border: "2px dashed #334155",
-          }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
+          <div
+            style={{
+              textAlign: "center",
+              padding: 80,
+              background: "linear-gradient(135deg, #1e293b20, #10b96120)",
+              borderRadius: 20,
+              border: "2px dashed #334155",
+            }}
+          >
+            <div style={{ fontSize: 56, marginBottom: 16, color: "#10b981" }}>
+              <Icon name="checkCircle" size="xl" />
+            </div>
             <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: "#f1f5f9" }}>
               ¡Sin órdenes pendientes!
             </div>
@@ -277,75 +308,103 @@ export default function PreventiveOrdersTechnician() {
                     {/* Encabezado */}
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
                       <div>
-                        <h3 style={{
-                          margin: "0 0 4px 0",
-                          fontSize: 18,
-                          fontWeight: 900,
-                          color: "#f1f5f9",
-                        }}>
+                        <h3
+                          style={{
+                            margin: "0 0 4px 0",
+                            fontSize: 18,
+                            fontWeight: 900,
+                            color: "#f1f5f9",
+                          }}
+                        >
                           {order.title || `Orden #${order.id}`}
                         </h3>
-                        <p style={{
-                          margin: 0,
-                          color: "#94a3b8",
-                          fontSize: 13,
-                        }}>
-                          ⚙️ {order.equipment?.name}
+                        <p
+                          style={{
+                            margin: 0,
+                            color: "#94a3b8",
+                            fontSize: 13,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <Icon name="settings" size="sm" />
+                          {order.equipment?.name}
                         </p>
                       </div>
                     </div>
 
                     {/* Info */}
-                    <div style={{
-                      padding: 12,
-                      background: "#0f172a80",
-                      borderRadius: 10,
-                      border: "1px solid #334155",
-                      marginBottom: 12,
-                    }}>
-                      <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                        gap: 12,
-                        fontSize: 12,
-                      }}>
+                    <div
+                      style={{
+                        padding: 12,
+                        background: "#0f172a80",
+                        borderRadius: 10,
+                        border: "1px solid #334155",
+                        marginBottom: 12,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                          gap: 12,
+                          fontSize: 12,
+                        }}
+                      >
                         <div>
-                          <div style={{ color: "#94a3b8", marginBottom: 4 }}>📅 Fecha</div>
+                          <div style={{ color: "#94a3b8", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                            <Icon name="calendar" size="xs" />
+                            Fecha
+                          </div>
                           <strong style={{ color: "#f1f5f9" }}>
-                            {new Date(order.scheduledDate).toLocaleDateString('es-MX')}
+                            {new Date(order.scheduledDate).toLocaleDateString("es-MX")}
                           </strong>
                           {daysUntil !== 0 && (
-                            <div style={{
-                              fontSize: 11,
-                              color: daysUntil < 0 ? "#ef4444" : "#f59e0b",
-                              marginTop: 2,
-                            }}>
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: daysUntil < 0 ? "#ef4444" : "#f59e0b",
+                                marginTop: 2,
+                              }}
+                            >
                               {daysUntil < 0
-                                ? `⚠️ ${Math.abs(daysUntil)} días atrasada`
+                                ? `${Math.abs(daysUntil)} días atrasada`
                                 : daysUntil === 0
-                                ? "🎯 Hoy"
-                                : `📈 En ${daysUntil} días`}
+                                ? "Hoy"
+                                : `En ${daysUntil} días`}
                             </div>
                           )}
                         </div>
                         <div>
-                          <div style={{ color: "#94a3b8", marginBottom: 4 }}>📋 Items</div>
+                          <div style={{ color: "#94a3b8", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                            <Icon name="list" size="xs" />
+                            Items
+                          </div>
                           <strong style={{ color: "#f1f5f9" }}>
                             {order.progress?.completed || 0}/{order.progress?.total || 0}
                           </strong>
                         </div>
                         <div>
-                          <div style={{ color: "#94a3b8", marginBottom: 4 }}>🏷️ Estado</div>
-                          <div style={{
-                            display: "inline-block",
-                            padding: "4px 8px",
-                            borderRadius: 6,
-                            background: `${config.color}20`,
-                            color: config.color,
-                            fontWeight: 600,
-                            fontSize: 11,
-                          }}>
-                            {config.icon} {config.label}
+                          <div style={{ color: "#94a3b8", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                            <Icon name="tag" size="xs" />
+                            Estado
+                          </div>
+                          <div
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              background: `${config.color}20`,
+                              color: config.color,
+                              fontWeight: 600,
+                              fontSize: 11,
+                            }}
+                          >
+                            <Icon name={config.icon} size="xs" />
+                            {config.label}
                           </div>
                         </div>
                       </div>
@@ -354,24 +413,28 @@ export default function PreventiveOrdersTechnician() {
                     {/* Progreso */}
                     {order.progress && (
                       <div>
-                        <div style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: 12,
-                          color: "#94a3b8",
-                          marginBottom: 6,
-                        }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            fontSize: 12,
+                            color: "#94a3b8",
+                            marginBottom: 6,
+                          }}
+                        >
                           <span>Progreso</span>
                           <strong style={{ color: "#f1f5f9" }}>
                             {Math.round((order.progress.completed / order.progress.total) * 100)}%
                           </strong>
                         </div>
-                        <div style={{
-                          height: 8,
-                          background: "#334155",
-                          borderRadius: 4,
-                          overflow: "hidden"
-                        }}>
+                        <div
+                          style={{
+                            height: 8,
+                            background: "#334155",
+                            borderRadius: 4,
+                            overflow: "hidden",
+                          }}
+                        >
                           <div
                             style={{
                               height: "100%",
@@ -387,12 +450,14 @@ export default function PreventiveOrdersTechnician() {
                   </div>
 
                   {/* Botón ejecutar y badges de estado */}
-                  <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    flexShrink: 0,
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      flexShrink: 0,
+                    }}
+                  >
                     {daysUntil <= 0 ? (
                       <button
                         onClick={(e) => {
@@ -411,6 +476,10 @@ export default function PreventiveOrdersTechnician() {
                           cursor: "pointer",
                           transition: "all 0.2s",
                           whiteSpace: "nowrap",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.boxShadow = "0 6px 20px rgba(249, 115, 22, 0.4)";
@@ -421,7 +490,8 @@ export default function PreventiveOrdersTechnician() {
                           e.currentTarget.style.transform = "translateY(0)";
                         }}
                       >
-                        ▶️ Ejecutar
+                        <Icon name="play" size="sm" />
+                        Ejecutar
                       </button>
                     ) : (
                       <button
@@ -437,24 +507,37 @@ export default function PreventiveOrdersTechnician() {
                           fontSize: 13,
                           cursor: "not-allowed",
                           whiteSpace: "nowrap",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
                         }}
                         title="Disponible a partir del día asignado"
                       >
-                        🔒 Disponible luego
+                        <Icon name="lock" size="sm" />
+                        Disponible
                       </button>
                     )}
 
                     {/* Badge de estado */}
-                    <div style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: "4px 8px",
-                      borderRadius: 6,
-                      textAlign: "center",
-                      background: daysUntil < 0 ? "#ef444420" : daysUntil === 0 ? "#f5960b20" : "#3b82f620",
-                      color: daysUntil < 0 ? "#ef4444" : daysUntil === 0 ? "#f59e0b" : "#3b82f6",
-                    }}>
-                      {daysUntil < 0 ? "⚠️ ATRASADA" : daysUntil === 0 ? "🎯 HOY" : "⏳ PENDIENTE"}
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "6px 8px",
+                        borderRadius: 6,
+                        textAlign: "center",
+                        background:
+                          daysUntil < 0 ? "#ef444420" : daysUntil === 0 ? "#f5960b20" : "#3b82f620",
+                        color: daysUntil < 0 ? "#ef4444" : daysUntil === 0 ? "#f59e0b" : "#3b82f6",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <Icon name={daysUntil < 0 ? "alertCircle" : daysUntil === 0 ? "target" : "clock"} size="xs" />
+                      {daysUntil < 0 ? "ATRASADA" : daysUntil === 0 ? "HOY" : "PENDIENTE"}
                     </div>
                   </div>
                 </div>
