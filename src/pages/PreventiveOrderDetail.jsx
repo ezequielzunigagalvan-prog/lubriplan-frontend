@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import MainLayout from "../layouts/MainLayout";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { httpGet } from "../services/http";
+import { Icon } from "../components/ui/lpIcons";
 
 export default function PreventiveOrderDetail() {
   const navigate = useNavigate();
@@ -9,6 +11,7 @@ export default function PreventiveOrderDetail() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [technicians, setTechnicians] = useState([]);
   const [selectedTechnician, setSelectedTechnician] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
@@ -21,6 +24,7 @@ export default function PreventiveOrderDetail() {
 
   async function loadOrder() {
     setLoading(true);
+    setNotFound(false);
     try {
       const data = await preventiveOrdersService.get(Number(id));
       setOrder(data);
@@ -28,7 +32,8 @@ export default function PreventiveOrderDetail() {
         setSelectedTechnician(data.assignedTo);
       }
     } catch (err) {
-      setError("No se pudo cargar la orden");
+      console.error("Error loading order:", err);
+      setNotFound(true);
     } finally {
       setLoading(false);
     }
@@ -45,308 +50,525 @@ export default function PreventiveOrderDetail() {
     }
   }
 
-  const statusColors = {
-    DRAFT: "#94a3b8",
-    OPEN: "#3b82f6",
-    IN_PROGRESS: "#f59e0b",
-    COMPLETED: "#10b981",
-    CANCELLED: "#ef4444",
+  const statusConfig = {
+    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "file" },
+    OPEN: { color: "#3b82f6", label: "Abierta", icon: "unlock" },
+    IN_PROGRESS: { color: "#f59e0b", label: "En progreso", icon: "play" },
+    COMPLETED: { color: "#10b981", label: "Completada", icon: "check" },
+    CANCELLED: { color: "#ef4444", label: "Cancelada", icon: "x" },
   };
 
-  const statusLabels = {
-    DRAFT: "Borrador",
-    OPEN: "Abierta",
-    IN_PROGRESS: "En progreso",
-    COMPLETED: "Completada",
-    CANCELLED: "Cancelada",
-  };
-
-  async function handleOpen() {
-    setActionLoading(true);
-    try {
-      const updated = await preventiveOrdersService.open(Number(id));
-      setOrder(updated);
-    } catch (err) {
-      setError(err.response?.data?.error || "Error abriendo orden");
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function handleStart() {
-    if (!selectedTechnician) {
-      setError("Selecciona un técnico");
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const updated = await preventiveOrdersService.start(Number(id), selectedTechnician);
-      setOrder(updated);
-    } catch (err) {
-      setError(err.response?.data?.error || "Error iniciando orden");
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function handleEdit() {
-    navigate(`/preventive-orders/${id}/edit`);
-  }
-
-  async function handleCancel() {
-    if (window.confirm("¿Seguro que deseas cancelar esta orden?")) {
-      setActionLoading(true);
-      try {
-        const updated = await preventiveOrdersService.cancel(Number(id));
-        setOrder(updated);
-      } catch (err) {
-        setError(err.response?.data?.error || "Error cancelando orden");
-      } finally {
-        setActionLoading(false);
-      }
-    }
-  }
-
+  // Pantalla de carga
   if (loading) {
-    return <div style={{ padding: 20, textAlign: "center" }}>Cargando…</div>;
+    return (
+      <MainLayout>
+        <div style={{ padding: 40, textAlign: "center", minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div>
+            <Icon name="loader" size="lg" style={{ marginBottom: 16, display: "block" }} />
+            <p style={{ color: "#64748b", fontSize: 16, fontWeight: 600 }}>Cargando orden…</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
 
-  if (!order) {
-    return <div style={{ padding: 20, textAlign: "center", color: "#ef4444" }}>Orden no encontrada</div>;
+  // Pantalla de orden no encontrada
+  if (notFound || !order) {
+    return (
+      <MainLayout>
+        <div style={{
+          padding: "40px 24px",
+          minHeight: "80vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0f172a"
+        }}>
+          <div style={{
+            maxWidth: 500,
+            textAlign: "center",
+            padding: 40,
+            borderRadius: 20,
+            background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
+            border: "2px dashed #334155"
+          }}>
+            <div style={{
+              fontSize: 64,
+              marginBottom: 20,
+              color: "#ef4444"
+            }}>
+              <Icon name="alertCircle" size="xl" />
+            </div>
+            <h1 style={{
+              fontSize: 28,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              marginBottom: 8
+            }}>
+              Orden no encontrada
+            </h1>
+            <p style={{
+              fontSize: 14,
+              color: "#94a3b8",
+              marginBottom: 32
+            }}>
+              La orden que buscas no existe o fue eliminada. Verifica el ID e intenta nuevamente.
+            </p>
+            <button
+              onClick={() => navigate("/preventive-orders")}
+              style={{
+                padding: "12px 24px",
+                borderRadius: 12,
+                border: "none",
+                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                color: "white",
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(249, 115, 22, 0.4)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              <Icon name="arrowLeft" size="sm" />
+              Volver a órdenes
+            </button>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
 
   const completedCount = order.items?.filter((i) => i.status === "COMPLETED").length || 0;
   const totalItems = order.items?.length || 0;
+  const progress = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+  const config = statusConfig[order.status];
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 30 }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: "#0f172a", margin: 0, marginBottom: 10 }}>
-            {order.title}
-          </h1>
-          <div style={{ fontSize: 14, color: "#64748b" }}>
-            {order.equipment?.name} • {order.equipment?.code}
-          </div>
-        </div>
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            padding: "8px 16px",
-            borderRadius: 8,
-            background: `${statusColors[order.status]}15`,
-            color: statusColors[order.status],
-          }}
-        >
-          {statusLabels[order.status]}
-        </div>
-      </div>
-
-      {error && (
-        <div style={{ padding: 12, borderRadius: 8, background: "#fee2e2", color: "#dc2626", marginBottom: 20, fontWeight: 600 }}>
-          {error}
-        </div>
-      )}
-
-      {/* Grid de detalles */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16, marginBottom: 30 }}>
-        <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", marginBottom: 6 }}>Fecha Programada</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#0f172a" }}>
-            {new Date(order.scheduledDate).toLocaleDateString()}
-          </div>
-        </div>
-        <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", marginBottom: 6 }}>Items</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#0f172a" }}>
-            {completedCount} de {totalItems} completados
-          </div>
-        </div>
-        <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", marginBottom: 6 }}>Creada por</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>
-            {order.createdByUser?.name}
-          </div>
-        </div>
-        <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", marginBottom: 6 }}>Asignado a</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>
-            {order.assignedToUser?.name || "Sin asignar"}
-          </div>
-        </div>
-      </div>
-
-      {/* Items */}
-      <div style={{ marginBottom: 30 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 16 }}>Items de la Orden</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {order.items?.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                padding: 14,
-                borderRadius: 10,
-                border: item.status === "COMPLETED" ? "1px solid #dcfce7" : "1px solid #e2e8f0",
-                background: item.status === "COMPLETED" ? "#f0fdf4" : "white",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ fontSize: 16 }}>
-                  {item.status === "COMPLETED" ? "✅" : "⭕"}
-                </div>
-                <div>
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      color: item.status === "COMPLETED" ? "#15803d" : "#0f172a",
-                    }}
-                  >
-                    {item.route?.name}
-                  </div>
-                  {item.observations && (
-                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-                      {item.observations}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+    <MainLayout>
+      <div style={{ padding: "24px", minHeight: "100vh", background: "#0f172a" }}>
+        {/* Botón para regresar */}
         <button
           onClick={() => navigate("/preventive-orders")}
           style={{
-            padding: "10px 20px",
-            borderRadius: 8,
-            border: "1px solid #cbd5e1",
-            background: "white",
-            color: "#475569",
-            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "transparent",
+            border: "1px solid #334155",
+            color: "#cbd5e1",
+            padding: "8px 16px",
+            borderRadius: 10,
+            fontWeight: 600,
             cursor: "pointer",
+            marginBottom: 24,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "#475569";
+            e.currentTarget.style.color = "#f1f5f9";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "#334155";
+            e.currentTarget.style.color = "#cbd5e1";
           }}
         >
-          Atrás
+          <Icon name="arrowLeft" size="sm" />
+          Volver
         </button>
 
-        {order.status === "DRAFT" && (
-          <>
-            <button
-              onClick={handleEdit}
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          {/* Header */}
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 32,
+            paddingBottom: 20,
+            borderBottom: "2px solid #334155"
+          }}>
+            <div>
+              <h1 style={{
+                fontSize: 32,
+                fontWeight: 900,
+                color: "#f1f5f9",
+                margin: "0 0 8px 0"
+              }}>
+                Orden #{order.id}
+              </h1>
+              <p style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>
+                {order.title}
+              </p>
+            </div>
+            <div
               style={{
-                padding: "10px 20px",
-                borderRadius: 8,
-                border: "1px solid #f97316",
-                background: "white",
-                color: "#f97316",
+                fontSize: 12,
                 fontWeight: 700,
-                cursor: "pointer",
+                padding: "8px 16px",
+                borderRadius: 10,
+                background: `${config.color}20`,
+                color: config.color,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              ✏️ Editar
-            </button>
-            <button
-              onClick={handleOpen}
-              disabled={actionLoading}
-              style={{
-                padding: "10px 20px",
-                borderRadius: 8,
-                border: "none",
-                background: actionLoading ? "#cbd5e1" : "#3b82f6",
-                color: "white",
-                fontWeight: 700,
-                cursor: actionLoading ? "default" : "pointer",
-              }}
-            >
-              {actionLoading ? "Procesando…" : "Abrir Orden"}
-            </button>
-          </>
-        )}
-
-        {["DRAFT", "OPEN"].includes(order.status) && (
-          <button
-            onClick={handleCancel}
-            disabled={actionLoading}
-            style={{
-              padding: "10px 20px",
-              borderRadius: 8,
-              border: "1px solid #ef4444",
-              background: "white",
-              color: "#ef4444",
-              fontWeight: 700,
-              cursor: actionLoading ? "default" : "pointer",
-            }}
-          >
-            Cancelar
-          </button>
-        )}
-
-        {order.status === "OPEN" && (
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <select
-              value={selectedTechnician}
-              onChange={(e) => setSelectedTechnician(e.target.value)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 8,
-                border: "1px solid #cbd5e1",
-                fontFamily: "inherit",
-              }}
-            >
-              <option value="">Selecciona técnico</option>
-              {technicians.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleStart}
-              disabled={actionLoading || !selectedTechnician}
-              style={{
-                padding: "10px 20px",
-                borderRadius: 8,
-                border: "none",
-                background: selectedTechnician && !actionLoading ? "#f59e0b" : "#cbd5e1",
-                color: "white",
-                fontWeight: 700,
-                cursor: selectedTechnician && !actionLoading ? "pointer" : "default",
-              }}
-            >
-              {actionLoading ? "Procesando…" : "Iniciar Ejecución"}
-            </button>
+              <Icon name={config.icon} size="sm" />
+              {config.label}
+            </div>
           </div>
-        )}
 
-        {order.status === "IN_PROGRESS" && (
-          <button
-            onClick={() => navigate(`/preventive-orders/${id}/execute`)}
-            style={{
-              padding: "10px 20px",
-              borderRadius: 8,
-              border: "none",
-              background: "#f59e0b",
-              color: "white",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            ⚡ Continuar Ejecución
-          </button>
-        )}
-      </div>
+          {error && (
+            <div style={{
+              padding: 16,
+              borderRadius: 12,
+              background: "#fee2e2",
+              color: "#dc2626",
+              marginBottom: 20,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 8
+            }}>
+              <Icon name="alertCircle" size="sm" />
+              {error}
+            </div>
+          )}
 
-      {order.notes && (
-        <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc", borderLeft: "4px solid #f97316" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", marginBottom: 8 }}>Notas</div>
-          <div style={{ fontSize: 14, color: "#475569", whiteSpace: "pre-wrap" }}>{order.notes}</div>
+          {/* Grid de información */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 16,
+            marginBottom: 32,
+          }}>
+            {[
+              {
+                icon: "settings",
+                label: "Equipo",
+                value: order.equipment?.name,
+                detail: order.equipment?.code
+              },
+              {
+                icon: "calendar",
+                label: "Fecha Programada",
+                value: new Date(order.scheduledDate).toLocaleDateString('es-MX'),
+              },
+              {
+                icon: "users",
+                label: "Asignado a",
+                value: order.assignedToUser?.name || "Sin asignar",
+              },
+              {
+                icon: "user",
+                label: "Creado por",
+                value: order.createdByUser?.name,
+              }
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: 16,
+                  borderRadius: 12,
+                  background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
+                  border: "1px solid #334155",
+                }}
+              >
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 8,
+                  color: "#94a3b8",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}>
+                  <Icon name={item.icon} size="sm" />
+                  {item.label}
+                </div>
+                <div style={{
+                  fontSize: 16,
+                  fontWeight: 900,
+                  color: "#f1f5f9"
+                }}>
+                  {item.value}
+                </div>
+                {item.detail && (
+                  <div style={{
+                    fontSize: 12,
+                    color: "#64748b",
+                    marginTop: 4
+                  }}>
+                    {item.detail}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Progreso */}
+          <div style={{
+            padding: 20,
+            borderRadius: 16,
+            background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
+            border: "1px solid #334155",
+            marginBottom: 32,
+          }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 12,
+            }}>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                color: "#94a3b8",
+                fontWeight: 600,
+                fontSize: 14,
+              }}>
+                <Icon name="check" size="sm" />
+                Progreso de Ejecución
+              </div>
+              <div style={{
+                fontSize: 18,
+                fontWeight: 900,
+                color: config.color,
+              }}>
+                {completedCount}/{totalItems} ({progress}%)
+              </div>
+            </div>
+            <div style={{
+              height: 10,
+              background: "#334155",
+              borderRadius: 5,
+              overflow: "hidden"
+            }}>
+              <div
+                style={{
+                  height: "100%",
+                  background: `linear-gradient(90deg, ${config.color}, ${config.color}dd)`,
+                  width: `${progress}%`,
+                  transition: "width 0.3s ease",
+                  boxShadow: `0 0 12px ${config.color}66`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Items */}
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              marginBottom: 16,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}>
+              <Icon name="list" size="sm" />
+              Items de la Orden ({totalItems})
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {order.items?.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    border: `1px solid ${item.status === "COMPLETED" ? "#10b981" : "#334155"}`,
+                    borderLeft: `4px solid ${item.status === "COMPLETED" ? "#10b981" : "#f59e0b"}`,
+                    background: item.status === "COMPLETED" ? "#10b98115" : "transparent",
+                  }}
+                >
+                  <div style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12
+                  }}>
+                    <div style={{
+                      marginTop: 2,
+                      color: item.status === "COMPLETED" ? "#10b981" : "#f59e0b",
+                    }}>
+                      <Icon
+                        name={item.status === "COMPLETED" ? "check" : "circle"}
+                        size="sm"
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontWeight: 700,
+                        color: item.status === "COMPLETED" ? "#10b981" : "#f1f5f9",
+                        fontSize: 14,
+                      }}>
+                        {item.route?.name}
+                      </div>
+                      {item.observations && (
+                        <div style={{
+                          fontSize: 12,
+                          color: "#94a3b8",
+                          marginTop: 6
+                        }}>
+                          {item.observations}
+                        </div>
+                      )}
+                      {item.completedByUser && (
+                        <div style={{
+                          fontSize: 11,
+                          color: "#64748b",
+                          marginTop: 4
+                        }}>
+                          Completado por: {item.completedByUser.name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Notas */}
+          {order.notes && (
+            <div style={{
+              padding: 16,
+              borderRadius: 12,
+              background: "#1e293b",
+              border: "1px solid #f97316",
+              borderLeft: "4px solid #f97316",
+              marginBottom: 32,
+            }}>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#94a3b8",
+                marginBottom: 8,
+              }}>
+                <Icon name="note" size="sm" />
+                Notas
+              </div>
+              <div style={{
+                fontSize: 14,
+                color: "#cbd5e1",
+                whiteSpace: "pre-wrap"
+              }}>
+                {order.notes}
+              </div>
+            </div>
+          )}
+
+          {/* Acciones */}
+          <div style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            paddingTop: 20,
+            borderTop: "2px solid #334155"
+          }}>
+            <button
+              onClick={() => navigate("/preventive-orders")}
+              style={{
+                padding: "10px 20px",
+                borderRadius: 10,
+                border: "1px solid #475569",
+                background: "transparent",
+                color: "#cbd5e1",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#f97316";
+                e.currentTarget.style.color = "#f97316";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#475569";
+                e.currentTarget.style.color = "#cbd5e1";
+              }}
+            >
+              <Icon name="arrowLeft" size="sm" />
+              Atrás
+            </button>
+
+            {order.status === "DRAFT" && (
+              <>
+                <button
+                  onClick={() => navigate(`/preventive-orders/${id}/edit`)}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: 10,
+                    border: "1px solid #f97316",
+                    background: "transparent",
+                    color: "#f97316",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#f97316" + "15";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  <Icon name="edit" size="sm" />
+                  Editar
+                </button>
+              </>
+            )}
+
+            {order.status === "IN_PROGRESS" && (
+              <button
+                onClick={() => navigate(`/preventive-orders/${id}/execute`)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "linear-gradient(135deg, #f97316, #ea580c)",
+                  color: "white",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(249, 115, 22, 0.4)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <Icon name="play" size="sm" />
+                Continuar Ejecución
+              </button>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </MainLayout>
   );
 }
