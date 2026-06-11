@@ -299,21 +299,13 @@ export default function HistoryPage() {
           limit: 20,
           ...(from && { from }),
           ...(to && { to }),
+          ...(isTech && myTechId && { assignedTo: myTechId }),
         };
 
         const resp = await preventiveOrdersService.listCompleted(params);
-        const all = Array.isArray(resp?.data) ? resp.data : [];
+        const olpData = Array.isArray(resp?.data) ? resp.data : [];
 
-        // Scope técnico: solo sus órdenes asignadas
-        const scoped = isTech
-          ? all.filter((olp) => {
-              const techId = olp?.assignedTo ?? null;
-              if (!Number.isFinite(myTechId)) return false;
-              return Number(techId) === Number(myTechId);
-            })
-          : all;
-
-        setOlpItems(scoped);
+        setOlpItems(olpData);
         setOlpMeta(resp?.meta || null);
       } catch (e) {
         console.error(e);

@@ -14,12 +14,13 @@ export const preventiveOrdersService = {
 
   // Listar órdenes con filtros
   async list(filters = {}) {
-    const { status, equipmentId, page = 1, limit = 20 } = filters;
+    const { status, equipmentId, assignedTo, page = 1, limit = 20 } = filters;
     const params = new URLSearchParams({
       page,
       limit,
       ...(status && { status }),
       ...(equipmentId && { equipmentId }),
+      ...(assignedTo && { assignedTo }),
     });
     return httpGet(`/preventive-orders?${params}`);
   },
@@ -69,13 +70,14 @@ export const preventiveOrdersService = {
 
   // Obtener órdenes completadas para historial
   async listCompleted(filters = {}) {
-    const { from, to, page = 1, limit = 20 } = filters;
+    const { from, to, assignedTo, page = 1, limit = 20 } = filters;
     const params = new URLSearchParams({
       page,
       limit,
       status: 'COMPLETED',
       ...(from && { from }),
       ...(to && { to }),
+      ...(assignedTo && { assignedTo }),
     });
     return httpGet(`/preventive-orders?${params}`);
   },

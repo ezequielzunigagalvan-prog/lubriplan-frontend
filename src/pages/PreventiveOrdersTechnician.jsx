@@ -24,7 +24,11 @@ export default function PreventiveOrdersTechnician() {
   async function loadOrders() {
     setLoading(true);
     try {
-      const data = await preventiveOrdersService.list({ status: "OPEN,IN_PROGRESS", limit: 100 });
+      const filters = { status: "OPEN,IN_PROGRESS", limit: 100 };
+      if (user?.technicianId) {
+        filters.assignedTo = user.technicianId;
+      }
+      const data = await preventiveOrdersService.list(filters);
       setOrders(data.data || []);
     } catch (err) {
       console.error("Error loading orders:", err);
