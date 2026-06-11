@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import PreventiveOrderFormModal from "./PreventiveOrderFormModal";
 import MainLayout from "../layouts/MainLayout";
+import { Icon } from "../components/ui/lpIcons";
 
 export default function PreventiveOrdersList() {
   const navigate = useNavigate();
@@ -40,11 +41,11 @@ export default function PreventiveOrdersList() {
   };
 
   const statusConfig = {
-    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "📝" },
-    OPEN: { color: "#3b82f6", label: "Abierta", icon: "🔓" },
-    IN_PROGRESS: { color: "#f59e0b", label: "En progreso", icon: "⚙️" },
-    COMPLETED: { color: "#10b981", label: "Completada", icon: "✅" },
-    CANCELLED: { color: "#ef4444", label: "Cancelada", icon: "❌" },
+    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "file" },
+    OPEN: { color: "#3b82f6", label: "Abierta", icon: "unlock" },
+    IN_PROGRESS: { color: "#f59e0b", label: "En progreso", icon: "play" },
+    COMPLETED: { color: "#10b981", label: "Completada", icon: "check" },
+    CANCELLED: { color: "#ef4444", label: "Cancelada", icon: "x" },
   };
 
   const statuses = ["", "DRAFT", "OPEN", "IN_PROGRESS", "COMPLETED"];
@@ -142,8 +143,24 @@ export default function PreventiveOrdersList() {
                       e.currentTarget.style.color = "#94a3b8";
                     }
                   }}
+                  style={{
+                    ...style,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
                 >
-                  {s ? `${config.icon} ${config.label}` : "📊 Todas"}
+                  {s ? (
+                    <>
+                      <Icon name={config.icon} size="sm" style={{ display: "inline" }} />
+                      {config.label}
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="list" size="sm" />
+                      Todas
+                    </>
+                  )}
                 </button>
               );
             })}
@@ -181,7 +198,9 @@ export default function PreventiveOrdersList() {
         {/* Contenido */}
         {loading ? (
           <div style={{ textAlign: "center", padding: 60, color: "#64748b" }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>
+              <Icon name="loader" size="xl" />
+            </div>
             <div style={{ fontWeight: 600, fontSize: 16, color: "#cbd5e1" }}>Cargando órdenes…</div>
           </div>
         ) : orders.length === 0 ? (
@@ -192,7 +211,9 @@ export default function PreventiveOrdersList() {
             borderRadius: 20,
             border: "2px dashed #334155",
           }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>📋</div>
+            <div style={{ fontSize: 56, marginBottom: 16, color: "#3b82f6" }}>
+              <Icon name="list" size="xl" />
+            </div>
             <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: "#f1f5f9" }}>
               No hay órdenes en este filtro
             </div>
@@ -294,11 +315,11 @@ export default function PreventiveOrdersList() {
                   }}>
                     <div style={{ display: "grid", gap: 8, fontSize: 13, color: "#cbd5e1" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 16 }}>⚙️</span>
+                        <Icon name="settings" size="sm" />
                         <strong>{order.equipment?.name || "Equipo desconocido"}</strong>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 16 }}>📅</span>
+                        <Icon name="calendar" size="sm" />
                         {new Date(order.scheduledDate).toLocaleDateString('es-MX', {
                           weekday: 'short',
                           year: 'numeric',
@@ -308,7 +329,7 @@ export default function PreventiveOrdersList() {
                       </div>
                       {order.assignedToUser && (
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 16 }}>👤</span>
+                          <Icon name="user" size="sm" />
                           <strong>{order.assignedToUser.name}</strong>
                         </div>
                       )}
@@ -412,12 +433,15 @@ export default function PreventiveOrdersList() {
                             fontSize: 12,
                             cursor: "pointer",
                             transition: "all 0.15s",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = "#dc2626")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = "#ef4444")}
                           title="Cancelar orden"
                         >
-                          🗑️
+                          <Icon name="trash" size="sm" />
                         </button>
                       </>
                     )}
