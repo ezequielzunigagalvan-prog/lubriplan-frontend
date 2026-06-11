@@ -386,49 +386,75 @@ export default function PreventiveOrdersTechnician() {
                     )}
                   </div>
 
-                  {/* Botón ejecutar */}
+                  {/* Botón ejecutar y badges de estado */}
                   <div style={{
                     display: "flex",
                     flexDirection: "column",
                     gap: 8,
                     flexShrink: 0,
                   }}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/preventive-orders/${order.id}/execute`);
-                      }}
-                      style={{
-                        padding: "10px 20px",
-                        height: 40,
-                        borderRadius: 12,
-                        border: "none",
-                        background: "linear-gradient(135deg, #f97316, #ea580c)",
-                        color: "white",
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        whiteSpace: "nowrap",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(249, 115, 22, 0.4)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = "none";
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
-                    >
-                      ▶️ Ejecutar
-                    </button>
+                    {daysUntil <= 0 ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/preventive-orders/${order.id}/execute`);
+                        }}
+                        style={{
+                          padding: "10px 20px",
+                          height: 40,
+                          borderRadius: 12,
+                          border: "none",
+                          background: "linear-gradient(135deg, #f97316, #ea580c)",
+                          color: "white",
+                          fontWeight: 700,
+                          fontSize: 13,
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          whiteSpace: "nowrap",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow = "0 6px 20px rgba(249, 115, 22, 0.4)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = "none";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        ▶️ Ejecutar
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        style={{
+                          padding: "10px 20px",
+                          height: 40,
+                          borderRadius: 12,
+                          border: "1px solid #475569",
+                          background: "#334155",
+                          color: "#94a3b8",
+                          fontWeight: 700,
+                          fontSize: 13,
+                          cursor: "not-allowed",
+                          whiteSpace: "nowrap",
+                        }}
+                        title="Disponible a partir del día asignado"
+                      >
+                        🔒 Disponible luego
+                      </button>
+                    )}
+
+                    {/* Badge de estado */}
                     <div style={{
                       fontSize: 11,
-                      color: "#94a3b8",
+                      fontWeight: 700,
+                      padding: "4px 8px",
+                      borderRadius: 6,
                       textAlign: "center",
-                      fontWeight: 600,
+                      background: daysUntil < 0 ? "#ef444420" : daysUntil === 0 ? "#f5960b20" : "#3b82f620",
+                      color: daysUntil < 0 ? "#ef4444" : daysUntil === 0 ? "#f59e0b" : "#3b82f6",
                     }}>
-                      Haz clic para abrir
+                      {daysUntil < 0 ? "⚠️ ATRASADA" : daysUntil === 0 ? "🎯 HOY" : "⏳ PENDIENTE"}
                     </div>
                   </div>
                 </div>

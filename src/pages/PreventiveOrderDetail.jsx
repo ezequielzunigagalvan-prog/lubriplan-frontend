@@ -4,10 +4,15 @@ import MainLayout from "../layouts/MainLayout";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { httpGet } from "../services/http";
 import { Icon } from "../components/ui/lpIcons";
+import { useAuth } from "../context/AuthContext";
 
 export default function PreventiveOrderDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
+
+  const isTechnician = user?.role === "TECHNICIAN";
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPERVISOR";
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -480,7 +485,7 @@ export default function PreventiveOrderDetail() {
             borderTop: "2px solid #334155"
           }}>
             <button
-              onClick={() => navigate("/preventive-orders")}
+              onClick={() => navigate(isTechnician ? "/preventive-orders/technician" : "/preventive-orders")}
               style={{
                 padding: "10px 20px",
                 borderRadius: 10,
@@ -507,7 +512,8 @@ export default function PreventiveOrderDetail() {
               Atrás
             </button>
 
-            {order.status === "DRAFT" && (
+            {/* Solo ADMIN/SUPERVISOR pueden editar */}
+            {isAdmin && order.status === "DRAFT" && (
               <>
                 <button
                   onClick={() => navigate(`/preventive-orders/${id}/edit`)}
@@ -537,7 +543,8 @@ export default function PreventiveOrderDetail() {
               </>
             )}
 
-            {order.status === "IN_PROGRESS" && (
+            {/* Solo TECHNICIAN puede ejecutar, y solo en IN_PROGRESS */}
+            {isTechnician && order.status === "IN_PROGRESS" && (
               <button
                 onClick={() => navigate(`/preventive-orders/${id}/execute`)}
                 style={{
@@ -563,8 +570,27 @@ export default function PreventiveOrderDetail() {
                 }}
               >
                 <Icon name="play" size="sm" />
-                Continuar Ejecución
+                Ejecutar Orden
               </button>
+            )}
+
+            {/* Mostrar mensaje si técnico intenta ver orden no asignada aún */}
+            {isTechnician && order.status !== "IN_PROGRESS" && (
+              <div style={{
+                padding: "10px 16px",
+                borderRadius: 10,
+                background: "#3b82f620",
+                border: "1px solid #3b82f6",
+                color: "#3b82f6",
+                fontWeight: 600,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}>
+                <Icon name="info" size="sm" />
+                Orden en {statusConfig[order.status]?.label?.toLowerCase()}
+              </div>
             )}
           </div>
         </div>
