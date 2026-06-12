@@ -46,6 +46,7 @@ const PreventiveOrderDetail   = lazy(() => import("./pages/PreventiveOrderDetail
 const PreventiveOrderExecution = lazy(() => import("./pages/PreventiveOrderExecution"));
 
 function PageLoader() {
+  // Cache bust: 2026-06-12 01:55:00 UTC
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f8fafc" }}>
       <div style={{ width: 36, height: 36, border: "3px solid #e2e8f0", borderTopColor: "#0f172a", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
