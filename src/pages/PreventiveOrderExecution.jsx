@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import SignaturePad from "../components/ui/SignaturePad";
+import MainLayout from "../layouts/MainLayout";
+import { Icon } from "../components/ui/lpIcons";
 
 export default function PreventiveOrderExecution() {
   const navigate = useNavigate();
@@ -75,17 +77,30 @@ export default function PreventiveOrderExecution() {
 
   if (loading) {
     return (
-      <div style={{ padding: 20, textAlign: "center", color: "#94a3b8", minHeight: "100vh", background: "#0f172a" }}>
-        Cargando orden…
-      </div>
+      <MainLayout>
+        <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", minHeight: "100vh", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div>
+            <Icon name="loader" size="lg" style={{ marginBottom: 16, display: "block" }} />
+            <p style={{ fontSize: 16, fontWeight: 600, color: "#cbd5e1" }}>Cargando orden…</p>
+          </div>
+        </div>
+      </MainLayout>
     );
   }
 
   if (!order) {
     return (
-      <div style={{ padding: 20, textAlign: "center", color: "#ef4444", minHeight: "100vh", background: "#0f172a" }}>
-        Orden no encontrada
-      </div>
+      <MainLayout>
+        <div style={{ padding: 40, textAlign: "center", minHeight: "100vh", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div>
+            <Icon name="alertCircle" size="lg" style={{ marginBottom: 16, display: "block", color: "#ef4444" }} />
+            <p style={{ fontSize: 16, fontWeight: 600, color: "#ef4444" }}>Orden no encontrada</p>
+            <button onClick={() => navigate("/preventive-orders")} style={{ marginTop: 20, padding: "10px 20px", borderRadius: 10, border: "1px solid #334155", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontWeight: 600 }}>
+              Volver a órdenes
+            </button>
+          </div>
+        </div>
+      </MainLayout>
     );
   }
 
@@ -94,7 +109,8 @@ export default function PreventiveOrderExecution() {
   const progress = totalItems > 0 ? (completedCount / totalItems) * 100 : 0;
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 20, minHeight: "100vh", background: "#0f172a" }}>
+    <MainLayout>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: 20, minHeight: "100vh", background: "#0f172a" }}>
       {showWarning && (
         <div
           style={{
@@ -160,8 +176,38 @@ export default function PreventiveOrderExecution() {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header con botones de navegación */}
       <div style={{ marginBottom: 30, position: "sticky", top: 0, background: "#0f172a", paddingBottom: 20, zIndex: 100 }}>
+        {/* Botón de retroceso */}
+        <button
+          onClick={() => navigate(`/preventive-orders/${id}`)}
+          style={{
+            marginBottom: 16,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "transparent",
+            border: "1px solid #334155",
+            color: "#cbd5e1",
+            padding: "8px 16px",
+            borderRadius: 10,
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "#475569";
+            e.currentTarget.style.color = "#f1f5f9";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "#334155";
+            e.currentTarget.style.color = "#cbd5e1";
+          }}
+        >
+          <Icon name="arrowLeft" size="sm" />
+          Ver detalle
+        </button>
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 900, color: "#f1f5f9", margin: 0, marginBottom: 4 }}>
@@ -179,9 +225,13 @@ export default function PreventiveOrderExecution() {
               borderRadius: 6,
               background: "#f97316",
               color: "white",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            En progreso
+            <Icon name="play" size="sm" />
+            En ejecución
           </div>
         </div>
 
@@ -304,54 +354,97 @@ export default function PreventiveOrderExecution() {
       )}
 
       {/* Actions */}
-      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", position: "sticky", bottom: 0, background: "#0f172a", paddingTop: 20, marginBottom: -20, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20, paddingBottom: 20 }}>
-        <button
-          onClick={() => navigate(`/preventive-orders/${id}`)}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 8,
-            border: "1px solid #334155",
-            background: "transparent",
-            color: "#cbd5e1",
-            fontWeight: 700,
-            cursor: "pointer",
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "#475569";
-            e.currentTarget.style.color = "#f1f5f9";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "#334155";
-            e.currentTarget.style.color = "#cbd5e1";
-          }}
-        >
-          Cancelar
-        </button>
+      <div style={{ display: "flex", gap: 10, justifyContent: "space-between", position: "sticky", bottom: 0, background: "#0f172a", paddingTop: 20, marginBottom: -20, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20, paddingBottom: 20, borderTop: "1px solid #334155" }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => navigate(`/preventive-orders/${id}`)}
+            style={{
+              padding: "10px 20px",
+              borderRadius: 10,
+              border: "1px solid #334155",
+              background: "transparent",
+              color: "#cbd5e1",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#475569";
+              e.currentTarget.style.color = "#f1f5f9";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#334155";
+              e.currentTarget.style.color = "#cbd5e1";
+            }}
+          >
+            <Icon name="arrowLeft" size="sm" />
+            Atrás
+          </button>
+          <button
+            onClick={() => navigate("/preventive-orders/technician")}
+            style={{
+              padding: "10px 20px",
+              borderRadius: 10,
+              border: "1px solid #334155",
+              background: "transparent",
+              color: "#cbd5e1",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#475569";
+              e.currentTarget.style.color = "#f1f5f9";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#334155";
+              e.currentTarget.style.color = "#cbd5e1";
+            }}
+          >
+            <Icon name="home" size="sm" />
+            Mis órdenes
+          </button>
+        </div>
+
         {completedCount === totalItems && (
           <button
             onClick={handleCompleteOrder}
             style={{
-              padding: "10px 20px",
-              borderRadius: 8,
+              padding: "10px 24px",
+              borderRadius: 10,
               border: "none",
-              background: signature ? "#10b981" : "#475569",
+              background: signature ? "linear-gradient(135deg, #10b981, #059669)" : "#475569",
               color: "white",
               fontWeight: 700,
               cursor: signature ? "pointer" : "default",
-              transition: "all 0.15s",
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
             onMouseEnter={(e) => {
-              if (signature) e.currentTarget.style.background = "#059669";
+              if (signature) {
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.4)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }
             }}
             onMouseLeave={(e) => {
-              if (signature) e.currentTarget.style.background = "#10b981";
+              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
-            ✓ Completar Orden
+            <Icon name="check" size="sm" />
+            Completar Orden
           </button>
         )}
       </div>
     </div>
+    </MainLayout>
   );
 }
