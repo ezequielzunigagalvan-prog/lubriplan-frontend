@@ -1,4 +1,11 @@
-﻿import React from "react";
+﻿// Limpiar Service Workers viejos INMEDIATAMENTE al cargar
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => registration.unregister());
+  });
+}
+
+import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
