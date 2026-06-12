@@ -35,12 +35,13 @@ export default defineConfig({
           },
           {
             urlPattern: ({ request }) => ["script", "style", "worker"].includes(request.destination),
-            handler: "StaleWhileRevalidate",
+            handler: "NetworkFirst",
             options: {
               cacheName: "lubriplan-static",
+              networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
+                maxAgeSeconds: 60 * 60,
               },
             },
           },
