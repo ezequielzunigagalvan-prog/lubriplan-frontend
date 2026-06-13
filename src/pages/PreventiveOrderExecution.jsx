@@ -121,7 +121,7 @@ export default function PreventiveOrderExecution() {
 
   return (
     <MainLayout>
-      <div style={{ padding: "24px", minHeight: "100vh", background: "#0f172a" }}>
+      <div style={{ padding: "24px", minHeight: "100vh", background: "#0A0C0F" }}>
         {/* Warning Modal */}
         {showWarning && (
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
@@ -289,7 +289,7 @@ export default function PreventiveOrderExecution() {
                             padding: 8,
                             borderRadius: 8,
                             border: "1px solid #334155",
-                            background: "#0f172a",
+                            background: "#0A0C0F",
                             color: "#cbd5e1",
                             fontSize: 12,
                             fontFamily: "inherit",

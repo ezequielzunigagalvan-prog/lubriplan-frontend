@@ -19,7 +19,7 @@ export default function PreventiveOrdersList() {
   const [showModal, setShowModal] = useState(false);
 
   const statusConfig = {
-    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "file" },
+    DRAFT: { color: "#9BAAB8", label: "Borrador", icon: "file" },
     OPEN: { color: "#3b82f6", label: "Abierta", icon: "unlock" },
     IN_PROGRESS: { color: "#f59e0b", label: "En progreso", icon: "play" },
     COMPLETED: { color: "#10b981", label: "Completada", icon: "check" },
@@ -76,7 +76,7 @@ export default function PreventiveOrdersList() {
 
   return (
     <MainLayout>
-      <div style={{ padding: "24px", minHeight: "100vh", background: "#0f172a" }}>
+      <div style={{ padding: "24px", minHeight: "100vh", background: "#0A0C0F" }}>
         {/* Header */}
         <div style={{ marginBottom: 40, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
@@ -85,8 +85,8 @@ export default function PreventiveOrdersList() {
                 margin: "0 0 8px 0",
                 fontSize: 32,
                 fontWeight: 900,
-                color: "#f1f5f9",
-                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                color: "#E8ECF0",
+                background: "linear-gradient(135deg, #F4A020, #DC8F1A)",
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -94,7 +94,7 @@ export default function PreventiveOrdersList() {
             >
               Órdenes de Lubricación Preventiva
             </h1>
-            <p style={{ margin: "0", color: "#94a3b8", fontSize: 14 }}>
+            <p style={{ margin: "0", color: "#9BAAB8", fontSize: 14 }}>
               {total} orden{total !== 1 ? "es" : ""} en total • {orders.length} en esta página
             </p>
           </div>
@@ -103,9 +103,9 @@ export default function PreventiveOrdersList() {
             style={{
               padding: "8px 16px",
               borderRadius: 10,
-              border: "1px solid #334155",
+              border: "1px solid #2E3740",
               background: "transparent",
-              color: "#cbd5e1",
+              color: "#9BAAB8",
               fontWeight: 600,
               cursor: "pointer",
               transition: "all 0.2s",
@@ -114,12 +114,12 @@ export default function PreventiveOrdersList() {
               gap: 8,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#f97316";
-              e.currentTarget.style.color = "#f97316";
+              e.currentTarget.style.borderColor = "#F4A020";
+              e.currentTarget.style.color = "#F4A020";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#334155";
-              e.currentTarget.style.color = "#cbd5e1";
+              e.currentTarget.style.borderColor = "#2E3740";
+              e.currentTarget.style.color = "#9BAAB8";
             }}
           >
             <Icon name="arrowLeft" size="sm" />
@@ -133,8 +133,8 @@ export default function PreventiveOrdersList() {
             marginBottom: 28,
             padding: 20,
             borderRadius: 16,
-            background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
-            border: "1px solid #334155",
+            background: "linear-gradient(135deg, #111418 0%, #1a1f26 100%)",
+            border: "1px solid #2E3740",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -157,9 +157,9 @@ export default function PreventiveOrdersList() {
                     padding: "8px 16px",
                     borderRadius: 10,
                     border: "1.5px solid",
-                    background: isActive ? `${config?.color || "#f97316"}20` : "transparent",
-                    color: isActive ? config?.color || "#f97316" : "#94a3b8",
-                    borderColor: isActive ? config?.color || "#f97316" : "#334155",
+                    background: isActive ? `${config?.color || "#F4A020"}20` : "transparent",
+                    color: isActive ? config?.color || "#F4A020" : "#9BAAB8",
+                    borderColor: isActive ? config?.color || "#F4A020" : "#2E3740",
                     fontWeight: 600,
                     cursor: "pointer",
                     whiteSpace: "nowrap",
@@ -171,14 +171,14 @@ export default function PreventiveOrdersList() {
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.borderColor = "#475569";
-                      e.currentTarget.style.color = "#cbd5e1";
+                      e.currentTarget.style.borderColor = "#3D4A5A";
+                      e.currentTarget.style.color = "#9BAAB8";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.borderColor = "#334155";
-                      e.currentTarget.style.color = "#94a3b8";
+                      e.currentTarget.style.borderColor = "#2E3740";
+                      e.currentTarget.style.color = "#9BAAB8";
                     }
                   }}
                 >
@@ -202,7 +202,7 @@ export default function PreventiveOrdersList() {
             <button
               onClick={() => setShowModal(true)}
               style={{
-                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                background: "linear-gradient(135deg, #F4A020, #DC8F1A)",
                 color: "white",
                 border: "none",
                 padding: "10px 20px",
@@ -233,25 +233,25 @@ export default function PreventiveOrdersList() {
             <div style={{ fontSize: 40, marginBottom: 16 }}>
               <Icon name="loader" size="xl" />
             </div>
-            <div style={{ fontWeight: 600, fontSize: 16, color: "#cbd5e1" }}>Cargando órdenes…</div>
+            <div style={{ fontWeight: 600, fontSize: 16, color: "#9BAAB8" }}>Cargando órdenes…</div>
           </div>
         ) : orders.length === 0 ? (
           <div
             style={{
               textAlign: "center",
               padding: 80,
-              background: "linear-gradient(135deg, #1e293b20, #3b82f620)",
+              background: "linear-gradient(135deg, #11141820, #3b82f620)",
               borderRadius: 20,
-              border: "2px dashed #334155",
+              border: "2px dashed #2E3740",
             }}
           >
             <div style={{ fontSize: 56, marginBottom: 16, color: "#3b82f6" }}>
               <Icon name="list" size="xl" />
             </div>
-            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: "#f1f5f9" }}>
+            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: "#E8ECF0" }}>
               No hay órdenes en este filtro
             </div>
-            <div style={{ fontSize: 14, marginBottom: 24, color: "#94a3b8" }}>
+            <div style={{ fontSize: 14, marginBottom: 24, color: "#9BAAB8" }}>
               {total === 0
                 ? "Crea una nueva orden para comenzar"
                 : "Cambia el filtro para ver otras órdenes"}
@@ -260,7 +260,7 @@ export default function PreventiveOrdersList() {
               <button
                 onClick={() => setShowModal(true)}
                 style={{
-                  background: "#f97316",
+                  background: "#F4A020",
                   color: "white",
                   border: "none",
                   padding: "10px 20px",
@@ -269,8 +269,8 @@ export default function PreventiveOrdersList() {
                   cursor: "pointer",
                   transition: "all 0.15s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#ea580c")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#f97316")}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#DC8F1A")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#F4A020")}
               >
                 Crear primera orden
               </button>
@@ -311,9 +311,9 @@ export default function PreventiveOrdersList() {
                   style={{
                     padding: 20,
                     borderRadius: 16,
-                    border: "1px solid #334155",
+                    border: "1px solid #2E3740",
                     borderLeft: `5px solid ${config.color}`,
-                    background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
+                    background: "linear-gradient(135deg, #111418 0%, #1a1f26 100%)",
                     transition: "all 0.3s",
                     display: "flex",
                     flexDirection: "column",
@@ -325,7 +325,7 @@ export default function PreventiveOrdersList() {
                     e.currentTarget.style.transform = "translateY(-4px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "#334155";
+                    e.currentTarget.style.borderColor = "#2E3740";
                     e.currentTarget.style.boxShadow = "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
@@ -337,12 +337,12 @@ export default function PreventiveOrdersList() {
                         margin: "0 0 12px 0",
                         fontSize: 20,
                         fontWeight: 900,
-                        color: "#f1f5f9",
+                        color: "#E8ECF0",
                       }}
                     >
                       Orden #{order.id}
                     </h3>
-                    <p style={{ margin: "0 0 12px 0", color: "#cbd5e1", fontSize: 13 }}>
+                    <p style={{ margin: "0 0 12px 0", color: "#9BAAB8", fontSize: 13 }}>
                       {order.title || "Sin título"}
                     </p>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -387,12 +387,12 @@ export default function PreventiveOrdersList() {
                   <div
                     style={{
                       padding: "12px",
-                      background: "#0f172a80",
+                      background: "#0A0C0F80",
                       borderRadius: 12,
-                      border: "1px solid #334155",
+                      border: "1px solid #2E3740",
                     }}
                   >
-                    <div style={{ display: "grid", gap: 8, fontSize: 13, color: "#cbd5e1" }}>
+                    <div style={{ display: "grid", gap: 8, fontSize: 13, color: "#9BAAB8" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <Icon name="settings" size="sm" />
                         <strong>{order.equipment?.name || "Equipo desconocido"}</strong>
@@ -423,19 +423,19 @@ export default function PreventiveOrdersList() {
                           display: "flex",
                           justifyContent: "space-between",
                           fontSize: 12,
-                          color: "#94a3b8",
+                          color: "#9BAAB8",
                           marginBottom: 6,
                         }}
                       >
                         <span>Progreso</span>
-                        <strong style={{ color: "#f1f5f9" }}>
+                        <strong style={{ color: "#E8ECF0" }}>
                           {order.progress.completed}/{order.progress.total} ({progress}%)
                         </strong>
                       </div>
                       <div
                         style={{
                           height: 8,
-                          background: "#334155",
+                          background: "#2E3740",
                           borderRadius: 4,
                           overflow: "hidden",
                         }}
@@ -505,7 +505,7 @@ export default function PreventiveOrdersList() {
                     {(order.status === "OPEN" || order.status === "IN_PROGRESS") && (
                       <>
                         <button
-                          onClick={() => navigate(`/preventive-orders/${order.id}/execution`)}
+                          onClick={() => navigate(`/preventive-orders/${order.id}/execute`)}
                           style={{
                             flex: 1,
                             minWidth: 120,
@@ -531,21 +531,21 @@ export default function PreventiveOrdersList() {
                             minWidth: 120,
                             padding: "8px 16px",
                             borderRadius: 10,
-                            border: "1px solid #475569",
+                            border: "1px solid #3D4A5A",
                             background: "transparent",
-                            color: "#cbd5e1",
+                            color: "#9BAAB8",
                             fontWeight: 600,
                             fontSize: 12,
                             cursor: "pointer",
                             transition: "all 0.15s",
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = "#cbd5e1";
-                            e.currentTarget.style.color = "#f1f5f9";
+                            e.currentTarget.style.borderColor = "#9BAAB8";
+                            e.currentTarget.style.color = "#E8ECF0";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = "#475569";
-                            e.currentTarget.style.color = "#cbd5e1";
+                            e.currentTarget.style.borderColor = "#3D4A5A";
+                            e.currentTarget.style.color = "#9BAAB8";
                           }}
                         >
                           Ver detalle
@@ -561,21 +561,21 @@ export default function PreventiveOrdersList() {
                           minWidth: 120,
                           padding: "8px 16px",
                           borderRadius: 10,
-                          border: "1px solid #475569",
+                          border: "1px solid #3D4A5A",
                           background: "transparent",
-                          color: "#cbd5e1",
+                          color: "#9BAAB8",
                           fontWeight: 600,
                           fontSize: 12,
                           cursor: "pointer",
                           transition: "all 0.15s",
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = "#cbd5e1";
-                          e.currentTarget.style.color = "#f1f5f9";
+                          e.currentTarget.style.borderColor = "#9BAAB8";
+                          e.currentTarget.style.color = "#E8ECF0";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = "#475569";
-                          e.currentTarget.style.color = "#cbd5e1";
+                          e.currentTarget.style.borderColor = "#3D4A5A";
+                          e.currentTarget.style.color = "#9BAAB8";
                         }}
                       >
                         Ver detalle
@@ -605,27 +605,27 @@ export default function PreventiveOrdersList() {
               style={{
                 padding: "8px 16px",
                 borderRadius: 10,
-                border: "1px solid #334155",
+                border: "1px solid #2E3740",
                 background: "transparent",
-                color: page === 1 ? "#475569" : "#cbd5e1",
+                color: page === 1 ? "#3D4A5A" : "#9BAAB8",
                 cursor: page === 1 ? "default" : "pointer",
                 fontWeight: 600,
                 transition: "all 0.15s",
               }}
               onMouseEnter={(e) => {
                 if (page !== 1) {
-                  e.currentTarget.style.borderColor = "#f97316";
-                  e.currentTarget.style.color = "#f97316";
+                  e.currentTarget.style.borderColor = "#F4A020";
+                  e.currentTarget.style.color = "#F4A020";
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#334155";
-                e.currentTarget.style.color = "#cbd5e1";
+                e.currentTarget.style.borderColor = "#2E3740";
+                e.currentTarget.style.color = "#9BAAB8";
               }}
             >
               Anterior
             </button>
-            <span style={{ fontWeight: 600, color: "#94a3b8", minWidth: 120, textAlign: "center" }}>
+            <span style={{ fontWeight: 600, color: "#9BAAB8", minWidth: 120, textAlign: "center" }}>
               Página {page} de {Math.ceil(total / 20)}
             </span>
             <button
@@ -634,22 +634,22 @@ export default function PreventiveOrdersList() {
               style={{
                 padding: "8px 16px",
                 borderRadius: 10,
-                border: "1px solid #334155",
+                border: "1px solid #2E3740",
                 background: "transparent",
-                color: page * 20 >= total ? "#475569" : "#cbd5e1",
+                color: page * 20 >= total ? "#3D4A5A" : "#9BAAB8",
                 cursor: page * 20 >= total ? "default" : "pointer",
                 fontWeight: 600,
                 transition: "all 0.15s",
               }}
               onMouseEnter={(e) => {
                 if (page * 20 < total) {
-                  e.currentTarget.style.borderColor = "#f97316";
-                  e.currentTarget.style.color = "#f97316";
+                  e.currentTarget.style.borderColor = "#F4A020";
+                  e.currentTarget.style.color = "#F4A020";
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#334155";
-                e.currentTarget.style.color = "#cbd5e1";
+                e.currentTarget.style.borderColor = "#2E3740";
+                e.currentTarget.style.color = "#9BAAB8";
               }}
             >
               Siguiente
