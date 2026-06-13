@@ -5,6 +5,34 @@ import SignaturePad from "../components/ui/SignaturePad";
 import { Icon } from "../components/ui/lpIcons";
 import MainLayout from "../layouts/MainLayout";
 
+const COLORS = {
+  bgBase: "#070B0F",
+  bgCard: "#0D1117",
+  bgCardHover: "#131920",
+  bgElevated: "#1A2232",
+  border: "#1E2D42",
+  borderAccent: "#F4A020",
+  textPrimary: "#F0F4F8",
+  textSecondary: "#8899AA",
+  textMuted: "#4A5568",
+  accent: "#F4A020",
+  accentHover: "#E09010",
+  green: "#10B981",
+  red: "#EF4444",
+  blue: "#3B82F6",
+  purple: "#8B5CF6",
+};
+
+const FREQUENCY_COLORS = {
+  DAILY: { bg: "#EF444420", border: "#EF4444", label: "Diaria" },
+  WEEKLY: { bg: "#F59E0B20", border: "#F59E0B", label: "Semanal" },
+  MONTHLY: { bg: "#F4A02020", border: "#F4A020", label: "Mensual" },
+  QUARTERLY: { bg: "#10B98120", border: "#10B981", label: "Trimestral" },
+  ANNUAL: { bg: "#3B82F620", border: "#3B82F6", label: "Anual" },
+  BIMONTHLY: { bg: "#8B5CF620", border: "#8B5CF6", label: "Bimestral" },
+  SEMIANNUAL: { bg: "#06B6D420", border: "#06B6D4", label: "Semestral" },
+};
+
 export default function PreventiveOrderExecution() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -29,7 +57,6 @@ export default function PreventiveOrderExecution() {
       const data = await preventiveOrdersService.get(Number(id));
       setOrder(data);
 
-      // Inicializar estados de items
       const states = {};
       const observations = {};
       if (data.items && Array.isArray(data.items)) {
@@ -80,9 +107,9 @@ export default function PreventiveOrderExecution() {
   if (loading) {
     return (
       <MainLayout>
-        <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ padding: 40, textAlign: "center", color: COLORS.textMuted, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div>
-            <Icon name="loader" size="lg" style={{ marginBottom: 16, display: "block" }} />
+            <Icon name="loader" size="lg" style={{ marginBottom: 16, display: "block", color: COLORS.accent }} />
             <p>Cargando orden…</p>
           </div>
         </div>
@@ -93,64 +120,86 @@ export default function PreventiveOrderExecution() {
   if (!order) {
     return (
       <MainLayout>
-        <div style={{ padding: 40, textAlign: "center", color: "#ef4444", minHeight: "100vh" }}>
-          <p>Orden no encontrada</p>
+        <div style={{ padding: 40, textAlign: "center", color: COLORS.red, minHeight: "100vh", background: COLORS.bgBase }}>
+          <p style={{ fontSize: 80, margin: "0 0 16px 0" }}>404</p>
+          <h1 style={{ margin: "0 0 8px 0", fontSize: 24, fontWeight: 900, color: COLORS.textPrimary }}>
+            Orden No Encontrada
+          </h1>
+          <p style={{ color: COLORS.textSecondary, marginBottom: 24 }}>La orden que buscas no existe o fue eliminada.</p>
           <button
             onClick={() => navigate("/preventive-orders")}
             style={{
-              marginTop: 16,
-              padding: "10px 20px",
-              borderRadius: 8,
-              border: "1px solid #ef4444",
+              padding: "12px 24px",
+              borderRadius: 10,
+              border: `2px solid ${COLORS.red}`,
               background: "transparent",
-              color: "#ef4444",
+              color: COLORS.red,
               cursor: "pointer",
-              fontWeight: 600,
+              fontWeight: 700,
             }}
           >
-            Volver a órdenes
+            Volver a Órdenes
           </button>
         </div>
       </MainLayout>
     );
   }
 
-  const allItemsCompleted = order.items && Array.isArray(order.items) && order.items.length > 0 && order.items.every((item) => itemStates[item.id] === true);
   const completedCount = order.items ? order.items.filter((item) => itemStates[item.id] === true).length : 0;
   const totalItems = order.items ? order.items.length : 0;
+  const allItemsCompleted = totalItems > 0 && completedCount === totalItems;
 
   return (
     <MainLayout>
-      <div style={{ padding: "24px", minHeight: "100vh", background: "#0A0C0F" }}>
+      <div style={{ background: COLORS.bgBase, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         {/* Warning Modal */}
         {showWarning && (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-            <div style={{ background: "white", borderRadius: 12, padding: 32, maxWidth: 500, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-              <h2 style={{ margin: "0 0 16px 0", fontSize: 20, fontWeight: 900, color: "#1e293b" }}>Advertencia Importante</h2>
-              <p style={{ margin: "0 0 16px 0", color: "#475569", lineHeight: 1.6 }}>
-                Las órdenes preventivas deben ejecutarse respetando la frecuencia establecida. No ejecutar antes de la fecha programada puede afectar el ciclo de mantenimiento.
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+            <div style={{ background: COLORS.bgCard, borderRadius: 16, padding: 48, maxWidth: 480, border: `2px solid ${COLORS.borderAccent}`, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+              <div style={{ textAlign: "center", marginBottom: 32 }}>
+                <div style={{ fontSize: 64, marginBottom: 16, background: `${COLORS.accent}20`, borderRadius: "50%", width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                  ⚠️
+                </div>
+                <h2 style={{ margin: "0 0 12px 0", fontSize: 20, fontWeight: 900, color: COLORS.textPrimary }}>
+                  Aviso Técnico Importante
+                </h2>
+              </div>
+
+              <p style={{ color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 24, textAlign: "center" }}>
+                Las órdenes preventivas deben ejecutarse respetando la frecuencia establecida. No ejecutar conforme a calendario puede afectar el ciclo de mantenimiento.
               </p>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, cursor: "pointer" }}>
+
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 24, cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   checked={warningAcknowledged}
                   onChange={(e) => setWarningAcknowledged(e.target.checked)}
-                  style={{ cursor: "pointer" }}
+                  style={{ marginTop: 4, width: 18, height: 18, cursor: "pointer", accentColor: COLORS.accent }}
                 />
-                <span style={{ color: "#334155", fontSize: 13 }}>Entiendo y continúo con la ejecución</span>
+                <span style={{ color: COLORS.textSecondary, fontSize: 14 }}>
+                  Entiendo las implicaciones y deseo continuar con la ejecución de esta orden preventiva
+                </span>
               </label>
+
               <button
                 onClick={() => setShowWarning(false)}
                 disabled={!warningAcknowledged}
                 style={{
                   width: "100%",
                   padding: "12px 20px",
-                  borderRadius: 8,
+                  borderRadius: 10,
                   border: "none",
-                  background: warningAcknowledged ? "#f97316" : "#cbd5e1",
-                  color: "white",
+                  background: warningAcknowledged ? COLORS.accent : COLORS.textMuted,
+                  color: warningAcknowledged ? COLORS.bgBase : COLORS.textSecondary,
                   fontWeight: 700,
                   cursor: warningAcknowledged ? "pointer" : "default",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  if (warningAcknowledged) e.currentTarget.style.background = COLORS.accentHover;
+                }}
+                onMouseLeave={(e) => {
+                  if (warningAcknowledged) e.currentTarget.style.background = COLORS.accent;
                 }}
               >
                 Continuar
@@ -159,245 +208,281 @@ export default function PreventiveOrderExecution() {
           </div>
         )}
 
-        {/* Header */}
-        <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ margin: "0 0 8px 0", fontSize: 28, fontWeight: 900, color: "#f1f5f9" }}>
-              Orden #{order.id} - En Ejecución
-            </h1>
-            <p style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>
-              {completedCount} de {totalItems} items completados
-            </p>
+        {/* Sticky Header */}
+        <div style={{ position: "sticky", top: 0, zIndex: 100, background: COLORS.bgCard, borderBottom: `1px solid ${COLORS.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Icon name="settings" size="lg" style={{ color: COLORS.accent }} />
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: COLORS.textPrimary }}>
+                {order.equipment?.name || "Equipo"}
+              </div>
+              <div style={{ fontSize: 12, color: COLORS.textSecondary }}>
+                Orden #{order.id}
+              </div>
+            </div>
           </div>
+
+          <div style={{ flex: 1, marginX: 24, display: "flex", alignItems: "center", gap: 12, maxWidth: 300 }}>
+            <div style={{ height: 6, flex: 1, background: COLORS.border, borderRadius: 3, overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  background: `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.accentHover})`,
+                  width: `${totalItems > 0 ? (completedCount / totalItems) * 100 : 0}%`,
+                  transition: "width 0.3s",
+                }}
+              />
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary, whiteSpace: "nowrap" }}>
+              {completedCount}/{totalItems}
+            </span>
+          </div>
+
           <button
             onClick={() => navigate(`/preventive-orders/${order.id}`)}
             style={{
-              padding: "8px 16px",
-              borderRadius: 8,
-              border: "1px solid #334155",
               background: "transparent",
-              color: "#cbd5e1",
+              border: "none",
+              color: COLORS.textSecondary,
               cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
+              fontSize: 12,
               fontWeight: 600,
+              padding: "6px 12px",
+              borderRadius: 8,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = COLORS.accent;
+              e.currentTarget.style.background = `${COLORS.accent}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = COLORS.textSecondary;
+              e.currentTarget.style.background = "transparent";
             }}
           >
-            <Icon name="arrowLeft" size="sm" />
             Ver Detalle
           </button>
         </div>
 
-        {/* Progress Bar */}
-        <div
-          style={{
-            marginBottom: 24,
-            padding: 16,
-            borderRadius: 12,
-            background: "linear-gradient(135deg, #1e293b, #1a1f26)",
-            border: "1px solid #334155",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#cbd5e1" }}>Progreso</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>
-              {Math.round((completedCount / totalItems) * 100)}%
-            </span>
-          </div>
-          <div style={{ height: 8, background: "#334155", borderRadius: 4, overflow: "hidden" }}>
-            <div
-              style={{
-                height: "100%",
-                background: "linear-gradient(90deg, #f97316, #ea580c)",
-                width: `${(completedCount / totalItems) * 100}%`,
-                transition: "width 0.3s",
-              }}
-            />
-          </div>
-        </div>
+        {/* Content */}
+        <div style={{ flex: 1, padding: "24px", overflow: "auto" }}>
+          {error && (
+            <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, background: "#EF444420", color: COLORS.red, fontSize: 13, border: `1px solid ${COLORS.red}40` }}>
+              {error}
+            </div>
+          )}
 
-        {error && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              borderRadius: 8,
-              background: "#fee2e2",
-              color: "#991b1b",
-              fontSize: 13,
-            }}
-          >
-            {error}
-          </div>
-        )}
+          {/* Items List */}
+          <div style={{ display: "grid", gap: 16, marginBottom: 32 }}>
+            {order.items && Array.isArray(order.items)
+              ? order.items.map((item) => {
+                  const isCompleted = itemStates[item.id];
+                  const freqColor = FREQUENCY_COLORS[item.route?.frequencyType] || FREQUENCY_COLORS.MONTHLY;
 
-        {/* Items List */}
-        <div style={{ display: "grid", gap: 12, marginBottom: 32 }}>
-          {order.items && Array.isArray(order.items)
-            ? order.items.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    padding: 16,
-                    borderRadius: 12,
-                    border: "1px solid #334155",
-                    background: "linear-gradient(135deg, #1e293b, #1a1f26)",
-                    transition: "all 0.3s",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                    {/* Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={itemStates[item.id] || false}
-                      onChange={() => {
-                        if (!itemStates[item.id]) {
-                          handleCompleteItem(item.id);
-                        }
-                      }}
-                      style={{
-                        width: 52,
-                        height: 52,
-                        cursor: "pointer",
-                        marginTop: 4,
-                      }}
-                    />
-
-                    {/* Item Info */}
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: "0 0 8px 0", fontSize: 15, fontWeight: 800, color: "#f1f5f9" }}>
-                        {item.routeName || "Item"}
-                      </h3>
-                      {item.route && (
-                        <div style={{ display: "grid", gap: 4, fontSize: 13, color: "#cbd5e1", marginBottom: 8 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <Icon name="settings" size="sm" />
-                            {item.route.name}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Observaciones */}
-                      {itemStates[item.id] && (
-                        <textarea
-                          placeholder="Añade observaciones (opcional)"
-                          value={itemObservations[item.id] || ""}
-                          onChange={(e) => setItemObservations((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                          style={{
-                            width: "100%",
-                            padding: 8,
-                            borderRadius: 8,
-                            border: "1px solid #334155",
-                            background: "#0A0C0F",
-                            color: "#cbd5e1",
-                            fontSize: 12,
-                            fontFamily: "inherit",
-                            minHeight: 60,
-                            resize: "vertical",
-                          }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Status */}
+                  return (
                     <div
+                      key={item.id}
                       style={{
-                        padding: "6px 12px",
-                        borderRadius: 8,
-                        background: itemStates[item.id] ? "#10b98120" : "#f59e0b20",
-                        color: itemStates[item.id] ? "#10b981" : "#f59e0b",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        whiteSpace: "nowrap",
+                        padding: 20,
+                        borderRadius: 12,
+                        background: isCompleted ? `${COLORS.green}08` : COLORS.bgCard,
+                        border: `1px solid ${isCompleted ? COLORS.green : COLORS.border}`,
+                        borderLeft: `3px solid ${isCompleted ? COLORS.green : freqColor.border}`,
+                        transition: "all 0.3s",
                       }}
                     >
-                      {itemStates[item.id] ? "✓ Completado" : "Pendiente"}
+                      {/* Header con checkbox y nombre */}
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
+                        <input
+                          type="checkbox"
+                          checked={isCompleted}
+                          onChange={() => {
+                            if (!isCompleted) {
+                              handleCompleteItem(item.id);
+                            }
+                          }}
+                          style={{
+                            width: 52,
+                            height: 52,
+                            cursor: "pointer",
+                            accentColor: COLORS.green,
+                            flexShrink: 0,
+                          }}
+                        />
+
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: COLORS.textPrimary }}>
+                              {item.route?.name || "Ruta sin nombre"}
+                            </h3>
+                            <span
+                              style={{
+                                padding: "4px 8px",
+                                borderRadius: 6,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                background: isCompleted ? `${COLORS.green}20` : freqColor.bg,
+                                color: isCompleted ? COLORS.green : freqColor.border,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {isCompleted ? "✓ Completado" : freqColor.label}
+                            </span>
+                          </div>
+
+                          {/* Datos técnicos grid */}
+                          {item.route && (
+                            <div style={{ background: COLORS.bgCardHover, padding: 14, borderRadius: 8, marginBottom: 12 }}>
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+                                {item.route.lubricantName && (
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
+                                      🛢 Lubricante
+                                    </div>
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
+                                      {item.route.lubricantName}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {item.route.quantity && (
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
+                                      📊 Cantidad
+                                    </div>
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
+                                      {item.route.quantity} {item.route.unit || "ml"}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {item.route.method && (
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
+                                      🔧 Método
+                                    </div>
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
+                                      {item.route.method}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Imagen */}
+                          {item.route?.imageUrl && (
+                            <div style={{ marginBottom: 12, borderRadius: 8, overflow: "hidden", maxHeight: 120 }}>
+                              <img
+                                src={item.route.imageUrl}
+                                alt={item.route.name}
+                                style={{ width: "100%", height: "auto", maxHeight: 120, objectFit: "cover", borderRadius: 8 }}
+                                onError={(e) => (e.target.style.display = "none")}
+                              />
+                            </div>
+                          )}
+
+                          {/* Instrucciones */}
+                          {item.route?.instructions && (
+                            <div style={{ marginBottom: 12, padding: 12, borderRadius: 8, background: `${COLORS.blue}10`, borderLeft: `3px solid ${COLORS.blue}` }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
+                                📋 Instrucciones
+                              </div>
+                              <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+                                {item.route.instructions}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Observaciones - se expande al completar */}
+                          {isCompleted && (
+                            <textarea
+                              placeholder="Añade observaciones técnicas o problemas encontrados (opcional)"
+                              value={itemObservations[item.id] || ""}
+                              onChange={(e) => setItemObservations((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                              style={{
+                                width: "100%",
+                                padding: 12,
+                                borderRadius: 8,
+                                border: `1px solid ${COLORS.border}`,
+                                background: COLORS.bgElevated,
+                                color: COLORS.textPrimary,
+                                fontSize: 12,
+                                fontFamily: "inherit",
+                                minHeight: 80,
+                                resize: "vertical",
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))
-            : null}
+                  );
+                })
+              : null}
+          </div>
+
+          {/* Firma Digital */}
+          {allItemsCompleted && (
+            <div style={{ padding: 20, borderRadius: 12, border: `2px solid ${COLORS.borderAccent}`, background: `${COLORS.accent}10`, marginBottom: 100 }}>
+              <h3 style={{ margin: "0 0 12px 0", fontSize: 15, fontWeight: 900, color: COLORS.textPrimary }}>
+                Firma Digital
+              </h3>
+              <SignaturePad onSignatureCapture={setSignature} />
+            </div>
+          )}
         </div>
 
-        {/* Firma */}
-        {allItemsCompleted && (
-          <div
-            style={{
-              padding: 20,
-              borderRadius: 12,
-              border: "2px solid #f97316",
-              background: "#f97316" + "20",
-              marginBottom: 24,
-            }}
-          >
-            <h3 style={{ margin: "0 0 12px 0", fontSize: 15, fontWeight: 800, color: "#f1f5f9" }}>
-              Firma Digital
-            </h3>
-            <SignaturePad onSignatureCapture={setSignature} />
-          </div>
-        )}
-
-        {/* Botones Finales */}
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        {/* Sticky Footer */}
+        <div style={{ position: "sticky", bottom: 0, background: COLORS.bgCard, borderTop: `1px solid ${COLORS.border}`, padding: "16px 24px", display: "flex", gap: 8, justifyContent: "flex-end", alignItems: "center" }}>
           <button
             onClick={() => navigate(`/preventive-orders/${order.id}`)}
             style={{
               padding: "12px 24px",
               borderRadius: 10,
-              border: "1px solid #334155",
+              border: `1px solid ${COLORS.border}`,
               background: "transparent",
-              color: "#cbd5e1",
+              color: COLORS.textSecondary,
               fontWeight: 700,
               cursor: "pointer",
+              transition: "all 0.2s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#475569";
-              e.currentTarget.style.color = "#f1f5f9";
+              e.currentTarget.style.borderColor = COLORS.accent;
+              e.currentTarget.style.color = COLORS.accent;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#334155";
-              e.currentTarget.style.color = "#cbd5e1";
+              e.currentTarget.style.borderColor = COLORS.border;
+              e.currentTarget.style.color = COLORS.textSecondary;
             }}
           >
             Atrás
           </button>
-          <button
-            onClick={() => navigate("/preventive-orders/technician")}
-            style={{
-              padding: "12px 24px",
-              borderRadius: 10,
-              border: "none",
-              background: "#3b82f6",
-              color: "white",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#2563eb")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "#3b82f6")}
-          >
-            Mis Órdenes
-          </button>
+
           <button
             onClick={handleCompleteOrder}
             disabled={!allItemsCompleted || completing}
             style={{
-              padding: "12px 24px",
+              padding: "12px 28px",
               borderRadius: 10,
               border: "none",
-              background: allItemsCompleted && !completing ? "#10b981" : "#94a3b8",
+              background: allItemsCompleted && !completing ? COLORS.green : COLORS.textMuted,
               color: "white",
               fontWeight: 700,
-              cursor: allItemsCompleted && !completing ? "pointer" : "default",
+              cursor: allItemsCompleted && !completing ? "pointer" : "not-allowed",
+              opacity: allItemsCompleted && !completing ? 1 : 0.4,
+              transition: "all 0.2s",
             }}
             onMouseEnter={(e) => {
               if (allItemsCompleted && !completing) {
                 e.currentTarget.style.background = "#059669";
+                e.currentTarget.style.boxShadow = `0 8px 16px ${COLORS.green}40`;
               }
             }}
             onMouseLeave={(e) => {
               if (allItemsCompleted && !completing) {
-                e.currentTarget.style.background = "#10b981";
+                e.currentTarget.style.background = COLORS.green;
+                e.currentTarget.style.boxShadow = "none";
               }
             }}
           >

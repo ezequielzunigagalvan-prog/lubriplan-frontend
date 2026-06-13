@@ -76,7 +76,7 @@ export default function PreventiveOrdersList() {
 
   return (
     <MainLayout>
-      <div style={{ padding: "24px", minHeight: "100vh", background: "#0A0C0F" }}>
+      <div style={{ padding: "24px", minHeight: "100vh", background: "#070B0F" }}>
         {/* Header */}
         <div style={{ marginBottom: 40, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
@@ -387,7 +387,7 @@ export default function PreventiveOrdersList() {
                   <div
                     style={{
                       padding: "12px",
-                      background: "#0A0C0F80",
+                      background: "#070B0F80",
                       borderRadius: 12,
                       border: "1px solid #2E3740",
                     }}
