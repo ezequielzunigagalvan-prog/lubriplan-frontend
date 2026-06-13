@@ -18,6 +18,16 @@ export default function PreventiveOrdersList() {
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
+  const statusConfig = {
+    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "file" },
+    OPEN: { color: "#3b82f6", label: "Abierta", icon: "unlock" },
+    IN_PROGRESS: { color: "#f59e0b", label: "En progreso", icon: "play" },
+    COMPLETED: { color: "#10b981", label: "Completada", icon: "check" },
+    CANCELLED: { color: "#ef4444", label: "Cancelada", icon: "x" },
+  };
+
+  const statuses = ["", "DRAFT", "OPEN", "IN_PROGRESS", "COMPLETED"];
+
   useEffect(() => {
     loadOrders();
   }, [status, page]);
@@ -25,7 +35,11 @@ export default function PreventiveOrdersList() {
   async function loadOrders() {
     setLoading(true);
     try {
-      const data = await preventiveOrdersService.list({ status: status || undefined, page, limit: 20 });
+      const data = await preventiveOrdersService.list({
+        status: status || undefined,
+        page,
+        limit: 20,
+      });
       setOrders(data.data || []);
       setTotal(data.total || 0);
     } catch (err) {
@@ -40,23 +54,13 @@ export default function PreventiveOrdersList() {
     loadOrders();
   };
 
-  const statusConfig = {
-    DRAFT: { color: "#94a3b8", label: "Borrador", icon: "file" },
-    OPEN: { color: "#3b82f6", label: "Abierta", icon: "unlock" },
-    IN_PROGRESS: { color: "#f59e0b", label: "En progreso", icon: "play" },
-    COMPLETED: { color: "#10b981", label: "Completada", icon: "check" },
-    CANCELLED: { color: "#ef4444", label: "Cancelada", icon: "x" },
-  };
-
-  const statuses = ["", "DRAFT", "OPEN", "IN_PROGRESS", "COMPLETED"];
-
   const handleDelete = async (orderId) => {
     if (window.confirm("¿Seguro que deseas cancelar esta orden?")) {
       try {
         await preventiveOrdersService.cancel(orderId);
         loadOrders();
       } catch (err) {
-        console.error('Error cancelando orden:', err);
+        console.error("Error cancelando orden:", err);
       }
     }
   };
@@ -66,7 +70,7 @@ export default function PreventiveOrdersList() {
       await preventiveOrdersService.open(orderId);
       loadOrders();
     } catch (err) {
-      console.error('Error abriendo orden:', err);
+      console.error("Error abriendo orden:", err);
     }
   };
 
@@ -74,37 +78,70 @@ export default function PreventiveOrdersList() {
     <MainLayout>
       <div style={{ padding: "24px", minHeight: "100vh", background: "#0f172a" }}>
         {/* Header */}
-        <div style={{ marginBottom: 40 }}>
-          <h1 style={{
-            margin: "0 0 8px 0",
-            fontSize: 32,
-            fontWeight: 900,
-            color: "#f1f5f9",
-            background: "linear-gradient(135deg, #f97316, #ea580c)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}>
-            🔧 Órdenes de Lubricación Preventiva
-          </h1>
-          <p style={{ margin: "0", color: "#94a3b8", fontSize: 14 }}>
-            {total} orden{total !== 1 ? "es" : ""} en total • {orders.length} en esta página
-          </p>
+        <div style={{ marginBottom: 40, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <h1
+              style={{
+                margin: "0 0 8px 0",
+                fontSize: 32,
+                fontWeight: 900,
+                color: "#f1f5f9",
+                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Órdenes de Lubricación Preventiva
+            </h1>
+            <p style={{ margin: "0", color: "#94a3b8", fontSize: 14 }}>
+              {total} orden{total !== 1 ? "es" : ""} en total • {orders.length} en esta página
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/dashboard")}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 10,
+              border: "1px solid #334155",
+              background: "transparent",
+              color: "#cbd5e1",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#f97316";
+              e.currentTarget.style.color = "#f97316";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#334155";
+              e.currentTarget.style.color = "#cbd5e1";
+            }}
+          >
+            <Icon name="arrowLeft" size="sm" />
+            Volver
+          </button>
         </div>
 
-        {/* Top Bar con filtros y botón crear */}
-        <div style={{
-          marginBottom: 28,
-          padding: 20,
-          borderRadius: 16,
-          background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
-          border: "1px solid #334155",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 16,
-        }}>
+        {/* Filtros y Crear */}
+        <div
+          style={{
+            marginBottom: 28,
+            padding: 20,
+            borderRadius: 16,
+            background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
+            border: "1px solid #334155",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
           <div style={{ display: "flex", gap: 8, overflowX: "auto", flex: 1 }}>
             {statuses.map((s) => {
               const isActive = status === s;
@@ -120,11 +157,9 @@ export default function PreventiveOrdersList() {
                     padding: "8px 16px",
                     borderRadius: 10,
                     border: "1.5px solid",
-                    background: isActive
-                      ? `linear-gradient(135deg, ${config?.color || "#f97316"}20, ${config?.color || "#f97316"}10)`
-                      : "transparent",
-                    color: isActive ? (config?.color || "#f97316") : "#94a3b8",
-                    borderColor: isActive ? (config?.color || "#f97316") : "#334155",
+                    background: isActive ? `${config?.color || "#f97316"}20` : "transparent",
+                    color: isActive ? config?.color || "#f97316" : "#94a3b8",
+                    borderColor: isActive ? config?.color || "#f97316" : "#334155",
                     fontWeight: 600,
                     cursor: "pointer",
                     whiteSpace: "nowrap",
@@ -149,7 +184,7 @@ export default function PreventiveOrdersList() {
                 >
                   {s ? (
                     <>
-                      <Icon name={config.icon} size="sm" style={{ display: "inline" }} />
+                      <Icon name={config.icon} size="sm" />
                       {config.label}
                     </>
                   ) : (
@@ -187,7 +222,7 @@ export default function PreventiveOrdersList() {
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              ➕ Nueva Orden
+              Crear Orden
             </button>
           )}
         </div>
@@ -201,13 +236,15 @@ export default function PreventiveOrdersList() {
             <div style={{ fontWeight: 600, fontSize: 16, color: "#cbd5e1" }}>Cargando órdenes…</div>
           </div>
         ) : orders.length === 0 ? (
-          <div style={{
-            textAlign: "center",
-            padding: 80,
-            background: "linear-gradient(135deg, #1e293b20, #3b82f620)",
-            borderRadius: 20,
-            border: "2px dashed #334155",
-          }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: 80,
+              background: "linear-gradient(135deg, #1e293b20, #3b82f620)",
+              borderRadius: 20,
+              border: "2px dashed #334155",
+            }}
+          >
             <div style={{ fontSize: 56, marginBottom: 16, color: "#3b82f6" }}>
               <Icon name="list" size="xl" />
             </div>
@@ -240,12 +277,19 @@ export default function PreventiveOrdersList() {
             )}
           </div>
         ) : (
-          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))" }}>
+          <div
+            style={{
+              display: "grid",
+              gap: 16,
+              gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
+            }}
+          >
             {orders.map((order) => {
               const config = statusConfig[order.status];
-              const progress = order.progress?.total > 0
-                ? Math.round((order.progress.completed / order.progress.total) * 100)
-                : 0;
+              const progress =
+                order.progress?.total > 0
+                  ? Math.round((order.progress.completed / order.progress.total) * 100)
+                  : 0;
 
               return (
                 <div
@@ -257,7 +301,6 @@ export default function PreventiveOrdersList() {
                     borderLeft: `5px solid ${config.color}`,
                     background: "linear-gradient(135deg, #1e293b 0%, #1a1f26 100%)",
                     transition: "all 0.3s",
-                    cursor: "pointer",
                     display: "flex",
                     flexDirection: "column",
                     gap: 12,
@@ -273,15 +316,23 @@ export default function PreventiveOrdersList() {
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  {/* Encabezado */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  {/* Header */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <div style={{ flex: 1 }}>
-                      <h3 style={{
-                        margin: "0 0 4px 0",
-                        fontSize: 18,
-                        fontWeight: 900,
-                        color: "#f1f5f9"
-                      }}>
+                      <h3
+                        style={{
+                          margin: "0 0 4px 0",
+                          fontSize: 18,
+                          fontWeight: 900,
+                          color: "#f1f5f9",
+                        }}
+                      >
                         Orden #{order.id}
                       </h3>
                       <p style={{ margin: 0, color: "#94a3b8", fontSize: 13 }}>
@@ -299,17 +350,20 @@ export default function PreventiveOrdersList() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {config.icon} {config.label}
+                      <Icon name={config.icon} size="xs" style={{ marginRight: 4 }} />
+                      {config.label}
                     </div>
                   </div>
 
-                  {/* Info principal */}
-                  <div style={{
-                    padding: "12px",
-                    background: "#0f172a80",
-                    borderRadius: 12,
-                    border: "1px solid #334155",
-                  }}>
+                  {/* Info */}
+                  <div
+                    style={{
+                      padding: "12px",
+                      background: "#0f172a80",
+                      borderRadius: 12,
+                      border: "1px solid #334155",
+                    }}
+                  >
                     <div style={{ display: "grid", gap: 8, fontSize: 13, color: "#cbd5e1" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <Icon name="settings" size="sm" />
@@ -317,11 +371,11 @@ export default function PreventiveOrdersList() {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <Icon name="calendar" size="sm" />
-                        {new Date(order.scheduledDate).toLocaleDateString('es-MX', {
-                          weekday: 'short',
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
+                        {new Date(order.scheduledDate).toLocaleDateString("es-MX", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </div>
                       {order.assignedToUser && (
@@ -333,27 +387,31 @@ export default function PreventiveOrdersList() {
                     </div>
                   </div>
 
-                  {/* Progreso */}
+                  {/* Progress */}
                   {order.progress && (
                     <div>
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: 12,
-                        color: "#94a3b8",
-                        marginBottom: 6,
-                      }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          fontSize: 12,
+                          color: "#94a3b8",
+                          marginBottom: 6,
+                        }}
+                      >
                         <span>Progreso</span>
                         <strong style={{ color: "#f1f5f9" }}>
                           {order.progress.completed}/{order.progress.total} ({progress}%)
                         </strong>
                       </div>
-                      <div style={{
-                        height: 8,
-                        background: "#334155",
-                        borderRadius: 4,
-                        overflow: "hidden"
-                      }}>
+                      <div
+                        style={{
+                          height: 8,
+                          background: "#334155",
+                          borderRadius: 4,
+                          overflow: "hidden",
+                        }}
+                      >
                         <div
                           style={{
                             height: "100%",
@@ -395,7 +453,7 @@ export default function PreventiveOrdersList() {
                         e.currentTarget.style.background = "transparent";
                       }}
                     >
-                      Ver detalle →
+                      Ver detalle
                     </button>
 
                     {order.status === "DRAFT" && (
@@ -451,7 +509,15 @@ export default function PreventiveOrdersList() {
 
         {/* Paginación */}
         {total > 20 && (
-          <div style={{ marginTop: 40, display: "flex", justifyContent: "center", gap: 12, alignItems: "center" }}>
+          <div
+            style={{
+              marginTop: 40,
+              display: "flex",
+              justifyContent: "center",
+              gap: 12,
+              alignItems: "center",
+            }}
+          >
             <button
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
@@ -476,7 +542,7 @@ export default function PreventiveOrdersList() {
                 e.currentTarget.style.color = "#cbd5e1";
               }}
             >
-              ← Anterior
+              Anterior
             </button>
             <span style={{ fontWeight: 600, color: "#94a3b8", minWidth: 120, textAlign: "center" }}>
               Página {page} de {Math.ceil(total / 20)}
@@ -505,14 +571,12 @@ export default function PreventiveOrdersList() {
                 e.currentTarget.style.color = "#cbd5e1";
               }}
             >
-              Siguiente →
+              Siguiente
             </button>
           </div>
         )}
 
-        {showModal && (
-          <PreventiveOrderFormModal onClose={handleModalClose} />
-        )}
+        {showModal && <PreventiveOrderFormModal onClose={handleModalClose} />}
       </div>
     </MainLayout>
   );
