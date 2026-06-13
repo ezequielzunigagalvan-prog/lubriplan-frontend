@@ -144,7 +144,6 @@ export default function PreventiveOrdersList() {
                     }
                   }}
                   style={{
-                    ...style,
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
