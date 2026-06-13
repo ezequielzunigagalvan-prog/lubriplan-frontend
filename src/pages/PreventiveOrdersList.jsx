@@ -130,6 +130,9 @@ export default function PreventiveOrdersList() {
                     whiteSpace: "nowrap",
                     transition: "all 0.2s",
                     fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -142,12 +145,6 @@ export default function PreventiveOrdersList() {
                       e.currentTarget.style.borderColor = "#334155";
                       e.currentTarget.style.color = "#94a3b8";
                     }
-                  }}
-                  style={{
-                    ...style,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
                   }}
                 >
                   {s ? (
