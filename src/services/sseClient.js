@@ -40,6 +40,7 @@ export default function openSSE({ token, onEvent, onError, signal }) {
           }
 
           if (!dataStr) continue;
+          if (line.startsWith("data:")) dataStr += line.slice(5).trim() + "\n";
           let data;
           try { data = JSON.parse(dataStr); }
           catch { data = dataStr; }

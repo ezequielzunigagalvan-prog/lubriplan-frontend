@@ -1,11 +1,4 @@
-﻿// Limpiar Service Workers viejos INMEDIATAMENTE al cargar
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => registration.unregister());
-  });
-}
-
-import React from "react";
+﻿import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -16,11 +9,11 @@ import { PlantProvider } from "./context/PlantContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 import ErrorBoundary from "./components/ErrorBoundary";
-// import { registerPwa } from "./pwa/registerPwa";
+import { registerPwa } from "./pwa/registerPwa";
 import { initSentry } from "./config/sentry";
 
 initSentry();
-// registerPwa(); // Deshabilitado - PWA causaba caché de chunks viejos
+registerPwa();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -1,4 +1,4 @@
-// src/utils/dates.js
+/ src/utils/dates.js
 export function toStartOfDaySafe(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
