@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import SignaturePad from "../components/ui/SignaturePad";
+import { Icon } from "../components/ui/lpIcons";
+import MainLayout from "../layouts/MainLayout";
 
 export default function PreventiveOrderExecution() {
   const navigate = useNavigate();
@@ -10,348 +12,399 @@ export default function PreventiveOrderExecution() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [completing, setCompleting] = useState(false);
   const [signature, setSignature] = useState(null);
-  const [completingItemId, setCompletingItemId] = useState(null);
-
-  // Warning state
-  const [showWarning, setShowWarning] = useState(false);
+  const [showWarning, setShowWarning] = useState(true);
   const [warningAcknowledged, setWarningAcknowledged] = useState(false);
+  const [itemStates, setItemStates] = useState({});
+  const [itemObservations, setItemObservations] = useState({});
 
   useEffect(() => {
     loadOrder();
-    checkWarning();
   }, [id]);
-
-  function checkWarning() {
-    const acknowledged = sessionStorage.getItem("olpWarningAcknowledged");
-    if (!acknowledged) {
-      setShowWarning(true);
-    }
-  }
-
-  function acknowledgeWarning() {
-    sessionStorage.setItem("olpWarningAcknowledged", "true");
-    setWarningAcknowledged(true);
-    setShowWarning(false);
-  }
 
   async function loadOrder() {
     setLoading(true);
     try {
       const data = await preventiveOrdersService.get(Number(id));
       setOrder(data);
+
+      // Inicializar estados de items
+      const states = {};
+      const observations = {};
+      if (data.items && Array.isArray(data.items)) {
+        data.items.forEach((item) => {
+          states[item.id] = item.status === "COMPLETED" ? true : false;
+          observations[item.id] = item.observations || "";
+        });
+      }
+      setItemStates(states);
+      setItemObservations(observations);
     } catch (err) {
       setError("No se pudo cargar la orden");
+      console.error("Error:", err);
     } finally {
       setLoading(false);
     }
   }
 
   async function handleCompleteItem(itemId) {
-    setCompletingItemId(itemId);
     try {
-      await preventiveOrdersService.completeItem(Number(id), itemId, "COMPLETED", "", null);
-      await loadOrder();
+      const observations = itemObservations[itemId] || "";
+      await preventiveOrdersService.completeItem(Number(id), itemId, "COMPLETED", observations, null);
+      setItemStates((prev) => ({ ...prev, [itemId]: true }));
     } catch (err) {
       setError("Error completando item");
-    } finally {
-      setCompletingItemId(null);
+      console.error(err);
     }
   }
 
   async function handleCompleteOrder() {
     if (!signature) {
-      setError("La firma es requerida para completar la orden");
+      setError("Se requiere firma para completar la orden");
       return;
     }
 
+    setCompleting(true);
     try {
       await preventiveOrdersService.complete(Number(id), signature);
-      navigate("/preventive-orders");
+      setTimeout(() => {
+        navigate("/preventive-orders");
+      }, 1000);
     } catch (err) {
-      setError(err.response?.data?.error || "Error completando orden");
+      setError(err?.message || "Error completando orden");
+      setCompleting(false);
     }
   }
 
   if (loading) {
     return (
-      <div style={{ padding: 20, textAlign: "center", color: "#94a3b8", minHeight: "100vh", background: "#0f172a" }}>
-        Cargando orden…
-      </div>
+      <MainLayout>
+        <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div>
+            <Icon name="loader" size="lg" style={{ marginBottom: 16, display: "block" }} />
+            <p>Cargando orden…</p>
+          </div>
+        </div>
+      </MainLayout>
     );
   }
 
   if (!order) {
     return (
-      <div style={{ padding: 20, textAlign: "center", color: "#ef4444", minHeight: "100vh", background: "#0f172a" }}>
-        Orden no encontrada
-      </div>
+      <MainLayout>
+        <div style={{ padding: 40, textAlign: "center", color: "#ef4444", minHeight: "100vh" }}>
+          <p>Orden no encontrada</p>
+          <button
+            onClick={() => navigate("/preventive-orders")}
+            style={{
+              marginTop: 16,
+              padding: "10px 20px",
+              borderRadius: 8,
+              border: "1px solid #ef4444",
+              background: "transparent",
+              color: "#ef4444",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Volver a órdenes
+          </button>
+        </div>
+      </MainLayout>
     );
   }
 
-  const completedCount = order.items?.filter((i) => i.status === "COMPLETED").length || 0;
-  const totalItems = order.items?.length || 0;
-  const progress = totalItems > 0 ? (completedCount / totalItems) * 100 : 0;
+  const allItemsCompleted = order.items && Array.isArray(order.items) && order.items.length > 0 && order.items.every((item) => itemStates[item.id] === true);
+  const completedCount = order.items ? order.items.filter((item) => itemStates[item.id] === true).length : 0;
+  const totalItems = order.items ? order.items.length : 0;
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 20, minHeight: "100vh", background: "#0f172a" }}>
-      {showWarning && (
+    <MainLayout>
+      <div style={{ padding: "24px", minHeight: "100vh", background: "#0f172a" }}>
+        {/* Warning Modal */}
+        {showWarning && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+            <div style={{ background: "white", borderRadius: 12, padding: 32, maxWidth: 500, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+              <h2 style={{ margin: "0 0 16px 0", fontSize: 20, fontWeight: 900, color: "#1e293b" }}>Advertencia Importante</h2>
+              <p style={{ margin: "0 0 16px 0", color: "#475569", lineHeight: 1.6 }}>
+                Las órdenes preventivas deben ejecutarse respetando la frecuencia establecida. No ejecutar antes de la fecha programada puede afectar el ciclo de mantenimiento.
+              </p>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={warningAcknowledged}
+                  onChange={(e) => setWarningAcknowledged(e.target.checked)}
+                  style={{ cursor: "pointer" }}
+                />
+                <span style={{ color: "#334155", fontSize: 13 }}>Entiendo y continúo con la ejecución</span>
+              </label>
+              <button
+                onClick={() => setShowWarning(false)}
+                disabled={!warningAcknowledged}
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: warningAcknowledged ? "#f97316" : "#cbd5e1",
+                  color: "white",
+                  fontWeight: 700,
+                  cursor: warningAcknowledged ? "pointer" : "default",
+                }}
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Header */}
+        <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <h1 style={{ margin: "0 0 8px 0", fontSize: 28, fontWeight: 900, color: "#f1f5f9" }}>
+              Orden #{order.id} - En Ejecución
+            </h1>
+            <p style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>
+              {completedCount} de {totalItems} items completados
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(`/preventive-orders/${order.id}`)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 8,
+              border: "1px solid #334155",
+              background: "transparent",
+              color: "#cbd5e1",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontWeight: 600,
+            }}
+          >
+            <Icon name="arrowLeft" size="sm" />
+            Ver Detalle
+          </button>
+        </div>
+
+        {/* Progress Bar */}
         <div
           style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 1000,
-            background: "rgba(15,23,42,0.75)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            marginBottom: 24,
             padding: 16,
+            borderRadius: 12,
+            background: "linear-gradient(135deg, #1e293b, #1a1f26)",
+            border: "1px solid #334155",
           }}
         >
-          <div
-            style={{
-              background: "#1a1f26",
-              borderRadius: 20,
-              maxWidth: 500,
-              padding: 30,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
-              border: "1px solid #334155",
-            }}
-          >
-            <div style={{ fontSize: 28, marginBottom: 10 }}>⚠️</div>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: "#f1f5f9", marginBottom: 12 }}>
-              Advertencia Importante
-            </h2>
-            <p style={{ color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
-              Una Orden de Lubricación Preventiva agrupa múltiples rutas en una sola intervención. Sin embargo, <strong>cada equipo debe respetar sus frecuencias individuales</strong> independientemente.
-            </p>
-            <p style={{ color: "#cbd5e1", fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
-              Asegúrate de que las ejecuciones correspondan a los intervalos correctos según el plan de mantenimiento.
-            </p>
-            <label style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={warningAcknowledged}
-                onChange={(e) => setWarningAcknowledged(e.target.checked)}
-                style={{ width: 18, height: 18, cursor: "pointer" }}
-              />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#cbd5e1" }}>
-                He leído y entiendo la advertencia
-              </span>
-            </label>
-            <button
-              onClick={acknowledgeWarning}
-              disabled={!warningAcknowledged}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: 10,
-                border: "none",
-                background: warningAcknowledged ? "#f97316" : "#475569",
-                color: "white",
-                fontWeight: 700,
-                cursor: warningAcknowledged ? "pointer" : "default",
-              }}
-            >
-              Continuar
-            </button>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#cbd5e1" }}>Progreso</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>
+              {Math.round((completedCount / totalItems) * 100)}%
+            </span>
           </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div style={{ marginBottom: 30, position: "sticky", top: 0, background: "#0f172a", paddingBottom: 20, zIndex: 100 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-          <div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, color: "#f1f5f9", margin: 0, marginBottom: 4 }}>
-              {order.title || `Orden #${order.id}`}
-            </h1>
-            <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
-              {order.equipment?.name} • {new Date(order.scheduledDate).toLocaleDateString()}
-            </p>
-          </div>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              padding: "6px 14px",
-              borderRadius: 6,
-              background: "#f97316",
-              color: "white",
-            }}
-          >
-            En progreso
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", marginBottom: 8 }}>
-            Progreso: {completedCount} de {totalItems} items
-          </div>
-          <div
-            style={{
-              width: "100%",
-              height: 8,
-              borderRadius: 4,
-              background: "#334155",
-              overflow: "hidden",
-            }}
-          >
+          <div style={{ height: 8, background: "#334155", borderRadius: 4, overflow: "hidden" }}>
             <div
               style={{
-                width: `${progress}%`,
                 height: "100%",
-                background: "#10b981",
+                background: "linear-gradient(90deg, #f97316, #ea580c)",
+                width: `${(completedCount / totalItems) * 100}%`,
                 transition: "width 0.3s",
               }}
             />
           </div>
         </div>
-      </div>
 
-      {error && (
-        <div style={{ padding: 12, borderRadius: 8, background: "#7f1d1d", color: "#fecaca", marginBottom: 20, fontWeight: 600 }}>
-          {error}
-        </div>
-      )}
-
-      {/* Items */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 30 }}>
-        {order.items?.map((item, idx) => (
+        {error && (
           <div
-            key={item.id}
             style={{
-              padding: 16,
-              borderRadius: 12,
-              border: item.status === "COMPLETED" ? "1px solid #166534" : "1px solid #334155",
-              background: item.status === "COMPLETED" ? "#064e3b" : "#1a1f26",
-              transition: "all 0.15s",
+              marginBottom: 16,
+              padding: 12,
+              borderRadius: 8,
+              background: "#fee2e2",
+              color: "#991b1b",
+              fontSize: 13,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  minWidth: 48,
-                  borderRadius: 8,
-                  background: item.status === "COMPLETED" ? "#10b981" : "#475569",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontWeight: 700,
-                  fontSize: 16,
-                }}
-              >
-                {item.status === "COMPLETED" ? "✓" : idx + 1}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: item.status === "COMPLETED" ? "#86efac" : "#f1f5f9",
-                  }}
-                >
-                  {item.route?.name}
-                </div>
-                {item.observations && (
-                  <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>{item.observations}</div>
-                )}
-              </div>
-              {item.status !== "COMPLETED" && (
-                <button
-                  onClick={() => handleCompleteItem(item.id)}
-                  disabled={completingItemId === item.id}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 8,
-                    border: "none",
-                    background: completingItemId === item.id ? "#475569" : "#10b981",
-                    color: "white",
-                    fontWeight: 700,
-                    cursor: completingItemId === item.id ? "default" : "pointer",
-                    fontSize: 12,
-                    transition: "all 0.15s",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (completingItemId !== item.id) e.currentTarget.style.background = "#059669";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (completingItemId !== item.id) e.currentTarget.style.background = "#10b981";
-                  }}
-                >
-                  {completingItemId === item.id ? "Completando…" : "Completar"}
-                </button>
-              )}
-            </div>
+            {error}
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Signature */}
-      {completedCount === totalItems && (
-        <div style={{ background: "#242b35", padding: 20, borderRadius: 12, marginBottom: 20, border: "1px solid #334155" }}>
-          <SignaturePad
-            onChange={setSignature}
-            label="Firma del técnico responsable"
-          />
+        {/* Items List */}
+        <div style={{ display: "grid", gap: 12, marginBottom: 32 }}>
+          {order.items && Array.isArray(order.items)
+            ? order.items.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    border: "1px solid #334155",
+                    background: "linear-gradient(135deg, #1e293b, #1a1f26)",
+                    transition: "all 0.3s",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={itemStates[item.id] || false}
+                      onChange={() => {
+                        if (!itemStates[item.id]) {
+                          handleCompleteItem(item.id);
+                        }
+                      }}
+                      style={{
+                        width: 52,
+                        height: 52,
+                        cursor: "pointer",
+                        marginTop: 4,
+                      }}
+                    />
+
+                    {/* Item Info */}
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ margin: "0 0 8px 0", fontSize: 15, fontWeight: 800, color: "#f1f5f9" }}>
+                        {item.routeName || "Item"}
+                      </h3>
+                      {item.route && (
+                        <div style={{ display: "grid", gap: 4, fontSize: 13, color: "#cbd5e1", marginBottom: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <Icon name="settings" size="sm" />
+                            {item.route.name}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Observaciones */}
+                      {itemStates[item.id] && (
+                        <textarea
+                          placeholder="Añade observaciones (opcional)"
+                          value={itemObservations[item.id] || ""}
+                          onChange={(e) => setItemObservations((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          style={{
+                            width: "100%",
+                            padding: 8,
+                            borderRadius: 8,
+                            border: "1px solid #334155",
+                            background: "#0f172a",
+                            color: "#cbd5e1",
+                            fontSize: 12,
+                            fontFamily: "inherit",
+                            minHeight: 60,
+                            resize: "vertical",
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    <div
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: 8,
+                        background: itemStates[item.id] ? "#10b98120" : "#f59e0b20",
+                        color: itemStates[item.id] ? "#10b981" : "#f59e0b",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {itemStates[item.id] ? "✓ Completado" : "Pendiente"}
+                    </div>
+                  </div>
+                </div>
+              ))
+            : null}
         </div>
-      )}
 
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", position: "sticky", bottom: 0, background: "#0f172a", paddingTop: 20, marginBottom: -20, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20, paddingBottom: 20 }}>
-        <button
-          onClick={() => navigate(`/preventive-orders/${id}`)}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 8,
-            border: "1px solid #334155",
-            background: "transparent",
-            color: "#cbd5e1",
-            fontWeight: 700,
-            cursor: "pointer",
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "#475569";
-            e.currentTarget.style.color = "#f1f5f9";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "#334155";
-            e.currentTarget.style.color = "#cbd5e1";
-          }}
-        >
-          Cancelar
-        </button>
-        {completedCount === totalItems && (
-          <button
-            onClick={handleCompleteOrder}
+        {/* Firma */}
+        {allItemsCompleted && (
+          <div
             style={{
-              padding: "10px 20px",
-              borderRadius: 8,
-              border: "none",
-              background: signature ? "#10b981" : "#475569",
-              color: "white",
+              padding: 20,
+              borderRadius: 12,
+              border: "2px solid #f97316",
+              background: "#f97316" + "20",
+              marginBottom: 24,
+            }}
+          >
+            <h3 style={{ margin: "0 0 12px 0", fontSize: 15, fontWeight: 800, color: "#f1f5f9" }}>
+              Firma Digital
+            </h3>
+            <SignaturePad onSignatureCapture={setSignature} />
+          </div>
+        )}
+
+        {/* Botones Finales */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button
+            onClick={() => navigate(`/preventive-orders/${order.id}`)}
+            style={{
+              padding: "12px 24px",
+              borderRadius: 10,
+              border: "1px solid #334155",
+              background: "transparent",
+              color: "#cbd5e1",
               fontWeight: 700,
-              cursor: signature ? "pointer" : "default",
-              transition: "all 0.15s",
+              cursor: "pointer",
             }}
             onMouseEnter={(e) => {
-              if (signature) e.currentTarget.style.background = "#059669";
+              e.currentTarget.style.borderColor = "#475569";
+              e.currentTarget.style.color = "#f1f5f9";
             }}
             onMouseLeave={(e) => {
-              if (signature) e.currentTarget.style.background = "#10b981";
+              e.currentTarget.style.borderColor = "#334155";
+              e.currentTarget.style.color = "#cbd5e1";
             }}
           >
-            ✓ Completar Orden
+            Atrás
           </button>
-        )}
+          <button
+            onClick={() => navigate("/preventive-orders/technician")}
+            style={{
+              padding: "12px 24px",
+              borderRadius: 10,
+              border: "none",
+              background: "#3b82f6",
+              color: "white",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#2563eb")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#3b82f6")}
+          >
+            Mis Órdenes
+          </button>
+          <button
+            onClick={handleCompleteOrder}
+            disabled={!allItemsCompleted || completing}
+            style={{
+              padding: "12px 24px",
+              borderRadius: 10,
+              border: "none",
+              background: allItemsCompleted && !completing ? "#10b981" : "#94a3b8",
+              color: "white",
+              fontWeight: 700,
+              cursor: allItemsCompleted && !completing ? "pointer" : "default",
+            }}
+            onMouseEnter={(e) => {
+              if (allItemsCompleted && !completing) {
+                e.currentTarget.style.background = "#059669";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (allItemsCompleted && !completing) {
+                e.currentTarget.style.background = "#10b981";
+              }
+            }}
+          >
+            {completing ? "Finalizando…" : "Completar Orden"}
+          </button>
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

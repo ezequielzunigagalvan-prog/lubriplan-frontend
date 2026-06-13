@@ -2,171 +2,99 @@ import { useEffect, useState } from "react";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { getEquipment } from "../services/equipmentService";
 import { httpGet } from "../services/http";
+import { Icon } from "../components/ui/lpIcons";
 
 export default function PreventiveOrderFormModal({ onClose }) {
   const [equipments, setEquipments] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [equipmentSearch, setEquipmentSearch] = useState("");
-  const [formData, setFormData] = useState({
-    equipmentId: "",
-    scheduledDate: "",
-    title: "",
-    notes: "",
-    assignedTo: "",
-  });
+  const [showEquipmentDropdown, setShowEquipmentDropdown] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [selectedTechnician, setSelectedTechnician] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [createdOrderId, setCreatedOrderId] = useState(null);
 
   useEffect(() => {
-    loadEquipments();
-    loadTechnicians();
+    loadData();
   }, []);
 
-  async function loadEquipments() {
+  async function loadData() {
     try {
-      const data = await getEquipment();
-      setEquipments(data?.data || data || []);
-    } catch (err) {
-      console.error("Error loading equipments:", err);
-    }
-  }
+      const equipData = await getEquipment();
+      setEquipments(equipData?.data || equipData || []);
 
-  async function loadTechnicians() {
-    try {
-      const data = await httpGet("/technicians");
-      const techs = data?.data || data?.technicians || data || [];
+      const techData = await httpGet("/technicians");
+      const techs = techData?.data || techData?.technicians || techData || [];
       setTechnicians(Array.isArray(techs) ? techs : []);
     } catch (err) {
-      console.error("Error loading technicians:", err);
-      setTechnicians([]);
+      console.error("Error loading data:", err);
     }
   }
 
-  const filteredEquipments = equipments.filter(eq =>
-    eq.name?.toLowerCase().includes(equipmentSearch.toLowerCase()) ||
-    eq.code?.toLowerCase().includes(equipmentSearch.toLowerCase())
+  const filteredEquipments = equipments.filter((eq) =>
+    (eq.name?.toLowerCase() || "").includes(equipmentSearch.toLowerCase()) ||
+    (eq.code?.toLowerCase() || "").includes(equipmentSearch.toLowerCase())
   );
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+
+    if (!selectedEquipment || !scheduledDate) {
+      setError("Equipo y fecha son requeridos");
+      return;
+    }
+
     setLoading(true);
-
     try {
-      if (!formData.equipmentId || !formData.scheduledDate) {
-        setError("Equipo y fecha son requeridos");
-        setLoading(false);
-        return;
-      }
-
-      const order = await preventiveOrdersService.create(
-        Number(formData.equipmentId),
-        formData.scheduledDate,
-        formData.title,
-        formData.notes,
-        formData.assignedTo ? Number(formData.assignedTo) : null
+      await preventiveOrdersService.create(
+        selectedEquipment.id,
+        scheduledDate,
+        title || undefined,
+        notes || undefined,
+        selectedTechnician ? Number(selectedTechnician) : null
       );
 
-      // Mostrar el número de orden creada
-      setCreatedOrderId(order.id);
-
-      // Cerrar modal después de 2 segundos mostrando el ID
       setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 1000);
     } catch (err) {
-      setError(err.message || err?.data?.error || "Error guardando la orden");
+      setError(err?.message || "Error al guardar la orden");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: "#1a1f26",
-          borderRadius: 12,
-          border: "1px solid #334155",
-          maxWidth: 560,
-          width: "calc(100% - 40px)",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          padding: 24,
-          position: "relative",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "#f1f5f9" }}>
-            {createdOrderId ? "Orden Creada" : "Nueva Orden de Lubricación"}
-          </h2>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+      <div style={{ background: "white", borderRadius: 12, padding: 24, width: "90%", maxWidth: 500, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "#1e293b" }}>Nueva Orden Preventiva</h2>
           <button
             onClick={onClose}
             style={{
               background: "none",
               border: "none",
               fontSize: 24,
-              color: "#94a3b8",
               cursor: "pointer",
-              padding: 0,
-              width: 24,
-              height: 24,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              color: "#94a3b8",
             }}
           >
             ×
           </button>
         </div>
 
-        {createdOrderId && (
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 8,
-              background: "#064e3b",
-              border: "1px solid #10b981",
-              color: "#d1fae5",
-              marginBottom: 20,
-              fontWeight: 600,
-              fontSize: 14,
-              textAlign: "center",
-            }}
-          >
-            <div style={{ marginBottom: 6 }}>✓ Orden creada exitosamente</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: "#10b981" }}>
-              Orden #{createdOrderId}
-            </div>
-          </div>
-        )}
-
         {error && (
           <div
             style={{
               padding: 12,
               borderRadius: 8,
-              background: "#7f1d1d",
-              color: "#fecaca",
-              marginBottom: 20,
-              fontWeight: 600,
+              background: "#fee2e2",
+              color: "#991b1b",
+              marginBottom: 16,
               fontSize: 13,
             }}
           >
@@ -174,120 +102,128 @@ export default function PreventiveOrderFormModal({ onClose }) {
           </div>
         )}
 
-        {!createdOrderId && <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Equipo */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#cbd5e1",
-                marginBottom: 6,
-              }}
-            >
+            <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
               Equipo *
             </label>
             <div style={{ position: "relative" }}>
-              <input
-                type="text"
-                placeholder="Buscar equipo por nombre o código..."
-                value={equipmentSearch}
-                onChange={(e) => setEquipmentSearch(e.target.value)}
+              <div
+                onClick={() => setShowEquipmentDropdown(!showEquipmentDropdown)}
                 style={{
-                  width: "100%",
-                  padding: 12,
+                  padding: "10px 12px",
                   borderRadius: 8,
-                  border: "1px solid #334155",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                  background: "#242b35",
-                  color: "#f1f5f9",
-                  marginBottom: 8,
-                  boxSizing: "border-box",
-                }}
-              />
-              <select
-                value={formData.equipmentId}
-                onChange={(e) => setFormData({ ...formData, equipmentId: e.target.value })}
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  borderRadius: 8,
-                  border: "1px solid #334155",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                  background: "#242b35",
-                  color: "#f1f5f9",
-                  boxSizing: "border-box",
+                  border: "1px solid #cbd5e1",
+                  background: "white",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                <option value="">Selecciona un equipo</option>
-                {filteredEquipments.map((eq) => (
-                  <option key={eq.id} value={eq.id}>
-                    {eq.code ? `[${eq.code}] ` : ""}{eq.name}
-                  </option>
-                ))}
-              </select>
+                <span style={{ color: selectedEquipment ? "#1e293b" : "#94a3b8" }}>
+                  {selectedEquipment ? selectedEquipment.name : "Selecciona un equipo"}
+                </span>
+                <Icon name={showEquipmentDropdown ? "chevronUp" : "chevronDown"} size="sm" />
+              </div>
+
+              {showEquipmentDropdown && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    marginTop: 4,
+                    background: "white",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 8,
+                    maxHeight: 300,
+                    overflowY: "auto",
+                    zIndex: 10,
+                  }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Buscar equipo..."
+                    value={equipmentSearch}
+                    onChange={(e) => setEquipmentSearch(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      borderBottom: "1px solid #e2e8f0",
+                      fontSize: 13,
+                      boxSizing: "border-box",
+                      border: "none",
+                      outline: "none",
+                    }}
+                  />
+                  {filteredEquipments.map((eq) => (
+                    <div
+                      key={eq.id}
+                      onClick={() => {
+                        setSelectedEquipment(eq);
+                        setEquipmentSearch("");
+                        setShowEquipmentDropdown(false);
+                      }}
+                      style={{
+                        padding: 10,
+                        borderBottom: "1px solid #f1f5f9",
+                        cursor: "pointer",
+                        fontSize: 13,
+                        color: "#1e293b",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                    >
+                      {eq.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
+          {/* Fecha */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#cbd5e1",
-                marginBottom: 6,
-              }}
-            >
+            <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
               Fecha Programada *
             </label>
             <input
               type="date"
-              value={formData.scheduledDate}
-              onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
               style={{
                 width: "100%",
-                padding: 12,
+                padding: "10px 12px",
                 borderRadius: 8,
-                border: "1px solid #334155",
-                fontSize: 14,
-                fontFamily: "inherit",
+                border: "1px solid #cbd5e1",
+                fontSize: 13,
                 boxSizing: "border-box",
-                background: "#242b35",
-                color: "#f1f5f9",
               }}
+              required
             />
           </div>
 
+          {/* Técnico */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#cbd5e1",
-                marginBottom: 6,
-              }}
-            >
-              Técnico Asignado (Opcional)
+            <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
+              Técnico (Opcional)
             </label>
             <select
-              value={formData.assignedTo}
-              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+              value={selectedTechnician}
+              onChange={(e) => setSelectedTechnician(e.target.value)}
               style={{
                 width: "100%",
-                padding: 12,
+                padding: "10px 12px",
                 borderRadius: 8,
-                border: "1px solid #334155",
-                fontSize: 14,
-                fontFamily: "inherit",
-                background: "#242b35",
-                color: "#f1f5f9",
+                border: "1px solid #cbd5e1",
+                fontSize: 13,
+                boxSizing: "border-box",
               }}
             >
-              <option value="">Selecciona un técnico (opcional)</option>
+              <option value="">Selecciona un técnico</option>
               {technicians.map((tech) => (
                 <option key={tech.id} value={tech.id}>
                   {tech.name}
@@ -296,91 +232,67 @@ export default function PreventiveOrderFormModal({ onClose }) {
             </select>
           </div>
 
+          {/* Título */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#cbd5e1",
-                marginBottom: 6,
-              }}
-            >
+            <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
               Título (Opcional)
             </label>
             <input
               type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Ej: Mantenimiento preventivo Q2"
               style={{
                 width: "100%",
-                padding: 12,
+                padding: "10px 12px",
                 borderRadius: 8,
-                border: "1px solid #334155",
-                fontSize: 14,
-                fontFamily: "inherit",
+                border: "1px solid #cbd5e1",
+                fontSize: 13,
                 boxSizing: "border-box",
-                background: "#242b35",
-                color: "#f1f5f9",
               }}
             />
           </div>
 
+          {/* Notas */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#cbd5e1",
-                marginBottom: 6,
-              }}
-            >
-              Notas
+            <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
+              Notas (Opcional)
             </label>
             <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Instrucciones adicionales o observaciones…"
-              rows={4}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Instrucciones adicionales..."
               style={{
                 width: "100%",
-                padding: 12,
+                padding: "10px 12px",
                 borderRadius: 8,
-                border: "1px solid #334155",
-                fontSize: 14,
-                fontFamily: "inherit",
+                border: "1px solid #cbd5e1",
+                fontSize: 13,
                 boxSizing: "border-box",
-                background: "#242b35",
-                color: "#f1f5f9",
+                minHeight: 80,
+                fontFamily: "inherit",
                 resize: "vertical",
               }}
             />
           </div>
 
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
+          {/* Botones */}
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
             <button
               type="button"
               onClick={onClose}
               style={{
                 padding: "10px 20px",
                 borderRadius: 8,
-                border: "1px solid #334155",
-                background: "transparent",
-                color: "#cbd5e1",
+                border: "1px solid #cbd5e1",
+                background: "white",
+                color: "#334155",
                 fontWeight: 700,
                 cursor: "pointer",
-                transition: "all 0.15s",
+                fontSize: 13,
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#475569";
-                e.currentTarget.style.color = "#f1f5f9";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#334155";
-                e.currentTarget.style.color = "#cbd5e1";
-              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
             >
               Cancelar
             </button>
@@ -395,7 +307,7 @@ export default function PreventiveOrderFormModal({ onClose }) {
                 color: "white",
                 fontWeight: 700,
                 cursor: loading ? "default" : "pointer",
-                transition: "all 0.15s",
+                fontSize: 13,
               }}
               onMouseEnter={(e) => {
                 if (!loading) e.currentTarget.style.background = "#ea580c";
@@ -404,11 +316,10 @@ export default function PreventiveOrderFormModal({ onClose }) {
                 if (!loading) e.currentTarget.style.background = "#f97316";
               }}
             >
-              {loading ? "Guardando…" : "Guardar"}
+              {loading ? "Guardando..." : "Crear Orden"}
             </button>
           </div>
         </form>
-        }
       </div>
     </div>
   );
