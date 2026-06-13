@@ -1,11 +1,12 @@
 ﻿import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { VitePWA } from "vite-plugin-pwa";
+// import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 export default defineConfig({
   plugins: [
     react(),
+    /* VitePWA deshabilitado - causaba caché de chunks viejos
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
@@ -69,6 +70,7 @@ export default defineConfig({
         enabled: false,
       },
     }),
+    */
   ],
   resolve: {
     alias: {

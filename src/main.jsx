@@ -16,11 +16,11 @@ import { PlantProvider } from "./context/PlantContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { registerPwa } from "./pwa/registerPwa";
+// import { registerPwa } from "./pwa/registerPwa";
 import { initSentry } from "./config/sentry";
 
 initSentry();
-registerPwa();
+// registerPwa(); // Deshabilitado - PWA causaba caché de chunks viejos
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
