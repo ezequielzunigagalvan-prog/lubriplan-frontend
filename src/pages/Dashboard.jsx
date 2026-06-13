@@ -28,6 +28,8 @@ import {
 import useDashboardAlerts from "../hooks/useDashboardAlerts";
 import useDashboardPredictiveAlerts from "../hooks/useDashboardPredictiveAlerts";
 import useRealtimeAlerts from "../hooks/useRealtimeAlerts";
+
+const API_ASSETS_URL = "";
 import useDashboardPriorityQueue from "../hooks/useDashboardPriorityQueue.js";
 import { formatRouteDisplayName } from "../utils/routeNames";
 
@@ -7800,6 +7802,22 @@ const dashboardCompactInstructionText = {
   color: "#334155",
   fontWeight: 800,
   whiteSpace: "pre-wrap",
+};
+
+const dashboardCompactPreviewFrameSlim = {
+  width: "100%",
+  height: 100,
+  borderRadius: 10,
+  overflow: "hidden",
+  border: "1px solid rgba(226,232,240,0.8)",
+  background: "rgba(248,250,252,0.8)",
+};
+
+const dashboardCompactInstructionBoxSlim = {
+  padding: "8px 10px",
+  borderRadius: 10,
+  background: "rgba(255,255,255,0.7)",
+  border: "1px solid rgba(251,146,60,0.2)",
 };
 
   const perfBar = {
