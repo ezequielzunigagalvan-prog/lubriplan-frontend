@@ -314,10 +314,10 @@ export default function PreventiveOrderDetail() {
                     {/* Datos técnicos */}
                     {item.route && (
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12, color: "#cbd5e1" }}>
-                        {item.route.lubricant && (
+                        {item.route.lubricantName && (
                           <div>
                             <span style={{ color: "#94a3b8", fontSize: 11 }}>Lubricante</span>
-                            <div style={{ fontWeight: 700 }}>{item.route.lubricant}</div>
+                            <div style={{ fontWeight: 700 }}>{item.route.lubricantName}</div>
                           </div>
                         )}
                         {item.route.quantity && (
@@ -334,10 +334,10 @@ export default function PreventiveOrderDetail() {
                             <div style={{ fontWeight: 700 }}>{item.route.method}</div>
                           </div>
                         )}
-                        {item.route.frequency && (
+                        {item.route.frequencyType && (
                           <div>
                             <span style={{ color: "#94a3b8", fontSize: 11 }}>Frecuencia</span>
-                            <div style={{ fontWeight: 700 }}>{item.route.frequency}</div>
+                            <div style={{ fontWeight: 700 }}>{item.route.frequencyType}</div>
                           </div>
                         )}
                       </div>
