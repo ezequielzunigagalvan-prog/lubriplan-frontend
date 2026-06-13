@@ -291,6 +291,20 @@ export default function PreventiveOrdersList() {
                   ? Math.round((order.progress.completed / order.progress.total) * 100)
                   : 0;
 
+              // Calcular urgencia según fecha
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const scheduledDate = new Date(order.scheduledDate);
+              scheduledDate.setHours(0, 0, 0, 0);
+              const daysUntil = Math.floor((scheduledDate - today) / (1000 * 60 * 60 * 24));
+
+              let urgencyBadge = { color: "#3b82f6", label: "Próxima", icon: "calendar" };
+              if (daysUntil < 0) {
+                urgencyBadge = { color: "#ef4444", label: "Atrasada", icon: "alertCircle" };
+              } else if (daysUntil === 0) {
+                urgencyBadge = { color: "#f59e0b", label: "Hoy", icon: "clock" };
+              }
+
               return (
                 <div
                   key={order.id}
@@ -316,42 +330,56 @@ export default function PreventiveOrdersList() {
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  {/* Header */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <h3
-                        style={{
-                          margin: "0 0 4px 0",
-                          fontSize: 18,
-                          fontWeight: 900,
-                          color: "#f1f5f9",
-                        }}
-                      >
-                        Orden #{order.id}
-                      </h3>
-                      <p style={{ margin: 0, color: "#94a3b8", fontSize: 13 }}>
-                        {order.title || "Sin título"}
-                      </p>
-                    </div>
-                    <div
+                  {/* Header con título grande y badges */}
+                  <div>
+                    <h3
                       style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: "6px 12px",
-                        borderRadius: 8,
-                        background: `${config.color}20`,
-                        color: config.color,
-                        whiteSpace: "nowrap",
+                        margin: "0 0 12px 0",
+                        fontSize: 20,
+                        fontWeight: 900,
+                        color: "#f1f5f9",
                       }}
                     >
-                      <Icon name={config.icon} size="xs" style={{ marginRight: 4 }} />
-                      {config.label}
+                      Orden #{order.id}
+                    </h3>
+                    <p style={{ margin: "0 0 12px 0", color: "#cbd5e1", fontSize: 13 }}>
+                      {order.title || "Sin título"}
+                    </p>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {/* Badge de estado */}
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "6px 10px",
+                          borderRadius: 8,
+                          background: `${config.color}20`,
+                          color: config.color,
+                        }}
+                      >
+                        <Icon name={config.icon} size="xs" />
+                        {config.label}
+                      </div>
+                      {/* Badge de urgencia */}
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "6px 10px",
+                          borderRadius: 8,
+                          background: `${urgencyBadge.color}20`,
+                          color: urgencyBadge.color,
+                        }}
+                      >
+                        <Icon name={urgencyBadge.icon} size="xs" />
+                        {urgencyBadge.label}
+                      </div>
                     </div>
                   </div>
 
@@ -425,42 +453,15 @@ export default function PreventiveOrdersList() {
                     </div>
                   )}
 
-                  {/* Botones */}
+                  {/* Botones según estado */}
                   <div style={{ display: "flex", gap: 8, marginTop: "auto", flexWrap: "wrap" }}>
-                    <button
-                      onClick={() => navigate(`/preventive-orders/${order.id}`)}
-                      style={{
-                        flex: 1,
-                        minWidth: 120,
-                        padding: "8px 16px",
-                        borderRadius: 10,
-                        border: "1px solid #475569",
-                        background: "transparent",
-                        color: "#cbd5e1",
-                        fontWeight: 600,
-                        fontSize: 12,
-                        cursor: "pointer",
-                        transition: "all 0.15s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = config.color;
-                        e.currentTarget.style.color = config.color;
-                        e.currentTarget.style.background = `${config.color}10`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "#475569";
-                        e.currentTarget.style.color = "#cbd5e1";
-                        e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      Ver detalle
-                    </button>
-
                     {order.status === "DRAFT" && (
                       <>
                         <button
                           onClick={() => handleOpen(order.id)}
                           style={{
+                            flex: 1,
+                            minWidth: 120,
                             padding: "8px 16px",
                             borderRadius: 10,
                             border: "none",
@@ -474,7 +475,7 @@ export default function PreventiveOrdersList() {
                           onMouseEnter={(e) => (e.currentTarget.style.background = "#2563eb")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = "#3b82f6")}
                         >
-                          Liberar
+                          Liberar al técnico
                         </button>
                         <button
                           onClick={() => handleDelete(order.id)}
@@ -494,11 +495,91 @@ export default function PreventiveOrdersList() {
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = "#dc2626")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = "#ef4444")}
-                          title="Cancelar orden"
+                          title="Eliminar orden"
                         >
                           <Icon name="trash" size="sm" />
                         </button>
                       </>
+                    )}
+
+                    {(order.status === "OPEN" || order.status === "IN_PROGRESS") && (
+                      <>
+                        <button
+                          onClick={() => navigate(`/preventive-orders/${order.id}/execution`)}
+                          style={{
+                            flex: 1,
+                            minWidth: 120,
+                            padding: "8px 16px",
+                            borderRadius: 10,
+                            border: "none",
+                            background: "#10b981",
+                            color: "white",
+                            fontWeight: 600,
+                            fontSize: 12,
+                            cursor: "pointer",
+                            transition: "all 0.15s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#059669")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "#10b981")}
+                        >
+                          Ejecutar
+                        </button>
+                        <button
+                          onClick={() => navigate(`/preventive-orders/${order.id}`)}
+                          style={{
+                            flex: 1,
+                            minWidth: 120,
+                            padding: "8px 16px",
+                            borderRadius: 10,
+                            border: "1px solid #475569",
+                            background: "transparent",
+                            color: "#cbd5e1",
+                            fontWeight: 600,
+                            fontSize: 12,
+                            cursor: "pointer",
+                            transition: "all 0.15s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = "#cbd5e1";
+                            e.currentTarget.style.color = "#f1f5f9";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = "#475569";
+                            e.currentTarget.style.color = "#cbd5e1";
+                          }}
+                        >
+                          Ver detalle
+                        </button>
+                      </>
+                    )}
+
+                    {order.status === "COMPLETED" && (
+                      <button
+                        onClick={() => navigate(`/preventive-orders/${order.id}`)}
+                        style={{
+                          flex: 1,
+                          minWidth: 120,
+                          padding: "8px 16px",
+                          borderRadius: 10,
+                          border: "1px solid #475569",
+                          background: "transparent",
+                          color: "#cbd5e1",
+                          fontWeight: 600,
+                          fontSize: 12,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "#cbd5e1";
+                          e.currentTarget.style.color = "#f1f5f9";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "#475569";
+                          e.currentTarget.style.color = "#cbd5e1";
+                        }}
+                      >
+                        Ver detalle
+                      </button>
                     )}
                   </div>
                 </div>

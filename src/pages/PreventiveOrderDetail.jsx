@@ -84,7 +84,7 @@ export default function PreventiveOrderDetail() {
 
   const config = statusConfig[order.status] || statusConfig.DRAFT;
   const progress = order.progress?.total > 0 ? Math.round((order.progress.completed / order.progress.total) * 100) : 0;
-  const canExecute = isTechnician && order.status === "IN_PROGRESS";
+  const canExecute = order.status === "OPEN" || order.status === "IN_PROGRESS";
 
   return (
     <MainLayout>
@@ -274,19 +274,24 @@ export default function PreventiveOrderDetail() {
                   <div
                     key={item.id}
                     style={{
-                      padding: 12,
+                      padding: 14,
                       borderRadius: 10,
-                      background: item.status === "COMPLETED" ? "#10b98120" : "#334155",
+                      background: item.status === "COMPLETED" ? "#10b98110" : "#334155",
                       border: `1px solid ${item.status === "COMPLETED" ? "#10b981" : "#475569"}`,
                       display: "grid",
-                      gap: 8,
+                      gap: 10,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      {item.status === "COMPLETED" && <Icon name="check" size="sm" style={{ color: "#10b981" }} />}
-                      <strong style={{ color: item.status === "COMPLETED" ? "#10b981" : "#cbd5e1", flex: 1 }}>
-                        {item.routeName || "Item"}
-                      </strong>
+                    {/* Header con nombre de ruta y estado */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <strong style={{ color: "#f1f5f9", fontSize: 14, display: "block", marginBottom: 4 }}>
+                          {item.route?.name || "Ruta sin nombre"}
+                        </strong>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8" }}>
+                          ID Item: {item.id}
+                        </span>
+                      </div>
                       <span
                         style={{
                           fontSize: 11,
@@ -295,14 +300,62 @@ export default function PreventiveOrderDetail() {
                           borderRadius: 6,
                           background: item.status === "COMPLETED" ? "#10b98140" : "#f59e0b40",
                           color: item.status === "COMPLETED" ? "#10b981" : "#f59e0b",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                          whiteSpace: "nowrap",
                         }}
                       >
+                        {item.status === "COMPLETED" && <Icon name="check" size="xs" />}
                         {item.status === "COMPLETED" ? "Completado" : "Pendiente"}
                       </span>
                     </div>
+
+                    {/* Datos técnicos */}
+                    {item.route && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12, color: "#cbd5e1" }}>
+                        {item.route.lubricant && (
+                          <div>
+                            <span style={{ color: "#94a3b8", fontSize: 11 }}>Lubricante</span>
+                            <div style={{ fontWeight: 700 }}>{item.route.lubricant}</div>
+                          </div>
+                        )}
+                        {item.route.quantity && (
+                          <div>
+                            <span style={{ color: "#94a3b8", fontSize: 11 }}>Cantidad</span>
+                            <div style={{ fontWeight: 700 }}>
+                              {item.route.quantity} {item.route.unit || "unidades"}
+                            </div>
+                          </div>
+                        )}
+                        {item.route.method && (
+                          <div>
+                            <span style={{ color: "#94a3b8", fontSize: 11 }}>Método</span>
+                            <div style={{ fontWeight: 700 }}>{item.route.method}</div>
+                          </div>
+                        )}
+                        {item.route.frequency && (
+                          <div>
+                            <span style={{ color: "#94a3b8", fontSize: 11 }}>Frecuencia</span>
+                            <div style={{ fontWeight: 700 }}>{item.route.frequency}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Instrucciones */}
+                    {item.route?.instructions && (
+                      <div style={{ fontSize: 12, color: "#cbd5e1", padding: "8px", borderLeft: "2px solid #3b82f6", background: "#3b82f610" }}>
+                        <strong style={{ color: "#94a3b8", display: "block", marginBottom: 4 }}>Instrucciones:</strong>
+                        {item.route.instructions}
+                      </div>
+                    )}
+
+                    {/* Observaciones */}
                     {item.observations && (
-                      <div style={{ fontSize: 12, color: "#94a3b8", paddingLeft: 8 }}>
-                        <strong>Observaciones:</strong> {item.observations}
+                      <div style={{ fontSize: 12, color: "#cbd5e1", padding: "8px", borderLeft: "2px solid #10b981", background: "#10b98110" }}>
+                        <strong style={{ color: "#10b981", display: "block", marginBottom: 4 }}>Observaciones:</strong>
+                        {item.observations}
                       </div>
                     )}
                   </div>
