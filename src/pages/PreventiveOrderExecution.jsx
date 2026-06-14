@@ -160,7 +160,7 @@ export default function PreventiveOrderExecution() {
                 <div style={{ fontSize: 64, marginBottom: 16, background: `${COLORS.accent}20`, borderRadius: "50%", width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                   ⚠️
                 </div>
-                <h2 style={{ margin: "0 0 12px 0", fontSize: 20, fontWeight: 900, color: COLORS.textPrimary }}>
+                <h2 style={{ margin: "0 0 12px 0", fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 900, color: COLORS.textPrimary }}>
                   Aviso Técnico Importante
                 </h2>
               </div>
@@ -265,7 +265,7 @@ export default function PreventiveOrderExecution() {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, padding: "24px", overflow: "auto" }}>
+        <div style={{ flex: 1, padding: "clamp(16px, 4vw, 24px)", overflow: "auto" }}>
           {error && (
             <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, background: "#EF444420", color: COLORS.red, fontSize: 13, border: `1px solid ${COLORS.red}40` }}>
               {error}

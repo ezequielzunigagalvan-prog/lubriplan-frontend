@@ -88,11 +88,11 @@ export default function PreventiveOrderDetail() {
 
   return (
     <MainLayout>
-      <div style={{ padding: "24px", minHeight: "100vh", background: "#070B0F" }}>
+      <div style={{ padding: "clamp(16px, 4vw, 24px)", minHeight: "100vh", background: "#070B0F" }}>
         {/* Header */}
         <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <h1 style={{ margin: "0 0 8px 0", fontSize: 28, fontWeight: 900, color: "#f1f5f9" }}>
+            <h1 style={{ margin: "0 0 8px 0", fontSize: "clamp(24px, 5vw, 32px)", fontWeight: 900, color: "#f1f5f9" }}>
               Orden #{order.id}
             </h1>
             <p style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>

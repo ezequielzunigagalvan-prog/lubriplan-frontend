@@ -7,18 +7,23 @@ import MainLayout from "../layouts/MainLayout";
 import { Icon } from "../components/ui/lpIcons";
 
 const COLORS = {
-  bgBase: "#070B0F",
-  bgCard: "#0D1117",
-  bgCardHover: "#131920",
-  border: "#1E2D42",
-  borderPrimary: "#818cf8",
+  bgBase: "#050810",
+  bgGradient: "linear-gradient(135deg, #050810 0%, #0a0f1a 100%)",
+  bgCard: "#0f1724",
+  bgCardGradient: "linear-gradient(135deg, rgba(15, 23, 36, 0.9), rgba(10, 15, 26, 0.95))",
+  bgCardHover: "linear-gradient(135deg, rgba(20, 30, 45, 0.95), rgba(15, 20, 30, 0.98))",
+  border: "rgba(129, 140, 248, 0.1)",
+  borderLight: "rgba(129, 140, 248, 0.2)",
+  borderAccent: "#818cf8",
   textPrimary: "#F0F4F8",
   textSecondary: "#8899AA",
   textMuted: "#4A5568",
   accent: "#818cf8",
   accentHover: "#6366f1",
+  accentGlow: "rgba(129, 140, 248, 0.3)",
   amber: "#F4A020",
   green: "#10B981",
+  greenGlow: "rgba(16, 185, 129, 0.3)",
   red: "#EF4444",
 };
 
@@ -33,6 +38,7 @@ export default function PreventiveOrdersList() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   const statusConfig = {
     DRAFT: { color: COLORS.textMuted, label: "Borrador", icon: "file" },
@@ -100,10 +106,12 @@ export default function PreventiveOrdersList() {
   if (loading) {
     return (
       <MainLayout>
-        <div style={{ padding: 40, textAlign: "center", color: COLORS.textMuted, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div>
-            <Icon name="loader" size="lg" style={{ marginBottom: 16, display: "block", color: COLORS.accent }} />
-            <p>Cargando órdenes…</p>
+        <div style={{ padding: "20px", minHeight: "100vh", background: COLORS.bgGradient, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, margin: "0 auto 16px", borderRadius: "50%", background: `${COLORS.accent}20`, display: "flex", alignItems: "center", justifyContent: "center", animation: "spin 1s linear infinite" }}>
+              <Icon name="loader" size="lg" style={{ color: COLORS.accent }} />
+            </div>
+            <p style={{ color: COLORS.textMuted, fontSize: 14, margin: 0 }}>Cargando órdenes…</p>
           </div>
         </div>
       </MainLayout>
@@ -112,49 +120,74 @@ export default function PreventiveOrdersList() {
 
   return (
     <MainLayout>
-      <div style={{ padding: "24px", minHeight: "100vh", background: COLORS.bgBase }}>
-        {/* Header */}
-        <div style={{ marginBottom: 40, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <h1 style={{ margin: "0 0 8px 0", fontSize: 32, fontWeight: 900, color: COLORS.textPrimary }}>
-              Órdenes Preventivas
-            </h1>
-            <p style={{ margin: 0, color: COLORS.textSecondary, fontSize: 14 }}>
-              {activeOrders.length} activa{activeOrders.length !== 1 ? "s" : ""} • {completedOrders.length} completada{completedOrders.length !== 1 ? "s" : ""}
-            </p>
+      <div style={{ background: COLORS.bgGradient, minHeight: "100vh", paddingBottom: 40 }}>
+        <style>{`
+          @keyframes spin { to { transform: rotate(360deg); } }
+          @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes glow { 0%, 100% { box-shadow: 0 0 20px ${COLORS.accentGlow}; } 50% { box-shadow: 0 0 30px ${COLORS.accentGlow}; } }
+
+          .olp-card:hover { animation: glow 2s ease-in-out; }
+        `}</style>
+
+        {/* Hero Section */}
+        <div style={{ padding: "32px 20px 24px", background: `linear-gradient(135deg, ${COLORS.accent}15 0%, transparent 100%)`, borderBottom: `1px solid ${COLORS.borderLight}`, animation: "slideUp 0.6s ease-out" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <h1 style={{ margin: "0 0 6px 0", fontSize: "clamp(24px, 5vw, 36px)", fontWeight: 900, color: COLORS.textPrimary, letterSpacing: "-0.02em" }}>
+                  Órdenes Preventivas
+                </h1>
+                <div style={{ display: "flex", gap: 12, fontSize: 13, color: COLORS.textSecondary, flexWrap: "wrap" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.amber }}></span>
+                    {activeOrders.length} activa{activeOrders.length !== 1 ? "s" : ""}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.green }}></span>
+                    {completedOrders.length} completada{completedOrders.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              </div>
+              {canCreate && (
+                <button
+                  onClick={() => setShowModal(true)}
+                  style={{
+                    background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentHover})`,
+                    color: "white",
+                    border: "none",
+                    padding: "12px 24px",
+                    borderRadius: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontSize: "clamp(13px, 2vw, 15px)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    boxShadow: `0 8px 24px ${COLORS.accentGlow}`,
+                    minHeight: 44,
+                    minWidth: 44,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.boxShadow = `0 12px 32px ${COLORS.accentGlow}`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = `0 8px 24px ${COLORS.accentGlow}`;
+                  }}
+                >
+                  <Icon name="plus" size="sm" />
+                  <span style={{ display: "none", "@media (min-width: 768px)": { display: "inline" } }}>Nueva OLP</span>
+                </button>
+              )}
+            </div>
           </div>
-          {canCreate && (
-            <button
-              onClick={() => setShowModal(true)}
-              style={{
-                background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentHover})`,
-                color: "white",
-                border: "none",
-                padding: "12px 24px",
-                borderRadius: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                boxShadow: `0 4px 12px ${COLORS.accent}40`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = `0 6px 20px ${COLORS.accent}60`;
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = `0 4px 12px ${COLORS.accent}40`;
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-            >
-              <Icon name="plus" size="sm" style={{ marginRight: 6, display: "inline-block" }} />
-              Nueva OLP
-            </button>
-          )}
         </div>
 
         {/* Filtros */}
-        {!status && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 32, flexWrap: "wrap" }}>
+        <div style={{ padding: "20px", borderBottom: `1px solid ${COLORS.borderLight}`, overflowX: "auto" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 8 }}>
             {statuses.map((s) => {
               const isActive = status === s;
               const config = s ? statusConfig[s] : null;
@@ -166,11 +199,11 @@ export default function PreventiveOrdersList() {
                     setPage(1);
                   }}
                   style={{
-                    padding: "8px 16px",
+                    padding: "10px 16px",
                     borderRadius: 10,
-                    border: `1.5px solid ${isActive ? (config?.color || COLORS.accent) : COLORS.border}`,
-                    background: isActive ? `${config?.color || COLORS.accent}15` : "transparent",
-                    color: isActive ? config?.color || COLORS.accent : COLORS.textSecondary,
+                    border: `1.5px solid ${isActive ? COLORS.accent : COLORS.borderLight}`,
+                    background: isActive ? `${COLORS.accent}15` : "transparent",
+                    color: isActive ? COLORS.accent : COLORS.textSecondary,
                     fontWeight: 600,
                     cursor: "pointer",
                     fontSize: 13,
@@ -178,111 +211,126 @@ export default function PreventiveOrdersList() {
                     alignItems: "center",
                     gap: 6,
                     transition: "all 0.2s",
+                    whiteSpace: "nowrap",
+                    minHeight: 44,
+                    backdrop: "blur(10px)",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.borderColor = COLORS.textSecondary;
-                      e.currentTarget.style.color = COLORS.textPrimary;
+                      e.currentTarget.style.borderColor = COLORS.borderAccent;
+                      e.currentTarget.style.background = `${COLORS.accent}08`;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.borderColor = COLORS.border;
-                      e.currentTarget.style.color = COLORS.textSecondary;
+                      e.currentTarget.style.borderColor = COLORS.borderLight;
+                      e.currentTarget.style.background = "transparent";
                     }
                   }}
                 >
                   {s ? (
                     <>
                       <Icon name={config.icon} size="sm" />
-                      {config.label}
+                      <span style={{ display: "none", "@media (min-width: 640px)": { display: "inline" } }}>{config.label}</span>
                     </>
                   ) : (
                     <>
                       <Icon name="list" size="sm" />
-                      Todas
+                      <span>Todas</span>
                     </>
                   )}
                 </button>
               );
             })}
           </div>
-        )}
+        </div>
 
-        {/* Órdenes Activas */}
-        {activeOrders.length > 0 && (
-          <div style={{ marginBottom: 48 }}>
-            <h2 style={{ margin: "0 0 16px 0", fontSize: 18, fontWeight: 900, color: COLORS.textPrimary }}>
-              Activas ({activeOrders.length})
-            </h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
-              {activeOrders.map((order) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  onDelete={handleDelete}
-                  onOpen={handleOpen}
-                  onNavigate={() => navigate(`/preventive-orders/${order.id}`)}
-                  onReload={loadOrders}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Contenido */}
+        <div style={{ padding: "24px 20px", maxWidth: 1200, margin: "0 auto" }}>
+          {/* Órdenes Activas */}
+          {activeOrders.length > 0 && (
+            <section style={{ marginBottom: 48, animation: "slideUp 0.6s ease-out 0.1s backwards" }}>
+              <div style={{ marginBottom: 20 }}>
+                <h2 style={{ margin: "0 0 4px 0", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 900, color: COLORS.textPrimary }}>
+                  Activas
+                </h2>
+                <div style={{ height: 2, width: 40, background: `linear-gradient(90deg, ${COLORS.accent}, transparent)`, borderRadius: 1 }}></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))", gap: 16 }}>
+                {activeOrders.map((order) => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onDelete={handleDelete}
+                    onOpen={handleOpen}
+                    onNavigate={() => navigate(`/preventive-orders/${order.id}`)}
+                    isHovered={hoveredCard === order.id}
+                    onHover={() => setHoveredCard(order.id)}
+                    onHoverLeave={() => setHoveredCard(null)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-        {/* Órdenes Completadas */}
-        {completedOrders.length > 0 && (
-          <div>
-            <h2 style={{ margin: "0 0 16px 0", fontSize: 18, fontWeight: 900, color: COLORS.textPrimary }}>
-              Completadas ({completedOrders.length})
-            </h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
-              {completedOrders.map((order) => (
-                <CompletedOrderCard key={order.id} order={order} onNavigate={() => navigate(`/preventive-orders/${order.id}`)} />
-              ))}
-            </div>
-          </div>
-        )}
+          {/* Órdenes Completadas */}
+          {completedOrders.length > 0 && (
+            <section style={{ animation: "slideUp 0.6s ease-out 0.2s backwards" }}>
+              <div style={{ marginBottom: 20 }}>
+                <h2 style={{ margin: "0 0 4px 0", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 900, color: COLORS.textPrimary }}>
+                  Completadas
+                </h2>
+                <div style={{ height: 2, width: 40, background: `linear-gradient(90deg, ${COLORS.green}, transparent)`, borderRadius: 1 }}></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))", gap: 16 }}>
+                {completedOrders.map((order) => (
+                  <CompletedOrderCard
+                    key={order.id}
+                    order={order}
+                    onNavigate={() => navigate(`/preventive-orders/${order.id}`)}
+                    isHovered={hoveredCard === `completed-${order.id}`}
+                    onHover={() => setHoveredCard(`completed-${order.id}`)}
+                    onHoverLeave={() => setHoveredCard(null)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-        {activeOrders.length === 0 && completedOrders.length === 0 && (
-          <div
-            style={{
-              padding: 40,
-              borderRadius: 16,
-              border: `1px dashed ${COLORS.border}`,
-              textAlign: "center",
-              background: `${COLORS.accent}05`,
-            }}
-          >
-            <div style={{ fontSize: 56, marginBottom: 16, color: COLORS.accent }}>
-              <Icon name="list" size="xl" />
+          {activeOrders.length === 0 && completedOrders.length === 0 && (
+            <div style={{ padding: "60px 20px", textAlign: "center", animation: "slideUp 0.6s ease-out" }}>
+              <div style={{ fontSize: 64, marginBottom: 16, color: COLORS.accentGlow, opacity: 0.6 }}>
+                <Icon name="inbox" size="xl" />
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 900, color: COLORS.textPrimary, marginBottom: 8 }}>
+                No hay órdenes
+              </h2>
+              <p style={{ fontSize: 14, color: COLORS.textSecondary, marginBottom: 24 }}>
+                {total === 0 ? "Crea una nueva orden para comenzar" : "Cambia el filtro para ver otras órdenes"}
+              </p>
+              {canCreate && total === 0 && (
+                <button
+                  onClick={() => setShowModal(true)}
+                  style={{
+                    background: COLORS.accent,
+                    color: "white",
+                    border: "none",
+                    padding: "12px 24px",
+                    borderRadius: 10,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 14,
+                    minHeight: 44,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.accentHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.accent)}
+                >
+                  Crear primera orden
+                </button>
+              )}
             </div>
-            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: COLORS.textPrimary }}>
-              No hay órdenes en este filtro
-            </div>
-            <div style={{ fontSize: 14, marginBottom: 24, color: COLORS.textSecondary }}>
-              {total === 0 ? "Crea una nueva orden para comenzar" : "Cambia el filtro para ver otras órdenes"}
-            </div>
-            {canCreate && total === 0 && (
-              <button
-                onClick={() => setShowModal(true)}
-                style={{
-                  background: COLORS.accent,
-                  color: "white",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: 10,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.accentHover)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.accent)}
-              >
-                Crear primera orden
-              </button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Modal */}
         {showModal && <PreventiveOrderFormModal onClose={handleModalClose} />}
@@ -292,14 +340,13 @@ export default function PreventiveOrdersList() {
 }
 
 // Card para órdenes activas
-function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
+function OrderCard({ order, onDelete, onOpen, onNavigate, isHovered, onHover, onHoverLeave }) {
   const config = {
     DRAFT: { color: COLORS.textMuted, label: "Borrador", icon: "file" },
     OPEN: { color: COLORS.accent, label: "Abierta", icon: "unlock" },
     IN_PROGRESS: { color: COLORS.amber, label: "En progreso", icon: "play" },
   }[order.status];
 
-  // Calcular urgencia
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const scheduledDate = new Date(order.scheduledDate);
@@ -317,109 +364,98 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
 
   return (
     <div
+      className="olp-card"
+      onMouseEnter={onHover}
+      onMouseLeave={onHoverLeave}
       style={{
-        padding: 20,
-        borderRadius: 14,
-        background: COLORS.bgCard,
-        border: `1px solid ${COLORS.border}`,
+        background: COLORS.bgCardGradient,
+        border: `1px solid ${isHovered ? COLORS.borderAccent : COLORS.borderLight}`,
         borderLeft: `4px solid ${config.color}`,
+        borderRadius: 16,
+        padding: "20px",
         display: "flex",
         flexDirection: "column",
-        gap: 14,
-        transition: "all 0.3s",
+        gap: 16,
+        transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
         cursor: "pointer",
+        position: "relative",
+        overflow: "hidden",
+        backdropFilter: "blur(10px)",
+        minHeight: 280,
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = config.color;
-        e.currentTarget.style.background = COLORS.bgCardHover;
-        e.currentTarget.style.boxShadow = `0 8px 24px ${config.color}20, 0 4px 12px rgba(0,0,0,0.4)`;
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = COLORS.border;
-        e.currentTarget.style.background = COLORS.bgCard;
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.transform = "translateY(0)";
+      style={isHovered ? {
+        background: COLORS.bgCardHover,
+        border: `1px solid ${COLORS.borderAccent}`,
+        borderLeft: `4px solid ${config.color}`,
+        transform: "translateY(-8px)",
+        boxShadow: `0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 ${COLORS.borderAccent}30`,
+      } : {
+        background: COLORS.bgCardGradient,
+        border: `1px solid ${COLORS.borderLight}`,
+        borderLeft: `4px solid ${config.color}`,
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
       }}
     >
-      {/* Título y badges */}
+      {/* Header */}
       <div>
-        <h3 style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 900, color: COLORS.textPrimary }}>
-          Orden #{order.id}
-        </h3>
-        <p style={{ margin: "0 0 10px 0", color: COLORS.textSecondary, fontSize: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: COLORS.textPrimary, letterSpacing: "-0.01em" }}>
+            Orden #{order.id}
+          </h3>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6, background: `${config.color}20`, color: config.color }}>
+            {config.label}
+          </span>
+        </div>
+        <p style={{ margin: "0 0 10px 0", color: COLORS.textSecondary, fontSize: 12, lineHeight: 1.4 }}>
           {order.title || "Sin título"}
         </p>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "5px 10px",
-              borderRadius: 8,
-              background: `${config.color}20`,
-              color: config.color,
-            }}
-          >
-            <Icon name={config.icon} size="xs" />
-            {config.label}
-          </span>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "5px 10px",
-              borderRadius: 8,
-              background: `${urgencyBadge.color}20`,
-              color: urgencyBadge.color,
-            }}
-          >
+          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6, background: `${urgencyBadge.color}20`, color: urgencyBadge.color }}>
             <Icon name={urgencyBadge.icon} size="xs" />
             {urgencyBadge.label}
           </span>
         </div>
       </div>
 
-      {/* Info */}
+      {/* Info Grid */}
       <div style={{ display: "grid", gap: 8, fontSize: 12, color: COLORS.textSecondary }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 24 }}>
           <Icon name="settings" size="sm" />
-          <strong>{order.equipment?.name || "Equipo desconocido"}</strong>
+          <strong style={{ color: COLORS.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {order.equipment?.name || "Equipo desconocido"}
+          </strong>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 24 }}>
           <Icon name="calendar" size="sm" />
           {new Date(order.scheduledDate).toLocaleDateString("es-MX")}
         </div>
         {order.assignedToUser && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 24 }}>
             <Icon name="user" size="sm" />
-            <strong>{order.assignedToUser.name}</strong>
+            <strong style={{ color: COLORS.textPrimary }}>
+              {order.assignedToUser.name}
+            </strong>
           </div>
         )}
       </div>
 
       {/* Progreso */}
       {order.progress && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: COLORS.textMuted, marginBottom: 6 }}>
+        <div style={{ marginTop: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: COLORS.textMuted, marginBottom: 8 }}>
             <span>Progreso</span>
             <strong style={{ color: COLORS.textPrimary }}>
               {order.progress.completed}/{order.progress.total} ({progress}%)
             </strong>
           </div>
-          <div style={{ height: 6, background: COLORS.border, borderRadius: 3, overflow: "hidden" }}>
+          <div style={{ height: 6, background: COLORS.border, borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
             <div
               style={{
                 height: "100%",
                 background: `linear-gradient(90deg, ${config.color}, ${config.color}dd)`,
                 width: `${progress}%`,
-                transition: "width 0.3s",
+                transition: "width 0.4s ease",
+                boxShadow: `0 0 12px ${config.color}80`,
               }}
             />
           </div>
@@ -427,7 +463,7 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
       )}
 
       {/* Botones */}
-      <div style={{ display: "flex", gap: 8, marginTop: "auto", flexWrap: "wrap" }}>
+      <div style={{ display: "grid", gridTemplateColumns: order.status === "DRAFT" ? "1fr 1fr" : "1fr 1fr", gap: 8, marginTop: "auto" }}>
         {order.status === "DRAFT" && (
           <>
             <button
@@ -436,9 +472,7 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
                 onOpen(order.id);
               }}
               style={{
-                flex: 1,
-                minWidth: 120,
-                padding: "8px 12px",
+                padding: "10px 12px",
                 borderRadius: 8,
                 border: "none",
                 background: COLORS.accent,
@@ -447,9 +481,16 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
                 fontSize: 12,
                 cursor: "pointer",
                 transition: "all 0.2s",
+                minHeight: 40,
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.accentHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.accent)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = COLORS.accentHover;
+                e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = COLORS.accent;
+                e.currentTarget.style.transform = "scale(1)";
+              }}
             >
               Liberar
             </button>
@@ -459,7 +500,7 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
                 onDelete(order.id);
               }}
               style={{
-                padding: "8px 12px",
+                padding: "10px 12px",
                 borderRadius: 8,
                 border: "none",
                 background: COLORS.red,
@@ -468,14 +509,18 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
                 fontSize: 12,
                 cursor: "pointer",
                 transition: "all 0.2s",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
+                minHeight: 40,
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#dc2626")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.red)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#dc2626";
+                e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = COLORS.red;
+                e.currentTarget.style.transform = "scale(1)";
+              }}
             >
-              <Icon name="trash" size="sm" />
+              Eliminar
             </button>
           </>
         )}
@@ -488,9 +533,7 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
                 onNavigate();
               }}
               style={{
-                flex: 1,
-                minWidth: 120,
-                padding: "8px 12px",
+                padding: "10px 12px",
                 borderRadius: 8,
                 border: "none",
                 background: COLORS.green,
@@ -499,9 +542,16 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
                 fontSize: 12,
                 cursor: "pointer",
                 transition: "all 0.2s",
+                minHeight: 40,
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#059669")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.green)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#059669";
+                e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = COLORS.green;
+                e.currentTarget.style.transform = "scale(1)";
+              }}
             >
               Ejecutar
             </button>
@@ -511,28 +561,29 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
                 onNavigate();
               }}
               style={{
-                flex: 1,
-                minWidth: 120,
-                padding: "8px 12px",
+                padding: "10px 12px",
                 borderRadius: 8,
-                border: `1px solid ${COLORS.border}`,
+                border: `1px solid ${COLORS.borderAccent}`,
                 background: "transparent",
                 color: COLORS.textSecondary,
                 fontWeight: 600,
                 fontSize: 12,
                 cursor: "pointer",
                 transition: "all 0.2s",
+                minHeight: 40,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = COLORS.accent;
                 e.currentTarget.style.color = COLORS.accent;
+                e.currentTarget.style.background = `${COLORS.accent}10`;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = COLORS.border;
+                e.currentTarget.style.borderColor = COLORS.borderAccent;
                 e.currentTarget.style.color = COLORS.textSecondary;
+                e.currentTarget.style.background = "transparent";
               }}
             >
-              Ver detalle
+              Detalle
             </button>
           </>
         )}
@@ -542,97 +593,97 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, onReload }) {
 }
 
 // Card para órdenes completadas
-function CompletedOrderCard({ order, onNavigate }) {
+function CompletedOrderCard({ order, onNavigate, isHovered, onHover, onHoverLeave }) {
   const progress = order.progress?.total > 0 ? Math.round((order.progress.completed / order.progress.total) * 100) : 0;
   const executedDate = order.completedAt ? new Date(order.completedAt) : null;
 
   return (
     <div
+      className="olp-card"
+      onMouseEnter={onHover}
+      onMouseLeave={onHoverLeave}
       style={{
-        padding: 20,
-        borderRadius: 14,
-        background: COLORS.bgCard,
+        background: COLORS.bgCardGradient,
         border: `1px solid ${COLORS.green}30`,
         borderLeft: `4px solid ${COLORS.green}`,
+        borderRadius: 16,
+        padding: "20px",
         display: "flex",
         flexDirection: "column",
-        gap: 14,
-        transition: "all 0.3s",
+        gap: 16,
+        transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
         cursor: "pointer",
-        opacity: 0.85,
+        position: "relative",
+        overflow: "hidden",
+        backdropFilter: "blur(10px)",
+        minHeight: 280,
+        opacity: 0.8,
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.opacity = "1";
-        e.currentTarget.style.boxShadow = `0 8px 24px ${COLORS.green}15, 0 4px 12px rgba(0,0,0,0.4)`;
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.opacity = "0.85";
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.transform = "translateY(0)";
+      style={isHovered ? {
+        background: COLORS.bgCardHover,
+        border: `1px solid ${COLORS.green}40`,
+        borderLeft: `4px solid ${COLORS.green}`,
+        transform: "translateY(-8px)",
+        boxShadow: `0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 ${COLORS.green}30`,
+        opacity: 1,
+      } : {
+        background: COLORS.bgCardGradient,
+        border: `1px solid ${COLORS.green}30`,
+        borderLeft: `4px solid ${COLORS.green}`,
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+        opacity: 0.8,
       }}
     >
-      {/* Título y estado */}
+      {/* Header */}
       <div>
-        <h3 style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 900, color: COLORS.textPrimary }}>
-          Orden #{order.id}
-        </h3>
-        <p style={{ margin: "0 0 10px 0", color: COLORS.textSecondary, fontSize: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: COLORS.textPrimary, letterSpacing: "-0.01em" }}>
+            Orden #{order.id}
+          </h3>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6, background: `${COLORS.green}20`, color: COLORS.green }}>
+            ✓ Completada
+          </span>
+        </div>
+        <p style={{ margin: "0 0 10px 0", color: COLORS.textSecondary, fontSize: 12, lineHeight: 1.4 }}>
           {order.title || "Sin título"}
         </p>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "5px 10px",
-              borderRadius: 8,
-              background: `${COLORS.green}20`,
-              color: COLORS.green,
-            }}
-          >
-            <Icon name="check" size="xs" />
-            Completada
+        {executedDate && (
+          <span style={{ fontSize: 11, color: COLORS.green, fontWeight: 600 }}>
+            Ejecutada: {executedDate.toLocaleDateString("es-MX")}
           </span>
-          {executedDate && (
-            <span style={{ fontSize: 11, color: COLORS.textMuted }}>
-              {executedDate.toLocaleDateString("es-MX")}
-            </span>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Info */}
+      {/* Info Grid */}
       <div style={{ display: "grid", gap: 8, fontSize: 12, color: COLORS.textSecondary }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 24 }}>
           <Icon name="settings" size="sm" />
-          <strong>{order.equipment?.name || "Equipo desconocido"}</strong>
+          <strong style={{ color: COLORS.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {order.equipment?.name || "Equipo desconocido"}
+          </strong>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 24 }}>
           <Icon name="calendar" size="sm" />
           {new Date(order.scheduledDate).toLocaleDateString("es-MX")}
         </div>
         {order.assignedToUser && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 24 }}>
             <Icon name="user" size="sm" />
-            <strong>{order.assignedToUser.name}</strong>
+            <strong style={{ color: COLORS.textPrimary }}>
+              {order.assignedToUser.name}
+            </strong>
           </div>
         )}
       </div>
 
       {/* Progreso */}
       {order.progress && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: COLORS.textMuted, marginBottom: 6 }}>
+        <div style={{ marginTop: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: COLORS.textMuted, marginBottom: 8 }}>
             <span>Completado</span>
-            <strong style={{ color: COLORS.green }}>
-              {order.progress.completed}/{order.progress.total} (100%)
-            </strong>
+            <strong style={{ color: COLORS.green }}>100%</strong>
           </div>
-          <div style={{ height: 6, background: COLORS.border, borderRadius: 3, overflow: "hidden" }}>
+          <div style={{ height: 6, background: COLORS.border, borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
             <div
               style={{
                 height: "100%",
@@ -651,24 +702,27 @@ function CompletedOrderCard({ order, onNavigate }) {
           onNavigate();
         }}
         style={{
-          width: "100%",
-          padding: "8px 12px",
+          padding: "10px 12px",
           borderRadius: 8,
-          border: `1px solid ${COLORS.border}`,
+          border: `1px solid ${COLORS.borderAccent}`,
           background: "transparent",
           color: COLORS.textSecondary,
           fontWeight: 600,
           fontSize: 12,
           cursor: "pointer",
           transition: "all 0.2s",
+          minHeight: 40,
+          width: "100%",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = COLORS.accent;
           e.currentTarget.style.color = COLORS.accent;
+          e.currentTarget.style.background = `${COLORS.accent}10`;
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = COLORS.border;
+          e.currentTarget.style.borderColor = COLORS.borderAccent;
           e.currentTarget.style.color = COLORS.textSecondary;
+          e.currentTarget.style.background = "transparent";
         }}
       >
         Ver detalle
