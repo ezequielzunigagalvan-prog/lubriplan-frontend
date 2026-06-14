@@ -12,16 +12,19 @@ const COLORS = {
   bgCard: "#0f1724",
   bgCardGradient: "linear-gradient(135deg, rgba(15, 23, 36, 0.9), rgba(10, 15, 26, 0.95))",
   bgCardHover: "linear-gradient(135deg, rgba(20, 30, 45, 0.95), rgba(15, 20, 30, 0.98))",
-  border: "rgba(129, 140, 248, 0.1)",
-  borderLight: "rgba(129, 140, 248, 0.2)",
-  borderAccent: "#818cf8",
+  border: "rgba(244, 160, 32, 0.08)",
+  borderLight: "rgba(244, 160, 32, 0.15)",
+  borderAccent: "#F4A020",
   textPrimary: "#F0F4F8",
   textSecondary: "#8899AA",
   textMuted: "#4A5568",
   accent: "#818cf8",
   accentHover: "#6366f1",
   accentGlow: "rgba(129, 140, 248, 0.3)",
-  amber: "#F4A020",
+  accentPrimary: "#818cf8",
+  orange: "#F4A020",
+  orangeHover: "#E09010",
+  orangeGlow: "rgba(244, 160, 32, 0.4)",
   green: "#10B981",
   greenGlow: "rgba(16, 185, 129, 0.3)",
   red: "#EF4444",
@@ -130,7 +133,7 @@ export default function PreventiveOrdersList() {
         `}</style>
 
         {/* Hero Section */}
-        <div style={{ padding: "32px 20px 24px", background: `linear-gradient(135deg, ${COLORS.accent}15 0%, transparent 100%)`, borderBottom: `1px solid ${COLORS.borderLight}`, animation: "slideUp 0.6s ease-out" }}>
+        <div style={{ padding: "32px 20px 24px", background: `linear-gradient(135deg, ${COLORS.orange}15 0%, ${COLORS.accent}10 50%, transparent 100%)`, borderBottom: `2px solid ${COLORS.borderLight}`, animation: "slideUp 0.6s ease-out" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
               <div>
@@ -152,8 +155,8 @@ export default function PreventiveOrdersList() {
                 <button
                   onClick={() => setShowModal(true)}
                   style={{
-                    background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentHover})`,
-                    color: "white",
+                    background: `linear-gradient(135deg, ${COLORS.orange}, ${COLORS.orangeHover})`,
+                    color: "#050810",
                     border: "none",
                     padding: "12px 24px",
                     borderRadius: 12,
@@ -164,17 +167,17 @@ export default function PreventiveOrdersList() {
                     alignItems: "center",
                     gap: 8,
                     transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                    boxShadow: `0 8px 24px ${COLORS.accentGlow}`,
+                    boxShadow: `0 8px 24px ${COLORS.orangeGlow}`,
                     minHeight: 44,
                     minWidth: 44,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = `0 12px 32px ${COLORS.accentGlow}`;
+                    e.currentTarget.style.transform = "translateY(-4px) scale(1.05)";
+                    e.currentTarget.style.boxShadow = `0 12px 40px ${COLORS.orangeGlow}`;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = `0 8px 24px ${COLORS.accentGlow}`;
+                    e.currentTarget.style.transform = "translateY(0) scale(1)";
+                    e.currentTarget.style.boxShadow = `0 8px 24px ${COLORS.orangeGlow}`;
                   }}
                 >
                   <Icon name="plus" size="sm" />
@@ -254,7 +257,7 @@ export default function PreventiveOrdersList() {
                 <h2 style={{ margin: "0 0 4px 0", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 900, color: COLORS.textPrimary }}>
                   Activas
                 </h2>
-                <div style={{ height: 2, width: 40, background: `linear-gradient(90deg, ${COLORS.accent}, transparent)`, borderRadius: 1 }}></div>
+                <div style={{ height: 3, width: 50, background: `linear-gradient(90deg, ${COLORS.orange}, ${COLORS.accent}, transparent)`, borderRadius: 2, boxShadow: `0 0 12px ${COLORS.orangeGlow}` }}></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))", gap: 16 }}>
                 {activeOrders.map((order) => (
@@ -280,7 +283,7 @@ export default function PreventiveOrdersList() {
                 <h2 style={{ margin: "0 0 4px 0", fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 900, color: COLORS.textPrimary }}>
                   Completadas
                 </h2>
-                <div style={{ height: 2, width: 40, background: `linear-gradient(90deg, ${COLORS.green}, transparent)`, borderRadius: 1 }}></div>
+                <div style={{ height: 3, width: 50, background: `linear-gradient(90deg, ${COLORS.green}, ${COLORS.accent}, transparent)`, borderRadius: 2, boxShadow: `0 0 12px ${COLORS.greenGlow}` }}></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))", gap: 16 }}>
                 {completedOrders.map((order) => (
@@ -410,7 +413,7 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, isHovered, onHover, on
           {order.title || "Sin título"}
         </p>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6, background: `${urgencyBadge.color}20`, color: urgencyBadge.color }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, padding: "5px 10px", borderRadius: 6, background: `${urgencyBadge.color}25`, color: urgencyBadge.color, border: `1px solid ${urgencyBadge.color}40`, boxShadow: `0 0 8px ${urgencyBadge.color}30` }}>
             <Icon name={urgencyBadge.icon} size="xs" />
             {urgencyBadge.label}
           </span>
@@ -475,21 +478,22 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, isHovered, onHover, on
                 padding: "10px 12px",
                 borderRadius: 8,
                 border: "none",
-                background: COLORS.accent,
-                color: "white",
+                background: `linear-gradient(135deg, ${COLORS.orange}, ${COLORS.orangeHover})`,
+                color: "#050810",
                 fontWeight: 600,
                 fontSize: 12,
                 cursor: "pointer",
                 transition: "all 0.2s",
                 minHeight: 40,
+                boxShadow: `0 4px 12px ${COLORS.orangeGlow}`,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = COLORS.accentHover;
-                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.transform = "scale(1.08)";
+                e.currentTarget.style.boxShadow = `0 6px 16px ${COLORS.orangeGlow}`;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = COLORS.accent;
                 e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = `0 4px 12px ${COLORS.orangeGlow}`;
               }}
             >
               Liberar
@@ -536,21 +540,22 @@ function OrderCard({ order, onDelete, onOpen, onNavigate, isHovered, onHover, on
                 padding: "10px 12px",
                 borderRadius: 8,
                 border: "none",
-                background: COLORS.green,
+                background: `linear-gradient(135deg, ${COLORS.accent}, #6366f1)`,
                 color: "white",
                 fontWeight: 600,
                 fontSize: 12,
                 cursor: "pointer",
                 transition: "all 0.2s",
                 minHeight: 40,
+                boxShadow: `0 4px 12px ${COLORS.accentGlow}`,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#059669";
-                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.transform = "scale(1.08)";
+                e.currentTarget.style.boxShadow = `0 6px 16px ${COLORS.accentGlow}`;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = COLORS.green;
                 e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = `0 4px 12px ${COLORS.accentGlow}`;
               }}
             >
               Ejecutar
