@@ -317,11 +317,11 @@ export default function LubriPlanLanding() {
         <div style={sectionHead}>
           <div style={sectionKicker}>
             <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
-            EL PRODUCTO EN ACCIÓN
+            VE EL PRODUCTO
           </div>
-          <h2 style={sectionTitle}>Mira LubriPlan funcionando en planta</h2>
+          <h2 style={sectionTitle}>Mira LubriPlan en acción</h2>
           <p style={sectionText}>
-            Del plan a la ejecución real: rutas, condición, consumo e inventario, todo en una sola plataforma.
+            Así se ve LubriPlan configurado con datos de ejemplo — rutas, condición, consumo e inventario, todo en una sola plataforma.
           </p>
         </div>
 
@@ -338,7 +338,7 @@ export default function LubriPlanLanding() {
           <div style={videoBadgeRow}>
             <span style={videoBadge}>
               <span style={videoDot} />
-              Producto real · sin edición
+              Demo con datos de ejemplo
             </span>
             <span style={videoBadge}>
               <Icon name="drop" style={{ width: 12, height: 12 }} />
