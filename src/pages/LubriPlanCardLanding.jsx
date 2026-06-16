@@ -591,7 +591,7 @@ export default function LubriPlanCardLanding() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.30)', display: 'grid', placeItems: 'center' }}>
-            <img src="/logo.jpeg" alt="LubriPlan Card" style={{ width: 26, height: 26, borderRadius: 6, objectFit: 'cover' }} />
+            <img src="/lubriplan-card-logo.jpeg" alt="LubriPlan Card" style={{ width: 26, height: 26, borderRadius: 6, objectFit: 'cover' }} />
           </div>
           <div>
             <div style={{ fontWeight: 900, fontSize: 15, color: '#f1f5f9', letterSpacing: '-0.02em' }}>LubriPlan Card</div>
@@ -599,6 +599,14 @@ export default function LubriPlanCardLanding() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={() => navigate('/')}
+            style={{ padding: '8px 16px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.20)', borderRadius: 8, color: '#94a3b8', fontSize: 13, cursor: 'pointer', fontFamily: FONT, fontWeight: 500, transition: 'border-color 0.15s, color 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.50)'; e.currentTarget.style.color = '#a5b4fc' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.20)'; e.currentTarget.style.color = '#94a3b8' }}
+          >
+            ← Volver a LubriPlan
+          </button>
           <button
             onClick={() => scrollTo(pricingRef)}
             style={{ padding: '8px 16px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.20)', borderRadius: 8, color: '#94a3b8', fontSize: 13, cursor: 'pointer', fontFamily: FONT, fontWeight: 500, transition: 'border-color 0.15s, color 0.15s' }}
