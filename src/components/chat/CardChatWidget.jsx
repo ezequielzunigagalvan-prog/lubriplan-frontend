@@ -13,7 +13,6 @@ const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-ser
 const SUGGESTIONS = [
   { icon: "📇", label: "¿Qué es LubriPlan Card?" },
   { icon: "🔍", label: "¿Cómo funciona el acceso QR?" },
-  { icon: "💰", label: "¿Cuánto cuesta?" },
   { icon: "🎯", label: "Quiero solicitar una demo" },
 ];
 
