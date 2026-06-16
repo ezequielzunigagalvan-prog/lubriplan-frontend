@@ -45,6 +45,8 @@ function getNotifMeta(type) {
     case "EXEC_CRITICAL":
     case "EXEC_CONDITION_CRITICAL":
       return { icon: "alert", tone: "red", label: "Crítica" };
+    case "MONTHLY_TECH_SUMMARY":
+      return { icon: "chartBar", tone: "amber", label: "Desempeño" };
     default:
       return { icon: "info", tone: "steel", label: "Sistema" };
   }
@@ -194,6 +196,24 @@ function resolveNotificationTarget(n) {
         equipmentId,
         focus: "condition",
       },
+    };
+  }
+
+  // Manejo de resumen mensual técnico
+  if (type === "MONTHLY_TECH_SUMMARY") {
+    // El link viene directamente en la notificación (ej: /activities?month=2026-06&scope=mine)
+    if (n.link) {
+      return {
+        pathname: n.link.split("?")[0] || "/activities",
+        search: n.link.includes("?") ? "?" + n.link.split("?")[1] : "",
+        state: { notificationId: n.id },
+      };
+    }
+    // Fallback: ir a mis actividades
+    return {
+      pathname: "/activities",
+      search: "?scope=mine",
+      state: { notificationId: n.id },
     };
   }
 
