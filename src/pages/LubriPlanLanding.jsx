@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -14,6 +14,56 @@ const CONTACT_EMAIL = "lubriplan@hidrolub.com";
 
 export default function LubriPlanLanding() {
   const { isAuthenticated } = useAuth();
+
+  const structuredData = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "LubriPlan",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web Browser",
+      url: "https://www.lubriplan.com",
+      description:
+        "Software especializado en gestion de lubricacion industrial para control de actividades, rutas, cartas digitales de lubricacion, alertas, inventario y analisis tecnico.",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "MXN",
+      },
+      featureList: [
+        "Gestion de actividades de lubricacion",
+        "Rutas de lubricacion",
+        "Cartas digitales de lubricacion",
+        "Alertas operativas",
+        "Inventario de lubricantes",
+        "Indicadores de mantenimiento",
+        "Analisis asistido por IA",
+        "Compatibilidad de grasas",
+        "Calculo de frecuencias de lubricacion",
+      ],
+    }),
+    []
+  );
+
+  useEffect(() => {
+    const scriptId = "lubriplan-structured-data";
+    let script = document.getElementById(scriptId);
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+
+    script.textContent = JSON.stringify(structuredData);
+
+    return () => {
+      const current = document.getElementById(scriptId);
+      if (current) current.remove();
+    };
+  }, [structuredData]);
+
 
   const signals = useMemo(
     () => [
