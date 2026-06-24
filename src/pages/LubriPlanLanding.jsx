@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -15,67 +15,18 @@ const CONTACT_EMAIL = "lubriplan@hidrolub.com";
 export default function LubriPlanLanding() {
   const { isAuthenticated } = useAuth();
 
-  const structuredData = useMemo(
-    () => ({
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      name: "LubriPlan",
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Web Browser",
-      url: "https://www.lubriplan.com",
-      description:
-        "Software especializado en gestion de lubricacion industrial para control de actividades, rutas, cartas digitales de lubricacion, alertas, inventario y analisis tecnico.",
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "MXN",
-      },
-      featureList: [
-        "Gestion de actividades de lubricacion",
-        "Rutas de lubricacion",
-        "Cartas digitales de lubricacion",
-        "Alertas operativas",
-        "Inventario de lubricantes",
-        "Indicadores de mantenimiento",
-        "Analisis asistido por IA",
-        "Compatibilidad de grasas",
-        "Calculo de frecuencias de lubricacion",
-      ],
-    }),
-    []
-  );
-
-  useEffect(() => {
-    const scriptId = "lubriplan-structured-data";
-    let script = document.getElementById(scriptId);
-
-    if (!script) {
-      script = document.createElement("script");
-      script.id = scriptId;
-      script.type = "application/ld+json";
-      document.head.appendChild(script);
-    }
-
-    script.textContent = JSON.stringify(structuredData);
-
-    return () => {
-      const current = document.getElementById(scriptId);
-      if (current) current.remove();
-    };
-  }, [structuredData]);
-
 
   const signals = useMemo(
     () => [
       {
         icon: "route",
         title: "Rutas bajo control",
-        text: "Frecuencias, puntos, métodos y responsables en una sola base. Sin hojas sueltas ni seguimiento informal.",
+        text: "Frecuencias, puntos, m�todos y responsables en una sola base. Sin hojas sueltas ni seguimiento informal.",
       },
       {
         icon: "checkCircle",
-        title: "Ejecución trazable",
-        text: "Cada actividad queda respaldada con técnico, condición, evidencia y consumo real aplicado.",
+        title: "Ejecuci�n trazable",
+        text: "Cada actividad queda respaldada con t�cnico, condici�n, evidencia y consumo real aplicado.",
       },
       {
         icon: "trendUp",
@@ -93,12 +44,12 @@ export default function LubriPlanLanding() {
 
   const capabilities = useMemo(
     () => [
-      "Roles diferenciados: administrador, supervisor y técnico",
-      "Historial completo por equipo, técnico y condición",
+      "Roles diferenciados: administrador, supervisor y t�cnico",
+      "Historial completo por equipo, t�cnico y condici�n",
       "Inventario con consumo real y alertas de existencia",
       "Lectura ejecutiva y alertas predictivas con IA",
       "Multiplanta sin mezcla de datos entre operaciones",
-      "Modo offline para ejecución en campo sin red",
+      "Modo offline para ejecuci�n en campo sin red",
     ],
     []
   );
@@ -111,11 +62,11 @@ export default function LubriPlanLanding() {
       },
       {
         title: "Campo ejecuta con contexto",
-        text: "El técnico recibe instrucciones claras, captura evidencia y registra consumo real en una sola pantalla.",
+        text: "El t�cnico recibe instrucciones claras, captura evidencia y registra consumo real en una sola pantalla.",
       },
       {
-        title: "Jefatura decide con información",
-        text: "Supervisión y gerencia reciben alertas, resumen ejecutivo e historial útil para actuar con prioridad.",
+        title: "Jefatura decide con informaci�n",
+        text: "Supervisi�n y gerencia reciben alertas, resumen ejecutivo e historial �til para actuar con prioridad.",
       },
     ],
     []
@@ -124,15 +75,15 @@ export default function LubriPlanLanding() {
   const modules = useMemo(
     () => [
       "Equipos",
-      "Técnicos",
+      "T�cnicos",
       "Inventario",
       "Rutas",
-      "Actividades automáticas",
+      "Actividades autom�ticas",
       "Actividades manuales",
       "Actividades emergentes",
-      "Condición anormal",
+      "Condici�n anormal",
       "Historial",
-      "Análisis",
+      "An�lisis",
       "Alertas",
       "Reportes IA",
       "Exportar PDF",
@@ -146,9 +97,9 @@ export default function LubriPlanLanding() {
   const audiences = useMemo(
     () => [
       "Jefes de mantenimiento",
-      "Supervisores de lubricación",
+      "Supervisores de lubricaci�n",
       "Responsables de confiabilidad",
-      "Técnicos de campo",
+      "T�cnicos de campo",
     ],
     []
   );
@@ -157,19 +108,19 @@ export default function LubriPlanLanding() {
     () => [
       {
         title: "Compatibilidad de grasas",
-        text: "Valida cambios de grasa entre espesantes y reduce el riesgo de mezcla inadecuada en rodamientos, guías y sistemas centralizados.",
+        text: "Valida cambios de grasa entre espesantes y reduce el riesgo de mezcla inadecuada en rodamientos, gu�as y sistemas centralizados.",
       },
       {
         title: "Reengrase de rodamientos",
-        text: "Calcula una referencia inicial de cantidad y frecuencia para decisiones rápidas de mantenimiento en campo.",
+        text: "Calcula una referencia inicial de cantidad y frecuencia para decisiones r�pidas de mantenimiento en campo.",
       },
       {
         title: "Viscosidad para reductores",
-        text: "Sugiere un ISO VG inicial según velocidad, carga, temperatura y choque operativo para cajas y reductores.",
+        text: "Sugiere un ISO VG inicial seg�n velocidad, carga, temperatura y choque operativo para cajas y reductores.",
       },
       {
-        title: "Conversor técnico",
-        text: "Conversiones de distancia, volumen, presión, temperatura y viscosidad, incluyendo pulgadas en fracción.",
+        title: "Conversor t�cnico",
+        text: "Conversiones de distancia, volumen, presi�n, temperatura y viscosidad, incluyendo pulgadas en fracci�n.",
       },
     ],
     []
@@ -179,7 +130,7 @@ export default function LubriPlanLanding() {
     () => [
       "Manufactura",
       "Automotriz",
-      "Metalmecánica",
+      "Metalmec�nica",
       "Alimentos y bebidas",
       "Servicios auxiliares",
       "Plantas industriales",
@@ -191,17 +142,17 @@ export default function LubriPlanLanding() {
     () => [
       [
         "01",
-        "Estandarizas la operación",
-        "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos en una base única y compartida.",
+        "Estandarizas la operaci�n",
+        "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos en una base �nica y compartida.",
       ],
       [
         "02",
         "LubriPlan ordena las prioridades",
-        "Genera actividades automáticamente, separa lo vencido de lo pendiente y mantiene visibles los riesgos activos.",
+        "Genera actividades autom�ticamente, separa lo vencido de lo pendiente y mantiene visibles los riesgos activos.",
       ],
       [
         "03",
-        "El técnico ejecuta con contexto",
+        "El t�cnico ejecuta con contexto",
         "Instrucciones claras, captura de evidencia y registro del consumo real, todo desde su dispositivo en planta.",
       ],
       [
@@ -217,9 +168,9 @@ export default function LubriPlanLanding() {
     () => [
       "Actividades vencidas que nadie detecta a tiempo",
       "Control en Excel, papel o mensajes de WhatsApp",
-      "Ejecución inconsistente entre técnicos",
+      "Ejecuci�n inconsistente entre t�cnicos",
       "Inventario desconectado del consumo real",
-      "Sin trazabilidad por equipo, técnico ni condición",
+      "Sin trazabilidad por equipo, t�cnico ni condici�n",
       "Decisiones reactivas por falta de visibilidad",
     ],
     []
@@ -240,12 +191,12 @@ export default function LubriPlanLanding() {
             </div>
             <div>
               <div style={brandTitle}>LubriPlan</div>
-              <div style={brandSub}>Software de gestión de lubricación industrial</div>
+              <div style={brandSub}>Software de gesti�n de lubricaci�n industrial</div>
             </div>
           </div>
 
           <div style={nav}>
-            <a href="#como-funciona" style={navLink}>Cómo funciona</a>
+            <a href="#como-funciona" style={navLink}>C�mo funciona</a>
             <a href="#capacidades" style={navLink}>Capacidades</a>
             <a href="#contacto" style={navLink}>Contacto</a>
             <Link to="/card" style={navBtnCard}>LubriPlan Card</Link>
@@ -255,26 +206,26 @@ export default function LubriPlanLanding() {
 
         <div style={heroGrid}>
           <div>
-            <div style={eyebrow}>GESTIÓN DE LUBRICACIÓN INDUSTRIAL</div>
+            <div style={eyebrow}>GESTI�N DE LUBRICACI�N INDUSTRIAL</div>
             <h1 style={heroTitle}>
-              Control real sobre la lubricación de tu planta
+              Control real sobre la lubricaci�n de tu planta
             </h1>
             <p style={heroText}>
               LubriPlan reemplaza el seguimiento en Excel, papel o mensajes con una plataforma
-              que conecta planeación, ejecución, condición, consumo e inventario en un solo lugar.
+              que conecta planeaci�n, ejecuci�n, condici�n, consumo e inventario en un solo lugar.
             </p>
             <div style={heroRoleLine}>
-              Para jefes de mantenimiento, supervisores y técnicos de lubricación industrial.
+              Para jefes de mantenimiento, supervisores y t�cnicos de lubricaci�n industrial.
             </div>
             <div style={actions}>
               <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
-              <a href="#como-funciona" style={btnGhost}>Cómo funciona</a>
+              <a href="#como-funciona" style={btnGhost}>C�mo funciona</a>
               <Link to="/login" style={btnGhostSoft}>Entrar a la plataforma</Link>
             </div>
             <div style={statsRow}>
               <Tag icon="checkCircle" text="Trazabilidad por actividad" />
               <Tag icon="alert" text="Alertas de riesgo operativo" />
-              <Tag icon="trendUp" text="Indicadores para supervisión" />
+              <Tag icon="trendUp" text="Indicadores para supervisi�n" />
             </div>
           </div>
 
@@ -282,7 +233,7 @@ export default function LubriPlanLanding() {
             <div style={panelHead}>
               <div>
                 <div style={panelKicker}>Dashboard operativo</div>
-                <div style={panelTitle}>Visibilidad en tiempo real para mantenimiento y dirección</div>
+                <div style={panelTitle}>Visibilidad en tiempo real para mantenimiento y direcci�n</div>
               </div>
               <span style={liveBadge}>Producto real</span>
             </div>
@@ -309,17 +260,17 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* ── Belt de señales de valor ── */}
+      {/* -- Belt de se�ales de valor -- */}
       <section style={sectionTight}>
         <div style={signalGrid}>{signals.map((item) => <SignalCard key={item.title} {...item} />)}</div>
       </section>
 
-      {/* ── El problema ── */}
+      {/* -- El problema -- */}
       <section style={sectionAlt}>
         <div style={twoCol}>
           <div style={glassBlock}>
             <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />EL PROBLEMA</div>
-            <h2 style={sectionTitle}>La lubricación se vuelve riesgosa sin un sistema</h2>
+            <h2 style={sectionTitle}>La lubricaci�n se vuelve riesgosa sin un sistema</h2>
             <p style={sectionText}>
               Cuando el control vive en papel, Excel o mensajes de WhatsApp, los pendientes se
               acumulan, las prioridades no son claras y el inventario deja de reflejar lo que
@@ -328,21 +279,21 @@ export default function LubriPlanLanding() {
           </div>
           <div style={board}>
             <ProblemLine icon="warn" text="Actividades vencidas que nadie detecta a tiempo" />
-            <ProblemLine icon="xCircle" text="Sobrelubricación o deficiencia por ejecución inconsistente" />
-            <ProblemLine icon="search" text="Sin trazabilidad por equipo, técnico ni condición" />
+            <ProblemLine icon="xCircle" text="Sobrelubricaci�n o deficiencia por ejecuci�n inconsistente" />
+            <ProblemLine icon="search" text="Sin trazabilidad por equipo, t�cnico ni condici�n" />
             <ProblemLine icon="drop" text="Inventario desconectado del consumo real" />
             <ProblemLine icon="trendDown" text="Decisiones reactivas por falta de visibilidad operativa" />
           </div>
         </div>
       </section>
 
-      {/* ── Lo que LubriPlan aporta ── */}
+      {/* -- Lo que LubriPlan aporta -- */}
       <section style={section}>
         <div style={sectionHead}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />LA DIFERENCIA</div>
-          <h2 style={sectionTitle}>Control operativo desde el primer día</h2>
+          <h2 style={sectionTitle}>Control operativo desde el primer d�a</h2>
           <p style={sectionText}>
-            No es solo digitalizar formatos. Es darle a cada rol la información que necesita
+            No es solo digitalizar formatos. Es darle a cada rol la informaci�n que necesita
             para ejecutar mejor, priorizar sin adivinar y demostrar control operativo con datos reales.
           </p>
         </div>
@@ -353,25 +304,25 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* ── Cómo funciona ── */}
+      {/* -- C�mo funciona -- */}
       <section id="como-funciona" style={sectionAlt}>
         <div style={sectionHead}>
-          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />CÓMO FUNCIONA</div>
-          <h2 style={sectionTitle}>De la planeación al control ejecutivo en cuatro pasos</h2>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />C�MO FUNCIONA</div>
+          <h2 style={sectionTitle}>De la planeaci�n al control ejecutivo en cuatro pasos</h2>
         </div>
         <div style={journeyGrid}>{journey.map(([n, title, text]) => <JourneyCard key={n} n={n} title={title} text={text} />)}</div>
       </section>
 
-      {/* ── Video demo ── */}
+      {/* -- Video demo -- */}
       <section style={videoSection}>
         <div style={sectionHead}>
           <div style={sectionKicker}>
             <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
             VE EL PRODUCTO
           </div>
-          <h2 style={sectionTitle}>Mira LubriPlan en acción</h2>
+          <h2 style={sectionTitle}>Mira LubriPlan en acci�n</h2>
           <p style={sectionText}>
-            Así se ve LubriPlan configurado con datos de ejemplo — rutas, condición, consumo e inventario, todo en una sola plataforma.
+            As� se ve LubriPlan configurado con datos de ejemplo � rutas, condici�n, consumo e inventario, todo en una sola plataforma.
           </p>
         </div>
 
@@ -392,30 +343,30 @@ export default function LubriPlanLanding() {
             </span>
             <span style={videoBadge}>
               <Icon name="drop" style={{ width: 12, height: 12 }} />
-              Gestión completa de lubricación industrial
+              Gesti�n completa de lubricaci�n industrial
             </span>
           </div>
         </div>
       </section>
 
-      {/* ── Capacidades ── */}
+      {/* -- Capacidades -- */}
       <section id="capacidades" style={section}>
         <div style={sectionHead}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />CAPACIDADES</div>
           <h2 style={sectionTitle}>Una plataforma para planear, ejecutar, alertar y decidir</h2>
           <p style={sectionText}>
-            LubriPlan conecta control operativo, monitoreo de condición, inventario y lectura
-            ejecutiva en un solo sistema, sin módulos separados ni hojas paralelas.
+            LubriPlan conecta control operativo, monitoreo de condici�n, inventario y lectura
+            ejecutiva en un solo sistema, sin m�dulos separados ni hojas paralelas.
           </p>
         </div>
         <div style={featureGrid}>{capabilities.map((item) => <FeatureLine key={item} text={item} />)}</div>
       </section>
 
-      {/* ── Screenshots ── */}
+      {/* -- Screenshots -- */}
       <section style={sectionAlt}>
         <div style={sectionHeadWide}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />EL PRODUCTO EN USO</div>
-          <h2 style={sectionTitle}>Alertas y lectura ejecutiva para operar con anticipación</h2>
+          <h2 style={sectionTitle}>Alertas y lectura ejecutiva para operar con anticipaci�n</h2>
           <p style={sectionText}>
             LubriPlan muestra lo que importa en el momento que importa: alertas accionables y
             un resumen inteligente que ayuda a priorizar sin necesidad de revisar cada registro.
@@ -428,33 +379,33 @@ export default function LubriPlanLanding() {
             alt="Alertas operativas de LubriPlan"
             kicker="Centro de alertas"
             title="Riesgos operativos visibles antes de que escalen"
-            text="Atrasadas, sin técnico, riesgo de reincidencia y sobrecarga operativa, todo clasificado y accionable desde una sola vista."
+            text="Atrasadas, sin t�cnico, riesgo de reincidencia y sobrecarga operativa, todo clasificado y accionable desde una sola vista."
           />
           <ScreenshotCard
             image={landingAiSummary}
             alt="Resumen ejecutivo inteligente de LubriPlan"
             kicker="Lectura ejecutiva con IA"
-            title="Diagnóstico automático con prioridades accionables"
-            text="La IA analiza la operación del mes, detecta patrones, identifica riesgos y entrega recomendaciones con contexto real de planta."
+            title="Diagn�stico autom�tico con prioridades accionables"
+            text="La IA analiza la operaci�n del mes, detecta patrones, identifica riesgos y entrega recomendaciones con contexto real de planta."
           />
         </div>
       </section>
 
-      {/* ── Asistente técnico ── */}
+      {/* -- Asistente t�cnico -- */}
       <section style={section}>
         <div style={twoCol}>
           <div style={glassBlock}>
-            <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ASISTENTE TÉCNICO</div>
-            <h2 style={sectionTitle}>Herramientas técnicas integradas en la plataforma</h2>
+            <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ASISTENTE T�CNICO</div>
+            <h2 style={sectionTitle}>Herramientas t�cnicas integradas en la plataforma</h2>
             <p style={sectionText}>
-              LubriPlan incluye un asistente técnico con utilidades prácticas para tomar decisiones
-              de lubricación, validar compatibilidad y resolver conversiones, sin salir del sistema.
+              LubriPlan incluye un asistente t�cnico con utilidades pr�cticas para tomar decisiones
+              de lubricaci�n, validar compatibilidad y resolver conversiones, sin salir del sistema.
             </p>
             <div style={assistantNoteBox}>
-              <div style={assistantNoteTitle}>Criterio técnico más consistente</div>
+              <div style={assistantNoteTitle}>Criterio t�cnico m�s consistente</div>
               <div style={assistantNoteText}>
                 Reduce consultas dispersas, acelera definiciones en campo y alinea el criterio
-                técnico entre supervisión y ejecución.
+                t�cnico entre supervisi�n y ejecuci�n.
               </div>
             </div>
           </div>
@@ -467,7 +418,7 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* ── LubriPlan Card ── */}
+      {/* -- LubriPlan Card -- */}
       <section style={section}>
         <div style={twoCol}>
           <div style={cardProductBlock}>
@@ -475,19 +426,19 @@ export default function LubriPlanLanding() {
               <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
               LUBRIPLAN CARD
             </div>
-            <h2 style={sectionTitle}>La carta de lubricación en el bolsillo del técnico</h2>
+            <h2 style={sectionTitle}>La carta de lubricaci�n en el bolsillo del t�cnico</h2>
             <p style={sectionText}>
-              LubriPlan Card lleva los puntos de lubricación de cada equipo directo al campo.
-              El técnico escanea el código QR del equipo y accede en segundos a la imagen con
-              los puntos marcados, lubricante, cantidad, frecuencia y método — sin login, sin instalación.
+              LubriPlan Card lleva los puntos de lubricaci�n de cada equipo directo al campo.
+              El t�cnico escanea el c�digo QR del equipo y accede en segundos a la imagen con
+              los puntos marcados, lubricante, cantidad, frecuencia y m�todo � sin login, sin instalaci�n.
             </p>
 
             <div style={cardFeatureList}>
               {[
-                "Acceso por QR — escanear y listo, sin credenciales",
+                "Acceso por QR � escanear y listo, sin credenciales",
                 "Imagen del equipo con puntos numerados y coloreados por frecuencia",
-                "Lubricante, cantidad, unidad y método por punto",
-                "Diseñado para pantallas con guantes en planta industrial",
+                "Lubricante, cantidad, unidad y m�todo por punto",
+                "Dise�ado para pantallas con guantes en planta industrial",
                 "El administrador gestiona las cartas desde el panel web",
               ].map((f) => (
                 <div key={f} style={cardFeatureLine}>
@@ -514,11 +465,11 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* ── Para quién / industrias / módulos (combinado) ── */}
+      {/* -- Para qui�n / industrias / m�dulos (combinado) -- */}
       <section style={sectionAlt}>
         <div style={sectionHead}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ALCANCE Y AUDIENCIA</div>
-          <h2 style={sectionTitle}>Para quién es y qué incluye</h2>
+          <h2 style={sectionTitle}>Para qui�n es y qu� incluye</h2>
         </div>
 
         <div style={pillSectionGrid}>
@@ -539,7 +490,7 @@ export default function LubriPlanLanding() {
             </div>
           </div>
           <div>
-            <div style={pillGroupLabel}>Módulos incluidos</div>
+            <div style={pillGroupLabel}>M�dulos incluidos</div>
             <div style={industryWrap}>
               {modules.map((item) => (
                 <span key={item} style={industryPill}>{item}</span>
@@ -549,14 +500,14 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
+      {/* -- CTA -- */}
       <section id="contacto" style={ctaSection}>
         <div style={ctaBox}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />SIGUIENTE PASO</div>
-          <h2 style={ctaTitle}>¿Tu planta sigue controlando la lubricación con Excel o papel?</h2>
+          <h2 style={ctaTitle}>�Tu planta sigue controlando la lubricaci�n con Excel o papel?</h2>
           <p style={ctaText}>
             LubriPlan es la base operativa para ejecutar con orden, anticipar riesgos y demostrar
-            control con datos reales. Solicita una demo y evalúalo en tu operación.
+            control con datos reales. Solicita una demo y eval�alo en tu operaci�n.
           </p>
           <div style={actions}>
             <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
@@ -725,7 +676,7 @@ const CARD_PUNTOS = [
   },
   {
     n: 4, color: "#22c55e", bg: "rgba(34,197,94,0.12)", x: "78%", y: "52%",
-    nombre: "Sistema de válvulas", lubricante: "Aeroshell Grease 7",
+    nombre: "Sistema de v�lvulas", lubricante: "Aeroshell Grease 7",
     cantidad: "5 g", frecuencia: "Trimestral", metodo: "Pistola de engrase",
   },
 ]
@@ -747,7 +698,7 @@ function InteractiveCardMock() {
         </div>
         <div>
           <div style={cardMockTitle}>LubriPlan Card</div>
-          <div style={cardMockSub}>Cartas de lubricación</div>
+          <div style={cardMockSub}>Cartas de lubricaci�n</div>
         </div>
         <span style={cardMockBadge}>Campo</span>
       </div>
@@ -759,7 +710,7 @@ function InteractiveCardMock() {
         <div style={cardMockEquipoArea}>Sala de compresores</div>
       </div>
 
-      {/* Interactive image area — overflow visible so tooltips can escape */}
+      {/* Interactive image area � overflow visible so tooltips can escape */}
       <div style={{ ...cardMockImageArea, overflow: "visible" }}>
         {/* Inner visual layer with overflow hidden for rounded corners */}
         <div style={{
@@ -772,7 +723,7 @@ function InteractiveCardMock() {
             <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
           </svg>
           <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 11, marginTop: 8 }}>
-            Pasá el mouse sobre los puntos
+            Pas� el mouse sobre los puntos
           </span>
         </div>
 
@@ -838,7 +789,7 @@ function InteractiveCardMock() {
                     {[
                       { label: "Lubricante", val: p.lubricante },
                       { label: "Cantidad", val: p.cantidad },
-                      { label: "Método", val: p.metodo },
+                      { label: "M�todo", val: p.metodo },
                     ].map(({ label, val }) => (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 10, color: "#64748b", fontWeight: 700, flexShrink: 0 }}>{label}</span>
@@ -859,7 +810,7 @@ function InteractiveCardMock() {
         })}
       </div>
 
-      {/* Points list — hover synced with dots */}
+      {/* Points list � hover synced with dots */}
       <div style={cardMockPoints}>
         {CARD_PUNTOS.slice(0, 3).map((p) => {
           const isActive = hovered === p.n
@@ -888,7 +839,7 @@ function InteractiveCardMock() {
                 <div style={cardMockPointName}>{p.nombre}</div>
                 {isActive && (
                   <div style={{ fontSize: 11, color: "#64748b", marginTop: 1, fontWeight: 600 }}>
-                    {p.lubricante} · {p.cantidad}
+                    {p.lubricante} � {p.cantidad}
                   </div>
                 )}
               </div>
@@ -924,10 +875,10 @@ function InteractiveCardMock() {
   )
 }
 
-/* ═══════════════════════════════════════════════
-   INDUSTRIAL DESIGN SYSTEM — LubriPlan Landing
+/* -----------------------------------------------
+   INDUSTRIAL DESIGN SYSTEM � LubriPlan Landing
    Dark navy + orange accent + dot-grid texture
-═══════════════════════════════════════════════ */
+----------------------------------------------- */
 
 const page = {
   background: [
@@ -942,12 +893,12 @@ const page = {
   overflowX: "hidden",
 };
 
-/* ── Hero section ── */
+/* -- Hero section -- */
 const hero = { position: "relative", maxWidth: 1320, margin: "0 auto", padding: "0 24px 44px" };
 const glowA = { position: "absolute", width: 500, height: 500, borderRadius: 999, background: "radial-gradient(circle, rgba(249,115,22,0.16), transparent 68%)", top: -160, right: -140, pointerEvents: "none" };
 const glowB = { position: "absolute", width: 400, height: 400, borderRadius: 999, background: "radial-gradient(circle, rgba(56,189,248,0.07), transparent 70%)", bottom: -180, left: -140, pointerEvents: "none" };
 
-/* ── Sticky navbar ── */
+/* -- Sticky navbar -- */
 const topBar = {
   position: "sticky", top: 0, zIndex: 20,
   display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -985,7 +936,7 @@ const navBtnCard = {
   fontWeight: 900, fontSize: 13,
 };
 
-/* ── Hero content ── */
+/* -- Hero content -- */
 const heroGrid = { position: "relative", zIndex: 2, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 28, alignItems: "center" };
 const eyebrow = {
   display: "inline-flex", alignItems: "center", gap: 10,
@@ -1036,7 +987,7 @@ const tag = {
 };
 const tagIcon = { display: "grid", placeItems: "center", color: "#fb923c" };
 
-/* ── Hero product panel ── */
+/* -- Hero product panel -- */
 const panel = {
   borderRadius: 24, padding: 20,
   background: "linear-gradient(165deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%)",
@@ -1091,7 +1042,7 @@ const chipRed = { padding: "5px 10px", borderRadius: 999, background: "rgba(239,
 const chipAmber = { padding: "5px 10px", borderRadius: 999, background: "rgba(245,158,11,0.14)", color: "#fde68a", border: "1px solid rgba(245,158,11,0.24)", fontSize: 11, fontWeight: 900 };
 const chipBlue = { padding: "5px 10px", borderRadius: 999, background: "rgba(59,130,246,0.14)", color: "#bfdbfe", border: "1px solid rgba(59,130,246,0.24)", fontSize: 11, fontWeight: 900 };
 
-/* ── Section structure ── */
+/* -- Section structure -- */
 const sectionTight = { maxWidth: 1320, margin: "0 auto", padding: "0 24px 22px" };
 const section = {
   maxWidth: 1320, margin: "0 auto", padding: "48px 24px",
@@ -1111,7 +1062,7 @@ const sectionKicker = {
 const sectionTitle = { margin: 0, fontSize: "clamp(2rem, 4.2vw, 3.2rem)", lineHeight: 1, letterSpacing: -1.2 };
 const sectionText = { marginTop: 16, color: "#94a3b8", fontSize: 16, lineHeight: 1.70, fontWeight: 600 };
 
-/* ── Signal cards (top belt) ── */
+/* -- Signal cards (top belt) -- */
 const signalGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 };
 const signalCard = {
   display: "flex", gap: 14, alignItems: "flex-start",
@@ -1129,7 +1080,7 @@ const signalIcon = {
 const signalTitle = { fontSize: 15, fontWeight: 900, letterSpacing: "-0.01em" };
 const signalText = { marginTop: 6, color: "#94a3b8", fontSize: 13, lineHeight: 1.58, fontWeight: 700 };
 
-/* ── Pain cards ── */
+/* -- Pain cards -- */
 const painGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 };
 const painCard = {
   display: "flex", alignItems: "flex-start", gap: 12,
@@ -1145,7 +1096,7 @@ const painIcon = {
 };
 const painText = { fontWeight: 900, lineHeight: 1.5, color: "#f1f5f9", fontSize: 14 };
 
-/* ── Two-col sections ── */
+/* -- Two-col sections -- */
 const twoCol = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 20, alignItems: "stretch" };
 const glassBlock = {
   padding: 28, borderRadius: 24,
@@ -1173,7 +1124,7 @@ const problemIcon = {
 };
 const problemText = { fontWeight: 900, lineHeight: 1.45, fontSize: 14 };
 
-/* ── Feature lines (capabilities) ── */
+/* -- Feature lines (capabilities) -- */
 const featureGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 };
 const featureLine = {
   display: "flex", gap: 12, alignItems: "flex-start",
@@ -1189,7 +1140,7 @@ const featureLineIcon = {
   display: "grid", placeItems: "center", flexShrink: 0,
 };
 
-/* ── Win cards ── */
+/* -- Win cards -- */
 const winGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
 const winCard = {
   padding: 22, borderRadius: 20,
@@ -1205,7 +1156,7 @@ const winIcon = {
 const winTitle = { fontSize: 18, fontWeight: 900 };
 const winText = { marginTop: 8, color: "#94a3b8", fontSize: 14, lineHeight: 1.62, fontWeight: 700 };
 
-/* ── Journey cards (how it works steps) ── */
+/* -- Journey cards (how it works steps) -- */
 const journeyGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
 const journeyCard = {
   padding: 22, borderRadius: 20,
@@ -1221,7 +1172,7 @@ const journeyNumber = {
 const journeyTitle = { marginTop: 0, fontSize: 19, lineHeight: 1.2, fontWeight: 900 };
 const journeyText = { marginTop: 10, color: "#94a3b8", fontSize: 14, lineHeight: 1.62, fontWeight: 700 };
 
-/* ── Industry / modules pills ── */
+/* -- Industry / modules pills -- */
 const pillSectionGrid = { display: "grid", gap: 28 };
 const pillGroupLabel = {
   fontSize: 11, fontWeight: 900, letterSpacing: "0.13em",
@@ -1237,7 +1188,7 @@ const industryPill = {
   color: "#cbd5e1", fontSize: 13, fontWeight: 900,
 };
 
-/* ── Technical assistant section ── */
+/* -- Technical assistant section -- */
 const assistantGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 };
 const assistantCard = {
   padding: 20, borderRadius: 20,
@@ -1262,7 +1213,7 @@ const assistantNoteBox = {
 const assistantNoteTitle = { fontSize: 12, fontWeight: 900, letterSpacing: "0.10em", textTransform: "uppercase", color: "#fdba74" };
 const assistantNoteText = { marginTop: 8, color: "#e2e8f0", fontSize: 14, lineHeight: 1.62, fontWeight: 700 };
 
-/* ── Screenshot cards ── */
+/* -- Screenshot cards -- */
 const screenshotGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: 20, alignItems: "start" };
 const screenshotCard = {
   display: "grid", gap: 14, padding: 18, borderRadius: 24,
@@ -1278,7 +1229,7 @@ const screenshotKicker = { fontSize: 11, fontWeight: 900, letterSpacing: "0.14em
 const screenshotTitle = { fontSize: 21, lineHeight: 1.1, fontWeight: 900, color: "#f8fafc" };
 const screenshotText = { color: "#94a3b8", fontSize: 14, lineHeight: 1.65, fontWeight: 700 };
 
-/* ── CTA section ── */
+/* -- CTA section -- */
 const ctaSection = { maxWidth: 1320, margin: "0 auto", padding: "20px 24px 80px" };
 const ctaBox = {
   position: "relative", overflow: "hidden",
@@ -1301,7 +1252,7 @@ const contactMailText = {
 const contactMailStrong = { color: "#fdba74", fontWeight: 900 };
 const contactMailLink = { color: "#fdba74", textDecoration: "none", fontWeight: 900 };
 
-/* ── LubriPlan Card section ── */
+/* -- LubriPlan Card section -- */
 const cardProductBlock = {
   padding: 28, borderRadius: 24,
   background: "rgba(255,255,255,0.04)",
@@ -1395,7 +1346,7 @@ const cardMockQRBox = {
 const cardMockQRLabel = { fontSize: 12, fontWeight: 900, color: "#fdba74" };
 const cardMockQRSub = { fontSize: 10, color: "#64748b", marginTop: 4, wordBreak: "break-all", fontFamily: "monospace" };
 
-/* ── Video demo section ── */
+/* -- Video demo section -- */
 const videoSection = {
   maxWidth: 1320, margin: "0 auto", padding: "48px 24px",
   borderTop: "1px solid rgba(255,255,255,0.05)",
@@ -1465,6 +1416,8 @@ const videoDot = {
   boxShadow: "0 0 0 3px rgba(34,197,94,0.22)",
   flexShrink: 0,
 };
+
+
 
 
 

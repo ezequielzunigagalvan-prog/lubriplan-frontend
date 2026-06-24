@@ -1,49 +1,55 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import AppSeo from "./components/seo/AppSeo";
 
-// Eager: tiny pages needed on first paint
 import LoginPage from "./pages/LoginPage";
 import LubriPlanLanding from "./pages/LubriPlanLanding";
 import Unauthorized from "./pages/Unauthorized";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
-// Lazy: load only when the route is visited
-const Dashboard               = lazy(() => import("./pages/Dashboard"));
-const RoutesPage              = lazy(() => import("./pages/RoutesPage"));
-const RouteDetail             = lazy(() => import("./pages/RouteDetail"));
-const EditRoutePage           = lazy(() => import("./pages/EditRoutePage"));
-const ActivitiesPage          = lazy(() => import("./pages/ActivitiesPage"));
-const ActivitiesDetailPage    = lazy(() => import("./pages/ActivitiesDetailPage"));
-const CompleteExecutionModal  = lazy(() => import("./pages/CompleteExecutionModal"));
-const EquipmentsPage          = lazy(() => import("./pages/EquipmentsPage"));
-const EquipmentDetailPage     = lazy(() => import("./pages/EquipmentDetailPage"));
-const EditEquipmentPage       = lazy(() => import("./pages/EditEquipmentPage"));
-const NewAreaPage             = lazy(() => import("./pages/NewAreaPage"));
-const UsersPage               = lazy(() => import("./pages/UsersPage"));
-const InventoryPage           = lazy(() => import("./pages/InventoryPage"));
-const TechniciansPage         = lazy(() => import("./pages/TechniciansPage"));
-const AnalysisPage            = lazy(() => import("./pages/AnalysisPage"));
-const ExportPage              = lazy(() => import("./pages/ExportPage"));
-const HistoryPage             = lazy(() => import("./pages/HistoryPage"));
-const ConditionReportsPage    = lazy(() => import("./pages/ConditionReportsPage"));
-const AdminTechLinksPage      = lazy(() => import("./pages/AdminTechLinksPage"));
-const NewRoutePage            = lazy(() => import("./pages/NewRoutePage"));
-const NotificationsPage       = lazy(() => import("./pages/NotificationsPage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const RoutesPage = lazy(() => import("./pages/RoutesPage"));
+const RouteDetail = lazy(() => import("./pages/RouteDetail"));
+const EditRoutePage = lazy(() => import("./pages/EditRoutePage"));
+const ActivitiesPage = lazy(() => import("./pages/ActivitiesPage"));
+const ActivitiesDetailPage = lazy(() => import("./pages/ActivitiesDetailPage"));
+const CompleteExecutionModal = lazy(() => import("./pages/CompleteExecutionModal"));
+const EquipmentsPage = lazy(() => import("./pages/EquipmentsPage"));
+const EquipmentDetailPage = lazy(() => import("./pages/EquipmentDetailPage"));
+const EditEquipmentPage = lazy(() => import("./pages/EditEquipmentPage"));
+const NewAreaPage = lazy(() => import("./pages/NewAreaPage"));
+const UsersPage = lazy(() => import("./pages/UsersPage"));
+const InventoryPage = lazy(() => import("./pages/InventoryPage"));
+const TechniciansPage = lazy(() => import("./pages/TechniciansPage"));
+const AnalysisPage = lazy(() => import("./pages/AnalysisPage"));
+const ExportPage = lazy(() => import("./pages/ExportPage"));
+const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const ConditionReportsPage = lazy(() => import("./pages/ConditionReportsPage"));
+const AdminTechLinksPage = lazy(() => import("./pages/AdminTechLinksPage"));
+const NewRoutePage = lazy(() => import("./pages/NewRoutePage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const MonthlyIntelligentReport = lazy(() => import("./pages/reports/MonthlyIntelligentReport"));
-const SettingsPage            = lazy(() => import("./pages/SettingsPage"));
-const AdminOnboardingPage     = lazy(() => import("./pages/AdminOnboardingPage"));
-const LandingChatLogsPage     = lazy(() => import("./pages/admin/LandingChatLogsPage"));
-const LandingLeadsPage        = lazy(() => import("./pages/admin/LandingLeadsPage"));
-const LubriPlanCardLanding    = lazy(() => import("./pages/LubriPlanCardLanding"));
-const TechnicalAssistantPage  = lazy(() => import("./pages/TechnicalAssistantPage"));
-const CorporateDashboard      = lazy(() => import("./pages/CorporateDashboard"));
-const LubricationCardPage     = lazy(() => import("./pages/LubricationCardPage"));
-const PreventiveOrdersList    = lazy(() => import("./pages/PreventiveOrdersList"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const AdminOnboardingPage = lazy(() => import("./pages/AdminOnboardingPage"));
+const LandingChatLogsPage = lazy(() => import("./pages/admin/LandingChatLogsPage"));
+const LandingLeadsPage = lazy(() => import("./pages/admin/LandingLeadsPage"));
+const LubriPlanCardLanding = lazy(() => import("./pages/LubriPlanCardLanding"));
+const TechnicalAssistantPage = lazy(() => import("./pages/TechnicalAssistantPage"));
+const CorporateDashboard = lazy(() => import("./pages/CorporateDashboard"));
+const LubricationCardPage = lazy(() => import("./pages/LubricationCardPage"));
+const PreventiveOrdersList = lazy(() => import("./pages/PreventiveOrdersList"));
 const PreventiveOrdersTechnician = lazy(() => import("./pages/PreventiveOrdersTechnician"));
-const PreventiveOrderForm     = lazy(() => import("./pages/PreventiveOrderForm"));
-const PreventiveOrderDetail   = lazy(() => import("./pages/PreventiveOrderDetail"));
+const PreventiveOrderForm = lazy(() => import("./pages/PreventiveOrderForm"));
+const PreventiveOrderDetail = lazy(() => import("./pages/PreventiveOrderDetail"));
 const PreventiveOrderExecution = lazy(() => import("./pages/PreventiveOrderExecution"));
+const ContactoPage = lazy(() => import("./pages/seo/ContactoPage"));
+const QueEsLubriPlanPage = lazy(() => import("./pages/seo/QueEsLubriPlanPage"));
+const SoftwareLubricacionIndustrialPage = lazy(() => import("./pages/seo/SoftwareLubricacionIndustrialPage"));
+const CartasDigitalesLubricacionPage = lazy(() => import("./pages/seo/CartasDigitalesLubricacionPage"));
+const RutasDeLubricacionPage = lazy(() => import("./pages/seo/RutasDeLubricacionPage"));
+const GestionDeLubricantesPage = lazy(() => import("./pages/seo/GestionDeLubricantesPage"));
+const AnalisisDeLubricacionPage = lazy(() => import("./pages/seo/AnalisisDeLubricacionPage"));
 
 function PageLoader() {
   return (
@@ -62,11 +68,19 @@ function NotFoundRedirect() {
 export default function App() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <AppSeo />
       <Routes>
         <Route path="/" element={<LubriPlanLanding />} />
         <Route path="/card" element={<LubriPlanCardLanding />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/contacto" element={<ContactoPage />} />
+        <Route path="/que-es-lubriplan" element={<QueEsLubriPlanPage />} />
+        <Route path="/software-lubricacion-industrial" element={<SoftwareLubricacionIndustrialPage />} />
+        <Route path="/cartas-digitales-lubricacion" element={<CartasDigitalesLubricacionPage />} />
+        <Route path="/rutas-de-lubricacion" element={<RutasDeLubricacionPage />} />
+        <Route path="/gestion-de-lubricantes" element={<GestionDeLubricantesPage />} />
+        <Route path="/analisis-de-lubricacion" element={<AnalisisDeLubricacionPage />} />
 
         <Route path="/dashboard" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><Dashboard /></ProtectedRoute>} />
 
@@ -113,3 +127,4 @@ export default function App() {
     </Suspense>
   );
 }
+

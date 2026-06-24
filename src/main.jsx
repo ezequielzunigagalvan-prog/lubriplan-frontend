@@ -1,6 +1,7 @@
-﻿import React from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "sonner";
 
 import AppGate from "./AppGate";
@@ -17,23 +18,25 @@ registerPwa();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <BrowserRouter>
-        <ThemeProvider>
-          <AuthProvider>
-            <PlantProvider>
-              <ConfirmProvider>
-                <AppGate />
-                <Toaster
-                  position="bottom-right"
-                  richColors
-                  toastOptions={{ style: { fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 700, fontSize: 13 } }}
-                />
-              </ConfirmProvider>
-            </PlantProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
+    <HelmetProvider>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <ThemeProvider>
+            <AuthProvider>
+              <PlantProvider>
+                <ConfirmProvider>
+                  <AppGate />
+                  <Toaster
+                    position="bottom-right"
+                    richColors
+                    toastOptions={{ style: { fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 700, fontSize: 13 } }}
+                  />
+                </ConfirmProvider>
+              </PlantProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </BrowserRouter>
+      </ErrorBoundary>
+    </HelmetProvider>
   </React.StrictMode>
 );
