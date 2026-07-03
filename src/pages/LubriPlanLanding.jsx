@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+ï»¿import React, { useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
@@ -21,12 +21,12 @@ export default function LubriPlanLanding() {
       {
         icon: "route",
         title: "Rutas bajo control",
-        text: "Frecuencias, puntos, métodos y responsables en una sola base. Sin hojas sueltas ni seguimiento informal.",
+        text: "Frecuencias, puntos, mÃ©todos y responsables en una sola base. Sin hojas sueltas ni seguimiento informal.",
       },
       {
         icon: "checkCircle",
-        title: "Ejecución trazable",
-        text: "Cada actividad queda respaldada con técnico, condición, evidencia y consumo real aplicado.",
+        title: "EjecuciÃ³n trazable",
+        text: "Cada actividad queda respaldada con tÃ©cnico, condiciÃ³n, evidencia y consumo real aplicado.",
       },
       {
         icon: "trendUp",
@@ -44,12 +44,12 @@ export default function LubriPlanLanding() {
 
   const capabilities = useMemo(
     () => [
-      "Roles diferenciados: administrador, supervisor y técnico",
-      "Historial completo por equipo, técnico y condición",
+      "Roles diferenciados: administrador, supervisor y tÃ©cnico",
+      "Historial completo por equipo, tÃ©cnico y condiciÃ³n",
       "Inventario con consumo real y alertas de existencia",
       "Lectura ejecutiva y alertas predictivas con IA",
       "Multiplanta sin mezcla de datos entre operaciones",
-      "Modo offline para ejecución en campo sin red",
+      "Modo offline para ejecuciÃ³n en campo sin red",
     ],
     []
   );
@@ -62,11 +62,11 @@ export default function LubriPlanLanding() {
       },
       {
         title: "Campo ejecuta con contexto",
-        text: "El técnico recibe instrucciones claras, captura evidencia y registra consumo real en una sola pantalla.",
+        text: "El tÃ©cnico recibe instrucciones claras, captura evidencia y registra consumo real en una sola pantalla.",
       },
       {
-        title: "Jefatura decide con información",
-        text: "Supervisión y gerencia reciben alertas, resumen ejecutivo e historial útil para actuar con prioridad.",
+        title: "Jefatura decide con informaciÃ³n",
+        text: "SupervisiÃ³n y gerencia reciben alertas, resumen ejecutivo e historial Ãºtil para actuar con prioridad.",
       },
     ],
     []
@@ -75,15 +75,15 @@ export default function LubriPlanLanding() {
   const modules = useMemo(
     () => [
       "Equipos",
-      "Técnicos",
+      "TÃ©cnicos",
       "Inventario",
       "Rutas",
-      "Actividades automáticas",
+      "Actividades automÃ¡ticas",
       "Actividades manuales",
       "Actividades emergentes",
-      "Condición anormal",
+      "CondiciÃ³n anormal",
       "Historial",
-      "Análisis",
+      "AnÃ¡lisis",
       "Alertas",
       "Reportes IA",
       "Exportar PDF",
@@ -97,9 +97,9 @@ export default function LubriPlanLanding() {
   const audiences = useMemo(
     () => [
       "Jefes de mantenimiento",
-      "Supervisores de lubricación",
+      "Supervisores de lubricaciÃ³n",
       "Responsables de confiabilidad",
-      "Técnicos de campo",
+      "TÃ©cnicos de campo",
     ],
     []
   );
@@ -108,19 +108,19 @@ export default function LubriPlanLanding() {
     () => [
       {
         title: "Compatibilidad de grasas",
-        text: "Valida cambios de grasa entre espesantes y reduce el riesgo de mezcla inadecuada en rodamientos, guías y sistemas centralizados.",
+        text: "Valida cambios de grasa entre espesantes y reduce el riesgo de mezcla inadecuada en rodamientos, guÃ­as y sistemas centralizados.",
       },
       {
         title: "Reengrase de rodamientos",
-        text: "Calcula una referencia inicial de cantidad y frecuencia para decisiones rápidas de mantenimiento en campo.",
+        text: "Calcula una referencia inicial de cantidad y frecuencia para decisiones rÃ¡pidas de mantenimiento en campo.",
       },
       {
         title: "Viscosidad para reductores",
-        text: "Sugiere un ISO VG inicial según velocidad, carga, temperatura y choque operativo para cajas y reductores.",
+        text: "Sugiere un ISO VG inicial segÃºn velocidad, carga, temperatura y choque operativo para cajas y reductores.",
       },
       {
-        title: "Conversor técnico",
-        text: "Conversiones de distancia, volumen, presión, temperatura y viscosidad, incluyendo pulgadas en fracción.",
+        title: "Conversor tÃ©cnico",
+        text: "Conversiones de distancia, volumen, presiÃ³n, temperatura y viscosidad, incluyendo pulgadas en fracciÃ³n.",
       },
     ],
     []
@@ -130,7 +130,7 @@ export default function LubriPlanLanding() {
     () => [
       "Manufactura",
       "Automotriz",
-      "Metalmecánica",
+      "MetalmecÃ¡nica",
       "Alimentos y bebidas",
       "Servicios auxiliares",
       "Plantas industriales",
@@ -142,17 +142,17 @@ export default function LubriPlanLanding() {
     () => [
       [
         "01",
-        "Estandarizas la operación",
-        "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos en una base única y compartida.",
+        "Estandarizas la operaciÃ³n",
+        "Configuras equipos, rutas, frecuencias, cantidades y criterios operativos en una base Ãºnica y compartida.",
       ],
       [
         "02",
         "LubriPlan ordena las prioridades",
-        "Genera actividades automáticamente, separa lo vencido de lo pendiente y mantiene visibles los riesgos activos.",
+        "Genera actividades automÃ¡ticamente, separa lo vencido de lo pendiente y mantiene visibles los riesgos activos.",
       ],
       [
         "03",
-        "El técnico ejecuta con contexto",
+        "El tÃ©cnico ejecuta con contexto",
         "Instrucciones claras, captura de evidencia y registro del consumo real, todo desde su dispositivo en planta.",
       ],
       [
@@ -168,9 +168,9 @@ export default function LubriPlanLanding() {
     () => [
       "Actividades vencidas que nadie detecta a tiempo",
       "Control en Excel, papel o mensajes de WhatsApp",
-      "Ejecución inconsistente entre técnicos",
+      "EjecuciÃ³n inconsistente entre tÃ©cnicos",
       "Inventario desconectado del consumo real",
-      "Sin trazabilidad por equipo, técnico ni condición",
+      "Sin trazabilidad por equipo, tÃ©cnico ni condiciÃ³n",
       "Decisiones reactivas por falta de visibilidad",
     ],
     []
@@ -191,12 +191,12 @@ export default function LubriPlanLanding() {
             </div>
             <div>
               <div style={brandTitle}>LubriPlan</div>
-              <div style={brandSub}>Software de gestión de lubricación industrial</div>
+              <div style={brandSub}>Software de gestiÃ³n de lubricaciÃ³n industrial</div>
             </div>
           </div>
 
           <div style={nav}>
-            <a href="#como-funciona" style={navLink}>Cómo funciona</a>
+            <a href="#como-funciona" style={navLink}>CÃ³mo funciona</a>
             <a href="#capacidades" style={navLink}>Capacidades</a>
             <a href="#contacto" style={navLink}>Contacto</a>
             <Link to="/card" style={navBtnCard}>LubriPlan Card</Link>
@@ -206,26 +206,26 @@ export default function LubriPlanLanding() {
 
         <div style={heroGrid}>
           <div>
-            <div style={eyebrow}>GESTIÓN DE LUBRICACIÓN INDUSTRIAL</div>
+            <div style={eyebrow}>GESTIÃ“N DE LUBRICACIÃ“N INDUSTRIAL</div>
             <h1 style={heroTitle}>
-              Control real sobre la lubricación de tu planta
+              Control real sobre la lubricaciÃ³n de tu planta
             </h1>
             <p style={heroText}>
               LubriPlan reemplaza el seguimiento en Excel, papel o mensajes con una plataforma
-              que conecta planeación, ejecución, condición, consumo e inventario en un solo lugar.
+              que conecta planeaciÃ³n, ejecuciÃ³n, condiciÃ³n, consumo e inventario en un solo lugar.
             </p>
             <div style={heroRoleLine}>
-              Para jefes de mantenimiento, supervisores y técnicos de lubricación industrial.
+              Para jefes de mantenimiento, supervisores y tÃ©cnicos de lubricaciÃ³n industrial.
             </div>
             <div style={actions}>
               <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
-              <a href="#como-funciona" style={btnGhost}>Cómo funciona</a>
+              <a href="#como-funciona" style={btnGhost}>CÃ³mo funciona</a>
               <Link to="/login" style={btnGhostSoft}>Entrar a la plataforma</Link>
             </div>
             <div style={statsRow}>
               <Tag icon="checkCircle" text="Trazabilidad por actividad" />
               <Tag icon="alert" text="Alertas de riesgo operativo" />
-              <Tag icon="trendUp" text="Indicadores para supervisión" />
+              <Tag icon="trendUp" text="Indicadores para supervisiÃ³n" />
             </div>
           </div>
 
@@ -233,7 +233,7 @@ export default function LubriPlanLanding() {
             <div style={panelHead}>
               <div>
                 <div style={panelKicker}>Dashboard operativo</div>
-                <div style={panelTitle}>Visibilidad en tiempo real para mantenimiento y dirección</div>
+                <div style={panelTitle}>Visibilidad en tiempo real para mantenimiento y direcciÃ³n</div>
               </div>
               <span style={liveBadge}>Producto real</span>
             </div>
@@ -260,7 +260,7 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* -- Belt de señales de valor -- */}
+      {/* -- Belt de seï¿½ales de valor -- */}
       <section style={sectionTight}>
         <div style={signalGrid}>{signals.map((item) => <SignalCard key={item.title} {...item} />)}</div>
       </section>
@@ -270,7 +270,7 @@ export default function LubriPlanLanding() {
         <div style={twoCol}>
           <div style={glassBlock}>
             <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />EL PROBLEMA</div>
-            <h2 style={sectionTitle}>La lubricación se vuelve riesgosa sin un sistema</h2>
+            <h2 style={sectionTitle}>La lubricaciÃ³n se vuelve riesgosa sin un sistema</h2>
             <p style={sectionText}>
               Cuando el control vive en papel, Excel o mensajes de WhatsApp, los pendientes se
               acumulan, las prioridades no son claras y el inventario deja de reflejar lo que
@@ -279,8 +279,8 @@ export default function LubriPlanLanding() {
           </div>
           <div style={board}>
             <ProblemLine icon="warn" text="Actividades vencidas que nadie detecta a tiempo" />
-            <ProblemLine icon="xCircle" text="Sobrelubricación o deficiencia por ejecución inconsistente" />
-            <ProblemLine icon="search" text="Sin trazabilidad por equipo, técnico ni condición" />
+            <ProblemLine icon="xCircle" text="SobrelubricaciÃ³n o deficiencia por ejecuciÃ³n inconsistente" />
+            <ProblemLine icon="search" text="Sin trazabilidad por equipo, tÃ©cnico ni condiciÃ³n" />
             <ProblemLine icon="drop" text="Inventario desconectado del consumo real" />
             <ProblemLine icon="trendDown" text="Decisiones reactivas por falta de visibilidad operativa" />
           </div>
@@ -291,9 +291,9 @@ export default function LubriPlanLanding() {
       <section style={section}>
         <div style={sectionHead}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />LA DIFERENCIA</div>
-          <h2 style={sectionTitle}>Control operativo desde el primer día</h2>
+          <h2 style={sectionTitle}>Control operativo desde el primer dÃ­a</h2>
           <p style={sectionText}>
-            No es solo digitalizar formatos. Es darle a cada rol la información que necesita
+            No es solo digitalizar formatos. Es darle a cada rol la informaciÃ³n que necesita
             para ejecutar mejor, priorizar sin adivinar y demostrar control operativo con datos reales.
           </p>
         </div>
@@ -304,11 +304,11 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* -- Cómo funciona -- */}
+      {/* -- CÃ³mo funciona -- */}
       <section id="como-funciona" style={sectionAlt}>
         <div style={sectionHead}>
-          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />CÓMO FUNCIONA</div>
-          <h2 style={sectionTitle}>De la planeación al control ejecutivo en cuatro pasos</h2>
+          <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />Cï¿½MO FUNCIONA</div>
+          <h2 style={sectionTitle}>De la planeaciÃ³n al control ejecutivo en cuatro pasos</h2>
         </div>
         <div style={journeyGrid}>{journey.map(([n, title, text]) => <JourneyCard key={n} n={n} title={title} text={text} />)}</div>
       </section>
@@ -320,9 +320,9 @@ export default function LubriPlanLanding() {
             <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
             VE EL PRODUCTO
           </div>
-          <h2 style={sectionTitle}>Mira LubriPlan en acción</h2>
+          <h2 style={sectionTitle}>Mira LubriPlan en acciÃ³n</h2>
           <p style={sectionText}>
-            Así se ve LubriPlan configurado con datos de ejemplo — rutas, condición, consumo e inventario, todo en una sola plataforma.
+            AsÃ­ se ve LubriPlan configurado con datos de ejemplo, rutas, condiciÃ³n, consumo e inventario, todo en una sola plataforma.
           </p>
         </div>
 
@@ -343,7 +343,7 @@ export default function LubriPlanLanding() {
             </span>
             <span style={videoBadge}>
               <Icon name="drop" style={{ width: 12, height: 12 }} />
-              Gestión completa de lubricación industrial
+              GestiÃ³n completa de lubricaciÃ³n industrial
             </span>
           </div>
         </div>
@@ -355,8 +355,8 @@ export default function LubriPlanLanding() {
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />CAPACIDADES</div>
           <h2 style={sectionTitle}>Una plataforma para planear, ejecutar, alertar y decidir</h2>
           <p style={sectionText}>
-            LubriPlan conecta control operativo, monitoreo de condición, inventario y lectura
-            ejecutiva en un solo sistema, sin módulos separados ni hojas paralelas.
+            LubriPlan conecta control operativo, monitoreo de condiciÃ³n, inventario y lectura
+            ejecutiva en un solo sistema, sin mÃ³dulos separados ni hojas paralelas.
           </p>
         </div>
         <div style={featureGrid}>{capabilities.map((item) => <FeatureLine key={item} text={item} />)}</div>
@@ -366,7 +366,7 @@ export default function LubriPlanLanding() {
       <section style={sectionAlt}>
         <div style={sectionHeadWide}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />EL PRODUCTO EN USO</div>
-          <h2 style={sectionTitle}>Alertas y lectura ejecutiva para operar con anticipación</h2>
+          <h2 style={sectionTitle}>Alertas y lectura ejecutiva para operar con anticipaciÃ³n</h2>
           <p style={sectionText}>
             LubriPlan muestra lo que importa en el momento que importa: alertas accionables y
             un resumen inteligente que ayuda a priorizar sin necesidad de revisar cada registro.
@@ -379,33 +379,33 @@ export default function LubriPlanLanding() {
             alt="Alertas operativas de LubriPlan"
             kicker="Centro de alertas"
             title="Riesgos operativos visibles antes de que escalen"
-            text="Atrasadas, sin técnico, riesgo de reincidencia y sobrecarga operativa, todo clasificado y accionable desde una sola vista."
+            text="Atrasadas, sin tÃ©cnico, riesgo de reincidencia y sobrecarga operativa, todo clasificado y accionable desde una sola vista."
           />
           <ScreenshotCard
             image={landingAiSummary}
             alt="Resumen ejecutivo inteligente de LubriPlan"
             kicker="Lectura ejecutiva con IA"
-            title="Diagnóstico automático con prioridades accionables"
-            text="La IA analiza la operación del mes, detecta patrones, identifica riesgos y entrega recomendaciones con contexto real de planta."
+            title="DiagnÃ³stico automÃ¡tico con prioridades accionables"
+            text="La IA analiza la operaciÃ³n del mes, detecta patrones, identifica riesgos y entrega recomendaciones con contexto real de planta."
           />
         </div>
       </section>
 
-      {/* -- Asistente técnico -- */}
+      {/* -- Asistente tï¿½cnico -- */}
       <section style={section}>
         <div style={twoCol}>
           <div style={glassBlock}>
-            <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ASISTENTE TÉCNICO</div>
-            <h2 style={sectionTitle}>Herramientas técnicas integradas en la plataforma</h2>
+            <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ASISTENTE Tï¿½CNICO</div>
+            <h2 style={sectionTitle}>Herramientas tÃ©cnicas integradas en la plataforma</h2>
             <p style={sectionText}>
-              LubriPlan incluye un asistente técnico con utilidades prácticas para tomar decisiones
-              de lubricación, validar compatibilidad y resolver conversiones, sin salir del sistema.
+              LubriPlan incluye un asistente tÃ©cnico con utilidades prÃ¡cticas para tomar decisiones
+              de lubricaciÃ³n, validar compatibilidad y resolver conversiones, sin salir del sistema.
             </p>
             <div style={assistantNoteBox}>
-              <div style={assistantNoteTitle}>Criterio técnico más consistente</div>
+              <div style={assistantNoteTitle}>Criterio tÃ©cnico mÃ¡s consistente</div>
               <div style={assistantNoteText}>
                 Reduce consultas dispersas, acelera definiciones en campo y alinea el criterio
-                técnico entre supervisión y ejecución.
+                tï¿½cnico entre supervisiÃ³n y ejecuciÃ³n.
               </div>
             </div>
           </div>
@@ -426,19 +426,19 @@ export default function LubriPlanLanding() {
               <span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />
               LUBRIPLAN CARD
             </div>
-            <h2 style={sectionTitle}>La carta de lubricación en el bolsillo del técnico</h2>
+            <h2 style={sectionTitle}>La carta de lubricaciÃ³n en el bolsillo del tÃ©cnico</h2>
             <p style={sectionText}>
-              LubriPlan Card lleva los puntos de lubricación de cada equipo directo al campo.
-              El técnico escanea el código QR del equipo y accede en segundos a la imagen con
-              los puntos marcados, lubricante, cantidad, frecuencia y método — sin login, sin instalación.
+              LubriPlan Card lleva los puntos de lubricaciÃ³n de cada equipo directo al campo.
+              El tÃ©cnico escanea el cÃ³digo QR del equipo y accede en segundos a la imagen con
+              los puntos marcados, lubricante, cantidad, frecuencia y mÃ©todo, sin login, sin instalaciÃ³n.
             </p>
 
             <div style={cardFeatureList}>
               {[
-                "Acceso por QR — escanear y listo, sin credenciales",
+                "Acceso por QR, escanea y listo, sin credenciales",
                 "Imagen del equipo con puntos numerados y coloreados por frecuencia",
-                "Lubricante, cantidad, unidad y método por punto",
-                "Diseñado para pantallas con guantes en planta industrial",
+                "Lubricante, cantidad, unidad y mÃ©todo por punto",
+                "DiseÃ±ado para pantallas con guantes en planta industrial",
                 "El administrador gestiona las cartas desde el panel web",
               ].map((f) => (
                 <div key={f} style={cardFeatureLine}>
@@ -465,11 +465,11 @@ export default function LubriPlanLanding() {
         </div>
       </section>
 
-      {/* -- Para quién / industrias / módulos (combinado) -- */}
+      {/* -- Para quiï¿½n / industrias / mï¿½dulos (combinado) -- */}
       <section style={sectionAlt}>
         <div style={sectionHead}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />ALCANCE Y AUDIENCIA</div>
-          <h2 style={sectionTitle}>Para quién es y qué incluye</h2>
+          <h2 style={sectionTitle}>Para quiÃ©n es y quÃ© incluye</h2>
         </div>
 
         <div style={pillSectionGrid}>
@@ -490,7 +490,7 @@ export default function LubriPlanLanding() {
             </div>
           </div>
           <div>
-            <div style={pillGroupLabel}>Módulos incluidos</div>
+            <div style={pillGroupLabel}>MÃ³dulos incluidos</div>
             <div style={industryWrap}>
               {modules.map((item) => (
                 <span key={item} style={industryPill}>{item}</span>
@@ -504,10 +504,10 @@ export default function LubriPlanLanding() {
       <section id="contacto" style={ctaSection}>
         <div style={ctaBox}>
           <div style={sectionKicker}><span style={{ display:"block", width:20, height:2, background:"#f97316", borderRadius:999, flexShrink:0 }} />SIGUIENTE PASO</div>
-          <h2 style={ctaTitle}>¿Tu planta sigue controlando la lubricación con Excel o papel?</h2>
+          <h2 style={ctaTitle}>Tu planta sigue controlando la lubricaciÃ³n con Excel o papel?</h2>
           <p style={ctaText}>
             LubriPlan es la base operativa para ejecutar con orden, anticipar riesgos y demostrar
-            control con datos reales. Solicita una demo y evalúalo en tu operación.
+            control con datos reales. Solicita una demo y evalÃºalo en tu operaciÃ³n.
           </p>
           <div style={actions}>
             <a href={DEMO_URL} target="_blank" rel="noreferrer" style={btnPrimary}>Solicitar demo</a>
@@ -676,7 +676,7 @@ const CARD_PUNTOS = [
   },
   {
     n: 4, color: "#22c55e", bg: "rgba(34,197,94,0.12)", x: "78%", y: "52%",
-    nombre: "Sistema de válvulas", lubricante: "Aeroshell Grease 7",
+    nombre: "Sistema de vÃ¡lvulas", lubricante: "Aeroshell Grease 7",
     cantidad: "5 g", frecuencia: "Trimestral", metodo: "Pistola de engrase",
   },
 ]
@@ -698,7 +698,7 @@ function InteractiveCardMock() {
         </div>
         <div>
           <div style={cardMockTitle}>LubriPlan Card</div>
-          <div style={cardMockSub}>Cartas de lubricación</div>
+          <div style={cardMockSub}>Cartas de lubricaciï¿½n</div>
         </div>
         <span style={cardMockBadge}>Campo</span>
       </div>
@@ -710,7 +710,7 @@ function InteractiveCardMock() {
         <div style={cardMockEquipoArea}>Sala de compresores</div>
       </div>
 
-      {/* Interactive image area — overflow visible so tooltips can escape */}
+      {/* Interactive image area ï¿½ overflow visible so tooltips can escape */}
       <div style={{ ...cardMockImageArea, overflow: "visible" }}>
         {/* Inner visual layer with overflow hidden for rounded corners */}
         <div style={{
@@ -723,7 +723,7 @@ function InteractiveCardMock() {
             <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
           </svg>
           <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 11, marginTop: 8 }}>
-            Pasá el mouse sobre los puntos
+            Pasï¿½ el mouse sobre los puntos
           </span>
         </div>
 
@@ -789,7 +789,7 @@ function InteractiveCardMock() {
                     {[
                       { label: "Lubricante", val: p.lubricante },
                       { label: "Cantidad", val: p.cantidad },
-                      { label: "Método", val: p.metodo },
+                      { label: "MÃ©todo", val: p.metodo },
                     ].map(({ label, val }) => (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 10, color: "#64748b", fontWeight: 700, flexShrink: 0 }}>{label}</span>
@@ -810,7 +810,7 @@ function InteractiveCardMock() {
         })}
       </div>
 
-      {/* Points list — hover synced with dots */}
+      {/* Points list ï¿½ hover synced with dots */}
       <div style={cardMockPoints}>
         {CARD_PUNTOS.slice(0, 3).map((p) => {
           const isActive = hovered === p.n
@@ -839,7 +839,7 @@ function InteractiveCardMock() {
                 <div style={cardMockPointName}>{p.nombre}</div>
                 {isActive && (
                   <div style={{ fontSize: 11, color: "#64748b", marginTop: 1, fontWeight: 600 }}>
-                    {p.lubricante} · {p.cantidad}
+                    {p.lubricante}  {p.cantidad}
                   </div>
                 )}
               </div>
@@ -876,7 +876,7 @@ function InteractiveCardMock() {
 }
 
 /* -----------------------------------------------
-   INDUSTRIAL DESIGN SYSTEM — LubriPlan Landing
+   INDUSTRIAL DESIGN SYSTEM ï¿½ LubriPlan Landing
    Dark navy + orange accent + dot-grid texture
 ----------------------------------------------- */
 
