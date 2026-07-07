@@ -405,7 +405,7 @@ export default function LubriPlanLanding() {
               <div style={assistantNoteTitle}>Criterio técnico más consistente</div>
               <div style={assistantNoteText}>
                 Reduce consultas dispersas, acelera definiciones en campo y alinea el criterio
-                t�cnico entre supervisión y ejecución.
+                técnico entre supervisión y ejecución.
               </div>
             </div>
           </div>
@@ -698,7 +698,7 @@ function InteractiveCardMock() {
         </div>
         <div>
           <div style={cardMockTitle}>LubriPlan Card</div>
-          <div style={cardMockSub}>Cartas de lubricaci�n</div>
+          <div style={cardMockSub}>Cartas de lubricación</div>
         </div>
         <span style={cardMockBadge}>Campo</span>
       </div>
@@ -723,7 +723,7 @@ function InteractiveCardMock() {
             <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
           </svg>
           <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 11, marginTop: 8 }}>
-            Pas� el mouse sobre los puntos
+            Pasá el mouse sobre los puntos
           </span>
         </div>
 
