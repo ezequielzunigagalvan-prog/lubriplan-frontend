@@ -1,11 +1,5 @@
 import { useState } from 'react';
-import {
-  IndustrialModal,
-  IndustrialInput,
-  IndustrialSelect,
-  IndustrialTextarea,
-  IndustrialButton,
-} from '../design/IndustrialDesignSystem';
+import { MtButton } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { toast } from 'sonner';
 
@@ -29,21 +23,61 @@ const STATUSES = [
   { value: 'OUT_OF_SERVICE', label: 'Fuera de Servicio' },
 ];
 
-export default function AssetFormModal({ isOpen, onClose, asset = null, onSuccess }) {
-  const [formData, setFormData] = useState(
-    asset || {
-      code: '',
-      name: '',
-      level: 'EQUIPMENT',
-      location: '',
-      manufacturer: '',
-      model: '',
-      serialNumber: '',
-      criticality: 'B',
-      status: 'OPERATING',
-      notes: '',
-    }
+function FormField({ label, placeholder, value, onChange, error, required }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', marginBottom: 'var(--mt-space-sm)', color: 'var(--mt-text-secondary)' }}>
+        {label}
+        {required && <span style={{ color: 'var(--mt-danger)' }}> *</span>}
+      </label>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        style={{ width: '100%', padding: 'var(--mt-space-md)', borderRadius: 'var(--mt-radius-md)', border: error ? '2px solid var(--mt-danger)' : '1px solid var(--mt-border)', background: 'var(--mt-bg-base)', color: 'var(--mt-text-primary)', fontFamily: 'inherit', fontSize: '14px' }}
+      />
+      {error && <p style={{ fontSize: '12px', color: 'var(--mt-danger)', marginTop: '4px' }}>{error}</p>}
+    </div>
   );
+}
+
+function FormSelect({ label, value, onChange, options, error, required }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', marginBottom: 'var(--mt-space-sm)', color: 'var(--mt-text-secondary)' }}>
+        {label}
+        {required && <span style={{ color: 'var(--mt-danger)' }}> *</span>}
+      </label>
+      <select
+        value={value}
+        onChange={onChange}
+        style={{ width: '100%', padding: 'var(--mt-space-md)', borderRadius: 'var(--mt-radius-md)', border: error ? '2px solid var(--mt-danger)' : '1px solid var(--mt-border)', background: 'var(--mt-bg-base)', color: 'var(--mt-text-primary)', fontFamily: 'inherit', fontSize: '14px' }}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      {error && <p style={{ fontSize: '12px', color: 'var(--mt-danger)', marginTop: '4px' }}>{error}</p>}
+    </div>
+  );
+}
+
+export default function AssetFormModal({ isOpen, onClose, asset = null, onSuccess }) {
+  const [formData, setFormData] = useState(asset || {
+    code: '',
+    name: '',
+    level: 'EQUIPMENT',
+    location: '',
+    manufacturer: '',
+    model: '',
+    serialNumber: '',
+    criticality: 'B',
+    status: 'OPERATING',
+    notes: '',
+  });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -91,114 +125,68 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <IndustrialModal
-      isOpen={isOpen}
-      title={asset?.id ? 'Editar Activo' : 'Crear Nuevo Activo'}
-      onClose={onClose}
-      footer={
-        <div className="flex gap-3">
-          <IndustrialButton
-            variant="secondary"
-            onClick={onClose}
-            disabled={loading}
-          >
+    <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--mt-z-modal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'fixed', inset: 0, background: 'var(--mt-overlay)' }} onClick={onClose}></div>
+
+      <div style={{ background: 'var(--mt-bg-surface)', borderRadius: 'var(--mt-radius-lg)', maxWidth: '600px', width: '90%', maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--mt-shadow-lg)', position: 'relative', zIndex: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--mt-space-lg)', borderBottom: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+            {asset?.id ? 'Editar Activo' : 'Crear Nuevo Activo'}
+          </h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--mt-text-secondary)', padding: 0 }}>
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ padding: 'var(--mt-space-2xl)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-lg)' }}>
+            <FormField label="Código del Activo" placeholder="EQ-001" value={formData.code} onChange={(e) => handleChange('code', e.target.value)} error={errors.code} required />
+            <FormField label="Nombre" placeholder="Bomba Centrífuga Principal" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} error={errors.name} required />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-lg)' }}>
+            <FormSelect label="Nivel de Activo" value={formData.level} onChange={(e) => handleChange('level', e.target.value)} options={ASSET_LEVELS} error={errors.level} required />
+            <FormSelect label="Criticidad" value={formData.criticality} onChange={(e) => handleChange('criticality', e.target.value)} options={CRITICALITIES} error={errors.criticality} required />
+          </div>
+
+          <FormField label="Ubicación" placeholder="Sala de Bombeo - Sector A" value={formData.location} onChange={(e) => handleChange('location', e.target.value)} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-lg)' }}>
+            <FormField label="Fabricante" placeholder="Ej: Grundfos" value={formData.manufacturer} onChange={(e) => handleChange('manufacturer', e.target.value)} />
+            <FormField label="Modelo" placeholder="Ej: CR95-3-2" value={formData.model} onChange={(e) => handleChange('model', e.target.value)} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-lg)' }}>
+            <FormField label="Número de Serie" placeholder="S/N: GRD-2023-001" value={formData.serialNumber} onChange={(e) => handleChange('serialNumber', e.target.value)} />
+            <FormSelect label="Estado" value={formData.status} onChange={(e) => handleChange('status', e.target.value)} options={STATUSES} />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', marginBottom: 'var(--mt-space-sm)', color: 'var(--mt-text-secondary)' }}>
+              Notas
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => handleChange('notes', e.target.value)}
+              placeholder="Información adicional..."
+              rows="3"
+              style={{ width: '100%', padding: 'var(--mt-space-md)', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-border)', background: 'var(--mt-bg-base)', color: 'var(--mt-text-primary)', fontFamily: 'inherit', fontSize: '14px', resize: 'vertical' }}
+            />
+          </div>
+        </form>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--mt-space-md)', padding: 'var(--mt-space-lg)', borderTop: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)' }}>
+          <MtButton variant="secondary" disabled={loading} onClick={onClose}>
             Cancelar
-          </IndustrialButton>
-          <IndustrialButton
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
+          </MtButton>
+          <MtButton variant="primary" disabled={loading} onClick={handleSubmit}>
             {loading ? 'Guardando...' : asset?.id ? 'Actualizar' : 'Crear'}
-          </IndustrialButton>
+          </MtButton>
         </div>
-      }
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <IndustrialInput
-            label="Código del Activo"
-            value={formData.code}
-            onChange={(e) => handleChange('code', e.target.value)}
-            placeholder="EQ-001"
-            required
-            error={errors.code}
-          />
-          <IndustrialInput
-            label="Nombre"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            placeholder="Bomba Centrífuga Principal"
-            required
-            error={errors.name}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <IndustrialSelect
-            label="Nivel de Activo"
-            value={formData.level}
-            onChange={(e) => handleChange('level', e.target.value)}
-            options={ASSET_LEVELS}
-            required
-            error={errors.level}
-          />
-          <IndustrialSelect
-            label="Criticidad"
-            value={formData.criticality}
-            onChange={(e) => handleChange('criticality', e.target.value)}
-            options={CRITICALITIES}
-            required
-            error={errors.criticality}
-          />
-        </div>
-
-        <IndustrialInput
-          label="Ubicación"
-          value={formData.location}
-          onChange={(e) => handleChange('location', e.target.value)}
-          placeholder="Sala de Bombeo - Sector A"
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <IndustrialInput
-            label="Fabricante"
-            value={formData.manufacturer}
-            onChange={(e) => handleChange('manufacturer', e.target.value)}
-            placeholder="Ej: Grundfos, Siemens"
-          />
-          <IndustrialInput
-            label="Modelo"
-            value={formData.model}
-            onChange={(e) => handleChange('model', e.target.value)}
-            placeholder="Ej: CR95-3-2"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <IndustrialInput
-            label="Número de Serie"
-            value={formData.serialNumber}
-            onChange={(e) => handleChange('serialNumber', e.target.value)}
-            placeholder="S/N: GRD-2023-001"
-          />
-          <IndustrialSelect
-            label="Estado"
-            value={formData.status}
-            onChange={(e) => handleChange('status', e.target.value)}
-            options={STATUSES}
-          />
-        </div>
-
-        <IndustrialTextarea
-          label="Notas"
-          value={formData.notes}
-          onChange={(e) => handleChange('notes', e.target.value)}
-          placeholder="Información adicional sobre el activo..."
-          rows={3}
-        />
-      </form>
-    </IndustrialModal>
+      </div>
+    </div>
   );
 }

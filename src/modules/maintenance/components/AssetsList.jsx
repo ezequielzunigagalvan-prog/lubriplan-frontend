@@ -1,11 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  IndustrialCard,
-  IndustrialButton,
-  IndustrialBadge,
-  IndustrialInput,
-} from '../design/IndustrialDesignSystem';
+import { MtCard, MtButton, MtBadge } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { Edit2, Trash2, Eye, Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
@@ -84,85 +79,110 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Search */}
-      <IndustrialInput
-        placeholder="Buscar por código, nombre o ubicación..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        icon={<Search size={18} />}
-      />
+      <div style={{ position: 'relative' }}>
+        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
+        <input
+          type="text"
+          placeholder="Buscar por código, nombre o ubicación..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            width: '100%',
+            paddingLeft: '40px',
+            paddingRight: '12px',
+            paddingTop: '10px',
+            paddingBottom: '10px',
+            borderRadius: 'var(--mt-radius-md)',
+          }}
+        />
+      </div>
 
       {/* Assets Grid */}
       {filteredAssets.length === 0 ? (
-        <IndustrialCard elevated className="p-12 text-center">
-          <div className="text-5xl mb-4">📦</div>
-          <h3 className="text-lg font-bold text-gray-900">No hay activos</h3>
-          <p className="text-gray-600 mt-2">Crea tu primer activo para comenzar</p>
-        </IndustrialCard>
+        <MtCard elevated>
+          <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)', fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>
+            📦
+          </div>
+          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', marginBottom: 'var(--mt-space-sm)' }}>
+            No hay activos
+          </h3>
+          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>
+            Crea tu primer activo para comenzar
+          </p>
+        </MtCard>
       ) : (
-        <div className="grid gap-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
           {filteredAssets.map((asset) => (
-            <IndustrialCard key={asset.id} elevated className="p-6 hover:shadow-lg transition-all">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">{asset.name}</h3>
-                      <p className="text-sm text-gray-600">Código: {asset.code}</p>
-                    </div>
+            <MtCard key={asset.id} elevated>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--mt-space-lg)' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ marginBottom: 'var(--mt-space-md)' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', marginBottom: 'var(--mt-space-xs)' }}>
+                      {asset.name}
+                    </h3>
+                    <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+                      Código: {asset.code}
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 'var(--mt-space-lg)', marginTop: 'var(--mt-space-lg)', marginBottom: 'var(--mt-space-lg)' }}>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold">Ubicación</p>
-                      <p className="text-sm font-semibold text-gray-900">{asset.location || '—'}</p>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                        Ubicación
+                      </p>
+                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)' }}>
+                        {asset.location || 'N/A'}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold">Criticidad</p>
-                      <div className="mt-1">
-                        <IndustrialBadge
-                          label={CRITICALITY_COLORS[asset.criticality]?.label}
-                          variant={CRITICALITY_COLORS[asset.criticality]?.badge}
-                          size="sm"
-                        />
-                      </div>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                        Criticidad
+                      </p>
+                      <MtBadge variant={CRITICALITY_COLORS[asset.criticality]?.badge} size="sm">
+                        {CRITICALITY_COLORS[asset.criticality]?.label}
+                      </MtBadge>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold">Estado</p>
-                      <div className="mt-1">
-                        <IndustrialBadge
-                          label={STATUS_COLORS[asset.status]?.label}
-                          variant={STATUS_COLORS[asset.status]?.badge}
-                          size="sm"
-                        />
-                      </div>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                        Estado
+                      </p>
+                      <MtBadge variant={STATUS_COLORS[asset.status]?.badge} size="sm">
+                        {STATUS_COLORS[asset.status]?.label}
+                      </MtBadge>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold">Modelo</p>
-                      <p className="text-sm font-semibold text-gray-900">{asset.model || '—'}</p>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                        Modelo
+                      </p>
+                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)' }}>
+                        {asset.model || 'N/A'}
+                      </p>
                     </div>
                   </div>
 
                   {asset.notes && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <p className="text-xs text-gray-600">{asset.notes}</p>
+                    <div style={{ padding: 'var(--mt-space-md)', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-sm)', border: '1px solid var(--mt-border)', marginTop: 'var(--mt-space-lg)' }}>
+                      <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                        {asset.notes}
+                      </p>
                     </div>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 ml-4">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-sm)', marginLeft: 'var(--mt-space-lg)' }}>
                   <button
                     onClick={() => navigate(`/maintenance/app/assets/${asset.id}`)}
-                    className="p-2 hover:bg-cyan-50 rounded-lg text-cyan-600 transition-colors"
+                    style={{ padding: '8px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: 'var(--mt-radius-sm)', border: 'none', cursor: 'pointer', color: 'var(--mt-accent)', transition: 'background 150ms ease' }}
                     title="Ver detalles"
                   >
                     <Eye size={18} />
                   </button>
                   <button
                     onClick={() => onEditClick?.(asset)}
-                    className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors"
+                    style={{ padding: '8px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: 'var(--mt-radius-sm)', border: 'none', cursor: 'pointer', color: 'var(--mt-accent)', transition: 'background 150ms ease' }}
                     title="Editar"
                   >
                     <Edit2 size={18} />
@@ -170,14 +190,14 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
                   <button
                     onClick={() => handleDelete(asset.id)}
                     disabled={deleting === asset.id}
-                    className="p-2 hover:bg-red-50 rounded-lg text-red-600 transition-colors disabled:opacity-50"
+                    style={{ padding: '8px', background: deleting === asset.id ? 'rgba(0,0,0,0.2)' : 'rgba(248, 113, 113, 0.1)', borderRadius: 'var(--mt-radius-sm)', border: 'none', cursor: deleting === asset.id ? 'not-allowed' : 'pointer', color: 'var(--mt-danger)', opacity: deleting === asset.id ? 0.6 : 1, transition: 'background 150ms ease' }}
                     title="Eliminar"
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
-            </IndustrialCard>
+            </MtCard>
           ))}
         </div>
       )}

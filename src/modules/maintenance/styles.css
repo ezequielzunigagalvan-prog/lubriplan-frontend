@@ -1,0 +1,240 @@
+/* ============================================================
+   LubriPlan Maintenance — Global Styles & Layout Reset
+   Single entry point for all maintenance module styles
+   ============================================================ */
+
+/* Import design tokens */
+@import './ui/tokens.css';
+
+/* ============================================================
+   Root Container — Dark Industrial Theme
+   ============================================================ */
+
+.mt-root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mt-text-primary);
+  background: var(--mt-bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Global Reset — Remove browser defaults
+   ============================================================ */
+
+.mt-root * {
+  box-sizing: border-box;
+}
+
+/* Typography */
+.mt-root h1,
+.mt-root h2,
+.mt-root h3,
+.mt-root h4,
+.mt-root h5,
+.mt-root h6 {
+  margin: 0;
+  padding: 0;
+  font-weight: var(--mt-font-weight-bold);
+  line-height: 1.3;
+  color: var(--mt-text-primary);
+}
+
+.mt-root h1 { font-size: 32px; }
+.mt-root h2 { font-size: 28px; }
+.mt-root h3 { font-size: 24px; }
+.mt-root h4 { font-size: 20px; }
+.mt-root h5 { font-size: 16px; }
+.mt-root h6 { font-size: 14px; }
+
+.mt-root p {
+  margin: 0;
+  padding: 0;
+}
+
+.mt-root a {
+  color: var(--mt-accent);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.mt-root a:hover {
+  color: var(--mt-accent-strong);
+  text-decoration: underline;
+}
+
+/* Lists */
+.mt-root ul,
+.mt-root ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Buttons */
+.mt-root button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: none;
+  color: inherit;
+}
+
+/* Form inputs */
+.mt-root input,
+.mt-root textarea,
+.mt-root select {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--mt-text-primary);
+  background: var(--mt-bg-surface);
+  border: 1px solid var(--mt-border);
+  padding: 8px 12px;
+  border-radius: var(--mt-radius-md);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.mt-root input:hover,
+.mt-root textarea:hover,
+.mt-root select:hover {
+  border-color: var(--mt-border-hover);
+}
+
+.mt-root input:focus,
+.mt-root textarea:focus,
+.mt-root select:focus {
+  outline: none;
+  border-color: var(--mt-accent);
+  box-shadow: var(--mt-shadow-focus);
+}
+
+.mt-root input:disabled,
+.mt-root textarea:disabled,
+.mt-root select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mt-root textarea {
+  resize: vertical;
+}
+
+/* Tables */
+.mt-root table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.mt-root th,
+.mt-root td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--mt-border);
+}
+
+.mt-root th {
+  background: var(--mt-bg-surface-2);
+  font-weight: var(--mt-font-weight-bold);
+  color: var(--mt-text-primary);
+}
+
+.mt-root td {
+  color: var(--mt-text-secondary);
+}
+
+/* Images */
+.mt-root img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================================
+   Layout Utilities — Safe spacing & alignment
+   ============================================================ */
+
+.mt-flex {
+  display: flex;
+}
+
+.mt-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mt-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mt-flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.mt-grid {
+  display: grid;
+}
+
+.mt-gap-xs { gap: var(--mt-space-xs); }
+.mt-gap-sm { gap: var(--mt-space-sm); }
+.mt-gap-md { gap: var(--mt-space-md); }
+.mt-gap-lg { gap: var(--mt-space-lg); }
+.mt-gap-xl { gap: var(--mt-space-xl); }
+.mt-gap-2xl { gap: var(--mt-space-2xl); }
+
+.mt-p-xs { padding: var(--mt-space-xs); }
+.mt-p-sm { padding: var(--mt-space-sm); }
+.mt-p-md { padding: var(--mt-space-md); }
+.mt-p-lg { padding: var(--mt-space-lg); }
+.mt-p-xl { padding: var(--mt-space-xl); }
+.mt-p-2xl { padding: var(--mt-space-2xl); }
+
+.mt-m-xs { margin: var(--mt-space-xs); }
+.mt-m-sm { margin: var(--mt-space-sm); }
+.mt-m-md { margin: var(--mt-space-md); }
+.mt-m-lg { margin: var(--mt-space-lg); }
+.mt-m-xl { margin: var(--mt-space-xl); }
+.mt-m-2xl { margin: var(--mt-space-2xl); }
+
+.mt-mb-xs { margin-bottom: var(--mt-space-xs); }
+.mt-mb-sm { margin-bottom: var(--mt-space-sm); }
+.mt-mb-md { margin-bottom: var(--mt-space-md); }
+.mt-mb-lg { margin-bottom: var(--mt-space-lg); }
+.mt-mb-xl { margin-bottom: var(--mt-space-xl); }
+.mt-mb-2xl { margin-bottom: var(--mt-space-2xl); }
+
+/* ============================================================
+   Text utilities
+   ============================================================ */
+
+.mt-text-primary { color: var(--mt-text-primary); }
+.mt-text-secondary { color: var(--mt-text-secondary); }
+.mt-text-tertiary { color: var(--mt-text-tertiary); }
+.mt-text-muted { color: var(--mt-text-muted); }
+.mt-text-accent { color: var(--mt-accent); }
+.mt-text-success { color: var(--mt-success); }
+.mt-text-warning { color: var(--mt-warning); }
+.mt-text-danger { color: var(--mt-danger); }
+
+.mt-font-bold { font-weight: var(--mt-font-weight-bold); }
+.mt-font-heavy { font-weight: var(--mt-font-weight-heavy); }
+.mt-font-black { font-weight: var(--mt-font-weight-black); }
+
+/* ============================================================
+   Transitions & Effects
+   ============================================================ */
+
+.mt-smooth {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mt-fast {
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}

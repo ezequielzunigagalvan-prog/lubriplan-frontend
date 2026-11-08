@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { IndustrialButton } from '../design/IndustrialDesignSystem';
+import { MtButton } from '../ui';
 import AssetFormModal from '../components/AssetFormModal';
 import AssetsList from '../components/AssetsList';
 import { Plus } from 'lucide-react';
@@ -24,21 +24,20 @@ export default function Assets() {
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--mt-space-lg)' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Activos</h1>
-          <p className="text-gray-600 mt-1">Gestiona todos los activos de tu planta</p>
+          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-text-primary)', marginBottom: 'var(--mt-space-sm)' }}>
+            Activos
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>
+            Gestiona todos los activos de tu planta
+          </p>
         </div>
-        <IndustrialButton
-          variant="primary"
-          size="lg"
-          icon={<Plus size={20} />}
-          onClick={handleCreate}
-        >
+        <MtButton variant="primary" size="lg" icon={<Plus size={20} />} onClick={handleCreate}>
           Crear Activo
-        </IndustrialButton>
+        </MtButton>
       </div>
 
       {/* Assets List */}

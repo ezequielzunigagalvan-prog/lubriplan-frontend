@@ -3,8 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MtIcon } from '../ui';
 import { useMaintenanceAccess } from '../hooks/useMaintenanceAccess';
 import NotificationBell from '../components/NotificationBell';
-import '../ui/tokens.css';
-import '../design/industrial.css';
+import '../styles.css';
 
 export default function MaintenanceLayout() {
   const { pathname } = useLocation();
@@ -20,7 +19,7 @@ export default function MaintenanceLayout() {
   const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--mt-bg-base)' }}>
+    <div className="mt-root" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Header */}
       <header style={{
         background: 'var(--mt-bg-surface)',
