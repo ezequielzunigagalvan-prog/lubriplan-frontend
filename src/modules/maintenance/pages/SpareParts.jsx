@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { IndustrialCard, IndustrialButton, IndustrialBadge, IndustrialInput } from '../design/IndustrialDesignSystem';
-import { Plus, Search, AlertTriangle, TrendingDown } from 'lucide-react';
-import '../ui/tokens.css';
+import { MtCard, MtButton, MtBadge } from '../ui';
+import { Plus, Search, AlertTriangle } from 'lucide-react';
 
 export default function SpareParts() {
   const [parts] = useState([
@@ -20,102 +19,117 @@ export default function SpareParts() {
   const lowStockParts = filtered.filter((p) => p.qty < p.minQty);
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--mt-space-lg)' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Refacciones y Repuestos</h1>
-          <p className="text-gray-600 mt-1">Gestiona tu catálogo de partes y componentes</p>
+          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-text-primary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+            Refacciones y Repuestos
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+            Gestiona tu catálogo de partes y componentes
+          </p>
         </div>
-        <IndustrialButton
-          variant="primary"
-          size="lg"
-          icon={<Plus size={20} />}
-          onClick={() => console.log('Create spare part')}
-        >
+        <MtButton variant="primary" size="lg" icon={<Plus size={20} />} onClick={() => console.log('Create spare part')}>
           Nueva Refacción
-        </IndustrialButton>
+        </MtButton>
       </div>
 
       {/* Search */}
-      <IndustrialInput
-        placeholder="Buscar por código, nombre o proveedor..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        icon={<Search size={18} />}
-      />
+      <div style={{ position: 'relative' }}>
+        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
+        <input
+          type="text"
+          placeholder="Buscar por código, nombre o proveedor..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: '100%', paddingLeft: '40px', padding: '10px 12px 10px 40px', borderRadius: 'var(--mt-radius-md)' }}
+        />
+      </div>
 
       {/* Low Stock Alert */}
       {lowStockParts.length > 0 && (
-        <IndustrialCard elevated className="p-4 bg-orange-50 border-l-4 border-orange-500">
-          <div className="flex items-start gap-3">
-            <AlertTriangle size={20} className="text-orange-600 mt-0.5 flex-shrink-0" />
+        <MtCard elevated>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--mt-space-md)', padding: 'var(--mt-space-lg)', background: 'rgba(251, 146, 60, 0.1)', borderRadius: 'var(--mt-radius-md)', border: '1px solid rgba(251, 146, 60, 0.2)' }}>
+            <AlertTriangle size={20} style={{ color: 'var(--mt-warning)', marginTop: '2px', flexShrink: 0 }} />
             <div>
-              <h3 className="font-bold text-orange-900">{lowStockParts.length} refacciones con stock bajo</h3>
-              <p className="text-sm text-orange-800 mt-1">
+              <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', color: 'var(--mt-warning)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                {lowStockParts.length} refacciones con stock bajo
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}>
                 Requieren reposición inmediata
               </p>
             </div>
           </div>
-        </IndustrialCard>
+        </MtCard>
       )}
 
       {/* Parts Grid */}
-      <div className="grid gap-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
         {filtered.length === 0 ? (
-          <IndustrialCard elevated className="p-12 text-center">
-            <div className="text-5xl mb-4">🔧</div>
-            <h3 className="text-lg font-bold text-gray-900">Sin refacciones</h3>
-            <p className="text-gray-600 mt-2">No hay refacciones que coincidan con tu búsqueda</p>
-          </IndustrialCard>
+          <MtCard elevated>
+            <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
+              <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>🔧</div>
+              <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+                Sin refacciones
+              </h3>
+              <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                No hay refacciones que coincidan con tu búsqueda
+              </p>
+            </div>
+          </MtCard>
         ) : (
           filtered.map((part) => {
             const isLowStock = part.qty < part.minQty;
             return (
-              <IndustrialCard
-                key={part.id}
-                elevated
-                className={`p-6 hover:shadow-lg transition-all ${isLowStock ? 'border-l-4 border-orange-500' : ''}`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <code className="bg-gray-100 px-2 py-1 rounded text-sm font-bold text-cyan-600">
+              <MtCard key={part.id} elevated style={{ borderLeft: isLowStock ? '4px solid var(--mt-warning)' : '4px solid var(--mt-success)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--mt-space-lg)' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
+                      <code style={{ background: 'var(--mt-bg-surface-2)', padding: '4px 8px', borderRadius: 'var(--mt-radius-sm)', fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', color: 'var(--mt-accent)' }}>
                         {part.code}
                       </code>
-                      <IndustrialBadge label={part.category} variant="info" size="sm" />
-                      {isLowStock && (
-                        <IndustrialBadge label="Stock Bajo" variant="danger" size="sm" />
-                      )}
+                      <MtBadge variant="info" size="sm">
+                        {part.category}
+                      </MtBadge>
+                      {isLowStock && <MtBadge variant="danger" size="sm">Stock Bajo</MtBadge>}
                     </div>
 
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">{part.name}</h3>
+                    <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
+                      {part.name}
+                    </h3>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 'var(--mt-space-lg)' }}>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold">Stock Actual</p>
-                        <p className={`text-xl font-bold ${isLowStock ? 'text-orange-600' : 'text-cyan-600'}`}>
-                          {part.qty} <span className="text-sm text-gray-600">{part.unit}</span>
+                        <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                          Stock Actual
+                        </p>
+                        <p style={{ fontSize: '20px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: isLowStock ? 'var(--mt-warning)' : 'var(--mt-accent)' }}>
+                          {part.qty} <span style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>{part.unit}</span>
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold">Mínimo</p>
-                        <p className="text-sm font-semibold text-gray-900">{part.minQty} {part.unit}</p>
+                        <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                          Mínimo
+                        </p>
+                        <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+                          {part.minQty} {part.unit}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold">Proveedor</p>
-                        <p className="text-sm font-semibold text-gray-900">{part.supplier}</p>
+                        <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                          Proveedor
+                        </p>
+                        <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+                          {part.supplier}
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {isLowStock && (
-                    <div className="text-2xl" title="Stock bajo">
-                      ⚠️
-                    </div>
-                  )}
+                  {isLowStock && <div style={{ fontSize: '32px' }}>⚠️</div>}
                 </div>
-              </IndustrialCard>
+              </MtCard>
             );
           })
         )}

@@ -1,27 +1,43 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { maintenanceApi } from '../services/maintenanceApi';
-import { IndustrialButton, IndustrialCard, IndustrialBadge, IndustrialInput } from '../design/IndustrialDesignSystem';
-import { MtButton, MtCard, MtBadge, MtPriorityBadge, MtEmpty, MtSkeleton, MtIcon } from '../ui';
-import '../ui/tokens.css';
-import { Plus, Search, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
+import { MtButton, MtCard, MtBadge, MtEmpty, MtSkeleton } from '../ui';
+import { Plus, Search } from 'lucide-react';
 
-const STATUS_BADGES = {
-  REQUESTED: { variant: 'info', label: 'Solicitada' },
-  APPROVED: { variant: 'info', label: 'Aprobada' },
-  ASSIGNED: { variant: 'warning', label: 'Asignada' },
-  IN_PROGRESS: { variant: 'warning', label: 'En Ejecución' },
-  WAITING_PARTS: { variant: 'warning', label: 'Esperando Partes' },
-  FINISHED: { variant: 'success', label: 'Finalizada' },
-  VALIDATED: { variant: 'success', label: 'Validada' },
-  REJECTED: { variant: 'danger', label: 'Rechazada' },
+const STATUS_LABELS = {
+  REQUESTED: 'Solicitada',
+  APPROVED: 'Aprobada',
+  ASSIGNED: 'Asignada',
+  IN_PROGRESS: 'En ejecución',
+  WAITING_PARTS: 'Esperando partes',
+  FINISHED: 'Finalizada',
+  VALIDATED: 'Validada',
+  REJECTED: 'Rechazada',
 };
 
-const PRIORITY_BADGES = {
-  URGENT: { variant: 'danger', label: 'Urgente' },
-  HIGH: { variant: 'warning', label: 'Alta' },
-  MEDIUM: { variant: 'info', label: 'Media' },
-  LOW: { variant: 'default', label: 'Baja' },
+const STATUS_VARIANTS = {
+  REQUESTED: 'info',
+  APPROVED: 'info',
+  ASSIGNED: 'warning',
+  IN_PROGRESS: 'warning',
+  WAITING_PARTS: 'warning',
+  FINISHED: 'success',
+  VALIDATED: 'success',
+  REJECTED: 'danger',
+};
+
+const PRIORITY_LABELS = {
+  URGENT: 'Urgente',
+  HIGH: 'Alta',
+  MEDIUM: 'Media',
+  LOW: 'Baja',
+};
+
+const PRIORITY_VARIANTS = {
+  URGENT: 'danger',
+  HIGH: 'warning',
+  MEDIUM: 'info',
+  LOW: 'default',
 };
 
 export default function WorkOrders() {
@@ -50,6 +66,8 @@ export default function WorkOrders() {
   if (error) return <MtEmpty icon="⚠️" title="Error" description={error} action={() => window.location.reload()} actionLabel="Reintentar" />;
   if (!orders.length) return <MtEmpty icon="📋" title="Sin órdenes" description="No hay órdenes de trabajo" action={() => navigate('/maintenance/app/report-failure')} actionLabel="Crear primera orden" />;
 
+  const statusFilters = ['all', 'REQUESTED', 'APPROVED', 'ASSIGNED', 'IN_PROGRESS', 'FINISHED', 'VALIDATED', 'REJECTED'];
+
   const filtered = orders.filter((order) => {
     const matchesFilter = filter === 'all' || order.status?.toUpperCase() === filter;
     const matchesSearch =
@@ -59,128 +77,137 @@ export default function WorkOrders() {
     return matchesFilter && matchesSearch;
   });
 
-  const statusFilters = ['all', 'REQUESTED', 'APPROVED', 'ASSIGNED', 'IN_PROGRESS', 'FINISHED', 'VALIDATED', 'REJECTED'];
-
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--mt-space-lg)' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Órdenes de Trabajo</h1>
-          <p className="text-gray-600 mt-1">Gestiona todas las órdenes de mantenimiento</p>
+          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-text-primary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+            Órdenes de Trabajo
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+            Gestiona todas las órdenes de mantenimiento
+          </p>
         </div>
-        <IndustrialButton
-          variant="primary"
-          size="lg"
-          icon={<Plus size={20} />}
-          onClick={() => navigate('/maintenance/app/report-failure')}
-        >
+        <MtButton variant="primary" size="lg" icon={<Plus size={20} />} onClick={() => navigate('/maintenance/app/report-failure')}>
           Nueva Orden
-        </IndustrialButton>
+        </MtButton>
       </div>
 
       {/* Search & Filters */}
-      <div className="space-y-4">
-        <IndustrialInput
-          placeholder="Buscar por número, título o activo..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          icon={<Search size={18} />}
-        />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
+        <div style={{ position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
+          <input
+            type="text"
+            placeholder="Buscar por número, título o activo..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: '100%', paddingLeft: '40px', paddingRight: '12px', padding: '10px 12px 10px 40px', borderRadius: 'var(--mt-radius-md)' }}
+          />
+        </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', overflowX: 'auto', paddingBottom: 'var(--mt-space-sm)' }}>
           {statusFilters.map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`
-                px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition-all
-                ${filter === status
-                  ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }
-              `}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 'var(--mt-radius-full)',
+                fontWeight: 'var(--mt-font-weight-bold)',
+                fontSize: '13px',
+                whiteSpace: 'nowrap',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+                background: filter === status ? 'linear-gradient(135deg, var(--mt-accent), var(--mt-accent-strong))' : 'var(--mt-bg-surface)',
+                color: filter === status ? '#fff' : 'var(--mt-text-secondary)',
+                boxShadow: filter === status ? '0 4px 12px rgba(56, 189, 248, 0.3)' : 'none',
+              }}
             >
-              {status === 'all' ? 'Todas' : STATUS_BADGES[status]?.label || status}
+              {status === 'all' ? 'Todas' : STATUS_LABELS[status] || status}
             </button>
           ))}
         </div>
       </div>
 
       {/* Orders List */}
-      <div className="grid gap-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
         {filtered.length === 0 ? (
-          <IndustrialCard elevated className="p-12 text-center">
-            <div className="text-5xl mb-4">📋</div>
-            <h3 className="text-lg font-bold text-gray-900">Sin órdenes</h3>
-            <p className="text-gray-600 mt-2">No hay órdenes que coincidan con tu búsqueda</p>
-          </IndustrialCard>
+          <MtCard elevated>
+            <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
+              <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>📋</div>
+              <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+                Sin órdenes
+              </h3>
+              <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                No hay órdenes que coincidan con tu búsqueda
+              </p>
+            </div>
+          </MtCard>
         ) : (
           filtered.map((order) => (
-            <IndustrialCard
+            <MtCard
               key={order.id}
               elevated
-              className="p-6 hover:shadow-lg transition-all cursor-pointer"
+              interactive
               onClick={() => navigate(`/maintenance/app/work-orders/${order.id}`)}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <code className="bg-gray-100 px-2 py-1 rounded text-sm font-bold text-cyan-600">
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--mt-space-lg)' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
+                    <code style={{ background: 'var(--mt-bg-surface-2)', padding: '4px 8px', borderRadius: 'var(--mt-radius-sm)', fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', color: 'var(--mt-accent)' }}>
                       OT-{String(order.id).padStart(6, '0')}
                     </code>
-                    <IndustrialBadge
-                      label={PRIORITY_BADGES[order.priority]?.label || order.priority}
-                      variant={PRIORITY_BADGES[order.priority]?.variant || 'default'}
-                      size="sm"
-                    />
+                    <MtBadge variant={PRIORITY_VARIANTS[order.priority]} size="sm">
+                      {PRIORITY_LABELS[order.priority] || order.priority}
+                    </MtBadge>
                   </div>
 
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{order.title}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{order.assetName}</p>
+                  <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                    {order.title}
+                  </h3>
+                  <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
+                    {order.assetName}
+                  </p>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 'var(--mt-space-lg)' }}>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold">Tipo</p>
-                      <p className="text-sm font-semibold text-gray-900">{order.type}</p>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                        Tipo
+                      </p>
+                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+                        {order.type}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold">Estado</p>
-                      <div className="mt-1">
-                        <IndustrialBadge
-                          label={STATUS_BADGES[order.status]?.label || order.status}
-                          variant={STATUS_BADGES[order.status]?.variant || 'default'}
-                          size="sm"
-                        />
-                      </div>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                        Estado
+                      </p>
+                      <MtBadge variant={STATUS_VARIANTS[order.status] || 'default'} size="sm">
+                        {STATUS_LABELS[order.status] || order.status}
+                      </MtBadge>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold">Creada</p>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {order.createdAt
-                          ? new Date(order.createdAt).toLocaleDateString('es-ES')
-                          : '—'}
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                        Creada
+                      </p>
+                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-ES') : '—'}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  {order.status === 'WAITING_PARTS' && (
-                    <div className="text-2xl">⏳</div>
-                  )}
-                  {order.status === 'IN_PROGRESS' && (
-                    <div className="text-2xl animate-pulse">⚙️</div>
-                  )}
-                  {['FINISHED', 'VALIDATED'].includes(order.status) && (
-                    <div className="text-2xl">✅</div>
-                  )}
-                  {order.status === 'REJECTED' && (
-                    <div className="text-2xl">❌</div>
-                  )}
+                <div style={{ fontSize: '32px', minWidth: '40px', textAlign: 'center' }}>
+                  {order.status === 'WAITING_PARTS' && '⏳'}
+                  {order.status === 'IN_PROGRESS' && '⚙️'}
+                  {['FINISHED', 'VALIDATED'].includes(order.status) && '✅'}
+                  {order.status === 'REJECTED' && '❌'}
                 </div>
               </div>
-            </IndustrialCard>
+            </MtCard>
           ))
         )}
       </div>

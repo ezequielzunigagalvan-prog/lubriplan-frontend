@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { IndustrialCard, IndustrialButton, IndustrialBadge, IndustrialStat, IndustrialInput } from '../design/IndustrialDesignSystem';
-import { Plus, Search, Package, AlertCircle, DollarSign, TrendingUp } from 'lucide-react';
-import '../ui/tokens.css';
+import { MtCard, MtButton, MtBadge } from '../ui';
+import { Plus, Search } from 'lucide-react';
 
 export default function Inventory() {
   const [warehouses] = useState([
@@ -26,117 +25,168 @@ export default function Inventory() {
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--mt-space-lg)' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Inventario de Almacenes</h1>
-          <p className="text-gray-600 mt-1">Monitorea el stock en todos tus almacenes</p>
+          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-text-primary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+            Inventario de Almacenes
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+            Monitorea el stock en todos tus almacenes
+          </p>
         </div>
-        <IndustrialButton
-          variant="primary"
-          size="lg"
-          icon={<Plus size={20} />}
-          onClick={() => console.log('Create warehouse')}
-        >
+        <MtButton variant="primary" size="lg" icon={<Plus size={20} />} onClick={() => console.log('Create warehouse')}>
           Nuevo Almacén
-        </IndustrialButton>
+        </MtButton>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <IndustrialStat
-          label="Items en Stock"
-          value={totalItems}
-          icon={<Package size={32} />}
-        />
-        <IndustrialStat
-          label="Almacenes"
-          value={warehouses.length}
-          icon={<span>🏭</span>}
-        />
-        <IndustrialStat
-          label="Stock Bajo"
-          value={lowStockWarehouses}
-          icon={<AlertCircle size={32} />}
-          trend={lowStockWarehouses > 0 ? -15 : null}
-        />
-        <IndustrialStat
-          label="Valor Total"
-          value={totalValue}
-          unit="USD"
-          icon={<DollarSign size={32} />}
-          trend={8}
-        />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <MtCard elevated>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                Items en Stock
+              </p>
+              <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-accent)' }}>
+                {totalItems}
+              </p>
+            </div>
+            <div style={{ fontSize: '32px', opacity: 0.2 }}>📦</div>
+          </div>
+        </MtCard>
+
+        <MtCard elevated>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                Almacenes
+              </p>
+              <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-accent)' }}>
+                {warehouses.length}
+              </p>
+            </div>
+            <div style={{ fontSize: '32px', opacity: 0.2 }}>🏭</div>
+          </div>
+        </MtCard>
+
+        <MtCard elevated>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                Stock Bajo
+              </p>
+              <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: lowStockWarehouses > 0 ? 'var(--mt-warning)' : 'var(--mt-success)' }}>
+                {lowStockWarehouses}
+              </p>
+            </div>
+            <div style={{ fontSize: '32px', opacity: 0.2 }}>⚠️</div>
+          </div>
+        </MtCard>
+
+        <MtCard elevated>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                Valor Total
+              </p>
+              <p style={{ fontSize: '20px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-accent)' }}>
+                {formatCurrency(totalValue)}
+              </p>
+            </div>
+            <div style={{ fontSize: '32px', opacity: 0.2 }}>💰</div>
+          </div>
+        </MtCard>
       </div>
 
       {/* Search */}
-      <IndustrialInput
-        placeholder="Buscar almacén por nombre o ubicación..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        icon={<Search size={18} />}
-      />
+      <div style={{ position: 'relative' }}>
+        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
+        <input
+          type="text"
+          placeholder="Buscar almacén por nombre o ubicación..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: '100%', paddingLeft: '40px', padding: '10px 12px 10px 40px', borderRadius: 'var(--mt-radius-md)' }}
+        />
+      </div>
 
       {/* Warehouses List */}
-      <div className="grid gap-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
         {filtered.length === 0 ? (
-          <IndustrialCard elevated className="p-12 text-center">
-            <div className="text-5xl mb-4">🏭</div>
-            <h3 className="text-lg font-bold text-gray-900">Sin almacenes</h3>
-            <p className="text-gray-600 mt-2">No hay almacenes que coincidan con tu búsqueda</p>
-          </IndustrialCard>
+          <MtCard elevated>
+            <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
+              <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>🏭</div>
+              <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+                Sin almacenes
+              </h3>
+              <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                No hay almacenes que coincidan con tu búsqueda
+              </p>
+            </div>
+          </MtCard>
         ) : (
           filtered.map((warehouse) => {
             const itemsPercentage = (warehouse.items / 300) * 100;
             const isLowStock = warehouse.status === 'LOW';
 
             return (
-              <IndustrialCard
-                key={warehouse.id}
-                elevated
-                className={`p-6 hover:shadow-lg transition-all ${isLowStock ? 'border-l-4 border-red-500' : 'border-l-4 border-green-500'}`}
-              >
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">🏢</span>
-                      <h3 className="text-lg font-bold text-gray-900">{warehouse.name}</h3>
-                      <IndustrialBadge
-                        label={warehouse.status === 'OPTIMAL' ? 'Óptimo' : 'Stock Bajo'}
-                        variant={warehouse.status === 'OPTIMAL' ? 'success' : 'danger'}
-                        size="sm"
-                      />
+              <MtCard key={warehouse.id} elevated style={{ borderLeft: isLowStock ? '4px solid var(--mt-danger)' : '4px solid var(--mt-success)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--mt-space-lg)', marginBottom: 'var(--mt-space-lg)' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-sm)' }}>
+                      <span style={{ fontSize: '24px' }}>🏢</span>
+                      <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+                        {warehouse.name}
+                      </h3>
+                      <MtBadge variant={warehouse.status === 'OPTIMAL' ? 'success' : 'danger'} size="sm">
+                        {warehouse.status === 'OPTIMAL' ? 'Óptimo' : 'Stock Bajo'}
+                      </MtBadge>
                     </div>
-                    <p className="text-sm text-gray-600">{warehouse.location}</p>
+                    <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                      {warehouse.location}
+                    </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--mt-space-lg)' }}>
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold">Items</p>
-                    <p className="text-2xl font-bold text-cyan-600">{warehouse.items}</p>
+                    <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                      Items
+                    </p>
+                    <p style={{ fontSize: '24px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-accent)' }}>
+                      {warehouse.items}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold">Valor Inventario</p>
-                    <p className="text-lg font-bold text-gray-900">{formatCurrency(warehouse.value)}</p>
+                    <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                      Valor Inventario
+                    </p>
+                    <p style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+                      {formatCurrency(warehouse.value)}
+                    </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold">Ocupación</p>
-                    <div className="mt-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            itemsPercentage > 80 ? 'bg-cyan-500' : 'bg-green-500'
-                          }`}
-                          style={{ width: `${Math.min(itemsPercentage, 100)}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1">{Math.round(itemsPercentage)}% full</p>
+                  <div style={{ gridColumn: 'span 1', minWidth: '140px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
+                      Ocupación
+                    </p>
+                    <div style={{ width: '100%', height: '8px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden', marginBottom: 'var(--mt-space-xs)' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          background: itemsPercentage > 80 ? 'var(--mt-accent)' : 'var(--mt-success)',
+                          width: `${Math.min(itemsPercentage, 100)}%`,
+                          transition: 'width 300ms ease',
+                        }}
+                      ></div>
                     </div>
+                    <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                      {Math.round(itemsPercentage)}% full
+                    </p>
                   </div>
                 </div>
-              </IndustrialCard>
+              </MtCard>
             );
           })
         )}
