@@ -26,6 +26,8 @@ const AssetExpedient = lazy(() => import("../pages/AssetExpedient"));
 const NotificationCenter = lazy(() => import("../pages/NotificationCenter"));
 const NotificationPreferences = lazy(() => import("../pages/NotificationPreferences"));
 const WorkOrderReview = lazy(() => import("../pages/WorkOrderReview"));
+const PreventivePlans = lazy(() => import("../pages/PreventivePlans"));
+const MaintenanceCalendar = lazy(() => import("../pages/MaintenanceCalendar"));
 
 // Protected Route Component
 import MaintenanceProtectedRoute from "../hooks/useMaintenanceProtectedRoute.jsx";
@@ -74,7 +76,11 @@ export default function MaintenanceRouter() {
           {/* Phase 2: Equipment Analytics */}
           <Route path="analytics" element={<EquipmentAnalytics />} />
 
-          {/* Phase 4: Notifications */}
+          {/* Phase 4: Preventive Maintenance */}
+          <Route path="preventive-plans" element={<PreventivePlans />} />
+          <Route path="maintenance-calendar" element={<MaintenanceCalendar />} />
+
+          {/* Phase 5: Notifications */}
           <Route path="notifications" element={<NotificationCenter />} />
           <Route path="notifications/preferences" element={<NotificationPreferences />} />
         </Route>
