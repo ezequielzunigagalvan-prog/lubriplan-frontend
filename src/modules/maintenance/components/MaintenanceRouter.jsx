@@ -21,6 +21,8 @@ const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
 const MaintenanceIndicators = lazy(() => import("../pages/Indicators"));
 const EquipmentAnalytics = lazy(() => import("../pages/EquipmentAnalytics"));
 const ExecutiveDashboard = lazy(() => import("../pages/ExecutiveDashboard"));
+const AssetHierarchy = lazy(() => import("../pages/AssetHierarchy"));
+const AssetExpedient = lazy(() => import("../pages/AssetExpedient"));
 const NotificationCenter = lazy(() => import("../pages/NotificationCenter"));
 const NotificationPreferences = lazy(() => import("../pages/NotificationPreferences"));
 
@@ -51,7 +53,8 @@ export default function MaintenanceRouter() {
         <Route path="app" element={<MaintenanceProtectedRoute><MaintenanceLayout /></MaintenanceProtectedRoute>}>
           <Route index element={<ExecutiveDashboard />} />
           <Route path="assets" element={<MaintenanceAssets />} />
-          <Route path="assets/:id" element={<MaintenanceAssetDetail />} />
+          <Route path="assets/hierarchy" element={<AssetHierarchy />} />
+          <Route path="assets/:id" element={<AssetExpedient />} />
           <Route path="assets/:id/history" element={<MaintenanceAssetHistory />} />
           <Route path="work-orders" element={<MaintenanceWorkOrders />} />
           <Route path="work-orders/:id" element={<MaintenanceWorkOrderDetail />} />
