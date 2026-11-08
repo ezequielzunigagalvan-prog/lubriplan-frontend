@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MtIcon } from '../ui';
 import { useMaintenanceAccess } from '../hooks/useMaintenanceAccess';
+import NotificationBell from '../components/NotificationBell';
 import '../ui/tokens.css';
 
 export default function MaintenanceLayout() {
@@ -57,6 +58,11 @@ export default function MaintenanceLayout() {
               { path: '/maintenance/app', icon: 'dashboard', label: 'Dashboard' },
               { path: '/maintenance/app/work-orders', icon: 'clipboard', label: 'Órdenes' },
               { path: '/maintenance/app/assets', icon: 'package', label: 'Activos' },
+              { path: '/maintenance/app/spare-parts', icon: 'wrench', label: 'Refacciones' },
+              { path: '/maintenance/app/inventory', icon: 'box', label: 'Inventario' },
+              { path: '/maintenance/app/failure-codes', icon: 'alertCircle', label: 'Fallas' },
+              { path: '/maintenance/app/indicators', icon: 'barChart3', label: 'Indicadores' },
+              { path: '/maintenance/app/notifications', icon: 'bell', label: 'Notificaciones' },
             ].map((item) => (
               <NavLink
                 key={item.path}
@@ -83,6 +89,8 @@ export default function MaintenanceLayout() {
               </NavLink>
             ))}
           </nav>
+
+          <NotificationBell />
 
           <button
             type="button"

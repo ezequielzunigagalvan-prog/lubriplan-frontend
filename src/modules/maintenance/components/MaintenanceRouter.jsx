@@ -14,6 +14,12 @@ const MaintenanceWorkOrderDetail = lazy(() => import("../pages/WorkOrderDetail")
 const MaintenanceReportFailure = lazy(() => import("../pages/ReportFailure"));
 const MaintenanceExecution = lazy(() => import("../pages/Execution"));
 const AccessDenied = lazy(() => import("../pages/AccessDenied"));
+const MaintenanceSpareParts = lazy(() => import("../pages/SpareParts"));
+const MaintenanceInventory = lazy(() => import("../pages/Inventory"));
+const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
+const MaintenanceIndicators = lazy(() => import("../pages/Indicators"));
+const NotificationCenter = lazy(() => import("../pages/NotificationCenter"));
+const NotificationPreferences = lazy(() => import("../pages/NotificationPreferences"));
 
 // Protected Route Component
 import MaintenanceProtectedRoute from "../hooks/useMaintenanceProtectedRoute.jsx";
@@ -47,6 +53,18 @@ export default function MaintenanceRouter() {
           <Route path="work-orders/:id" element={<MaintenanceWorkOrderDetail />} />
           <Route path="report-failure" element={<MaintenanceReportFailure />} />
           <Route path="work-orders/:id/execute" element={<MaintenanceExecution />} />
+
+          {/* Phase 3A: Inventory & Spare Parts */}
+          <Route path="spare-parts" element={<MaintenanceSpareParts />} />
+          <Route path="inventory" element={<MaintenanceInventory />} />
+          <Route path="failure-codes" element={<MaintenanceFailureCodes />} />
+
+          {/* Phase 3B: Indicators */}
+          <Route path="indicators" element={<MaintenanceIndicators />} />
+
+          {/* Phase 4: Notifications */}
+          <Route path="notifications" element={<NotificationCenter />} />
+          <Route path="notifications/preferences" element={<NotificationPreferences />} />
         </Route>
 
         {/* Fallback */}

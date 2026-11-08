@@ -71,4 +71,173 @@ export const maintenanceApi = {
     const params = new URLSearchParams(filters);
     return httpGet(`/maintenance/dashboard/summary?${params}`);
   },
+
+  // ============================================================
+  // PHASE 3A: SPARE PARTS & INVENTORY
+  // ============================================================
+
+  // Spare Parts CRUD
+  async getSpareParts(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return httpGet(`/maintenance/spare-parts?${params}`);
+  },
+
+  async getSparePart(id) {
+    return httpGet(`/maintenance/spare-parts/${id}`);
+  },
+
+  async createSparePart(data) {
+    return httpPost("/maintenance/spare-parts", data);
+  },
+
+  async updateSparePart(id, data) {
+    return httpPatch(`/maintenance/spare-parts/${id}`, data);
+  },
+
+  async linkSparePartToAsset(sparePartId, assetId) {
+    return httpPost(`/maintenance/spare-parts/${sparePartId}/assets/${assetId}`, {});
+  },
+
+  async getSparePartsForAsset(assetId) {
+    return httpGet(`/maintenance/assets/${assetId}/spare-parts`);
+  },
+
+  // Warehouses CRUD
+  async getWarehouses() {
+    return httpGet("/maintenance/inventory/warehouses");
+  },
+
+  async getWarehouse(id) {
+    return httpGet(`/maintenance/inventory/warehouses/${id}`);
+  },
+
+  async createWarehouse(data) {
+    return httpPost("/maintenance/inventory/warehouses", data);
+  },
+
+  async getWarehouseStock(warehouseId) {
+    return httpGet(`/maintenance/inventory/warehouses/${warehouseId}/stock`);
+  },
+
+  // Stock CRUD
+  async getStock(id) {
+    return httpGet(`/maintenance/inventory/stock/${id}`);
+  },
+
+  async createStock(data) {
+    return httpPost("/maintenance/inventory/stock", data);
+  },
+
+  async recordStockMovement(data) {
+    return httpPost("/maintenance/inventory/movements", data);
+  },
+
+  async getStockMovementHistory(stockId, limit = 50) {
+    return httpGet(`/maintenance/inventory/stock/${stockId}/movements?limit=${limit}`);
+  },
+
+  async consumeSparePartInWorkOrder(data) {
+    return httpPost("/maintenance/inventory/consume", data);
+  },
+
+  async getLowStockAlerts() {
+    return httpGet("/maintenance/inventory/alerts/low-stock");
+  },
+
+  // Failure Codes CRUD
+  async seedFailureCodes() {
+    return httpPost("/maintenance/failure-codes/seed", {});
+  },
+
+  async getFailureCodes(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return httpGet(`/maintenance/failure-codes?${params}`);
+  },
+
+  async getFailureCode(id) {
+    return httpGet(`/maintenance/failure-codes/${id}`);
+  },
+
+  async createFailureCode(data) {
+    return httpPost("/maintenance/failure-codes", data);
+  },
+
+  async updateFailureCode(id, data) {
+    return httpPatch(`/maintenance/failure-codes/${id}`, data);
+  },
+
+  async assignFailureToWorkOrder(workOrderId, data) {
+    return httpPost(`/maintenance/work-orders/${workOrderId}/failure`, data);
+  },
+
+  async getWorkOrderFailure(workOrderId) {
+    return httpGet(`/maintenance/work-orders/${workOrderId}/failure`);
+  },
+
+  // ============================================================
+  // INDICATORS (Phase 3B)
+  // ============================================================
+
+  async getDashboardSummary() {
+    return httpGet("/maintenance/indicators/dashboard");
+  },
+
+  async getCosts(startDate, endDate) {
+    const params = new URLSearchParams();
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    return httpGet(`/maintenance/indicators/costs?${params}`);
+  },
+
+  async getWorkOrderCost(workOrderId) {
+    return httpGet(`/maintenance/indicators/work-orders/${workOrderId}/cost`);
+  },
+
+  async getMTTR(days = 30) {
+    return httpGet(`/maintenance/indicators/mttr?days=${days}`);
+  },
+
+  async getMTBF(assetId) {
+    return httpGet(`/maintenance/indicators/assets/${assetId}/mtbf`);
+  },
+
+  async getAvailability(assetId, days = 30) {
+    return httpGet(`/maintenance/indicators/assets/${assetId}/availability?days=${days}`);
+  },
+
+  async getRecurrence(days = 30) {
+    return httpGet(`/maintenance/indicators/recurrence?days=${days}`);
+  },
+
+  async getTopAssets(metric = "cost", limit = 10, days = 30) {
+    return httpGet(`/maintenance/indicators/top-assets?metric=${metric}&limit=${limit}&days=${days}`);
+  },
+
+  // ============================================================
+  // NOTIFICATIONS (Phase 4)
+  // ============================================================
+
+  async getNotifications(limit = 50) {
+    return httpGet(`/maintenance/notifications?limit=${limit}`);
+  },
+
+  async getUnreadCount() {
+    return httpGet("/maintenance/notifications/unread-count");
+  },
+
+  async markNotificationAsRead(notificationId) {
+    return httpPatch(`/maintenance/notifications/${notificationId}/read`, {});
+  },
+
+  async checkAlerts() {
+    return httpPost("/maintenance/notifications/check-alerts", {});
+  },
+
+  async getNotificationPreferences() {
+    return httpGet("/maintenance/notifications/preferences");
+  },
+
+  async updateNotificationPreferences(data) {
+    return httpPatch("/maintenance/notifications/preferences", data);
+  },
 };
