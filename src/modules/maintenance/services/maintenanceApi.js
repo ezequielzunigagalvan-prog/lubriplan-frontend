@@ -248,4 +248,16 @@ export const maintenanceApi = {
   async getAssetHistory(assetId, days = 90) {
     return httpGet(`/maintenance/assets/${assetId}/history?days=${days}`);
   },
+
+  // ============================================================
+  // ANALYTICS & PREDICTIVE (Week 3)
+  // ============================================================
+
+  async getRiskAssessment() {
+    return httpGet("/maintenance/analytics/risk-assessment");
+  },
+
+  async predictEquipmentDegradation(assetId) {
+    return httpGet(`/maintenance/analytics/predict/${assetId}`);
+  },
 };

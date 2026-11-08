@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { maintenanceApi } from '../services/maintenanceApi';
+import RiskAssessmentDashboard from '../components/RiskAssessmentDashboard';
 import { MtButton, MtCard, MtStat, MtEmpty, MtSkeleton, MtIcon } from '../ui';
 import '../ui/tokens.css';
 
@@ -108,6 +109,9 @@ export default function Dashboard() {
           Reportar falla
         </MtButton>
       </div>
+
+      {/* Risk Assessment Dashboard */}
+      <RiskAssessmentDashboard />
     </div>
   );
 }
