@@ -14,6 +14,7 @@ import useInstallPrompt from "../hooks/useInstallPrompt";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import ChatWidget from "../components/chat/ChatWidget";
+import { useMaintenanceAccess } from "../modules/maintenance/hooks/useMaintenanceAccess";
 
 const EXEC_DISPLAY_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const EXEC_TEXT_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -212,6 +213,8 @@ export default function MainLayout({ children }) {
   });
 
   const alerts = canSeeAlerts ? rawAlerts || {} : {};
+
+  const { hasAccess: canSeeMaintenance } = useMaintenanceAccess();
 
   const can = {
     dashboard: true,
@@ -614,6 +617,17 @@ export default function MainLayout({ children }) {
             }
           `}</style>
 
+          {canSeeMaintenance && (
+            <NavLink className="lpSideLink" to="/maintenance" style={navLinkStyle("/maintenance")}>
+              <span style={sideRow}>
+                <span style={navIconStyle("/maintenance")}>
+                  <Icon name="wrench" />
+                </span>
+                <span style={sideText}>Mantenimiento</span>
+              </span>
+            </NavLink>
+          )}
+
           {can.history && (
             <NavLink className="lpSideLink" to="/history" style={navLinkStyle("/history")}>
               <span style={sideRow}>
@@ -998,6 +1012,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/settings")) return "Ajustes";
   if (pathname.startsWith("/notifications")) return "Notificaciones";
   if (pathname.startsWith("/technical-assistant")) return "Asistente tecnico";
+  if (pathname.startsWith("/maintenance")) return "Mantenimiento";
   return "LubriPlan";
 }
 
