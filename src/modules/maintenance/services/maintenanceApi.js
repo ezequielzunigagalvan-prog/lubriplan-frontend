@@ -260,4 +260,20 @@ export const maintenanceApi = {
   async predictEquipmentDegradation(assetId) {
     return httpGet(`/maintenance/analytics/predict/${assetId}`);
   },
+
+  // ============================================================
+  // REPORTS & EXPORTS (Week 4)
+  // ============================================================
+
+  async getAssetHistoryReport(assetId, format = "json") {
+    return httpGet(`/maintenance/reports/asset/${assetId}?format=${format}`);
+  },
+
+  async getPlantSummaryReport() {
+    return httpGet("/maintenance/reports/plant-summary");
+  },
+
+  async getWeeklyDigest() {
+    return httpGet("/maintenance/reports/weekly-digest");
+  },
 };

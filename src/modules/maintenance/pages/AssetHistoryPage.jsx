@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import AssetHistory from "../components/AssetHistory";
+import ExportReports from "../components/ExportReports";
 import { ChevronLeft } from "lucide-react";
 
 export default function AssetHistoryPage() {
@@ -17,6 +18,8 @@ export default function AssetHistoryPage() {
       </button>
 
       <AssetHistory assetId={parseInt(id)} days={90} />
+
+      <ExportReports assetId={parseInt(id)} />
     </div>
   );
 }
