@@ -62,6 +62,7 @@ export default function MaintenanceLayout() {
               { path: '/maintenance/app/inventory', icon: 'box', label: 'Inventario' },
               { path: '/maintenance/app/failure-codes', icon: 'alertCircle', label: 'Fallas' },
               { path: '/maintenance/app/indicators', icon: 'barChart3', label: 'Indicadores' },
+              { path: '/maintenance/app/analytics', icon: 'trendingUp', label: 'Analítica' },
               { path: '/maintenance/app/notifications', icon: 'bell', label: 'Notificaciones' },
             ].map((item) => (
               <NavLink

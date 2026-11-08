@@ -19,6 +19,7 @@ const MaintenanceSpareParts = lazy(() => import("../pages/SpareParts"));
 const MaintenanceInventory = lazy(() => import("../pages/Inventory"));
 const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
 const MaintenanceIndicators = lazy(() => import("../pages/Indicators"));
+const EquipmentAnalytics = lazy(() => import("../pages/EquipmentAnalytics"));
 const NotificationCenter = lazy(() => import("../pages/NotificationCenter"));
 const NotificationPreferences = lazy(() => import("../pages/NotificationPreferences"));
 
@@ -63,6 +64,9 @@ export default function MaintenanceRouter() {
 
           {/* Phase 3B: Indicators */}
           <Route path="indicators" element={<MaintenanceIndicators />} />
+
+          {/* Phase 2: Equipment Analytics */}
+          <Route path="analytics" element={<EquipmentAnalytics />} />
 
           {/* Phase 4: Notifications */}
           <Route path="notifications" element={<NotificationCenter />} />
