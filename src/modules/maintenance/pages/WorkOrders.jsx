@@ -1,14 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { maintenanceApi } from '../services/maintenanceApi';
+import { IndustrialButton, IndustrialCard, IndustrialBadge, IndustrialInput } from '../design/IndustrialDesignSystem';
 import { MtButton, MtCard, MtBadge, MtPriorityBadge, MtEmpty, MtSkeleton, MtIcon } from '../ui';
 import '../ui/tokens.css';
+import { Plus, Search, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
 
-const STATE_COLORS = {
-  OPEN: 'accent',
-  IN_PROGRESS: 'warning',
-  CLOSED: 'success',
-  CANCELLED: 'neutral',
+const STATUS_BADGES = {
+  REQUESTED: { variant: 'info', label: 'Solicitada' },
+  APPROVED: { variant: 'info', label: 'Aprobada' },
+  ASSIGNED: { variant: 'warning', label: 'Asignada' },
+  IN_PROGRESS: { variant: 'warning', label: 'En Ejecución' },
+  WAITING_PARTS: { variant: 'warning', label: 'Esperando Partes' },
+  FINISHED: { variant: 'success', label: 'Finalizada' },
+  VALIDATED: { variant: 'success', label: 'Validada' },
+  REJECTED: { variant: 'danger', label: 'Rechazada' },
+};
+
+const PRIORITY_BADGES = {
+  URGENT: { variant: 'danger', label: 'Urgente' },
+  HIGH: { variant: 'warning', label: 'Alta' },
+  MEDIUM: { variant: 'info', label: 'Media' },
+  LOW: { variant: 'default', label: 'Baja' },
 };
 
 export default function WorkOrders() {
@@ -17,6 +30,7 @@ export default function WorkOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -36,61 +50,139 @@ export default function WorkOrders() {
   if (error) return <MtEmpty icon="⚠️" title="Error" description={error} action={() => window.location.reload()} actionLabel="Reintentar" />;
   if (!orders.length) return <MtEmpty icon="📋" title="Sin órdenes" description="No hay órdenes de trabajo" action={() => navigate('/maintenance/app/report-failure')} actionLabel="Crear primera orden" />;
 
-  const filtered = filter === 'all' ? orders : orders.filter(o => o.state?.toUpperCase() === filter);
+  const filtered = orders.filter((order) => {
+    const matchesFilter = filter === 'all' || order.status?.toUpperCase() === filter;
+    const matchesSearch =
+      order.number?.toLowerCase().includes(search.toLowerCase()) ||
+      order.title?.toLowerCase().includes(search.toLowerCase()) ||
+      order.assetName?.toLowerCase().includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const statusFilters = ['all', 'REQUESTED', 'APPROVED', 'ASSIGNED', 'IN_PROGRESS', 'FINISHED', 'VALIDATED', 'REJECTED'];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {['all', 'OPEN', 'IN_PROGRESS', 'CLOSED'].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '20px',
-              border: '1px solid var(--mt-border)',
-              background: filter === f ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
-              color: filter === f ? 'var(--mt-accent)' : 'var(--mt-text-secondary)',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '12px',
-              transition: 'all 150ms ease',
-            }}
-          >
-            {f === 'all' ? 'Todas' : f === 'OPEN' ? 'Abiertas' : f === 'IN_PROGRESS' ? 'En ejecución' : 'Cerradas'}
-          </button>
-        ))}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Órdenes de Trabajo</h1>
+          <p className="text-gray-600 mt-1">Gestiona todas las órdenes de mantenimiento</p>
+        </div>
+        <IndustrialButton
+          variant="primary"
+          size="lg"
+          icon={<Plus size={20} />}
+          onClick={() => navigate('/maintenance/app/report-failure')}
+        >
+          Nueva Orden
+        </IndustrialButton>
       </div>
 
-      {/* Orders Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-        {filtered.map((order) => (
-          <MtCard
-            key={order.id}
-            interactive
-            elevated
-            onClick={() => navigate(`/maintenance/app/work-orders/${order.id}`)}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                <div style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, color: 'var(--mt-accent)' }}>
-                  OT-{String(order.id).padStart(6, '0')}
+      {/* Search & Filters */}
+      <div className="space-y-4">
+        <IndustrialInput
+          placeholder="Buscar por número, título o activo..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          icon={<Search size={18} />}
+        />
+
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {statusFilters.map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              className={`
+                px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition-all
+                ${filter === status
+                  ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }
+              `}
+            >
+              {status === 'all' ? 'Todas' : STATUS_BADGES[status]?.label || status}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Orders List */}
+      <div className="grid gap-4">
+        {filtered.length === 0 ? (
+          <IndustrialCard elevated className="p-12 text-center">
+            <div className="text-5xl mb-4">📋</div>
+            <h3 className="text-lg font-bold text-gray-900">Sin órdenes</h3>
+            <p className="text-gray-600 mt-2">No hay órdenes que coincidan con tu búsqueda</p>
+          </IndustrialCard>
+        ) : (
+          filtered.map((order) => (
+            <IndustrialCard
+              key={order.id}
+              elevated
+              className="p-6 hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => navigate(`/maintenance/app/work-orders/${order.id}`)}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <code className="bg-gray-100 px-2 py-1 rounded text-sm font-bold text-cyan-600">
+                      OT-{String(order.id).padStart(6, '0')}
+                    </code>
+                    <IndustrialBadge
+                      label={PRIORITY_BADGES[order.priority]?.label || order.priority}
+                      variant={PRIORITY_BADGES[order.priority]?.variant || 'default'}
+                      size="sm"
+                    />
+                  </div>
+
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">{order.title}</h3>
+                  <p className="text-sm text-gray-600 mb-3">{order.assetName}</p>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">Tipo</p>
+                      <p className="text-sm font-semibold text-gray-900">{order.type}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">Estado</p>
+                      <div className="mt-1">
+                        <IndustrialBadge
+                          label={STATUS_BADGES[order.status]?.label || order.status}
+                          variant={STATUS_BADGES[order.status]?.variant || 'default'}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">Creada</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {order.createdAt
+                          ? new Date(order.createdAt).toLocaleDateString('es-ES')
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <MtPriorityBadge priority={order.priority} short size="sm" />
+
+                <div className="text-right">
+                  {order.status === 'WAITING_PARTS' && (
+                    <div className="text-2xl">⏳</div>
+                  )}
+                  {order.status === 'IN_PROGRESS' && (
+                    <div className="text-2xl animate-pulse">⚙️</div>
+                  )}
+                  {['FINISHED', 'VALIDATED'].includes(order.status) && (
+                    <div className="text-2xl">✅</div>
+                  )}
+                  {order.status === 'REJECTED' && (
+                    <div className="text-2xl">❌</div>
+                  )}
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>{order.title}</div>
-                <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>{order.assetName}</div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <MtBadge variant={STATE_COLORS[order.state?.toUpperCase()] || 'neutral'} dot size="sm">
-                  {order.state}
-                </MtBadge>
-              </div>
-            </div>
-          </MtCard>
-        ))}
+            </IndustrialCard>
+          ))
+        )}
       </div>
     </div>
   );
