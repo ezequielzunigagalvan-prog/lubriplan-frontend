@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MtCard, MtBadge } from '../ui';
-import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, Zap, Wrench, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, Zap, Wrench, AlertTriangle, BarChart3 } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -106,13 +106,18 @@ export default function ExecutiveDashboard() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-            📊 Dashboard Ejecutivo
-          </h1>
-          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-            Estado operacional en tiempo real
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+          <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, var(--mt-accent), var(--mt-accent-strong))', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <BarChart3 size={28} style={{ color: '#fff' }} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+              Dashboard Ejecutivo
+            </h1>
+            <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+              Estado operacional en tiempo real
+            </p>
+          </div>
         </div>
         <div style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)' }}>
           Actualizado: {new Date().toLocaleTimeString('es-ES')}

@@ -2,19 +2,37 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MtCard, MtBadge } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
-import { Edit2, Trash2, Eye, Search, AlertTriangle, Pause, XCircle, CheckCircle2 } from 'lucide-react';
+import { Edit2, Trash2, Eye, Search, AlertTriangle, Pause, XCircle, CheckCircle2, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
+const getCriticalityIcon = (criticality) => {
+  const colors = {
+    A: { Icon: AlertTriangle, color: 'var(--mt-danger)' },
+    B: { Icon: AlertTriangle, color: 'var(--mt-warning)' },
+    C: { Icon: CheckCircle2, color: 'var(--mt-info)' },
+  };
+  return colors[criticality] || { Icon: Package, color: 'var(--mt-accent)' };
+};
+
+const getStatusIcon = (status) => {
+  const colors = {
+    OPERATING: { Icon: CheckCircle2, color: 'var(--mt-success)' },
+    STOPPED: { Icon: Pause, color: 'var(--mt-warning)' },
+    OUT_OF_SERVICE: { Icon: XCircle, color: 'var(--mt-danger)' },
+  };
+  return colors[status] || { Icon: Package, color: 'var(--mt-accent)' };
+};
+
 const CRITICALITY_COLORS = {
-  A: { badge: 'danger', label: 'Crítica', Icon: AlertTriangle, bg: 'rgba(244, 65, 82, 0.1)' },
-  B: { badge: 'warning', label: 'Moderada', Icon: AlertTriangle, bg: 'rgba(251, 191, 36, 0.1)' },
-  C: { badge: 'info', label: 'Baja', Icon: CheckCircle2, bg: 'rgba(59, 130, 246, 0.1)' },
+  A: { badge: 'danger', label: 'Crítica', bg: 'rgba(244, 65, 82, 0.1)' },
+  B: { badge: 'warning', label: 'Moderada', bg: 'rgba(251, 191, 36, 0.1)' },
+  C: { badge: 'info', label: 'Baja', bg: 'rgba(59, 130, 246, 0.1)' },
 };
 
 const STATUS_COLORS = {
-  OPERATING: { badge: 'success', label: 'Operando', Icon: CheckCircle2, color: 'var(--mt-success)' },
-  STOPPED: { badge: 'warning', label: 'Detenido', Icon: Pause, color: 'var(--mt-warning)' },
-  OUT_OF_SERVICE: { badge: 'danger', label: 'Fuera de Servicio', Icon: XCircle, color: 'var(--mt-danger)' },
+  OPERATING: { badge: 'success', label: 'Operando' },
+  STOPPED: { badge: 'warning', label: 'Detenido' },
+  OUT_OF_SERVICE: { badge: 'danger', label: 'Fuera de Servicio' },
 };
 
 const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, ref) {
@@ -73,7 +91,9 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
     return (
       <MtCard elevated>
         <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
-          <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite' }}>⚙️</div>
+          <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite' }}>
+            <Package size={32} style={{ color: 'var(--mt-accent)' }} />
+          </div>
           <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Cargando activos...</p>
         </div>
       </MtCard>
@@ -129,7 +149,9 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
       {filteredAssets.length === 0 ? (
         <MtCard elevated>
           <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
-            <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>📦</div>
+            <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>
+              <Package size={48} style={{ color: 'var(--mt-accent)' }} />
+            </div>
             <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
               No hay activos
             </h3>
@@ -140,222 +162,218 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
         </MtCard>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-          {filteredAssets.map((asset) => (
-            <div
-              key={asset.id}
-              style={{
-                background: 'linear-gradient(135deg, var(--mt-bg-surface) 0%, var(--mt-bg-surface-2) 100%)',
-                borderRadius: 'var(--mt-radius-lg)',
-                border: '1px solid var(--mt-border)',
-                overflow: 'hidden',
-                transition: 'all 300ms ease',
-                cursor: 'pointer',
-                transform: 'translateY(0)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                ':hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 8px 16px rgba(56, 189, 248, 0.2)',
-                }
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 16px rgba(56, 189, 248, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-              }}
-            >
-              {/* Card Header - Color Bar */}
-              <div style={{
-                height: '4px',
-                background: `linear-gradient(90deg, var(--mt-accent), var(--mt-accent-strong))`,
-              }}></div>
+          {filteredAssets.map((asset) => {
+            const critIcon = getCriticalityIcon(asset.criticality);
+            const CritIconComponent = critIcon.Icon;
 
-              {/* Card Content */}
-              <div style={{ padding: 'var(--mt-space-lg)' }}>
-                {/* Top Section: Name & Badges */}
-                <div style={{ marginBottom: 'var(--mt-space-lg)' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-sm)' }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: 'var(--mt-radius-md)',
-                      background: CRITICALITY_COLORS[asset.criticality]?.bg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      {(() => {
-                        const CritIcon = CRITICALITY_COLORS[asset.criticality]?.Icon;
-                        if (asset.criticality === 'A') return <CritIcon size={20} style={{ color: 'var(--mt-danger)' }} />;
-                        if (asset.criticality === 'B') return <CritIcon size={20} style={{ color: 'var(--mt-warning)' }} />;
-                        return <CritIcon size={20} style={{ color: 'var(--mt-info)' }} />;
-                      })()}
+            return (
+              <div
+                key={asset.id}
+                style={{
+                  background: 'linear-gradient(135deg, var(--mt-bg-surface) 0%, var(--mt-bg-surface-2) 100%)',
+                  borderRadius: 'var(--mt-radius-lg)',
+                  border: '1px solid var(--mt-border)',
+                  overflow: 'hidden',
+                  transition: 'all 300ms ease',
+                  cursor: 'pointer',
+                  transform: 'translateY(0)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 8px 16px rgba(56, 189, 248, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                {/* Card Header - Color Bar */}
+                <div style={{
+                  height: '4px',
+                  background: 'linear-gradient(90deg, var(--mt-accent), var(--mt-accent-strong))',
+                }}></div>
+
+                {/* Card Content */}
+                <div style={{ padding: 'var(--mt-space-lg)' }}>
+                  {/* Top Section: Name & Badges */}
+                  <div style={{ marginBottom: 'var(--mt-space-lg)' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-sm)' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: 'var(--mt-radius-md)',
+                        background: CRITICALITY_COLORS[asset.criticality]?.bg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}>
+                        <CritIconComponent size={20} style={{ color: critIcon.color }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px', color: 'var(--mt-text-primary)' }}>
+                          {asset.name}
+                        </h3>
+                        <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                          {asset.code}
+                        </p>
+                      </div>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '15px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px', color: 'var(--mt-text-primary)' }}>
-                        {asset.name}
-                      </h3>
-                      <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                        {asset.code}
+
+                    {/* Badges Row */}
+                    <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', flexWrap: 'wrap' }}>
+                      <MtBadge variant={CRITICALITY_COLORS[asset.criticality]?.badge} size="sm">
+                        {CRITICALITY_COLORS[asset.criticality]?.label}
+                      </MtBadge>
+                      <MtBadge variant={STATUS_COLORS[asset.status]?.badge} size="sm">
+                        {STATUS_COLORS[asset.status]?.label}
+                      </MtBadge>
+                    </div>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 'var(--mt-space-md)',
+                    marginBottom: 'var(--mt-space-lg)',
+                    paddingBottom: 'var(--mt-space-lg)',
+                    borderBottom: '1px solid var(--mt-border)',
+                  }}>
+                    <div>
+                      <p style={{ fontSize: '10px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
+                        Ubicación
+                      </p>
+                      <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, color: 'var(--mt-text-primary)' }}>
+                        {asset.location || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '10px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
+                        Modelo
+                      </p>
+                      <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, color: 'var(--mt-text-primary)' }}>
+                        {asset.model || 'N/A'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Badges Row */}
-                  <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', flexWrap: 'wrap' }}>
-                    <MtBadge variant={CRITICALITY_COLORS[asset.criticality]?.badge} size="sm">
-                      {CRITICALITY_COLORS[asset.criticality]?.label}
-                    </MtBadge>
-                    <MtBadge variant={STATUS_COLORS[asset.status]?.badge} size="sm">
-                      {STATUS_COLORS[asset.status]?.label}
-                    </MtBadge>
-                  </div>
-                </div>
+                  {/* Notes */}
+                  {asset.notes && (
+                    <div style={{
+                      padding: 'var(--mt-space-md)',
+                      background: 'var(--mt-bg-base)',
+                      borderRadius: 'var(--mt-radius-sm)',
+                      marginBottom: 'var(--mt-space-lg)',
+                      borderLeft: '2px solid var(--mt-accent)',
+                    }}>
+                      <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                        {asset.notes}
+                      </p>
+                    </div>
+                  )}
 
-                {/* Details Grid */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 'var(--mt-space-md)',
-                  marginBottom: 'var(--mt-space-lg)',
-                  paddingBottom: 'var(--mt-space-lg)',
-                  borderBottom: '1px solid var(--mt-border)',
-                }}>
-                  <div>
-                    <p style={{ fontSize: '10px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
-                      Ubicación
-                    </p>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, color: 'var(--mt-text-primary)' }}>
-                      {asset.location || 'N/A'}
-                    </p>
+                  {/* Action Buttons */}
+                  <div style={{ display: 'flex', gap: 'var(--mt-space-sm)' }}>
+                    <button
+                      onClick={() => navigate(`/maintenance/app/assets/${asset.id}`)}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        background: 'rgba(56, 189, 248, 0.1)',
+                        borderRadius: 'var(--mt-radius-md)',
+                        border: '1px solid var(--mt-accent)',
+                        cursor: 'pointer',
+                        color: 'var(--mt-accent)',
+                        fontWeight: 'var(--mt-font-weight-bold)',
+                        fontSize: '12px',
+                        transition: 'all 200ms ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                      }}
+                      title="Ver expediente"
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'rgba(56, 189, 248, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'rgba(56, 189, 248, 0.1)';
+                      }}
+                    >
+                      <Eye size={14} />
+                      Ver
+                    </button>
+                    <button
+                      onClick={() => onEditClick?.(asset)}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        background: 'transparent',
+                        borderRadius: 'var(--mt-radius-md)',
+                        border: '1px solid var(--mt-border)',
+                        cursor: 'pointer',
+                        color: 'var(--mt-text-secondary)',
+                        fontWeight: 'var(--mt-font-weight-bold)',
+                        fontSize: '12px',
+                        transition: 'all 200ms ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                      }}
+                      title="Editar"
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'var(--mt-bg-surface-2)';
+                        e.target.style.borderColor = 'var(--mt-accent)';
+                        e.target.style.color = 'var(--mt-accent)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                        e.target.style.borderColor = 'var(--mt-border)';
+                        e.target.style.color = 'var(--mt-text-secondary)';
+                      }}
+                    >
+                      <Edit2 size={14} />
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(asset.id)}
+                      disabled={deleting === asset.id}
+                      style={{
+                        width: '40px',
+                        padding: '8px',
+                        background: deleting === asset.id ? 'rgba(0, 0, 0, 0.2)' : 'transparent',
+                        borderRadius: 'var(--mt-radius-md)',
+                        border: '1px solid var(--mt-border)',
+                        cursor: deleting === asset.id ? 'not-allowed' : 'pointer',
+                        color: 'var(--mt-danger)',
+                        opacity: deleting === asset.id ? 0.6 : 1,
+                        transition: 'all 200ms ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Eliminar"
+                      onMouseEnter={(e) => {
+                        if (deleting !== asset.id) {
+                          e.target.style.background = 'rgba(244, 65, 82, 0.1)';
+                          e.target.style.borderColor = 'var(--mt-danger)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                        e.target.style.borderColor = 'var(--mt-border)';
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
-                  <div>
-                    <p style={{ fontSize: '10px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
-                      Modelo
-                    </p>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, color: 'var(--mt-text-primary)' }}>
-                      {asset.model || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                {asset.notes && (
-                  <div style={{
-                    padding: 'var(--mt-space-md)',
-                    background: 'var(--mt-bg-base)',
-                    borderRadius: 'var(--mt-radius-sm)',
-                    marginBottom: 'var(--mt-space-lg)',
-                    borderLeft: '2px solid var(--mt-accent)',
-                  }}>
-                    <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                      {asset.notes}
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: 'var(--mt-space-sm)' }}>
-                  <button
-                    onClick={() => navigate(`/maintenance/app/assets/${asset.id}`)}
-                    style={{
-                      flex: 1,
-                      padding: '8px 12px',
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      border: '1px solid var(--mt-accent)',
-                      cursor: 'pointer',
-                      color: 'var(--mt-accent)',
-                      fontWeight: 'var(--mt-font-weight-bold)',
-                      fontSize: '12px',
-                      transition: 'all 200ms ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                    }}
-                    title="Ver expediente"
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(56, 189, 248, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(56, 189, 248, 0.1)';
-                    }}
-                  >
-                    <Eye size={14} />
-                    Ver
-                  </button>
-                  <button
-                    onClick={() => onEditClick?.(asset)}
-                    style={{
-                      flex: 1,
-                      padding: '8px 12px',
-                      background: 'transparent',
-                      borderRadius: 'var(--mt-radius-md)',
-                      border: '1px solid var(--mt-border)',
-                      cursor: 'pointer',
-                      color: 'var(--mt-text-secondary)',
-                      fontWeight: 'var(--mt-font-weight-bold)',
-                      fontSize: '12px',
-                      transition: 'all 200ms ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                    }}
-                    title="Editar"
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'var(--mt-bg-surface-2)';
-                      e.target.style.borderColor = 'var(--mt-accent)';
-                      e.target.style.color = 'var(--mt-accent)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'transparent';
-                      e.target.style.borderColor = 'var(--mt-border)';
-                      e.target.style.color = 'var(--mt-text-secondary)';
-                    }}
-                  >
-                    <Edit2 size={14} />
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(asset.id)}
-                    disabled={deleting === asset.id}
-                    style={{
-                      width: '40px',
-                      padding: '8px',
-                      background: deleting === asset.id ? 'rgba(0, 0, 0, 0.2)' : 'transparent',
-                      borderRadius: 'var(--mt-radius-md)',
-                      border: '1px solid var(--mt-border)',
-                      cursor: deleting === asset.id ? 'not-allowed' : 'pointer',
-                      color: 'var(--mt-danger)',
-                      opacity: deleting === asset.id ? 0.6 : 1,
-                      transition: 'all 200ms ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                    title="Eliminar"
-                    onMouseEnter={(e) => {
-                      if (deleting !== asset.id) {
-                        e.target.style.background = 'rgba(244, 65, 82, 0.1)';
-                        e.target.style.borderColor = 'var(--mt-danger)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'transparent';
-                      e.target.style.borderColor = 'var(--mt-border)';
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

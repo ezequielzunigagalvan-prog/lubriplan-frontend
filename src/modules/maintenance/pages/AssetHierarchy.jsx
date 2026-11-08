@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MtCard, MtBadge, MtButton } from '../ui';
-import { ChevronDown, ChevronRight, Building2, Factory, Grid3x3, Zap, Package, Settings } from 'lucide-react';
+import { ChevronDown, ChevronRight, Building2, Factory, Grid3x3, Zap, Package, Settings, TreePine, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AssetHierarchy() {
@@ -319,7 +319,9 @@ export default function AssetHierarchy() {
     return (
       <MtCard elevated>
         <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center' }}>
-          <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite' }}>⚙️</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite' }}>
+            <Settings size={32} style={{ color: 'var(--mt-accent)' }} />
+          </div>
           <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Cargando jerarquía de activos...</p>
         </div>
       </MtCard>
@@ -330,9 +332,12 @@ export default function AssetHierarchy() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
       <div>
-        <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-          🌳 Jerarquía de Activos
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-sm)' }}>
+          <TreePine size={32} style={{ color: 'var(--mt-accent)' }} />
+          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
+            Jerarquía de Activos
+          </h1>
+        </div>
         <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
           Estructura completa de equipos por planta, área y línea
         </p>
@@ -433,9 +438,10 @@ export default function AssetHierarchy() {
       )}
 
       {/* Info Box */}
-      <div style={{ padding: 'var(--mt-space-lg)', background: 'var(--mt-bg-surface)', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-border)' }}>
+      <div style={{ padding: 'var(--mt-space-lg)', background: 'var(--mt-bg-surface)', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-border)', display: 'flex', gap: 'var(--mt-space-md)' }}>
+        <Lightbulb size={18} style={{ color: 'var(--mt-accent)', flexShrink: 0, marginTop: '2px' }} />
         <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-          💡 <strong>Tip:</strong> Click en un equipo para ver su expediente digital completo con historial de mantenimiento, órdenes de trabajo, fotografías y costos acumulados.
+          <strong>Tip:</strong> Click en un equipo para ver su expediente digital completo con historial de mantenimiento, órdenes de trabajo, fotografías y costos acumulados.
         </p>
       </div>
     </div>
