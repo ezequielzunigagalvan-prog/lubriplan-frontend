@@ -5,6 +5,7 @@ import PreventiveChecklist from '../components/PreventiveChecklist';
 import CorrectiveAnalysis from '../components/CorrectiveAnalysis';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { toast } from 'sonner';
+import { Settings, X } from 'lucide-react';
 
 export default function Execution() {
   const { id } = useParams();
@@ -84,7 +85,9 @@ export default function Execution() {
     return (
       <MtCard elevated>
         <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center' }}>
-          <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite' }}>⚙️</div>
+          <div style={{ marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite', display: 'flex', justifyContent: 'center' }}>
+            <Settings size={32} style={{ color: 'var(--mt-accent)' }} />
+          </div>
           <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Cargando orden...</p>
         </div>
       </MtCard>
@@ -95,7 +98,9 @@ export default function Execution() {
     return (
       <MtCard elevated>
         <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>❌</div>
+          <div style={{ marginBottom: 'var(--mt-space-md)', display: 'flex', justifyContent: 'center' }}>
+            <X size={48} style={{ color: 'var(--mt-danger)' }} />
+          </div>
           <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
             Orden no encontrada
           </h3>

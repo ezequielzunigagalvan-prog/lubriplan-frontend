@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { MtButton, MtCard, MtBadge, MtEmpty, MtSkeleton } from '../ui';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, AlertTriangle, FileText } from 'lucide-react';
 
 const STATUS_LABELS = {
   REQUESTED: 'Solicitada',
@@ -63,8 +63,8 @@ export default function WorkOrders() {
   }, []);
 
   if (loading) return <MtSkeleton type="card" count={3} />;
-  if (error) return <MtEmpty icon="⚠️" title="Error" description={error} action={() => window.location.reload()} actionLabel="Reintentar" />;
-  if (!orders.length) return <MtEmpty icon="📋" title="Sin órdenes" description="No hay órdenes de trabajo" action={() => navigate('/maintenance/app/report-failure')} actionLabel="Crear primera orden" />;
+  if (error) return <MtEmpty icon={<AlertTriangle size={40} style={{ color: 'var(--mt-danger)', opacity: 0.6 }} />} title="Error" description={error} action={() => window.location.reload()} actionLabel="Reintentar" />;
+  if (!orders.length) return <MtEmpty icon={<FileText size={40} style={{ color: 'var(--mt-accent)', opacity: 0.6 }} />} title="Sin órdenes" description="No hay órdenes de trabajo" action={() => navigate('/maintenance/app/report-failure')} actionLabel="Crear primera orden" />;
 
   const statusFilters = ['all', 'REQUESTED', 'APPROVED', 'ASSIGNED', 'IN_PROGRESS', 'FINISHED', 'VALIDATED', 'REJECTED'];
 
