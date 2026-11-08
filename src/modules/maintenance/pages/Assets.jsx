@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { MtButton, MtCard } from '../ui';
 import AssetFormModal from '../components/AssetFormModal';
 import AssetsList from '../components/AssetsList';
-import { Plus, Package, AlertCircle, CheckCircle, Zap, Building2 } from 'lucide-react';
+import { Plus, Package, Activity, CheckCircle, Pause, XCircle, AlertTriangle } from 'lucide-react';
 
 export default function Assets() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,7 +69,7 @@ export default function Assets() {
                 Gestión de Activos
               </h1>
               <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                Base de datos completa de equipos e instalaciones
+                Catálogo completo de equipos e instalaciones
               </p>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function Assets() {
             fontWeight: 'var(--mt-font-weight-bold)'
           }}
         >
-          + Nuevo Activo
+          Nuevo Activo
         </MtButton>
       </div>
 
@@ -96,7 +96,9 @@ export default function Assets() {
         {/* Total */}
         <MtCard elevated style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.05))' }}>
           <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)' }}>📦</div>
+            <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--mt-space-md)' }}>
+              <Package size={24} style={{ color: 'var(--mt-accent)' }} />
+            </div>
             <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
               Total Activos
             </p>
@@ -109,7 +111,9 @@ export default function Assets() {
         {/* Operating */}
         <MtCard elevated style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))' }}>
           <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)' }}>✅</div>
+            <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--mt-space-md)' }}>
+              <CheckCircle size={24} style={{ color: 'var(--mt-success)' }} />
+            </div>
             <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
               Operando
             </p>
@@ -122,7 +126,9 @@ export default function Assets() {
         {/* Stopped */}
         <MtCard elevated style={{ background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05))' }}>
           <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)' }}>⏸️</div>
+            <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--mt-space-md)' }}>
+              <Pause size={24} style={{ color: 'var(--mt-warning)' }} />
+            </div>
             <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
               Detenidos
             </p>
@@ -135,7 +141,9 @@ export default function Assets() {
         {/* Out of Service */}
         <MtCard elevated style={{ background: 'linear-gradient(135deg, rgba(244, 65, 82, 0.1), rgba(244, 65, 82, 0.05))' }}>
           <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)' }}>🔴</div>
+            <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--mt-space-md)' }}>
+              <XCircle size={24} style={{ color: 'var(--mt-danger)' }} />
+            </div>
             <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
               Fuera Servicio
             </p>
@@ -153,9 +161,9 @@ export default function Assets() {
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--mt-space-md)' }}>
           {[
-            { level: 'A - CRÍTICA', count: stats.criticalA, color: 'var(--mt-danger)', bg: 'rgba(244, 65, 82, 0.1)' },
-            { level: 'B - MODERADA', count: stats.criticalB, color: 'var(--mt-warning)', bg: 'rgba(251, 191, 36, 0.1)' },
-            { level: 'C - BAJA', count: stats.criticalC, color: 'var(--mt-info)', bg: 'rgba(59, 130, 246, 0.1)' },
+            { level: 'Crítica - A', count: stats.criticalA, color: 'var(--mt-danger)', bg: 'rgba(244, 65, 82, 0.1)', Icon: AlertTriangle },
+            { level: 'Moderada - B', count: stats.criticalB, color: 'var(--mt-warning)', bg: 'rgba(251, 191, 36, 0.1)', Icon: AlertTriangle },
+            { level: 'Baja - C', count: stats.criticalC, color: 'var(--mt-info)', bg: 'rgba(59, 130, 246, 0.1)', Icon: Activity },
           ].map((item) => (
             <div key={item.level} style={{
               background: item.bg,
@@ -166,7 +174,10 @@ export default function Assets() {
               alignItems: 'center',
               gap: 'var(--mt-space-md)'
             }}>
-              <div>
+              <div style={{ flexShrink: 0 }}>
+                <item.Icon size={20} style={{ color: item.color }} />
+              </div>
+              <div style={{ flex: 1 }}>
                 <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '2px' }}>
                   {item.level}
                 </p>
@@ -174,7 +185,7 @@ export default function Assets() {
                   {item.count}
                 </p>
               </div>
-              <div style={{ width: '100%', height: '4px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
+              <div style={{ width: '50px', height: '4px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
                 <div style={{
                   height: '100%',
                   background: item.color,

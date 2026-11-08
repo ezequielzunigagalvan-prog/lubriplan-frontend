@@ -2,19 +2,19 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MtCard, MtBadge } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
-import { Edit2, Trash2, Eye, Search, Zap, Package, Cog } from 'lucide-react';
+import { Edit2, Trash2, Eye, Search, AlertTriangle, Pause, XCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CRITICALITY_COLORS = {
-  A: { badge: 'danger', label: 'Crítica', icon: '🔴', bg: 'rgba(244, 65, 82, 0.1)' },
-  B: { badge: 'warning', label: 'Moderada', icon: '🟡', bg: 'rgba(251, 191, 36, 0.1)' },
-  C: { badge: 'info', label: 'Baja', icon: '🟢', bg: 'rgba(59, 130, 246, 0.1)' },
+  A: { badge: 'danger', label: 'Crítica', Icon: AlertTriangle, bg: 'rgba(244, 65, 82, 0.1)' },
+  B: { badge: 'warning', label: 'Moderada', Icon: AlertTriangle, bg: 'rgba(251, 191, 36, 0.1)' },
+  C: { badge: 'info', label: 'Baja', Icon: CheckCircle2, bg: 'rgba(59, 130, 246, 0.1)' },
 };
 
 const STATUS_COLORS = {
-  OPERATING: { badge: 'success', label: 'Operando', icon: '✅', color: 'var(--mt-success)' },
-  STOPPED: { badge: 'warning', label: 'Detenido', icon: '⏸️', color: 'var(--mt-warning)' },
-  OUT_OF_SERVICE: { badge: 'danger', label: 'Fuera de Servicio', icon: '🔴', color: 'var(--mt-danger)' },
+  OPERATING: { badge: 'success', label: 'Operando', Icon: CheckCircle2, color: 'var(--mt-success)' },
+  STOPPED: { badge: 'warning', label: 'Detenido', Icon: Pause, color: 'var(--mt-warning)' },
+  OUT_OF_SERVICE: { badge: 'danger', label: 'Fuera de Servicio', Icon: XCircle, color: 'var(--mt-danger)' },
 };
 
 const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, ref) {
@@ -185,10 +185,14 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '20px',
                       flexShrink: 0,
                     }}>
-                      {CRITICALITY_COLORS[asset.criticality]?.icon}
+                      {(() => {
+                        const CritIcon = CRITICALITY_COLORS[asset.criticality]?.Icon;
+                        if (asset.criticality === 'A') return <CritIcon size={20} style={{ color: 'var(--mt-danger)' }} />;
+                        if (asset.criticality === 'B') return <CritIcon size={20} style={{ color: 'var(--mt-warning)' }} />;
+                        return <CritIcon size={20} style={{ color: 'var(--mt-info)' }} />;
+                      })()}
                     </div>
                     <div style={{ flex: 1 }}>
                       <h3 style={{ fontSize: '15px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px', color: 'var(--mt-text-primary)' }}>
