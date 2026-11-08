@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MtCard, MtBadge, MtPriorityBadge, MtButton, MtIcon } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
+import PhotoCapture from '../components/PhotoCapture';
 import { toast } from 'sonner';
 import '../ui/tokens.css';
 
@@ -26,6 +27,8 @@ export default function WorkOrderDetail() {
     rootCauseId: '',
     productionEffect: '',
   });
+
+  const [photos, setPhotos] = useState([]);
 
   // Mock OT for now
   const mockOrder = {
@@ -375,6 +378,13 @@ export default function WorkOrderDetail() {
           )}
         </MtCard>
       </div>
+
+      {/* Photos */}
+      <PhotoCapture
+        workOrderId={order?.id}
+        maintenanceApi={maintenanceApi}
+        onPhotoAdded={(photo) => setPhotos([...photos, photo])}
+      />
 
       {/* Timeline */}
       <MtCard elevated>

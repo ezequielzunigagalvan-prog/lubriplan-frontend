@@ -8,7 +8,7 @@ export { default as MtStat } from './MtStat';
 export { default as MtEmpty } from './MtEmpty';
 export { default as MtSkeleton } from './MtSkeleton';
 export { default as MtInput } from './MtInput';
-export { default as MtIcon, getSvgIcon } from './MtIcons';
+export { default as MtIcon } from './MtIcons';
 
 // CSS is auto-imported by components
 import './tokens.css';
