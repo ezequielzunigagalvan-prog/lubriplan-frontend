@@ -1,0 +1,224 @@
+/* ============================================================
+   LubriPlan Maintenance — Design Tokens
+   Premium Industrial SaaS Design System
+   ============================================================ */
+
+:root {
+  /* Surfaces — Dark Industrial Base */
+  --mt-bg-base:           #060A10;
+  --mt-bg-surface:        #0C121B;
+  --mt-bg-surface-2:      #121B28;
+  --mt-bg-surface-3:      #1A2332;
+  --mt-bg-elevated:       #1F2A39;
+  --mt-overlay:           rgba(6, 10, 16, 0.8);
+  --mt-overlay-light:     rgba(6, 10, 16, 0.4);
+
+  /* Text */
+  --mt-text-primary:      #EAF1F8;
+  --mt-text-secondary:    #8EA3B8;
+  --mt-text-tertiary:     #5B6F85;
+  --mt-text-muted:        #3D4C5F;
+
+  /* Accent & Status */
+  --mt-accent:            #38BDF8;
+  --mt-accent-strong:     #0EA5E9;
+  --mt-accent-light:      #7DD3FC;
+  --mt-success:           #34D399;
+  --mt-warning:           #FBBF24;
+  --mt-danger:            #F87171;
+  --mt-danger-dark:       #DC2626;
+  --mt-info:              #60A5FA;
+  --mt-orange:            #FB923C;
+
+  /* Borders */
+  --mt-border:            rgba(255, 255, 255, 0.08);
+  --mt-border-hover:      rgba(255, 255, 255, 0.15);
+  --mt-border-focus:      rgba(56, 189, 248, 0.3);
+
+  /* Spacing Scale (4px base) */
+  --mt-space-xs:          4px;
+  --mt-space-sm:          8px;
+  --mt-space-md:          12px;
+  --mt-space-lg:          16px;
+  --mt-space-xl:          24px;
+  --mt-space-2xl:         32px;
+  --mt-space-3xl:         48px;
+
+  /* Radius */
+  --mt-radius-sm:         8px;
+  --mt-radius-md:         10px;
+  --mt-radius-lg:         14px;
+  --mt-radius-xl:         20px;
+  --mt-radius-full:       9999px;
+
+  /* Shadows */
+  --mt-shadow-sm:         0 2px 6px rgba(0, 0, 0, 0.4);
+  --mt-shadow-md:         0 6px 16px rgba(0, 0, 0, 0.5);
+  --mt-shadow-lg:         0 12px 32px rgba(0, 0, 0, 0.6);
+  --mt-shadow-glow:       0 0 20px rgba(56, 189, 248, 0.15);
+  --mt-shadow-focus:      0 0 0 3px rgba(56, 189, 248, 0.2);
+
+  /* Typography */
+  --mt-font-weight-regular: 400;
+  --mt-font-weight-medium:  600;
+  --mt-font-weight-bold:    700;
+  --mt-font-weight-heavy:   800;
+  --mt-font-weight-black:   900;
+
+  /* Z-Index */
+  --mt-z-base:            0;
+  --mt-z-dropdown:        100;
+  --mt-z-modal:           200;
+  --mt-z-toast:           300;
+}
+
+/* Light Theme Overrides */
+[data-theme="light"] {
+  --mt-bg-base:           #F8FAFC;
+  --mt-bg-surface:        #FFFFFF;
+  --mt-bg-surface-2:      #F1F5F9;
+  --mt-bg-surface-3:      #E8EEF6;
+  --mt-bg-elevated:       #FFFFFF;
+  --mt-overlay:           rgba(248, 250, 252, 0.85);
+  --mt-overlay-light:     rgba(248, 250, 252, 0.4);
+
+  --mt-text-primary:      #0C121B;
+  --mt-text-secondary:    #475569;
+  --mt-text-tertiary:     #64748B;
+  --mt-text-muted:        #94A3B8;
+
+  --mt-border:            rgba(226, 232, 240, 0.6);
+  --mt-border-hover:      rgba(203, 213, 225, 0.8);
+}
+
+/* Animation & Transition Utilities */
+@keyframes mt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mt-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mt-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes mt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mt-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes mt-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Transition Utilities */
+.mt-transition-fast {
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mt-transition-base {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mt-transition-smooth {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus Ring */
+.mt-focus-ring {
+  outline: none;
+  box-shadow: var(--mt-shadow-focus);
+}
+
+/* Accessible Motion */
+@media (prefers-reduced-motion: reduce) {
+  .mt-transition-fast,
+  .mt-transition-base,
+  .mt-transition-smooth {
+    transition: none;
+  }
+
+  .mt-fade-in,
+  .mt-slide-up,
+  .mt-slide-in-left {
+    animation: none;
+  }
+}
+
+/* Utility Classes */
+.mt-text-primary {
+  color: var(--mt-text-primary);
+}
+
+.mt-text-secondary {
+  color: var(--mt-text-secondary);
+}
+
+.mt-text-tertiary {
+  color: var(--mt-text-tertiary);
+}
+
+.mt-text-muted {
+  color: var(--mt-text-muted);
+}
+
+.mt-bg-surface {
+  background-color: var(--mt-bg-surface);
+}
+
+.mt-border {
+  border: 1px solid var(--mt-border);
+}
+
+.mt-shadow-md {
+  box-shadow: var(--mt-shadow-md);
+}
+
+/* Grid Background Pattern (subtle) */
+.mt-grid-pattern {
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glow Effect */
+.mt-glow {
+  box-shadow: var(--mt-shadow-glow);
+}

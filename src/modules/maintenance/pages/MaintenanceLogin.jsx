@@ -1,311 +1,209 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
-import { useTheme } from "../../../context/ThemeContext";
-import { Icon } from "../../../components/ui/lpIcons";
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { MtButton, MtInput, MtCard, MtIcon } from '../ui';
+import '../ui/tokens.css';
 
 export default function MaintenanceLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const { isAuthenticated, login } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
-  const demoAccounts = import.meta.env.VITE_MAINTENANCE_DEMO_ACCOUNTS
-    ? JSON.parse(import.meta.env.VITE_MAINTENANCE_DEMO_ACCOUNTS)
-    : [];
+  // Load demo accounts in dev mode (lazy initialization)
+  const getDemoAccounts = () => {
+    if (!import.meta.env.DEV) return [];
+    const envAccounts = import.meta.env.VITE_MAINTENANCE_DEMO_ACCOUNTS;
+    if (envAccounts) {
+      try {
+        return JSON.parse(envAccounts);
+      } catch (e) {
+        console.error('Error parsing demo accounts:', e);
+        return [];
+      }
+    }
+    return [];
+  };
 
-  const handleSubmit = async (e) => {
+  const demoAccounts = getDemoAccounts();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/maintenance/app', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setError(null);
+
+    if (!email.trim() || !password.trim()) {
+      setError('Por favor completa todos los campos');
+      return;
+    }
 
     try {
+      setLoading(true);
       await login(email, password);
-      const from = location.state?.from || "/maintenance/app";
+      const from = location.state?.from || '/maintenance/app';
       navigate(from, { replace: true });
     } catch (err) {
-      const msg = err.message || "Error inesperado";
-      if (msg.includes("Credenciales")) setError("Email o contraseña incorrecta");
-      else if (msg.includes("inactivo")) setError("Usuario inactivo, contacta al administrador");
-      else if (msg.includes("conexión")) setError("Error de conexión, intenta de nuevo");
-      else setError("Error inesperado, intenta de nuevo");
-    } finally {
+      if (err?.message?.includes('401') || err?.message?.includes('inválid') || err?.message?.includes('incorrect')) {
+        setError('Email o contraseña incorrecta');
+      } else if (err?.message?.includes('403') || err?.message?.includes('inactive')) {
+        setError('Usuario inactivo, contacta al administrador');
+      } else if (err?.message?.includes('network') || err?.message?.includes('fetch')) {
+        setError('Error de conexión, intenta de nuevo');
+      } else {
+        setError(err?.message || 'Error inesperado');
+      }
       setLoading(false);
     }
   };
 
-  const fillDemo = (cred) => {
-    setEmail(cred.email);
-    setPassword(cred.password);
-    setError("");
+  const fillDemoAccount = (account) => {
+    setEmail(account.email);
+    setPassword(account.password);
   };
 
   return (
-    <div style={container(isDark)}>
-      <div style={card(isDark)}>
-        {/* Header */}
-        <div style={header}>
-          <div style={logo}>LubriPlan Maintenance</div>
-        </div>
+    <div style={{ background: 'var(--mt-bg-base)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      {/* Background */}
+      <div style={{ position: 'fixed', inset: 0, opacity: 0.5, pointerEvents: 'none', zIndex: 0 }} className="mt-grid-pattern" />
+      <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={form}>
-          {/* Email */}
-          <div style={fieldGroup}>
-            <label style={label}>Correo</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="correo@ejemplo.com"
-              required
-              style={input(isDark, error)}
-            />
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 900 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
+          {/* Right Panel - Form */}
+          <div>
+            <MtCard elevated>
+              <div style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '20px', fontWeight: 900, color: 'var(--mt-accent)', marginBottom: '4px' }}>
+                    Maintenance
+                  </div>
+                  <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+                    Accede a tu cuenta
+                  </p>
+                </div>
+
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <MtInput
+                    label="Email"
+                    type="email"
+                    placeholder="tu@empresa.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+
+                  <MtInput
+                    label="Contraseña"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    showPassword={showPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                    required
+                  />
+
+                  {error && (
+                    <div style={{
+                      padding: '12px',
+                      background: 'rgba(248, 113, 113, 0.15)',
+                      border: '1px solid var(--mt-danger)',
+                      borderRadius: '8px',
+                      color: 'var(--mt-danger)',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                    }}>
+                      <span style={{ fontSize: '16px' }}>⚠️</span>
+                      {error}
+                    </div>
+                  )}
+
+                  <MtButton
+                    type="submit"
+                    disabled={loading}
+                    loading={loading}
+                    size="lg"
+                    style={{ width: '100%', marginTop: '8px' }}
+                  >
+                    Entrar
+                  </MtButton>
+                </form>
+
+                {/* Demo Accounts (Dev Only) */}
+                {import.meta.env.DEV && demoAccounts.length > 0 && (
+                  <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--mt-border)' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--mt-text-tertiary)', marginBottom: '12px' }}>
+                      👨‍💻 Cuentas de demo (desarrollo)
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {demoAccounts.map((acc, i) => (
+                        <MtButton
+                          key={i}
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => fillDemoAccount(acc)}
+                          style={{ width: '100%', fontSize: '12px' }}
+                        >
+                          {acc.label}
+                        </MtButton>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Links */}
+                <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/maintenance')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--mt-accent)',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    ← Volver al inicio
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--mt-accent)',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Ir a LubriPlan
+                  </button>
+                </div>
+              </div>
+            </MtCard>
           </div>
-
-          {/* Password */}
-          <div style={fieldGroup}>
-            <label style={label}>Contraseña</label>
-            <div style={passwordField}>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                style={passwordInput(isDark, error)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={showBtn}
-                title={showPassword ? "Ocultar" : "Mostrar"}
-              >
-                <Icon name={showPassword ? "eyeOff" : "eye"} size="sm" />
-              </button>
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && <div style={errorBox(isDark)}>{error}</div>}
-
-          {/* Submit */}
-          <button type="submit" disabled={loading} style={submitBtn(loading)}>
-            {loading ? "Entrando..." : "Entrar"}
-          </button>
-        </form>
-
-        {/* Demo Accounts (dev only) */}
-        {import.meta.env.DEV && demoAccounts.length > 0 && (
-          <div style={demoBox(isDark)}>
-            <div style={demoTitle}>Cuentas de demostración</div>
-            <div style={demoButtons}>
-              {demoAccounts.map((acc, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => fillDemo(acc)}
-                  style={demoBtn(isDark)}
-                >
-                  {acc.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Links */}
-        <div style={links}>
-          <button
-            type="button"
-            onClick={() => navigate("/maintenance")}
-            style={linkBtn}
-          >
-            ← Volver al inicio
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            style={linkBtn}
-          >
-            Ir a LubriPlan
-          </button>
         </div>
       </div>
     </div>
   );
 }
-
-const container = (isDark) => ({
-  minHeight: "100vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 16,
-  background: isDark ? "linear-gradient(180deg, #0f172a 0%, #0b1120 100%)" : "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)",
-});
-
-const card = (isDark) => ({
-  width: "100%",
-  maxWidth: 420,
-  background: isDark ? "#111827" : "#fff",
-  borderRadius: 20,
-  border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(226,232,240,0.95)",
-  padding: 32,
-  boxShadow: isDark ? "0 30px 80px rgba(0,0,0,0.4)" : "0 30px 80px rgba(15,23,42,0.1)",
-});
-
-const header = {
-  textAlign: "center",
-  marginBottom: 28,
-};
-
-const logo = {
-  fontSize: 18,
-  fontWeight: 950,
-  color: "#38bdf8",
-  letterSpacing: "-0.02em",
-};
-
-const form = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 16,
-  marginBottom: 24,
-};
-
-const fieldGroup = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 8,
-};
-
-const label = {
-  fontSize: 12,
-  fontWeight: 950,
-  color: "#0f172a",
-  textTransform: "uppercase",
-  letterSpacing: ".04em",
-};
-
-const input = (isDark, error) => ({
-  padding: "12px 14px",
-  borderRadius: 10,
-  border: error ? "1px solid #ef4444" : isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(226,232,240,0.95)",
-  background: isDark ? "#1f2937" : "#f8fafc",
-  color: isDark ? "#f1f5f9" : "#0f172a",
-  fontSize: 14,
-  fontWeight: 800,
-  outline: "none",
-  transition: "all 140ms ease",
-});
-
-const passwordField = {
-  display: "flex",
-  alignItems: "center",
-  position: "relative",
-};
-
-const passwordInput = (isDark, error) => ({
-  ...input(isDark, error),
-  flex: 1,
-  paddingRight: 40,
-});
-
-const showBtn = {
-  position: "absolute",
-  right: 12,
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-  color: "#64748b",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 0,
-};
-
-const errorBox = (isDark) => ({
-  padding: 12,
-  borderRadius: 10,
-  background: isDark ? "rgba(127,29,29,0.2)" : "#fee2e2",
-  border: isDark ? "1px solid rgba(239,68,68,0.3)" : "1px solid #fecaca",
-  color: isDark ? "#fca5a5" : "#991b1b",
-  fontSize: 13,
-  fontWeight: 850,
-});
-
-const submitBtn = (loading) => ({
-  padding: "12px 16px",
-  borderRadius: 10,
-  border: "none",
-  background: loading ? "#94a3b8" : "#38bdf8",
-  color: "#fff",
-  fontWeight: 950,
-  fontSize: 14,
-  cursor: loading ? "not-allowed" : "pointer",
-  transition: "all 140ms ease",
-  minHeight: 48,
-});
-
-const demoBox = (isDark) => ({
-  padding: 16,
-  marginBottom: 16,
-  borderRadius: 10,
-  border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px dashed rgba(226,232,240,0.95)",
-  background: isDark ? "rgba(255,255,255,0.02)" : "rgba(248,250,252,0.5)",
-});
-
-const demoTitle = {
-  fontSize: 11,
-  fontWeight: 950,
-  color: "#64748b",
-  textTransform: "uppercase",
-  letterSpacing: ".04em",
-  marginBottom: 8,
-};
-
-const demoButtons = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 6,
-};
-
-const demoBtn = (isDark) => ({
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(226,232,240,0.95)",
-  background: isDark ? "rgba(255,255,255,0.05)" : "rgba(248,250,252,0.8)",
-  color: isDark ? "#e2e8f0" : "#0f172a",
-  fontSize: 12,
-  fontWeight: 850,
-  cursor: "pointer",
-  transition: "all 140ms ease",
-});
-
-const links = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 8,
-  textAlign: "center",
-  paddingTop: 12,
-  borderTop: "1px solid rgba(226,232,240,0.95)",
-};
-
-const linkBtn = {
-  background: "none",
-  border: "none",
-  color: "#38bdf8",
-  fontSize: 12,
-  fontWeight: 900,
-  cursor: "pointer",
-  textDecoration: "none",
-  transition: "all 140ms ease",
-};
