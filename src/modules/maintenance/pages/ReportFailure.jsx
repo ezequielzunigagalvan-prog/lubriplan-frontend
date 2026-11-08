@@ -161,7 +161,7 @@ export default function ReportFailure() {
       localStorage.removeItem(DRAFT_KEY);
 
       // Navigate to work order
-      navigate(`/maintenance/work-orders/${workOrderId}`);
+      navigate(`/maintenance/app/work-orders/${workOrderId}`);
     } catch (err) {
       setError(err?.message || "Error al reportar falla");
       setSubmitting(false);

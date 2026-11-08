@@ -52,14 +52,7 @@ const GestionDeLubricantesPage = lazy(() => import("./pages/seo/GestionDeLubrica
 const AnalisisDeLubricacionPage = lazy(() => import("./pages/seo/AnalisisDeLubricacionPage"));
 
 // Maintenance module (CMMS)
-const MaintenanceLayout = lazy(() => import("./modules/maintenance/pages/MaintenanceLayout"));
-const MaintenanceDashboard = lazy(() => import("./modules/maintenance/pages/Dashboard"));
-const MaintenanceAssets = lazy(() => import("./modules/maintenance/pages/Assets"));
-const MaintenanceAssetDetail = lazy(() => import("./modules/maintenance/pages/AssetDetail"));
-const MaintenanceWorkOrders = lazy(() => import("./modules/maintenance/pages/WorkOrders"));
-const MaintenanceWorkOrderDetail = lazy(() => import("./modules/maintenance/pages/WorkOrderDetail"));
-const MaintenanceReportFailure = lazy(() => import("./modules/maintenance/pages/ReportFailure"));
-const MaintenanceExecution = lazy(() => import("./modules/maintenance/pages/Execution"));
+const MaintenanceRouter = lazy(() => import("./modules/maintenance/components/MaintenanceRouter"));
 
 function PageLoader() {
   return (
@@ -132,15 +125,7 @@ export default function App() {
         <Route path="/preventive-orders/:id/edit" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><PreventiveOrderForm /></ProtectedRoute>} />
         <Route path="/preventive-orders/:id/execute" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><PreventiveOrderExecution /></ProtectedRoute>} />
 
-        <Route path="/maintenance" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><MaintenanceLayout /></ProtectedRoute>}>
-          <Route index element={<MaintenanceDashboard />} />
-          <Route path="assets" element={<MaintenanceAssets />} />
-          <Route path="assets/:id" element={<MaintenanceAssetDetail />} />
-          <Route path="work-orders" element={<MaintenanceWorkOrders />} />
-          <Route path="work-orders/:id" element={<MaintenanceWorkOrderDetail />} />
-          <Route path="report-failure" element={<MaintenanceReportFailure />} />
-          <Route path="work-orders/:id/execute" element={<MaintenanceExecution />} />
-        </Route>
+        <Route path="/maintenance/*" element={<MaintenanceRouter />} />
 
         <Route path="*" element={<NotFoundRedirect />} />
       </Routes>

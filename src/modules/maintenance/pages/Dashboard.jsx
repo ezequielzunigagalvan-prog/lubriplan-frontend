@@ -120,7 +120,7 @@ export default function Dashboard() {
       <div style={reportFailureSection}>
         <button
           type="button"
-          onClick={() => navigate("/maintenance/report-failure")}
+          onClick={() => navigate("/maintenance/app/report-failure")}
           style={{
             ...reportFailureButton,
             background: isDark ? "#1f2937" : "linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)",

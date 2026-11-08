@@ -618,9 +618,9 @@ export default function MainLayout({ children }) {
           `}</style>
 
           {canSeeMaintenance && (
-            <NavLink className="lpSideLink" to="/maintenance" style={navLinkStyle("/maintenance")}>
+            <NavLink className="lpSideLink" to="/maintenance/app" style={navLinkStyle("/maintenance/app")}>
               <span style={sideRow}>
-                <span style={navIconStyle("/maintenance")}>
+                <span style={navIconStyle("/maintenance/app")}>
                   <Icon name="wrench" />
                 </span>
                 <span style={sideText}>Mantenimiento</span>

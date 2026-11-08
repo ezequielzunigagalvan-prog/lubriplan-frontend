@@ -1,13 +1,23 @@
+import { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "../../../components/ui/lpIcons";
 import { useTheme } from "../../../context/ThemeContext";
+import { useMaintenanceAccess } from "../hooks/useMaintenanceAccess";
 import { MAINTENANCE_ACCENT } from "../constants/maintenance";
 
 export default function MaintenanceLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { hasAccess } = useMaintenanceAccess();
   const isDark = theme === "dark";
+
+  // Check access and redirect if disabled
+  useEffect(() => {
+    if (hasAccess === false) {
+      navigate("/maintenance/access-denied", { replace: true });
+    }
+  }, [hasAccess, navigate]);
 
   const isActive = (path) => {
     return pathname === path || pathname.startsWith(`${path}/`);
@@ -55,8 +65,8 @@ export default function MaintenanceLayout() {
 
         <nav className="mntHeaderNav" style={headerNav}>
           <NavLink
-            to="/maintenance"
-            style={navLinkStyle("/maintenance")}
+            to="/maintenance/app"
+            style={navLinkStyle("/maintenance/app")}
             className="mntNavLink"
           >
             <span style={navItemLabel}>
@@ -66,8 +76,8 @@ export default function MaintenanceLayout() {
           </NavLink>
 
           <NavLink
-            to="/maintenance/work-orders"
-            style={navLinkStyle("/maintenance/work-orders")}
+            to="/maintenance/app/work-orders"
+            style={navLinkStyle("/maintenance/app/work-orders")}
             className="mntNavLink"
           >
             <span style={navItemLabel}>
@@ -77,8 +87,8 @@ export default function MaintenanceLayout() {
           </NavLink>
 
           <NavLink
-            to="/maintenance/assets"
-            style={navLinkStyle("/maintenance/assets")}
+            to="/maintenance/app/assets"
+            style={navLinkStyle("/maintenance/app/assets")}
             className="mntNavLink"
           >
             <span style={navItemLabel}>
