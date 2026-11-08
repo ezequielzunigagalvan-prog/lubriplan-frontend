@@ -25,6 +25,7 @@ const AssetHierarchy = lazy(() => import("../pages/AssetHierarchy"));
 const AssetExpedient = lazy(() => import("../pages/AssetExpedient"));
 const NotificationCenter = lazy(() => import("../pages/NotificationCenter"));
 const NotificationPreferences = lazy(() => import("../pages/NotificationPreferences"));
+const WorkOrderReview = lazy(() => import("../pages/WorkOrderReview"));
 
 // Protected Route Component
 import MaintenanceProtectedRoute from "../hooks/useMaintenanceProtectedRoute.jsx";
@@ -58,6 +59,7 @@ export default function MaintenanceRouter() {
           <Route path="assets/:id/history" element={<MaintenanceAssetHistory />} />
           <Route path="work-orders" element={<MaintenanceWorkOrders />} />
           <Route path="work-orders/:id" element={<MaintenanceWorkOrderDetail />} />
+          <Route path="work-orders/:id/review" element={<WorkOrderReview />} />
           <Route path="report-failure" element={<MaintenanceReportFailure />} />
           <Route path="work-orders/:id/execute" element={<MaintenanceExecution />} />
 
