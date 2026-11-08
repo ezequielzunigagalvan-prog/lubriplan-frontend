@@ -4,6 +4,7 @@ import { MtIcon } from '../ui';
 import { useMaintenanceAccess } from '../hooks/useMaintenanceAccess';
 import NotificationBell from '../components/NotificationBell';
 import '../ui/tokens.css';
+import '../design/industrial.css';
 
 export default function MaintenanceLayout() {
   const { pathname } = useLocation();
