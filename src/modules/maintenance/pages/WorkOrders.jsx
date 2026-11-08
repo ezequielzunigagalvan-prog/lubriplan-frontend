@@ -71,9 +71,9 @@ export default function WorkOrders() {
   const filtered = orders.filter((order) => {
     const matchesFilter = filter === 'all' || order.status?.toUpperCase() === filter;
     const matchesSearch =
-      order.number?.toLowerCase().includes(search.toLowerCase()) ||
-      order.title?.toLowerCase().includes(search.toLowerCase()) ||
-      order.assetName?.toLowerCase().includes(search.toLowerCase());
+      String(order.id).toLowerCase().includes(search.toLowerCase()) ||
+      (order.title?.toLowerCase?.().includes(search.toLowerCase()) || false) ||
+      (order.assetName?.toLowerCase?.().includes(search.toLowerCase()) || false);
     return matchesFilter && matchesSearch;
   });
 
