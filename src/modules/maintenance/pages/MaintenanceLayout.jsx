@@ -53,14 +53,17 @@ export default function MaintenanceLayout() {
             LubriPlan
           </button>
 
-          <nav style={{ display: 'flex', gap: '8px', flex: 1 }}>
+          <nav style={{ display: 'flex', gap: '8px', flex: 1, overflowX: 'auto' }}>
             {[
               { path: '/maintenance/app', icon: 'dashboard', label: 'Dashboard' },
               { path: '/maintenance/app/work-orders', icon: 'clipboard', label: 'Órdenes' },
+              { path: '/maintenance/app/report-failure', icon: 'alertCircle', label: 'Reportar Falla' },
+              { path: '/maintenance/app/preventive-plans', icon: 'calendar', label: 'Planes' },
+              { path: '/maintenance/app/maintenance-calendar', icon: 'calendarDays', label: 'Calendario' },
               { path: '/maintenance/app/assets', icon: 'package', label: 'Activos' },
               { path: '/maintenance/app/spare-parts', icon: 'wrench', label: 'Refacciones' },
               { path: '/maintenance/app/inventory', icon: 'box', label: 'Inventario' },
-              { path: '/maintenance/app/failure-codes', icon: 'alertCircle', label: 'Fallas' },
+              { path: '/maintenance/app/failure-codes', icon: 'zap', label: 'Fallas' },
               { path: '/maintenance/app/indicators', icon: 'barChart3', label: 'Indicadores' },
               { path: '/maintenance/app/analytics', icon: 'trendingUp', label: 'Analítica' },
               { path: '/maintenance/app/notifications', icon: 'bell', label: 'Notificaciones' },
