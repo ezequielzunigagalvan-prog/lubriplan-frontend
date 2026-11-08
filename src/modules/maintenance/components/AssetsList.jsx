@@ -1,8 +1,8 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MtCard, MtButton, MtBadge } from '../ui';
+import { MtCard, MtBadge } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
-import { Edit2, Trash2, Eye, Plus, Search } from 'lucide-react';
+import { Edit2, Trash2, Eye, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CRITICALITY_COLORS = {
@@ -71,15 +71,17 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
 
   if (loading) {
     return (
-      <IndustrialCard className="p-12 text-center">
-        <div className="inline-block animate-spin">⚙️</div>
-        <p className="mt-4 text-gray-600">Cargando activos...</p>
-      </IndustrialCard>
+      <MtCard elevated>
+        <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
+          <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite' }}>⚙️</div>
+          <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Cargando activos...</p>
+        </div>
+      </MtCard>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
       {/* Search */}
       <div style={{ position: 'relative' }}>
         <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
@@ -91,9 +93,7 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
           style={{
             width: '100%',
             paddingLeft: '40px',
-            paddingRight: '12px',
-            paddingTop: '10px',
-            paddingBottom: '10px',
+            padding: '10px 12px 10px 40px',
             borderRadius: 'var(--mt-radius-md)',
           }}
         />
@@ -105,10 +105,10 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
           <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)', fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>
             📦
           </div>
-          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', marginBottom: 'var(--mt-space-sm)' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', marginBottom: 'var(--mt-space-sm)', margin: 0 }}>
             No hay activos
           </h3>
-          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)' }}>
+          <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>
             Crea tu primer activo para comenzar
           </p>
         </MtCard>
@@ -119,25 +119,25 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--mt-space-lg)' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ marginBottom: 'var(--mt-space-md)' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', marginBottom: 'var(--mt-space-xs)' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', marginBottom: 'var(--mt-space-xs)', margin: 0 }}>
                       {asset.name}
                     </h3>
-                    <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}>
                       Código: {asset.code}
                     </p>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 'var(--mt-space-lg)', marginTop: 'var(--mt-space-lg)', marginBottom: 'var(--mt-space-lg)' }}>
                     <div>
-                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)', margin: 0 }}>
                         Ubicación
                       </p>
-                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)' }}>
+                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
                         {asset.location || 'N/A'}
                       </p>
                     </div>
                     <div>
-                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)', margin: 0 }}>
                         Criticidad
                       </p>
                       <MtBadge variant={CRITICALITY_COLORS[asset.criticality]?.badge} size="sm">
@@ -145,7 +145,7 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
                       </MtBadge>
                     </div>
                     <div>
-                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)', margin: 0 }}>
                         Estado
                       </p>
                       <MtBadge variant={STATUS_COLORS[asset.status]?.badge} size="sm">
@@ -153,10 +153,10 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
                       </MtBadge>
                     </div>
                     <div>
-                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)' }}>
+                      <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: 'var(--mt-space-xs)', margin: 0 }}>
                         Modelo
                       </p>
-                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)' }}>
+                      <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
                         {asset.model || 'N/A'}
                       </p>
                     </div>
