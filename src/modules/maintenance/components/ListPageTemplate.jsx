@@ -1,4 +1,4 @@
-import { IndustrialButton, IndustrialCard, IndustrialInput } from '../design/IndustrialDesignSystem';
+import { MtCard, MtButton, MtBadge } from '../ui';
 import { Plus, Search } from 'lucide-react';
 
 /**
@@ -25,68 +25,88 @@ export default function ListPageTemplate({
 }) {
   if (loading) {
     return (
-      <IndustrialCard className="p-12 text-center">
-        <div className="text-3xl animate-spin mb-4">⚙️</div>
-        <p className="text-gray-600">Cargando...</p>
-      </IndustrialCard>
+      <MtCard elevated>
+        <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
+          <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-md)', animation: 'spin 1s linear infinite' }}>⚙️</div>
+          <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Cargando...</p>
+        </div>
+      </MtCard>
     );
   }
 
   if (error) {
     return (
-      <IndustrialCard elevated className="p-12 text-center border-l-4 border-red-500">
-        <div className="text-5xl mb-4">⚠️</div>
-        <h3 className="text-lg font-bold text-red-900">{error}</h3>
-        <p className="text-red-700 mt-2">Intenta recargar la página</p>
-      </IndustrialCard>
+      <MtCard elevated>
+        <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center', borderLeft: '4px solid var(--mt-danger)' }}>
+          <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>⚠️</div>
+          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', color: 'var(--mt-danger)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+            {error}
+          </h3>
+          <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Intenta recargar la página</p>
+        </div>
+      </MtCard>
     );
   }
 
   const hasItems = items && items.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--mt-space-lg)' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-          {description && <p className="text-gray-600 mt-1">{description}</p>}
+          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-text-primary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+            {title}
+          </h1>
+          {description && (
+            <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+              {description}
+            </p>
+          )}
         </div>
-        <IndustrialButton
-          variant="primary"
-          size="lg"
-          icon={<Plus size={20} />}
-          onClick={onCreateClick}
-        >
+        <MtButton variant="primary" size="lg" icon={<Plus size={20} />} onClick={onCreateClick}>
           {createButtonLabel}
-        </IndustrialButton>
+        </MtButton>
       </div>
 
       {/* Search & Filters */}
       {(searchValue !== undefined || filters.length > 0) && (
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
           {searchValue !== undefined && (
-            <IndustrialInput
-              placeholder="Buscar..."
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              icon={<Search size={18} />}
-            />
+            <div style={{ position: 'relative' }}>
+              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={searchValue}
+                onChange={(e) => onSearchChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  paddingLeft: '40px',
+                  padding: '10px 12px 10px 40px',
+                  borderRadius: 'var(--mt-radius-md)',
+                }}
+              />
+            </div>
           )}
 
           {filters.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', overflowX: 'auto', paddingBottom: 'var(--mt-space-sm)' }}>
               {filters.map((filter) => (
                 <button
                   key={filter.value}
                   onClick={() => onFilterChange(filter.value)}
-                  className={`
-                    px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition-all
-                    ${selectedFilter === filter.value
-                      ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }
-                  `}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 'var(--mt-radius-full)',
+                    fontWeight: 'var(--mt-font-weight-bold)',
+                    fontSize: '13px',
+                    whiteSpace: 'nowrap',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: selectedFilter === filter.value ? 'linear-gradient(135deg, var(--mt-accent), var(--mt-accent-strong))' : 'var(--mt-bg-surface)',
+                    color: selectedFilter === filter.value ? '#fff' : 'var(--mt-text-secondary)',
+                  }}
                 >
                   {filter.label}
                 </button>
@@ -97,13 +117,21 @@ export default function ListPageTemplate({
       )}
 
       {/* Items List/Grid */}
-      <div className="grid gap-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
         {!hasItems ? (
-          <IndustrialCard elevated className="p-12 text-center">
-            <div className="text-5xl mb-4">{emptyIcon}</div>
-            <h3 className="text-lg font-bold text-gray-900">{emptyTitle}</h3>
-            <p className="text-gray-600 mt-2">{emptyDescription}</p>
-          </IndustrialCard>
+          <MtCard elevated>
+            <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
+              <div style={{ fontSize: '48px', marginBottom: 'var(--mt-space-md)' }}>
+                {emptyIcon}
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
+                {emptyTitle}
+              </h3>
+              <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>
+                {emptyDescription}
+              </p>
+            </div>
+          </MtCard>
         ) : (
           items.map((item, idx) => (
             <div key={item.id || idx}>{renderItem(item)}</div>
