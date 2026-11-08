@@ -20,6 +20,7 @@ const MaintenanceInventory = lazy(() => import("../pages/Inventory"));
 const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
 const MaintenanceIndicators = lazy(() => import("../pages/Indicators"));
 const EquipmentAnalytics = lazy(() => import("../pages/EquipmentAnalytics"));
+const ExecutiveDashboard = lazy(() => import("../pages/ExecutiveDashboard"));
 const NotificationCenter = lazy(() => import("../pages/NotificationCenter"));
 const NotificationPreferences = lazy(() => import("../pages/NotificationPreferences"));
 
@@ -48,7 +49,7 @@ export default function MaintenanceRouter() {
 
         {/* Protected Routes */}
         <Route path="app" element={<MaintenanceProtectedRoute><MaintenanceLayout /></MaintenanceProtectedRoute>}>
-          <Route index element={<MaintenanceDashboard />} />
+          <Route index element={<ExecutiveDashboard />} />
           <Route path="assets" element={<MaintenanceAssets />} />
           <Route path="assets/:id" element={<MaintenanceAssetDetail />} />
           <Route path="assets/:id/history" element={<MaintenanceAssetHistory />} />
