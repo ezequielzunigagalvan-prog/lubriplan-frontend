@@ -9,6 +9,7 @@ const MaintenanceLayout = lazy(() => import("../pages/MaintenanceLayout"));
 const MaintenanceDashboard = lazy(() => import("../pages/Dashboard"));
 const MaintenanceAssets = lazy(() => import("../pages/Assets"));
 const MaintenanceAssetDetail = lazy(() => import("../pages/AssetDetail"));
+const MaintenanceAssetHistory = lazy(() => import("../pages/AssetHistoryPage"));
 const MaintenanceWorkOrders = lazy(() => import("../pages/WorkOrders"));
 const MaintenanceWorkOrderDetail = lazy(() => import("../pages/WorkOrderDetail"));
 const MaintenanceReportFailure = lazy(() => import("../pages/ReportFailure"));
@@ -49,6 +50,7 @@ export default function MaintenanceRouter() {
           <Route index element={<MaintenanceDashboard />} />
           <Route path="assets" element={<MaintenanceAssets />} />
           <Route path="assets/:id" element={<MaintenanceAssetDetail />} />
+          <Route path="assets/:id/history" element={<MaintenanceAssetHistory />} />
           <Route path="work-orders" element={<MaintenanceWorkOrders />} />
           <Route path="work-orders/:id" element={<MaintenanceWorkOrderDetail />} />
           <Route path="report-failure" element={<MaintenanceReportFailure />} />

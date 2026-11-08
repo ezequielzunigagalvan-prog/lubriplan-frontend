@@ -240,4 +240,12 @@ export const maintenanceApi = {
   async updateNotificationPreferences(data) {
     return httpPatch("/maintenance/notifications/preferences", data);
   },
+
+  // ============================================================
+  // ASSET HISTORY (Week 2)
+  // ============================================================
+
+  async getAssetHistory(assetId, days = 90) {
+    return httpGet(`/maintenance/assets/${assetId}/history?days=${days}`);
+  },
 };
