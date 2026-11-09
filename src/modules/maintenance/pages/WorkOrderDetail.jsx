@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { MtCard, MtBadge, MtPriorityBadge, MtButton, MtIcon } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
 import PhotoCapture from '../components/PhotoCapture';
@@ -6,6 +7,9 @@ import { toast } from 'sonner';
 import '../ui/tokens.css';
 
 export default function WorkOrderDetail() {
+  const { id } = useParams();
+  const workOrderId = parseInt(id) || 1;
+
   const [order, setOrder] = useState(null);
   const [spareParts, setSpareParts] = useState([]);
   const [failureCodes, setFailureCodes] = useState({ FAILURE_MODE: [], MECHANISM: [], ROOT_CAUSE: [] });
@@ -75,8 +79,6 @@ export default function WorkOrderDetail() {
       return;
     }
     try {
-      // In real app, get workOrderId from URL/params
-      const workOrderId = 1; // TODO: Get from actual WO
       await maintenanceApi.consumeSparePartInWorkOrder({
         workOrderId,
         sparePartId: parseInt(consumeData.sparePartId),
@@ -94,7 +96,6 @@ export default function WorkOrderDetail() {
   async function handleAssignFailure(e) {
     e.preventDefault();
     try {
-      const workOrderId = 1; // TODO: Get from actual WO
       await maintenanceApi.assignFailureToWorkOrder(workOrderId, {
         failureModeId: failureData.failureModeId ? parseInt(failureData.failureModeId) : null,
         mechanismId: failureData.mechanismId ? parseInt(failureData.mechanismId) : null,

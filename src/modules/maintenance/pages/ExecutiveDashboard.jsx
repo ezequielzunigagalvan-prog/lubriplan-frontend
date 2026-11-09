@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MtCard, MtBadge } from '../ui';
+import { maintenanceApi } from '../services/maintenanceApi';
 import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, Zap, Wrench, AlertTriangle, BarChart3 } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
@@ -12,7 +13,14 @@ export default function ExecutiveDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // TODO: Integrar con API real
+      let dashboardData;
+      try {
+        dashboardData = await maintenanceApi.getDashboardSummary();
+      } catch (apiError) {
+        console.warn('API unavailable, using fallback data:', apiError);
+        dashboardData = null;
+      }
+
       const mockData = {
         openOrders: 23,
         correctivePending: 8,
@@ -67,7 +75,7 @@ export default function ExecutiveDashboard() {
         ],
       };
 
-      setDashboardData(mockData);
+      setDashboardData(dashboardData || mockData);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {

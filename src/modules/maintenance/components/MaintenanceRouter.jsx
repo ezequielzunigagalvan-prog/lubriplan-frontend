@@ -29,6 +29,12 @@ const WorkOrderReview = lazy(() => import("../pages/WorkOrderReview"));
 const PreventivePlans = lazy(() => import("../pages/PreventivePlans"));
 const MaintenanceCalendar = lazy(() => import("../pages/MaintenanceCalendar"));
 const TechnicianDashboard = lazy(() => import("../pages/TechnicianDashboard"));
+const PersonnelManagement = lazy(() => import("../pages/PersonnelManagement"));
+const TechnicianProfile = lazy(() => import("../pages/TechnicianProfile"));
+const NewTechnician = lazy(() => import("../pages/NewTechnician"));
+const SkillsMatrix = lazy(() => import("../pages/SkillsMatrix"));
+const PlanningCalendar = lazy(() => import("../pages/PlanningCalendar"));
+const HistoryDashboard = lazy(() => import("../pages/HistoryDashboard"));
 
 // Protected Route Component
 import MaintenanceProtectedRoute from "../hooks/useMaintenanceProtectedRoute.jsx";
@@ -81,10 +87,20 @@ export default function MaintenanceRouter() {
           {/* Phase 4: Preventive Maintenance */}
           <Route path="preventive-plans" element={<PreventivePlans />} />
           <Route path="maintenance-calendar" element={<MaintenanceCalendar />} />
+          <Route path="planning-calendar" element={<PlanningCalendar />} />
 
           {/* Phase 5: Notifications */}
           <Route path="notifications" element={<NotificationCenter />} />
           <Route path="notifications/preferences" element={<NotificationPreferences />} />
+
+          {/* History */}
+          <Route path="history" element={<HistoryDashboard />} />
+
+          {/* Phase 7: Personnel Management */}
+          <Route path="personnel" element={<PersonnelManagement />} />
+          <Route path="personnel/new" element={<NewTechnician />} />
+          <Route path="personnel/:id" element={<TechnicianProfile />} />
+          <Route path="skills-matrix" element={<SkillsMatrix />} />
         </Route>
 
         {/* Fallback */}

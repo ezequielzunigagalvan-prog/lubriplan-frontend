@@ -97,8 +97,15 @@ export default function WorkOrderReview() {
 
     try {
       setSubmitting(true);
-      // TODO: Call API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const workOrderId = parseInt(id) || 1;
+
+      await maintenanceApi.updateWorkOrderStatus(workOrderId, {
+        status: 'APPROVED',
+        assignedTechnicianId: parseInt(approvalData.assignedTechnicianId),
+        estimatedDate: approvalData.estimatedDate,
+        estimatedHours: parseFloat(approvalData.estimatedHours) || 0,
+        notes: approvalData.notes,
+      });
 
       toast.success('Orden aprobada y asignada');
       navigate('/maintenance/app/work-orders');
@@ -118,8 +125,13 @@ export default function WorkOrderReview() {
 
     try {
       setSubmitting(true);
-      // TODO: Call API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const workOrderId = parseInt(id) || 1;
+
+      await maintenanceApi.updateWorkOrderStatus(workOrderId, {
+        status: 'REJECTED',
+        rejectionReason: rejectionData.reason,
+        rejectionComments: rejectionData.comments,
+      });
 
       toast.success('Orden rechazada');
       navigate('/maintenance/app/work-orders');

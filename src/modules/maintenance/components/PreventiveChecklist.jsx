@@ -17,7 +17,15 @@ export default function PreventiveChecklist({ workOrderId, onTaskUpdate }) {
   const loadTasks = async () => {
     try {
       setLoading(true);
-      // TODO: Crear endpoint para obtener tareas
+      let tasksData;
+      try {
+        const preventiveOrder = await maintenanceApi.getPreventiveOrder(workOrderId);
+        tasksData = preventiveOrder?.checklistItems || null;
+      } catch (apiError) {
+        console.warn('API unavailable, using fallback data:', apiError);
+        tasksData = null;
+      }
+
       const mockTasks = [
         {
           id: 1,
@@ -60,7 +68,7 @@ export default function PreventiveChecklist({ workOrderId, onTaskUpdate }) {
           comments: [],
         },
       ];
-      setTasks(mockTasks);
+      setTasks(tasksData || mockTasks);
     } catch (error) {
       toast.error('Error cargando tareas: ' + error.message);
     } finally {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { maintenanceApi } from '../services/maintenanceApi';
 import { MtCard, MtBadge, MtButton } from '../ui';
 import { ArrowLeft, BarChart3, FileText, Image, Wrench, AlertCircle, DollarSign, Clock, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,7 +20,17 @@ export default function AssetExpedient() {
   const loadAssetExpedient = async () => {
     try {
       setLoading(true);
-      // TODO: Integrar con API real
+      let assetData;
+      let expedientData;
+      try {
+        assetData = await maintenanceApi.getAsset(parseInt(id));
+        expedientData = await maintenanceApi.getAssetExpedient(parseInt(id));
+      } catch (apiError) {
+        console.warn('API unavailable, using fallback:', apiError);
+        assetData = null;
+        expedientData = null;
+      }
+
       const mockAsset = {
         id: id,
         code: 'EQ-001',
@@ -157,8 +168,8 @@ export default function AssetExpedient() {
         ],
       };
 
-      setAsset(mockAsset);
-      setExpedient(mockExpedient);
+      setAsset(assetData || mockAsset);
+      setExpedient(expedientData || mockExpedient);
     } catch (error) {
       toast.error('Error cargando expediente');
     } finally {

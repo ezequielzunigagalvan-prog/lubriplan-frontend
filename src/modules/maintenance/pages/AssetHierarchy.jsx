@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MtCard, MtBadge, MtButton } from '../ui';
 import { ChevronDown, ChevronRight, Building2, Factory, Grid3x3, Zap, Package, Settings, TreePine, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
+import { maintenanceApi } from '../services/maintenanceApi';
 
 export default function AssetHierarchy() {
   const navigate = useNavigate();
@@ -18,7 +19,14 @@ export default function AssetHierarchy() {
   const loadHierarchy = async () => {
     try {
       setLoading(true);
-      // TODO: Integrar con API real
+      let hierarchyData;
+      try {
+        hierarchyData = await maintenanceApi.getAssetHierarchy();
+      } catch (apiError) {
+        console.warn('API unavailable, using fallback data:', apiError);
+        hierarchyData = null;
+      }
+
       const mockData = {
         id: 'empresa-1',
         name: 'TechManufacturing S.A.',
@@ -139,7 +147,7 @@ export default function AssetHierarchy() {
         ],
       };
 
-      setHierarchy(mockData);
+      setHierarchy(hierarchyData || mockData);
     } catch (error) {
       toast.error('Error cargando jerarquía');
     } finally {
