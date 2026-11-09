@@ -18,9 +18,25 @@ export default function MaintenanceLayout() {
 
   const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`);
 
+  const menuItems = [
+    { path: '/maintenance/app', icon: 'dashboard', label: 'Dashboard' },
+    { path: '/maintenance/app/work-orders', icon: 'clipboard', label: 'Órdenes' },
+    { path: '/maintenance/app/report-failure', icon: 'alertCircle', label: 'Reportar Falla' },
+    { path: '/maintenance/app/preventive-plans', icon: 'calendar', label: 'Planes' },
+    { path: '/maintenance/app/planning-calendar', icon: 'calendarDays', label: 'Planificación' },
+    { path: '/maintenance/app/maintenance-calendar', icon: 'calendar', label: 'Mantenimiento' },
+    { path: '/maintenance/app/assets', icon: 'package', label: 'Activos' },
+    { path: '/maintenance/app/personnel', icon: 'users', label: 'Personal' },
+    { path: '/maintenance/app/history', icon: 'clock', label: 'Historial' },
+    { path: '/maintenance/app/inventory', icon: 'box', label: 'Inventario & Refacciones' },
+    { path: '/maintenance/app/failure-codes', icon: 'zap', label: 'Fallas' },
+    { path: '/maintenance/app/analytics', icon: 'trendingUp', label: 'Analítica' },
+    { path: '/maintenance/app/notifications', icon: 'bell', label: 'Notificaciones' },
+  ];
+
   return (
     <div className="mt-root" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {/* Header */}
+      {/* Top Header - Minimal */}
       <header style={{
         background: 'var(--mt-bg-surface)',
         borderBottom: '1px solid var(--mt-border)',
@@ -29,7 +45,7 @@ export default function MaintenanceLayout() {
         top: 0,
         zIndex: 50,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
@@ -53,75 +69,85 @@ export default function MaintenanceLayout() {
             LubriPlan
           </button>
 
-          <nav style={{ display: 'flex', gap: '8px', flex: 1, overflowX: 'auto' }}>
-            {[
-              { path: '/maintenance/app', icon: 'dashboard', label: 'Dashboard' },
-              { path: '/maintenance/app/work-orders', icon: 'clipboard', label: 'Órdenes' },
-              { path: '/maintenance/app/report-failure', icon: 'alertCircle', label: 'Reportar Falla' },
-              { path: '/maintenance/app/preventive-plans', icon: 'calendar', label: 'Planes' },
-              { path: '/maintenance/app/planning-calendar', icon: 'calendarDays', label: 'Planificación' },
-              { path: '/maintenance/app/maintenance-calendar', icon: 'calendar', label: 'Mantenimiento' },
-              { path: '/maintenance/app/assets', icon: 'package', label: 'Activos' },
-              { path: '/maintenance/app/personnel', icon: 'users', label: 'Personal' },
-              { path: '/maintenance/app/history', icon: 'clock', label: 'Historial' },
-              { path: '/maintenance/app/inventory', icon: 'box', label: 'Inventario & Refacciones' },
-              { path: '/maintenance/app/failure-codes', icon: 'zap', label: 'Fallas' },
-              { path: '/maintenance/app/analytics', icon: 'trendingUp', label: 'Analítica' },
-              { path: '/maintenance/app/notifications', icon: 'bell', label: 'Notificaciones' },
-            ].map((item) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <NotificationBell />
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--mt-border)',
+                background: 'transparent',
+                color: 'var(--mt-text-secondary)',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '13px',
+                transition: 'all 150ms ease',
+              }}
+              title="Salir"
+            >
+              <MtIcon name="logOut" size="sm" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Layout - Sidebar + Content */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Sidebar Navigation */}
+        <aside style={{
+          width: '240px',
+          background: 'var(--mt-bg-surface)',
+          borderRight: '1px solid var(--mt-border)',
+          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          padding: 'var(--mt-space-lg)',
+        }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {menuItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 style={{
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 12px',
+                  gap: '12px',
+                  padding: '10px 12px',
                   borderRadius: '8px',
-                  border: '1px solid var(--mt-border)',
+                  border: isActive(item.path) ? '1px solid var(--mt-accent)' : '1px solid transparent',
                   background: isActive(item.path) ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
                   color: isActive(item.path) ? 'var(--mt-accent)' : 'var(--mt-text-secondary)',
                   textDecoration: 'none',
-                  fontWeight: 700,
+                  fontWeight: isActive(item.path) ? 700 : 600,
                   fontSize: '13px',
                   cursor: 'pointer',
                   transition: 'all 150ms ease',
-                  borderColor: isActive(item.path) ? 'var(--mt-accent)' : 'var(--mt-border)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
+                title={item.label}
               >
                 <MtIcon name={item.icon} size="sm" />
-                {item.label}
+                <span>{item.label}</span>
               </NavLink>
             ))}
           </nav>
+        </aside>
 
-          <NotificationBell />
-
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--mt-border)',
-              background: 'transparent',
-              color: 'var(--mt-text-secondary)',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '13px',
-              transition: 'all 150ms ease',
-            }}
-            title="Salir"
-          >
-            <MtIcon name="logOut" size="sm" />
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main style={{ flex: 1, padding: '24px 16px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-        <Outlet />
-      </main>
+        {/* Main Content Area */}
+        <main style={{
+          flex: 1,
+          padding: '24px 32px',
+          overflow: 'auto',
+          maxWidth: '100%'
+        }}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
