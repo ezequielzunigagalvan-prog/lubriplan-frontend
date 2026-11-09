@@ -102,7 +102,7 @@ export default function PersonnelManagement() {
   const specialities = Object.keys(SPECIALITIES);
 
   const filtered = technicians.filter(tech => {
-    const matchSearch = tech.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = tech.name?.toLowerCase().includes(search.toLowerCase()) ?? false;
     const matchSpeciality = filterSpeciality === 'all' || tech.speciality === filterSpeciality;
     const matchPlant = filterPlant === 'all' || tech.plant === filterPlant;
     return matchSearch && matchSpeciality && matchPlant;

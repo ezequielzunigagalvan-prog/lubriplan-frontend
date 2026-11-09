@@ -11,9 +11,9 @@ export default function SpareParts() {
   const [search, setSearch] = useState('');
 
   const filtered = parts.filter((part) =>
-    part.code.toLowerCase().includes(search.toLowerCase()) ||
-    part.name.toLowerCase().includes(search.toLowerCase()) ||
-    part.supplier.toLowerCase().includes(search.toLowerCase())
+    part.code?.toLowerCase().includes(search.toLowerCase()) ||
+    part.name?.toLowerCase().includes(search.toLowerCase()) ||
+    part.supplier?.toLowerCase().includes(search.toLowerCase())
   );
 
   const lowStockParts = filtered.filter((p) => p.qty < p.minQty);

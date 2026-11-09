@@ -12,8 +12,8 @@ export default function Inventory() {
   const [search, setSearch] = useState('');
 
   const filtered = warehouses.filter((wh) =>
-    wh.name.toLowerCase().includes(search.toLowerCase()) ||
-    wh.location.toLowerCase().includes(search.toLowerCase())
+    wh.name?.toLowerCase().includes(search.toLowerCase()) ||
+    wh.location?.toLowerCase().includes(search.toLowerCase())
   );
 
   const totalItems = warehouses.reduce((sum, wh) => sum + wh.items, 0);

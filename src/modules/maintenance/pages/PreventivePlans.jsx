@@ -226,9 +226,9 @@ export default function PreventivePlans() {
   const filteredPlans = plans.filter(plan => {
     const matchesFilter = filter === 'all' || plan.status === filter;
     const matchesSearch =
-      plan.name.toLowerCase().includes(search.toLowerCase()) ||
-      plan.assetName.toLowerCase().includes(search.toLowerCase()) ||
-      plan.assetCode.toLowerCase().includes(search.toLowerCase());
+      plan.name?.toLowerCase().includes(search.toLowerCase()) ||
+      plan.assetName?.toLowerCase().includes(search.toLowerCase()) ||
+      plan.assetCode?.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
