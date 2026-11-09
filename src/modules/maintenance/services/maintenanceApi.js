@@ -66,10 +66,15 @@ export const maintenanceApi = {
     return httpForm(`/maintenance/work-orders/${id}/photos`, formData, "POST");
   },
 
-  // Dashboard summary
+  // Dashboard summary (stub - returns mock until backend ready)
   async getDashboardSummary(filters = {}) {
-    const params = new URLSearchParams(filters);
-    return httpGet(`/maintenance/dashboard/summary?${params}`);
+    try {
+      const params = new URLSearchParams(filters);
+      return await httpGet(`/maintenance/dashboard/summary?${params}`);
+    } catch (error) {
+      // Fallback: endpoint not yet implemented
+      return null;
+    }
   },
 
   // ============================================================
@@ -177,10 +182,6 @@ export const maintenanceApi = {
   // ============================================================
   // INDICATORS (Phase 3B)
   // ============================================================
-
-  async getDashboardSummary() {
-    return httpGet("/maintenance/indicators/dashboard");
-  },
 
   async getCosts(startDate, endDate) {
     const params = new URLSearchParams();
@@ -301,17 +302,32 @@ export const maintenanceApi = {
 
   // Asset Expedient & History
   async getAssetExpedient(id) {
-    return httpGet(`/maintenance/assets/${id}/expedient`);
+    try {
+      return await httpGet(`/maintenance/assets/${id}/expedient`);
+    } catch (error) {
+      // Fallback: endpoint not yet implemented
+      return null;
+    }
   },
 
   // Asset Hierarchy
   async getAssetHierarchy() {
-    return httpGet("/maintenance/assets/hierarchy");
+    try {
+      return await httpGet("/maintenance/assets/hierarchy");
+    } catch (error) {
+      // Fallback: endpoint not yet implemented
+      return null;
+    }
   },
 
   // Preventive Orders & Checklists
   async getPreventiveOrder(workOrderId) {
-    return httpGet(`/maintenance/preventive-orders/${workOrderId}`);
+    try {
+      return await httpGet(`/maintenance/preventive-orders/${workOrderId}`);
+    } catch (error) {
+      // Fallback: endpoint not yet implemented
+      return null;
+    }
   },
 
   async getPreventiveOrders(filters = {}) {

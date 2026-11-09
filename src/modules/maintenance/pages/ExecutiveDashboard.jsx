@@ -75,9 +75,25 @@ export default function ExecutiveDashboard() {
         ],
       };
 
-      setDashboardData(dashboardData || mockData);
+      const finalData = dashboardData || mockData;
+
+      // Ensure all required nested objects exist
+      const safeData = {
+        ...finalData,
+        correctiveVsPreventive: finalData.correctiveVsPreventive || mockData.correctiveVsPreventive,
+        maintenanceByPlant: finalData.maintenanceByPlant || mockData.maintenanceByPlant,
+        failuresByEquipment: finalData.failuresByEquipment || mockData.failuresByEquipment,
+        equipmentDowntime: finalData.equipmentDowntime || mockData.equipmentDowntime,
+        monthlyCosts: finalData.monthlyCosts || mockData.monthlyCosts,
+        maintenanceCompliance: finalData.maintenanceCompliance || mockData.maintenanceCompliance,
+        ordersBySpecialty: finalData.ordersBySpecialty || mockData.ordersBySpecialty,
+      };
+
+      setDashboardData(safeData);
     } catch (error) {
       console.error('Error loading dashboard:', error);
+      // Fallback to mock data on error
+      setDashboardData(mockData);
     } finally {
       setLoading(false);
     }
