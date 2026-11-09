@@ -276,4 +276,71 @@ export const maintenanceApi = {
   async getWeeklyDigest() {
     return httpGet("/maintenance/reports/weekly-digest");
   },
+
+  // ============================================================
+  // MISSING ENDPOINTS (Fase 2: Integración Backend)
+  // ============================================================
+
+  // Personnel Management
+  async createTechnician(data) {
+    return httpPost("/maintenance/technicians", data);
+  },
+
+  async getTechnicians(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return httpGet(`/maintenance/technicians?${params}`);
+  },
+
+  async getTechnician(id) {
+    return httpGet(`/maintenance/technicians/${id}`);
+  },
+
+  async updateTechnician(id, data) {
+    return httpPatch(`/maintenance/technicians/${id}`, data);
+  },
+
+  // Asset Expedient & History
+  async getAssetExpedient(id) {
+    return httpGet(`/maintenance/assets/${id}/expedient`);
+  },
+
+  // Asset Hierarchy
+  async getAssetHierarchy() {
+    return httpGet("/maintenance/assets/hierarchy");
+  },
+
+  // Preventive Orders & Checklists
+  async getPreventiveOrder(workOrderId) {
+    return httpGet(`/maintenance/preventive-orders/${workOrderId}`);
+  },
+
+  async getPreventiveOrders(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return httpGet(`/maintenance/preventive-orders?${params}`);
+  },
+
+  async createPreventiveOrder(data) {
+    return httpPost("/maintenance/preventive-orders", data);
+  },
+
+  async getPreventiveChecklist(workOrderId) {
+    return httpGet(`/maintenance/preventive-orders/${workOrderId}/checklist`);
+  },
+
+  async updatePreventiveChecklistItem(workOrderId, itemId, data) {
+    return httpPatch(`/maintenance/preventive-orders/${workOrderId}/checklist/${itemId}`, data);
+  },
+
+  // Work Order Status Management
+  async updateWorkOrderStatus(id, data) {
+    return httpPatch(`/maintenance/work-orders/${id}/status`, data);
+  },
+
+  async approveWorkOrder(id, data) {
+    return httpPost(`/maintenance/work-orders/${id}/approve`, data);
+  },
+
+  async rejectWorkOrder(id, data) {
+    return httpPost(`/maintenance/work-orders/${id}/reject`, data);
+  },
 };
