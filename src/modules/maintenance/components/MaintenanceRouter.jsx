@@ -18,7 +18,6 @@ const AccessDenied = lazy(() => import("../pages/AccessDenied"));
 const MaintenanceSpareParts = lazy(() => import("../pages/SpareParts"));
 const MaintenanceInventory = lazy(() => import("../pages/Inventory"));
 const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
-const MaintenanceIndicators = lazy(() => import("../pages/Indicators"));
 const EquipmentAnalytics = lazy(() => import("../pages/EquipmentAnalytics"));
 const ExecutiveDashboard = lazy(() => import("../pages/ExecutiveDashboard"));
 const AssetHierarchy = lazy(() => import("../pages/AssetHierarchy"));
@@ -77,9 +76,6 @@ export default function MaintenanceRouter() {
           <Route path="spare-parts" element={<MaintenanceSpareParts />} />
           <Route path="inventory" element={<MaintenanceInventory />} />
           <Route path="failure-codes" element={<MaintenanceFailureCodes />} />
-
-          {/* Phase 3B: Indicators */}
-          <Route path="indicators" element={<MaintenanceIndicators />} />
 
           {/* Phase 2: Equipment Analytics */}
           <Route path="analytics" element={<EquipmentAnalytics />} />
