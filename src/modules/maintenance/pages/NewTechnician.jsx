@@ -45,7 +45,7 @@ export default function NewTechnician() {
   };
 
   const handleAddCertification = () => {
-    if (formData.newCertification.trim()) {
+    if ((formData.newCertification || '').trim()) {
       setFormData(prev => ({
         ...prev,
         certifications: [...prev.certifications, prev.newCertification],

@@ -111,8 +111,8 @@ export default function ReportFailure() {
 
     // Validate
     if (!formData.assetId) { toast.error('Selecciona un activo'); return; }
-    if (!formData.title.trim()) { toast.error('Ingresa un título'); return; }
-    if (!formData.description.trim()) { toast.error('Describe el problema'); return; }
+    if (!(formData.title || '').trim()) { toast.error('Ingresa un título'); return; }
+    if (!(formData.description || '').trim()) { toast.error('Describe el problema'); return; }
 
     try {
       setSubmitting(true);

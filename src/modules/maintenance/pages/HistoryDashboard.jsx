@@ -198,10 +198,10 @@ export default function HistoryDashboard() {
   const filtered = useMemo(() => {
     return MOCK_HISTORY.filter(item => {
       const matchSearch =
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.asset.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.assetCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.technician.toLowerCase().includes(searchTerm.toLowerCase());
+        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.asset?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.assetCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.technician?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchCategory = filterCategory === 'all' || item.category === filterCategory;
       const matchStatus = filterStatus === 'all' || item.status === filterStatus;
