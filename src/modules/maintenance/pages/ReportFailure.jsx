@@ -60,7 +60,7 @@ export default function ReportFailure() {
 
   // Filter assets
   const filtered = useMemo(() => {
-    const search = formData.assetCode.toLowerCase();
+    const search = (formData.assetCode || '').toLowerCase();
     if (!search) return [];
     return assets.filter(a =>
       a.name?.toLowerCase().includes(search) ||
