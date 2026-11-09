@@ -15,7 +15,6 @@ const MaintenanceWorkOrderDetail = lazy(() => import("../pages/WorkOrderDetail")
 const MaintenanceReportFailure = lazy(() => import("../pages/ReportFailure"));
 const MaintenanceExecution = lazy(() => import("../pages/Execution"));
 const AccessDenied = lazy(() => import("../pages/AccessDenied"));
-const MaintenanceSpareParts = lazy(() => import("../pages/SpareParts"));
 const MaintenanceInventory = lazy(() => import("../pages/Inventory"));
 const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
 const EquipmentAnalytics = lazy(() => import("../pages/EquipmentAnalytics"));
@@ -72,8 +71,7 @@ export default function MaintenanceRouter() {
           <Route path="report-failure" element={<MaintenanceReportFailure />} />
           <Route path="work-orders/:id/execute" element={<MaintenanceExecution />} />
 
-          {/* Phase 3A: Inventory & Spare Parts */}
-          <Route path="spare-parts" element={<MaintenanceSpareParts />} />
+          {/* Phase 3A: Inventory & Spare Parts (Unified) */}
           <Route path="inventory" element={<MaintenanceInventory />} />
           <Route path="failure-codes" element={<MaintenanceFailureCodes />} />
 
