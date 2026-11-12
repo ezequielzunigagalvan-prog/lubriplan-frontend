@@ -116,6 +116,8 @@ export default function PreventivePlans() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [submitting, setSubmitting] = useState(false);
+  const [spareParts, setSpareParts] = useState([]);
+  const [loadingSpareParts, setLoadingSpareParts] = useState(false);
 
   const [formData, setFormData] = useState({
     assetId: '',
@@ -124,6 +126,7 @@ export default function PreventivePlans() {
     assignedTo: '',
     estimatedHours: '1',
     notes: '',
+    selectedSpareParts: [],
   });
 
   useEffect(() => {
@@ -131,12 +134,29 @@ export default function PreventivePlans() {
       try {
         setLoading(false);
         setPlans(MOCK_PLANS);
+        // Cargar refacciones desde API
+        await loadSpareParts();
       } catch (err) {
         toast.error('Error cargando planes');
       }
     };
     load();
   }, []);
+
+  const loadSpareParts = async () => {
+    try {
+      setLoadingSpareParts(true);
+      const response = await fetch('/api/maintenance/spare-parts');
+      if (response.ok) {
+        const data = await response.json();
+        setSpareParts(data);
+      }
+    } catch (err) {
+      console.error('Error cargando refacciones:', err);
+    } finally {
+      setLoadingSpareParts(false);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -146,6 +166,7 @@ export default function PreventivePlans() {
       assignedTo: '',
       estimatedHours: '1',
       notes: '',
+      selectedSpareParts: [],
     });
     setEditingPlan(null);
   };
@@ -731,6 +752,59 @@ export default function PreventivePlans() {
                       boxSizing: 'border-box',
                     }}
                   />
+                </div>
+
+                {/* Spare Parts Selection */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
+                    Refacciones Requeridas (opcional)
+                  </label>
+                  {loadingSpareParts ? (
+                    <div style={{ textAlign: 'center', padding: '12px', color: 'var(--mt-text-secondary)' }}>
+                      Cargando refacciones...
+                    </div>
+                  ) : spareParts.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '12px', color: 'var(--mt-text-secondary)', fontSize: '13px' }}>
+                      No hay refacciones disponibles
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+                      {spareParts.map(part => (
+                        <label key={part.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '6px', background: 'var(--mt-bg-surface)', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={formData.selectedSpareParts.includes(part.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  selectedSpareParts: [...prev.selectedSpareParts, part.id]
+                                }));
+                              } else {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  selectedSpareParts: prev.selectedSpareParts.filter(id => id !== part.id)
+                                }));
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <span style={{ fontSize: '13px', flex: 1 }}>
+                            <strong>{part.code}</strong> - {part.name}
+                            <br />
+                            <span style={{ fontSize: '11px', color: 'var(--mt-text-secondary)' }}>
+                              Stock: {part.stock || 0} {part.unit} | ${part.costPerUnit || 0}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {formData.selectedSpareParts.length > 0 && (
+                    <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '6px', fontSize: '12px', color: 'var(--mt-accent)' }}>
+                      ✓ {formData.selectedSpareParts.length} refacción{formData.selectedSpareParts.length !== 1 ? 'es' : ''} seleccionada{formData.selectedSpareParts.length !== 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
 
                 {/* Buttons */}

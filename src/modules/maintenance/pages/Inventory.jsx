@@ -1,49 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MtCard, MtButton, MtBadge } from '../ui';
 import { Plus, Search, Package, Building2, AlertTriangle, DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, TrendingUp, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 
-export default function Inventory() {
-  // Unified data structure: Warehouses with integrated Spare Parts
-  const [warehouses] = useState([
-    {
-      id: 1,
-      name: 'Almacén Principal',
-      location: 'Planta Jilotepec',
-      status: 'OPTIMAL',
-      lastUpdated: '2026-11-08 14:30',
-      spareParts: [
-        { id: 'SP-001', code: 'SP-001', name: 'Sello mecánico bomba', sku: 'SEAL-MECH-001', qty: 5, minQty: 10, criticalQty: 2, unit: 'pz', price: 85.50, supplier: 'Hidrolub', category: 'Sellos', location: 'Estante A-01', lastMovement: '2026-11-05', notes: 'Para bomba principal' },
-        { id: 'SP-002', code: 'SP-002', name: 'Correa trapecial', sku: 'BELT-TRAP-005', qty: 12, minQty: 20, criticalQty: 5, unit: 'm', price: 45.00, supplier: 'Industrial', category: 'Correas', location: 'Estante B-03', lastMovement: '2026-11-06', notes: 'Diversos diámetros' },
-        { id: 'SP-003', code: 'SP-003', name: 'Aceite ISO 68', sku: 'OIL-ISO68-200L', qty: 100, minQty: 50, criticalQty: 25, unit: 'L', price: 12.50, supplier: 'Castrol', category: 'Lubricantes', location: 'Tanque T-01', lastMovement: '2026-11-03', notes: 'Lubricante industrial' },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Stock de Emergencia',
-      location: 'Planta Toluca',
-      status: 'LOW',
-      lastUpdated: '2026-11-07 09:15',
-      spareParts: [
-        { id: 'SP-004', code: 'SP-004', name: 'Rodamiento 6205-2RS', sku: 'BEAR-6205-01', qty: 8, minQty: 15, criticalQty: 3, unit: 'pz', price: 28.75, supplier: 'SKF', category: 'Rodamientos', location: 'Estante C-02', lastMovement: '2026-11-04', notes: 'Repuesto crítico' },
-        { id: 'SP-005', code: 'SP-005', name: 'Filtro hidráulico', sku: 'FILT-HYD-250', qty: 3, minQty: 10, criticalQty: 1, unit: 'pz', price: 156.00, supplier: 'Bosch', category: 'Filtros', location: 'Estante D-01', lastMovement: '2026-10-28', notes: 'CRÍTICO - Bajo stock' },
-      ],
-    },
-    {
-      id: 3,
-      name: 'Repuestos Críticos',
-      location: 'Sala de Bombeo',
-      status: 'OPTIMAL',
-      lastUpdated: '2026-11-08 11:45',
-      spareParts: [
-        { id: 'SP-006', code: 'SP-006', name: 'Sello mecánico 40mm', sku: 'SEAL-MECH-40', qty: 6, minQty: 8, criticalQty: 2, unit: 'pz', price: 95.00, supplier: 'Hidrolub', category: 'Sellos', location: 'Caja 001', lastMovement: '2026-11-07', notes: 'Para bomba secundaria' },
-      ],
-    },
-  ]);
+const API_BASE = '/api/maintenance';
 
+export default function Inventory() {
+  const [warehouses, setWarehouses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [expandedWarehouseId, setExpandedWarehouseId] = useState(null);
   const [expandedPartId, setExpandedPartId] = useState(null);
-  const [viewMode, setViewMode] = useState('by-warehouse'); // 'by-warehouse' or 'all-parts'
+  const [viewMode, setViewMode] = useState('by-warehouse');
+
+  // Cargar almacenes y stock desde API
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`${API_BASE}/inventory/warehouses`);
+        if (!response.ok) throw new Error('Error al cargar almacenes');
+
+        const warehousesData = await response.json();
+
+        // Para cada almacén, cargar su stock
+        const warehousesWithStock = await Promise.all(
+          warehousesData.map(async (warehouse) => {
+            try {
+              const stockResponse = await fetch(`${API_BASE}/inventory/warehouses/${warehouse.id}/stock`);
+              if (!stockResponse.ok) {
+                console.warn(`Error al cargar stock para almacén ${warehouse.id}`);
+                return { ...warehouse, spareParts: [] };
+              }
+              const stock = await stockResponse.json();
+              return { ...warehouse, spareParts: stock };
+            } catch (err) {
+              console.warn(`Error cargando stock para almacén ${warehouse.id}:`, err);
+              return { ...warehouse, spareParts: [] };
+            }
+          })
+        );
+
+        setWarehouses(warehousesWithStock);
+      } catch (err) {
+        console.error('Error cargando inventario:', err);
+        setError('No se pudo cargar el inventario. Intenta nuevamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInventory();
+  }, []);
+
+  // Estados para modales
+  const [showCreateWarehouseModal, setShowCreateWarehouseModal] = useState(false);
+  const [showCreatePartModal, setShowCreatePartModal] = useState(false);
+  const [showEditPartModal, setShowEditPartModal] = useState(false);
+  const [selectedPartForEdit, setSelectedPartForEdit] = useState(null);
+  const [showMovementsModal, setShowMovementsModal] = useState(false);
+  const [selectedPartForMovements, setSelectedPartForMovements] = useState(null);
 
   // Calculate total inventory stats
   const allSpareParts = warehouses.flatMap((wh) => wh.spareParts.map((p) => ({ ...p, warehouseId: wh.id })));
@@ -77,6 +95,61 @@ export default function Inventory() {
     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(value);
   };
 
+  const handleDeletePart = async (partId) => {
+    if (confirm('¿Estás seguro de que deseas eliminar esta refacción?')) {
+      try {
+        const response = await fetch(`${API_BASE}/spare-parts/${partId}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          // Recargar inventario
+          const updatedWarehouses = await Promise.all(
+            warehouses.map(async (wh) => {
+              const stockResponse = await fetch(`${API_BASE}/inventory/warehouses/${wh.id}/stock`);
+              if (!stockResponse.ok) return { ...wh, spareParts: [] };
+              const stock = await stockResponse.json();
+              return { ...wh, spareParts: stock };
+            })
+          );
+          setWarehouses(updatedWarehouses);
+        } else {
+          alert('Error al eliminar la refacción');
+        }
+      } catch (err) {
+        console.error('Error al eliminar:', err);
+        alert('Error al eliminar la refacción');
+      }
+    }
+  };
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--mt-border)', borderTopColor: 'var(--mt-accent)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+        <p style={{ color: 'var(--mt-text-secondary)' }}>Cargando inventario...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // Mostrar error
+  if (error) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+        <MtCard elevated>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <AlertCircle size={24} style={{ color: 'var(--mt-danger)', flexShrink: 0 }} />
+            <div>
+              <h3 style={{ margin: 0, marginBottom: '4px', color: 'var(--mt-danger)' }}>Error</h3>
+              <p style={{ margin: 0, color: 'var(--mt-text-secondary)' }}>{error}</p>
+            </div>
+          </div>
+        </MtCard>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
@@ -90,10 +163,10 @@ export default function Inventory() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--mt-space-md)' }}>
-          <MtButton variant="secondary" size="lg" icon={<Plus size={20} />} onClick={() => console.log('Create warehouse')}>
+          <MtButton variant="secondary" size="lg" icon={<Plus size={20} />} onClick={() => setShowCreateWarehouseModal(true)}>
             Nuevo Almacén
           </MtButton>
-          <MtButton variant="primary" size="lg" icon={<Plus size={20} />} onClick={() => console.log('Create part')}>
+          <MtButton variant="primary" size="lg" icon={<Plus size={20} />} onClick={() => setShowCreatePartModal(true)}>
             Nueva Refacción
           </MtButton>
         </div>
@@ -402,11 +475,20 @@ export default function Inventory() {
                                   </div>
 
                                   {/* Action Buttons */}
-                                  <div style={{ display: 'flex', gap: 'var(--mt-space-md)' }}>
-                                    <MtButton variant="secondary" size="sm" icon={<Edit2 size={14} />}>
+                                  <div style={{ display: 'flex', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
+                                    <MtButton variant="secondary" size="sm" icon={<Clock size={14} />} onClick={() => {
+                                      setSelectedPartForMovements(part);
+                                      setShowMovementsModal(true);
+                                    }}>
+                                      Historial
+                                    </MtButton>
+                                    <MtButton variant="secondary" size="sm" icon={<Edit2 size={14} />} onClick={() => {
+                                      setSelectedPartForEdit(part);
+                                      setShowEditPartModal(true);
+                                    }}>
                                       Editar
                                     </MtButton>
-                                    <MtButton variant="secondary" size="sm" icon={<Trash2 size={14} />}>
+                                    <MtButton variant="secondary" size="sm" icon={<Trash2 size={14} />} onClick={() => handleDeletePart(part.id)}>
                                       Eliminar
                                     </MtButton>
                                   </div>
@@ -424,6 +506,425 @@ export default function Inventory() {
           })
         )}
       </div>
+
+      {/* Modal Crear Almacén */}
+      {showCreateWarehouseModal && (
+        <WarehouseModal
+          onClose={() => setShowCreateWarehouseModal(false)}
+          onSuccess={() => {
+            setShowCreateWarehouseModal(false);
+            // Recargar inventario
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* Modal Crear Refacción */}
+      {showCreatePartModal && (
+        <SparePartModal
+          warehouses={warehouses}
+          onClose={() => setShowCreatePartModal(false)}
+          onSuccess={() => {
+            setShowCreatePartModal(false);
+            // Recargar inventario
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* Modal Editar Refacción */}
+      {showEditPartModal && selectedPartForEdit && (
+        <SparePartModal
+          warehouses={warehouses}
+          part={selectedPartForEdit}
+          onClose={() => {
+            setShowEditPartModal(false);
+            setSelectedPartForEdit(null);
+          }}
+          onSuccess={() => {
+            setShowEditPartModal(false);
+            setSelectedPartForEdit(null);
+            // Recargar inventario
+            window.location.reload();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Modal para crear/editar almacenes
+function WarehouseModal({ onClose, onSuccess }) {
+  const [formData, setFormData] = useState({ name: '', location: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.location) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE}/inventory/warehouses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        onSuccess();
+      } else {
+        alert('Error al crear almacén');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error al crear almacén');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <MtCard elevated style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Nuevo Almacén</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Nombre del Almacén</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Ej: Almacén Principal"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Ubicación</label>
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              placeholder="Ej: Planta Jilotepec"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <MtButton variant="secondary" onClick={onClose}>Cancelar</MtButton>
+            <MtButton variant="primary" type="submit" disabled={loading}>{loading ? 'Creando...' : 'Crear Almacén'}</MtButton>
+          </div>
+        </form>
+      </MtCard>
+    </div>
+  );
+}
+
+// Modal para crear/editar refacciones
+function SparePartModal({ warehouses, part, onClose, onSuccess }) {
+  const [formData, setFormData] = useState(part ? {
+    code: part.code,
+    name: part.name,
+    description: part.description || '',
+    category: part.category || '',
+    brand: part.brand || '',
+    partNumber: part.partNumber || part.sku || '',
+    unit: part.unit || 'pz',
+    minStock: part.minQty || 10,
+    maxStock: part.maxStock || part.minQty * 2 || 20,
+    costPerUnit: part.price || 0,
+  } : {
+    code: '',
+    name: '',
+    description: '',
+    category: '',
+    brand: '',
+    partNumber: '',
+    unit: 'pz',
+    minStock: 10,
+    maxStock: 20,
+    costPerUnit: 0,
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.code || !formData.name) {
+      alert('Por favor completa los campos requeridos');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const url = part ? `${API_BASE}/spare-parts/${part.id}` : `${API_BASE}/spare-parts`;
+      const method = part ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        onSuccess();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || `Error al ${part ? 'actualizar' : 'crear'} refacción`);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert(`Error al ${part ? 'actualizar' : 'crear'} refacción`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <MtCard elevated style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>{part ? 'Editar Refacción' : 'Nueva Refacción'}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Código *</label>
+            <input
+              type="text"
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              placeholder="SP-001"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Nombre *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Sello mecánico"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Categoría</label>
+            <input
+              type="text"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              placeholder="Sellos"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Marca</label>
+            <input
+              type="text"
+              value={formData.brand}
+              onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+              placeholder="Hidrolub"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Número de Parte</label>
+            <input
+              type="text"
+              value={formData.partNumber}
+              onChange={(e) => setFormData({ ...formData, partNumber: e.target.value })}
+              placeholder="SEAL-001"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Unidad</label>
+            <select
+              value={formData.unit}
+              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            >
+              <option value="pz">Pieza</option>
+              <option value="m">Metro</option>
+              <option value="L">Litro</option>
+              <option value="kg">Kilogramo</option>
+              <option value="ft">Pie</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Stock Mínimo</label>
+            <input
+              type="number"
+              value={formData.minStock}
+              onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) })}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Stock Máximo</label>
+            <input
+              type="number"
+              value={formData.maxStock}
+              onChange={(e) => setFormData({ ...formData, maxStock: parseInt(e.target.value) })}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Costo por Unidad</label>
+            <input
+              type="number"
+              value={formData.costPerUnit}
+              onChange={(e) => setFormData({ ...formData, costPerUnit: parseFloat(e.target.value) })}
+              placeholder="0.00"
+              step="0.01"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Descripción</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Descripción adicional..."
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box', minHeight: '80px' }}
+            />
+          </div>
+
+          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <MtButton variant="secondary" onClick={onClose}>Cancelar</MtButton>
+            <MtButton variant="primary" type="submit" disabled={loading}>{loading ? 'Guardando...' : (part ? 'Actualizar' : 'Crear')}</MtButton>
+          </div>
+        </form>
+      </MtCard>
+    </div>
+  );
+}
+
+// Modal para ver historial de movimientos
+function MovementsModal({ part, onClose }) {
+  const [movements, setMovements] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMovements = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE}/inventory/stock/${part.id}/movements`);
+        if (response.ok) {
+          const data = await response.json();
+          setMovements(data);
+        }
+      } catch (err) {
+        console.error('Error cargando movimientos:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovements();
+  }, [part.id]);
+
+  const getMovementIcon = (type) => {
+    switch (type) {
+      case 'IN': return '📥';
+      case 'OUT': return '📤';
+      case 'TRANSFER': return '🔄';
+      case 'ADJUST': return '⚙️';
+      default: return '📝';
+    }
+  };
+
+  const getMovementColor = (type) => {
+    switch (type) {
+      case 'IN': return 'var(--mt-success)';
+      case 'OUT': return 'var(--mt-danger)';
+      case 'TRANSFER': return 'var(--mt-accent)';
+      case 'ADJUST': return 'var(--mt-warning)';
+      default: return 'var(--mt-text-secondary)';
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <MtCard elevated style={{ width: '90%', maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Historial de Movimientos</h2>
+            <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+              {part.code} - {part.name}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '32px' }}>
+            <div style={{ width: '40px', height: '40px', border: '3px solid var(--mt-border)', borderTopColor: 'var(--mt-accent)', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
+          </div>
+        ) : movements.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px', color: 'var(--mt-text-secondary)' }}>
+            <Package size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+            <p>No hay movimientos registrados</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {movements.map((movement, idx) => (
+              <div key={idx} style={{
+                display: 'flex',
+                gap: '12px',
+                padding: '12px',
+                border: '1px solid var(--mt-border)',
+                borderRadius: '8px',
+                background: 'var(--mt-bg-surface-2)'
+              }}>
+                <div style={{ fontSize: '20px', marginTop: '4px' }}>
+                  {getMovementIcon(movement.type)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 'bold', color: getMovementColor(movement.type) }}>
+                      {movement.type === 'IN' ? 'Entrada' : movement.type === 'OUT' ? 'Salida' : movement.type === 'TRANSFER' ? 'Transferencia' : 'Ajuste'}
+                    </span>
+                    <span style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
+                      {new Date(movement.createdAt).toLocaleString('es-ES')}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
+                    <span>Cantidad: <strong>{movement.quantity} {part.unit}</strong></span>
+                    {movement.notes && <span>Nota: {movement.notes}</span>}
+                  </div>
+                  {movement.userId && (
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
+                      Por: Usuario #{movement.userId}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+          <MtButton variant="secondary" onClick={onClose}>Cerrar</MtButton>
+        </div>
+      </MtCard>
     </div>
   );
 }
