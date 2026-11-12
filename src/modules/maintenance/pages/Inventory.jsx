@@ -699,6 +699,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
     brand: part.brand || '',
     partNumber: part.partNumber || part.sku || '',
     unit: part.unit || 'pz',
+    warehouseId: '',
     initialQuantity: part.qty || 0,
     minStock: part.minQty || 10,
     maxStock: part.maxStock || part.minQty * 2 || 20,
@@ -711,6 +712,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
     brand: '',
     partNumber: '',
     unit: 'pz',
+    warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
     initialQuantity: 0,
     minStock: 10,
     maxStock: 20,
@@ -720,7 +722,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.code || !formData.name) {
+    if (!formData.code || !formData.name || !formData.warehouseId) {
       alert('Por favor completa los campos requeridos');
       return;
     }
@@ -730,7 +732,19 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
       if (part) {
         await maintenanceApi.updateSparePart(part.id, formData);
       } else {
-        await maintenanceApi.createSparePart(formData);
+        // Crear refacción
+        const newPart = await maintenanceApi.createSparePart(formData);
+
+        // Crear stock en el almacén seleccionado con cantidad inicial
+        if (formData.initialQuantity > 0 && newPart?.id) {
+          await maintenanceApi.createStock({
+            warehouseId: formData.warehouseId,
+            sparePartId: newPart.id,
+            quantity: formData.initialQuantity,
+            minStock: formData.minStock,
+            maxStock: formData.maxStock,
+          });
+        }
       }
       onSuccess();
     } catch (err) {
@@ -827,6 +841,21 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
               <option value="L">Litro</option>
               <option value="kg">Kilogramo</option>
               <option value="ft">Pie</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Almacén *</label>
+            <select
+              value={formData.warehouseId}
+              onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+              required
+            >
+              <option value="">-- Selecciona un almacén --</option>
+              {warehouses.map(wh => (
+                <option key={wh.id} value={wh.id}>{wh.name} ({wh.location})</option>
+              ))}
             </select>
           </div>
 
