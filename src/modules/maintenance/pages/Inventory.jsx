@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { MtCard, MtButton, MtBadge } from '../ui';
 import { Plus, Search, Package, Building2, AlertTriangle, DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, TrendingUp, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { maintenanceApi } from '../services/maintenanceApi';
+import { httpDelete } from '../../../services/http';
 
 export default function Inventory() {
   const [warehouses, setWarehouses] = useState([]);
@@ -20,7 +21,7 @@ export default function Inventory() {
         setError(null);
 
         // Usar maintenanceApi que incluye autenticación automáticamente
-        const warehousesData = await maintenanceApi.listWarehouses();
+        const warehousesData = await maintenanceApi.getWarehouses();
 
         // Si no es array, convertir a array
         if (!Array.isArray(warehousesData)) {
@@ -113,8 +114,8 @@ export default function Inventory() {
   const handleDeletePart = async (partId) => {
     if (confirm('¿Estás seguro de que deseas eliminar esta refacción?')) {
       try {
-        // Llamar a API para eliminar (usar maintenanceApi con httpDelete)
-        await maintenanceApi.deleteSparePart(partId);
+        // Usar httpDelete directamente
+        await httpDelete(`/maintenance/spare-parts/${partId}`);
         alert('Refacción eliminada exitosamente');
         // Recargar inventario
         window.location.reload();
