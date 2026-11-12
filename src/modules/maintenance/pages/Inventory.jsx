@@ -22,19 +22,28 @@ export default function Inventory() {
 
         const response = await fetch(`${API_BASE}/inventory/warehouses`);
 
-        // Verificar si la respuesta es JSON válido
-        const contentType = response.headers.get('content-type');
-        if (!contentType?.includes('application/json')) {
-          throw new Error(`El servidor retornó ${response.status}: ${response.statusText}. Asegúrate que el backend está corriendo.`);
-        }
-
         if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
 
-        const warehousesData = await response.json();
+        let warehousesData;
+        try {
+          const text = await response.text();
 
-        // Si no es array, retornar error
+          // Si está vacío, retornar array vacío
+          if (!text || text.trim() === '') {
+            console.warn('El servidor retornó respuesta vacía, usando array vacío');
+            warehousesData = [];
+          } else {
+            warehousesData = JSON.parse(text);
+          }
+        } catch (parseErr) {
+          console.error('Error parseando JSON:', parseErr);
+          throw new Error('El servidor retornó datos inválidos (no JSON)');
+        }
+
+        // Si no es array, convertir a array
         if (!Array.isArray(warehousesData)) {
-          throw new Error('El servidor retornó datos inválidos');
+          console.warn('Datos no son array, convirtiéndolos a []');
+          warehousesData = [];
         }
 
         // Para cada almacén, cargar su stock
