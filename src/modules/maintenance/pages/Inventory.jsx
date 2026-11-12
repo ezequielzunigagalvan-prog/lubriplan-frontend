@@ -45,22 +45,38 @@ export default function Inventory() {
           warehousesData.map(async (warehouse) => {
             try {
               const stock = await maintenanceApi.getWarehouseStock(warehouse.id);
+              console.log('Stock data:', stock);
+              console.log('Spare parts map:', sparePartsMap);
+
               const enrichedStock = (Array.isArray(stock) ? stock : []).map(s => {
-                const sparePart = sparePartsMap[s.sparePartId] || s;
-                return {
-                  ...s,
-                  ...sparePart,
+                console.log('Processing stock item:', s);
+                // El stock probablemente tiene la estructura: { id, sparePartId, quantity, minStock, maxStock }
+                // La refacción tiene: { id, code, name, unit, costPerUnit, etc }
+                const sparePart = sparePartsMap[s.sparePartId];
+                const enriched = {
+                  // Mantener datos del stock
+                  stockId: s.id,
                   id: s.sparePartId || s.id,
-                  qty: s.quantity || s.qty || 0,
-                  minQty: s.minStock || s.minQty || 10,
-                  maxQty: s.maxStock || s.maxQty || 20,
-                  price: sparePart?.costPerUnit || s.price || 0,
-                  code: sparePart?.code || s.code || 'N/A',
-                  name: sparePart?.name || s.name || 'Sin nombre',
-                  unit: sparePart?.unit || s.unit || 'pz',
-                  category: sparePart?.category || s.category || '',
-                  sku: sparePart?.partNumber || s.sku || '',
+                  quantity: s.quantity || 0,
+                  minStock: s.minStock || 10,
+                  maxStock: s.maxStock || 20,
+                  // Agregar datos de la refacción
+                  ...(sparePart || {}),
+                  // Mapear campos correctamente
+                  qty: s.quantity || 0,
+                  minQty: s.minStock || 10,
+                  maxQty: s.maxStock || 20,
+                  price: sparePart?.costPerUnit || 0,
+                  code: sparePart?.code || 'N/A',
+                  name: sparePart?.name || 'Sin nombre',
+                  unit: sparePart?.unit || 'pz',
+                  category: sparePart?.category || '',
+                  sku: sparePart?.partNumber || '',
+                  supplier: sparePart?.brand || '',
+                  criticalQty: Math.floor((s.minStock || 10) / 3),
                 };
+                console.log('Enriched item:', enriched);
+                return enriched;
               });
               return { ...warehouse, spareParts: enrichedStock };
             } catch (err) {
