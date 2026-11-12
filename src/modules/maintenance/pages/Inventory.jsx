@@ -21,9 +21,21 @@ export default function Inventory() {
         setError(null);
 
         const response = await fetch(`${API_BASE}/inventory/warehouses`);
-        if (!response.ok) throw new Error('Error al cargar almacenes');
+
+        // Verificar si la respuesta es JSON válido
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          throw new Error(`El servidor retornó ${response.status}: ${response.statusText}. Asegúrate que el backend está corriendo.`);
+        }
+
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
 
         const warehousesData = await response.json();
+
+        // Si no es array, retornar error
+        if (!Array.isArray(warehousesData)) {
+          throw new Error('El servidor retornó datos inválidos');
+        }
 
         // Para cada almacén, cargar su stock
         const warehousesWithStock = await Promise.all(
@@ -31,11 +43,11 @@ export default function Inventory() {
             try {
               const stockResponse = await fetch(`${API_BASE}/inventory/warehouses/${warehouse.id}/stock`);
               if (!stockResponse.ok) {
-                console.warn(`Error al cargar stock para almacén ${warehouse.id}`);
+                console.warn(`Error al cargar stock para almacén ${warehouse.id}: ${stockResponse.status}`);
                 return { ...warehouse, spareParts: [] };
               }
               const stock = await stockResponse.json();
-              return { ...warehouse, spareParts: stock };
+              return { ...warehouse, spareParts: Array.isArray(stock) ? stock : [] };
             } catch (err) {
               console.warn(`Error cargando stock para almacén ${warehouse.id}:`, err);
               return { ...warehouse, spareParts: [] };
@@ -46,7 +58,23 @@ export default function Inventory() {
         setWarehouses(warehousesWithStock);
       } catch (err) {
         console.error('Error cargando inventario:', err);
-        setError('No se pudo cargar el inventario. Intenta nuevamente.');
+        // Mostrar mensaje de error y usar datos demo
+        console.warn('Usando datos demo porque el backend no está disponible');
+        setError(`⚠️ ${err.message || 'Backend no disponible'} - Mostrando datos de demostración`);
+
+        // Cargar datos demo para que el usuario pueda ver la interfaz
+        setWarehouses([
+          {
+            id: 1,
+            name: 'Almacén Principal (DEMO)',
+            location: 'Planta Jilotepec',
+            status: 'OPTIMAL',
+            spareParts: [
+              { id: 'SP-001', code: 'SP-001', name: 'Sello mecánico bomba', sku: 'SEAL-MECH-001', qty: 5, minQty: 10, criticalQty: 2, unit: 'pz', price: 85.50, supplier: 'Hidrolub', category: 'Sellos', location: 'Estante A-01', lastMovement: '2026-11-05', notes: 'Para bomba principal' },
+              { id: 'SP-002', code: 'SP-002', name: 'Correa trapecial', sku: 'BELT-TRAP-005', qty: 12, minQty: 20, criticalQty: 5, unit: 'm', price: 45.00, supplier: 'Industrial', category: 'Correas', location: 'Estante B-03', lastMovement: '2026-11-06', notes: 'Diversos diámetros' },
+            ],
+          },
+        ]);
       } finally {
         setLoading(false);
       }
@@ -133,22 +161,8 @@ export default function Inventory() {
     );
   }
 
-  // Mostrar error
-  if (error) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-        <MtCard elevated>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <AlertCircle size={24} style={{ color: 'var(--mt-danger)', flexShrink: 0 }} />
-            <div>
-              <h3 style={{ margin: 0, marginBottom: '4px', color: 'var(--mt-danger)' }}>Error</h3>
-              <p style={{ margin: 0, color: 'var(--mt-text-secondary)' }}>{error}</p>
-            </div>
-          </div>
-        </MtCard>
-      </div>
-    );
-  }
+  // Mostrar error (pero permitir seguir usando la página con datos demo)
+  // El error ahora se muestra como alerta, no bloquea la interfaz
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
@@ -171,6 +185,26 @@ export default function Inventory() {
           </MtButton>
         </div>
       </div>
+
+      {/* Alerts for API Error or Critical Stock */}
+      {error && (
+        <div style={{ background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: 'var(--mt-radius-md)', padding: 'var(--mt-space-lg)', display: 'flex', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-lg)' }}>
+          <AlertTriangle size={24} style={{ color: 'var(--mt-warning)', flexShrink: 0, marginTop: '2px' }} />
+          <div>
+            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', color: 'var(--mt-warning)', margin: 0, marginBottom: '4px' }}>
+              {error.includes('Backend') ? '🔌 Conexión Backend' : '⚠️ Advertencia'}
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+              {error}
+            </p>
+            {error.includes('Backend') && (
+              <p style={{ fontSize: '11px', color: 'var(--mt-text-secondary)', margin: '8px 0 0 0' }}>
+                💡 Tip: Verifica que el backend esté corriendo con: <code style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px' }}>npm run dev</code>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Alerts for Critical Stock */}
       {criticalStockItems > 0 && (
