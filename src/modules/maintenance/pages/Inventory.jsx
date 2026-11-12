@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MtCard, MtButton, MtBadge } from '../ui';
 import { Plus, Search, Package, Building2, AlertTriangle, DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, TrendingUp, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
-
-const API_BASE = '/api/maintenance';
+import { maintenanceApi } from '../services/maintenanceApi';
 
 export default function Inventory() {
   const [warehouses, setWarehouses] = useState([]);
@@ -20,42 +19,21 @@ export default function Inventory() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${API_BASE}/inventory/warehouses`);
-
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-
-        let warehousesData;
-        try {
-          const text = await response.text();
-
-          // Si está vacío, retornar array vacío
-          if (!text || text.trim() === '') {
-            console.warn('El servidor retornó respuesta vacía, usando array vacío');
-            warehousesData = [];
-          } else {
-            warehousesData = JSON.parse(text);
-          }
-        } catch (parseErr) {
-          console.error('Error parseando JSON:', parseErr);
-          throw new Error('El servidor retornó datos inválidos (no JSON)');
-        }
+        // Usar maintenanceApi que incluye autenticación automáticamente
+        const warehousesData = await maintenanceApi.listWarehouses();
 
         // Si no es array, convertir a array
         if (!Array.isArray(warehousesData)) {
           console.warn('Datos no son array, convirtiéndolos a []');
-          warehousesData = [];
+          setWarehouses([]);
+          return;
         }
 
         // Para cada almacén, cargar su stock
         const warehousesWithStock = await Promise.all(
           warehousesData.map(async (warehouse) => {
             try {
-              const stockResponse = await fetch(`${API_BASE}/inventory/warehouses/${warehouse.id}/stock`);
-              if (!stockResponse.ok) {
-                console.warn(`Error al cargar stock para almacén ${warehouse.id}: ${stockResponse.status}`);
-                return { ...warehouse, spareParts: [] };
-              }
-              const stock = await stockResponse.json();
+              const stock = await maintenanceApi.getWarehouseStock(warehouse.id);
               return { ...warehouse, spareParts: Array.isArray(stock) ? stock : [] };
             } catch (err) {
               console.warn(`Error cargando stock para almacén ${warehouse.id}:`, err);
@@ -135,26 +113,14 @@ export default function Inventory() {
   const handleDeletePart = async (partId) => {
     if (confirm('¿Estás seguro de que deseas eliminar esta refacción?')) {
       try {
-        const response = await fetch(`${API_BASE}/spare-parts/${partId}`, {
-          method: 'DELETE',
-        });
-        if (response.ok) {
-          // Recargar inventario
-          const updatedWarehouses = await Promise.all(
-            warehouses.map(async (wh) => {
-              const stockResponse = await fetch(`${API_BASE}/inventory/warehouses/${wh.id}/stock`);
-              if (!stockResponse.ok) return { ...wh, spareParts: [] };
-              const stock = await stockResponse.json();
-              return { ...wh, spareParts: stock };
-            })
-          );
-          setWarehouses(updatedWarehouses);
-        } else {
-          alert('Error al eliminar la refacción');
-        }
+        // Llamar a API para eliminar (usar maintenanceApi con httpDelete)
+        await maintenanceApi.deleteSparePart(partId);
+        alert('Refacción eliminada exitosamente');
+        // Recargar inventario
+        window.location.reload();
       } catch (err) {
         console.error('Error al eliminar:', err);
-        alert('Error al eliminar la refacción');
+        alert('Error al eliminar la refacción: ' + err.message);
       }
     }
   };
@@ -610,20 +576,11 @@ function WarehouseModal({ onClose, onSuccess }) {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/inventory/warehouses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        onSuccess();
-      } else {
-        alert('Error al crear almacén');
-      }
+      await maintenanceApi.createWarehouse(formData);
+      onSuccess();
     } catch (err) {
       console.error('Error:', err);
-      alert('Error al crear almacén');
+      alert('Error al crear almacén: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -706,24 +663,15 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
 
     try {
       setLoading(true);
-      const url = part ? `${API_BASE}/spare-parts/${part.id}` : `${API_BASE}/spare-parts`;
-      const method = part ? 'PATCH' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        onSuccess();
+      if (part) {
+        await maintenanceApi.updateSparePart(part.id, formData);
       } else {
-        const errorData = await response.json();
-        alert(errorData.message || `Error al ${part ? 'actualizar' : 'crear'} refacción`);
+        await maintenanceApi.createSparePart(formData);
       }
+      onSuccess();
     } catch (err) {
       console.error('Error:', err);
-      alert(`Error al ${part ? 'actualizar' : 'crear'} refacción`);
+      alert(`Error al ${part ? 'actualizar' : 'crear'} refacción: ` + err.message);
     } finally {
       setLoading(false);
     }
@@ -869,13 +817,11 @@ function MovementsModal({ part, onClose }) {
     const fetchMovements = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE}/inventory/stock/${part.id}/movements`);
-        if (response.ok) {
-          const data = await response.json();
-          setMovements(data);
-        }
+        const data = await maintenanceApi.getStockMovementHistory(part.id, 50);
+        setMovements(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error cargando movimientos:', err);
+        setMovements([]);
       } finally {
         setLoading(false);
       }

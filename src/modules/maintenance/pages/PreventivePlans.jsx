@@ -6,6 +6,7 @@ import {
   RotateCw, Filter, Search
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { maintenanceApi } from '../services/maintenanceApi';
 import '../ui/tokens.css';
 
 const FREQUENCY_OPTIONS = [
@@ -146,13 +147,11 @@ export default function PreventivePlans() {
   const loadSpareParts = async () => {
     try {
       setLoadingSpareParts(true);
-      const response = await fetch('/api/maintenance/spare-parts');
-      if (response.ok) {
-        const data = await response.json();
-        setSpareParts(data);
-      }
+      const data = await maintenanceApi.listSpareParts();
+      setSpareParts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error cargando refacciones:', err);
+      setSpareParts([]);
     } finally {
       setLoadingSpareParts(false);
     }
