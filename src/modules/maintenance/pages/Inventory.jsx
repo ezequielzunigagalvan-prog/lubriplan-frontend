@@ -588,42 +588,52 @@ function WarehouseModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <MtCard elevated style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Nuevo Almacén</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+      <div style={{ width: '100%', maxWidth: '500px', maxHeight: '95vh', background: 'var(--mt-bg-surface)', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>🏭 Nuevo Almacén</h2>
+            <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>Crear un nuevo almacén para gestionar inventario</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: 'var(--mt-text-secondary)', padding: '8px', transition: 'all 150ms' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-text-primary)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Nombre del Almacén</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Ej: Almacén Principal"
-              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
-            />
-          </div>
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--mt-text-primary)' }}>Nombre del Almacén *</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Ej: Almacén Principal"
+                style={{ width: '100%', padding: '12px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box', fontSize: '14px', background: 'var(--mt-bg-surface)' }}
+              />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Ubicación</label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Ej: Planta Jilotepec"
-              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
-            />
-          </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--mt-text-primary)' }}>Ubicación *</label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Ej: Planta Jilotepec"
+                style={{ width: '100%', padding: '12px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box', fontSize: '14px', background: 'var(--mt-bg-surface)' }}
+              />
+            </div>
+          </form>
+        </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
-            <MtButton variant="secondary" onClick={onClose}>Cancelar</MtButton>
-            <MtButton variant="primary" type="submit" disabled={loading}>{loading ? 'Creando...' : 'Crear Almacén'}</MtButton>
-          </div>
-        </form>
-      </MtCard>
+        {/* Footer */}
+        <div style={{ padding: '20px 24px', borderTop: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <MtButton variant="secondary" onClick={onClose} disabled={loading}>Cancelar</MtButton>
+          <MtButton variant="primary" onClick={() => document.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true }))} disabled={loading}>
+            {loading ? '⏳ Creando...' : '✓ Crear Almacén'}
+          </MtButton>
+        </div>
+      </div>
     </div>
   );
 }
@@ -680,7 +690,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
-      <MtCard elevated style={{ width: '100%', maxWidth: '650px', maxHeight: '95vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '100%', maxWidth: '650px', maxHeight: '95vh', background: 'var(--mt-bg-surface)', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Header */}
         <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--mt-bg-surface-2)' }}>
           <div>
@@ -819,7 +829,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
             {loading ? '⏳ Guardando...' : (part ? '✓ Actualizar' : '✓ Crear')}
           </MtButton>
         </div>
-      </MtCard>
+      </div>
     </div>
   );
 }
@@ -868,7 +878,7 @@ function MovementsModal({ part, onClose }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
-      <MtCard elevated style={{ width: '100%', maxWidth: '700px', maxHeight: '95vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '100%', maxWidth: '700px', maxHeight: '95vh', background: 'var(--mt-bg-surface)', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
@@ -946,7 +956,7 @@ function MovementsModal({ part, onClose }) {
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', justifyContent: 'flex-end' }}>
           <MtButton variant="secondary" onClick={onClose}>Cerrar</MtButton>
         </div>
-      </MtCard>
+      </div>
     </div>
   );
 }
