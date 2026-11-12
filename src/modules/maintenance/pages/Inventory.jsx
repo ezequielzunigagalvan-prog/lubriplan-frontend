@@ -738,18 +738,18 @@ function WarehouseModal({ onClose, onSuccess }) {
 // Modal para crear/editar refacciones
 function SparePartModal({ warehouses, part, onClose, onSuccess }) {
   const [formData, setFormData] = useState(part ? {
-    code: part.code,
-    name: part.name,
+    code: part.code || '',
+    name: part.name || '',
     description: part.description || '',
     category: part.category || '',
     brand: part.brand || '',
     partNumber: part.partNumber || part.sku || '',
     unit: part.unit || 'pz',
     warehouseId: '',
-    initialQuantity: part.qty || 0,
-    minStock: part.minQty || 10,
-    maxStock: part.maxStock || part.minQty * 2 || 20,
-    costPerUnit: part.price || 0,
+    initialQuantity: parseInt(part.qty) || 0,
+    minStock: parseInt(part.minQty) || 10,
+    maxStock: parseInt(part.maxStock) || (parseInt(part.minQty) || 10) * 2 || 20,
+    costPerUnit: parseFloat(part.price) || 0,
   } : {
     code: '',
     name: '',
