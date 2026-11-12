@@ -21,10 +21,7 @@ export default function Inventory() {
         setError(null);
 
         // Usar maintenanceApi que incluye autenticación automáticamente
-        const [warehousesData, spareParts] = await Promise.all([
-          maintenanceApi.getWarehouses(),
-          maintenanceApi.getSpareParts()
-        ]);
+        const warehousesData = await maintenanceApi.getWarehouses();
 
         // Si no es array, convertir a array
         if (!Array.isArray(warehousesData)) {
@@ -33,50 +30,33 @@ export default function Inventory() {
           return;
         }
 
-        const sparePartsMap = {};
-        if (Array.isArray(spareParts)) {
-          spareParts.forEach(part => {
-            sparePartsMap[part.id] = part;
-          });
-        }
-
-        // Para cada almacén, cargar su stock y enriquecer con datos de refacciones
+        // Para cada almacén, cargar su stock
+        // El backend ya retorna sparePart incluido en cada stock
         const warehousesWithStock = await Promise.all(
           warehousesData.map(async (warehouse) => {
             try {
               const stock = await maintenanceApi.getWarehouseStock(warehouse.id);
-              console.log('Stock data:', stock);
-              console.log('Spare parts map:', sparePartsMap);
 
               const enrichedStock = (Array.isArray(stock) ? stock : []).map(s => {
-                console.log('Processing stock item:', s);
-                // El stock probablemente tiene la estructura: { id, sparePartId, quantity, minStock, maxStock }
-                // La refacción tiene: { id, code, name, unit, costPerUnit, etc }
-                const sparePart = sparePartsMap[s.sparePartId];
-                const enriched = {
-                  // Mantener datos del stock
-                  stockId: s.id,
+                // El stock ya viene con sparePart incluido del backend
+                const part = s.sparePart || {};
+                return {
                   id: s.sparePartId || s.id,
-                  quantity: s.quantity || 0,
-                  minStock: s.minStock || 10,
-                  maxStock: s.maxStock || 20,
-                  // Agregar datos de la refacción
-                  ...(sparePart || {}),
-                  // Mapear campos correctamente
+                  stockId: s.id,
                   qty: s.quantity || 0,
-                  minQty: s.minStock || 10,
-                  maxQty: s.maxStock || 20,
-                  price: sparePart?.costPerUnit || 0,
-                  code: sparePart?.code || 'N/A',
-                  name: sparePart?.name || 'Sin nombre',
-                  unit: sparePart?.unit || 'pz',
-                  category: sparePart?.category || '',
-                  sku: sparePart?.partNumber || '',
-                  supplier: sparePart?.brand || '',
-                  criticalQty: Math.floor((s.minStock || 10) / 3),
+                  minQty: part.minStock || 10,
+                  criticalQty: Math.floor((part.minStock || 10) / 3),
+                  code: part.code || 'N/A',
+                  name: part.name || 'Sin nombre',
+                  sku: part.id || '',
+                  unit: part.unit || 'pz',
+                  price: part.costPerUnit || 0,
+                  category: part.category || '',
+                  supplier: '',
+                  location: '',
+                  lastMovement: new Date().toISOString().split('T')[0],
+                  notes: '',
                 };
-                console.log('Enriched item:', enriched);
-                return enriched;
               });
               return { ...warehouse, spareParts: enrichedStock };
             } catch (err) {
