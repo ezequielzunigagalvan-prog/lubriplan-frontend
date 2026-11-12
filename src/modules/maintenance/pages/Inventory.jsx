@@ -679,14 +679,24 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <MtCard elevated style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>{part ? 'Editar Refacción' : 'Nueva Refacción'}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+      <MtCard elevated style={{ width: '100%', maxWidth: '650px', maxHeight: '95vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--mt-bg-surface-2)' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>
+              {part ? '✏️ Editar Refacción' : '➕ Nueva Refacción'}
+            </h2>
+            <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+              {part ? `ID: ${part.code}` : 'Completa los campos requeridos (*)'}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: 'var(--mt-text-secondary)', padding: '8px', transition: 'all 150ms' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-text-primary)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        {/* Content */}
+        <div style={{ overflowY: 'auto', flex: 1, padding: '24px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Código *</label>
             <input
@@ -799,11 +809,16 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
             />
           </div>
 
-          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
-            <MtButton variant="secondary" onClick={onClose}>Cancelar</MtButton>
-            <MtButton variant="primary" type="submit" disabled={loading}>{loading ? 'Guardando...' : (part ? 'Actualizar' : 'Crear')}</MtButton>
-          </div>
         </form>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '20px 24px', borderTop: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <MtButton variant="secondary" onClick={onClose} disabled={loading}>Cancelar</MtButton>
+          <MtButton variant="primary" onClick={() => document.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true }))} disabled={loading}>
+            {loading ? '⏳ Guardando...' : (part ? '✓ Actualizar' : '✓ Crear')}
+          </MtButton>
+        </div>
       </MtCard>
     </div>
   );
@@ -852,66 +867,83 @@ function MovementsModal({ part, onClose }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <MtCard elevated style={{ width: '90%', maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+      <MtCard elevated style={{ width: '100%', maxWidth: '700px', maxHeight: '95vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Historial de Movimientos</h2>
-            <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
-              {part.code} - {part.name}
+            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>📜 Historial de Movimientos</h2>
+            <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+              <strong>{part.code}</strong> · {part.name}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: 'var(--mt-text-secondary)', padding: '8px', transition: 'all 150ms' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-text-primary)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>×</button>
         </div>
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{ width: '40px', height: '40px', border: '3px solid var(--mt-border)', borderTopColor: 'var(--mt-accent)', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
-          </div>
-        ) : movements.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px', color: 'var(--mt-text-secondary)' }}>
-            <Package size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-            <p>No hay movimientos registrados</p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {movements.map((movement, idx) => (
-              <div key={idx} style={{
-                display: 'flex',
-                gap: '12px',
-                padding: '12px',
-                border: '1px solid var(--mt-border)',
-                borderRadius: '8px',
-                background: 'var(--mt-bg-surface-2)'
-              }}>
-                <div style={{ fontSize: '20px', marginTop: '4px' }}>
-                  {getMovementIcon(movement.type)}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 'bold', color: getMovementColor(movement.type) }}>
-                      {movement.type === 'IN' ? 'Entrada' : movement.type === 'OUT' ? 'Salida' : movement.type === 'TRANSFER' ? 'Transferencia' : 'Ajuste'}
-                    </span>
-                    <span style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
-                      {new Date(movement.createdAt).toLocaleString('es-ES')}
-                    </span>
+        {/* Content */}
+        <div style={{ overflowY: 'auto', flex: 1, padding: '24px' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '48px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '40px', height: '40px', border: '3px solid var(--mt-border)', borderTopColor: 'var(--mt-accent)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+              <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Cargando movimientos...</p>
+            </div>
+          ) : movements.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <Clock size={48} style={{ color: 'var(--mt-text-tertiary)', opacity: 0.5 }} />
+              <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--mt-text-secondary)', margin: 0 }}>Sin historial</p>
+              <p style={{ fontSize: '13px', color: 'var(--mt-text-tertiary)', margin: 0 }}>No hay movimientos registrados para este stock</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {movements.map((movement, idx) => (
+                <div key={idx} style={{
+                  display: 'flex',
+                  gap: '16px',
+                  padding: '16px',
+                  border: `2px solid ${getMovementColor(movement.type)}20`,
+                  borderRadius: '10px',
+                  background: `${getMovementColor(movement.type)}08`,
+                  transition: 'all 150ms',
+                  cursor: 'default'
+                }} onMouseEnter={(e) => { e.currentTarget.style.background = `${getMovementColor(movement.type)}12`; e.currentTarget.style.borderColor = `${getMovementColor(movement.type)}40`; }} onMouseLeave={(e) => { e.currentTarget.style.background = `${getMovementColor(movement.type)}08`; e.currentTarget.style.borderColor = `${getMovementColor(movement.type)}20`; }}>
+                  <div style={{ fontSize: '28px', minWidth: '32px', textAlign: 'center' }}>
+                    {getMovementIcon(movement.type)}
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
-                    <span>Cantidad: <strong>{movement.quantity} {part.unit}</strong></span>
-                    {movement.notes && <span>Nota: {movement.notes}</span>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
+                      <span style={{ fontWeight: '700', fontSize: '15px', color: getMovementColor(movement.type) }}>
+                        {movement.type === 'IN' ? '📥 Entrada' : movement.type === 'OUT' ? '📤 Salida' : movement.type === 'TRANSFER' ? '🔄 Transferencia' : '⚙️ Ajuste'}
+                      </span>
+                      <span style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', fontWeight: '500' }}>
+                        {new Date(movement.createdAt).toLocaleString('es-ES')}
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '16px 24px', fontSize: '13px', marginBottom: '8px' }}>
+                      <div>
+                        <span style={{ color: 'var(--mt-text-secondary)', fontSize: '12px' }}>Cantidad:</span>
+                        <div style={{ fontWeight: '700', color: getMovementColor(movement.type), fontSize: '15px' }}>{movement.quantity} {part.unit}</div>
+                      </div>
+                      {movement.notes && (
+                        <div>
+                          <span style={{ color: 'var(--mt-text-secondary)', fontSize: '12px' }}>Nota:</span>
+                          <div style={{ fontWeight: '500', color: 'var(--mt-text-primary)' }}>{movement.notes}</div>
+                        </div>
+                      )}
+                    </div>
+                    {movement.userId && (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'var(--mt-text-secondary)' }}>
+                        👤 Usuario #{movement.userId}
+                      </p>
+                    )}
                   </div>
-                  {movement.userId && (
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
-                      Por: Usuario #{movement.userId}
-                    </p>
-                  )}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
 
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+        {/* Footer */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', justifyContent: 'flex-end' }}>
           <MtButton variant="secondary" onClick={onClose}>Cerrar</MtButton>
         </div>
       </MtCard>
