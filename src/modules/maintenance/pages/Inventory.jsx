@@ -801,24 +801,6 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
           costPerUnit: formData.costPerUnit,
         };
         await maintenanceApi.updateSparePart(part.id, updateData);
-
-        // Si cambió la cantidad, registrar movimiento de ajuste en el almacén
-        if (formData.warehouseId && formData.initialQuantity !== (part.qty || 0)) {
-          const diff = formData.initialQuantity - (part.qty || 0);
-          if (diff !== 0) {
-            try {
-              await maintenanceApi.recordStockMovement({
-                warehouseId: formData.warehouseId,
-                sparePartId: part.id,
-                type: diff > 0 ? 'IN' : 'OUT',
-                quantity: Math.abs(diff),
-                notes: 'Ajuste manual por edición',
-              });
-            } catch (err) {
-              console.warn('Error registrando movimiento:', err);
-            }
-          }
-        }
       } else {
         // Crear refacción
         const newPart = await maintenanceApi.createSparePart(formData);
