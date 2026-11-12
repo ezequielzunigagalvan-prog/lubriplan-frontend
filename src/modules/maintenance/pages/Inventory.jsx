@@ -21,7 +21,10 @@ export default function Inventory() {
         setError(null);
 
         // Usar maintenanceApi que incluye autenticación automáticamente
-        const warehousesData = await maintenanceApi.getWarehouses();
+        const [warehousesData, spareParts] = await Promise.all([
+          maintenanceApi.getWarehouses(),
+          maintenanceApi.getSpareParts()
+        ]);
 
         // Si no es array, convertir a array
         if (!Array.isArray(warehousesData)) {
@@ -30,12 +33,36 @@ export default function Inventory() {
           return;
         }
 
-        // Para cada almacén, cargar su stock
+        const sparePartsMap = {};
+        if (Array.isArray(spareParts)) {
+          spareParts.forEach(part => {
+            sparePartsMap[part.id] = part;
+          });
+        }
+
+        // Para cada almacén, cargar su stock y enriquecer con datos de refacciones
         const warehousesWithStock = await Promise.all(
           warehousesData.map(async (warehouse) => {
             try {
               const stock = await maintenanceApi.getWarehouseStock(warehouse.id);
-              return { ...warehouse, spareParts: Array.isArray(stock) ? stock : [] };
+              const enrichedStock = (Array.isArray(stock) ? stock : []).map(s => {
+                const sparePart = sparePartsMap[s.sparePartId] || s;
+                return {
+                  ...s,
+                  ...sparePart,
+                  id: s.sparePartId || s.id,
+                  qty: s.quantity || s.qty || 0,
+                  minQty: s.minStock || s.minQty || 10,
+                  maxQty: s.maxStock || s.maxQty || 20,
+                  price: sparePart?.costPerUnit || s.price || 0,
+                  code: sparePart?.code || s.code || 'N/A',
+                  name: sparePart?.name || s.name || 'Sin nombre',
+                  unit: sparePart?.unit || s.unit || 'pz',
+                  category: sparePart?.category || s.category || '',
+                  sku: sparePart?.partNumber || s.sku || '',
+                };
+              });
+              return { ...warehouse, spareParts: enrichedStock };
             } catch (err) {
               console.warn(`Error cargando stock para almacén ${warehouse.id}:`, err);
               return { ...warehouse, spareParts: [] };
@@ -525,13 +552,36 @@ export default function Inventory() {
             setShowCreateWarehouseModal(false);
             // Recargar inventario sin reload
             try {
-              const warehousesData = await maintenanceApi.getWarehouses();
+              const [warehousesData, spareParts] = await Promise.all([
+                maintenanceApi.getWarehouses(),
+                maintenanceApi.getSpareParts()
+              ]);
               if (Array.isArray(warehousesData)) {
+                const sparePartsMap = {};
+                if (Array.isArray(spareParts)) {
+                  spareParts.forEach(part => {
+                    sparePartsMap[part.id] = part;
+                  });
+                }
                 const warehousesWithStock = await Promise.all(
                   warehousesData.map(async (wh) => {
                     try {
                       const stock = await maintenanceApi.getWarehouseStock(wh.id);
-                      return { ...wh, spareParts: Array.isArray(stock) ? stock : [] };
+                      const enrichedStock = (Array.isArray(stock) ? stock : []).map(s => {
+                        const sparePart = sparePartsMap[s.sparePartId] || s;
+                        return {
+                          ...s,
+                          ...sparePart,
+                          id: s.sparePartId || s.id,
+                          qty: s.quantity || s.qty || 0,
+                          minQty: s.minStock || s.minQty || 10,
+                          price: sparePart?.costPerUnit || s.price || 0,
+                          code: sparePart?.code || s.code || 'N/A',
+                          name: sparePart?.name || s.name || 'Sin nombre',
+                          unit: sparePart?.unit || s.unit || 'pz',
+                        };
+                      });
+                      return { ...wh, spareParts: enrichedStock };
                     } catch {
                       return { ...wh, spareParts: [] };
                     }
