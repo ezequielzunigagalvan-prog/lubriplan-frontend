@@ -480,7 +480,7 @@ export default function Inventory() {
                                   {/* Additional Info */}
                                   <div style={{ padding: 'var(--mt-space-md)', background: 'var(--mt-bg-surface)', borderRadius: 'var(--mt-radius-md)', marginBottom: 'var(--mt-space-lg)' }}>
                                     <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: '4px' }}>📍 Ubicación: <strong>{part.location}</strong></p>
-                                    <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: '4px' }}>🕐 Último movimiento: <strong>{part.lastMovement}</strong></p>
+                                    <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: '4px' }}>Último movimiento: <strong>{part.lastMovement}</strong></p>
                                     <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>📝 {part.notes}</p>
                                   </div>
 
@@ -644,7 +644,7 @@ function WarehouseModal({ onClose, onSuccess }) {
         {/* Header */}
         <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>🏭 Nuevo Almacén</h2>
+            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>Nuevo Almacén</h2>
             <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>Crear un nuevo almacén para gestionar inventario</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: 'var(--mt-text-secondary)', padding: '8px', transition: 'all 150ms' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-text-primary)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>×</button>
@@ -681,7 +681,7 @@ function WarehouseModal({ onClose, onSuccess }) {
         <div style={{ padding: '20px 24px', borderTop: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <MtButton variant="secondary" onClick={onClose} disabled={loading}>Cancelar</MtButton>
           <MtButton variant="primary" onClick={() => document.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true }))} disabled={loading}>
-            {loading ? '⏳ Creando...' : '✓ Crear Almacén'}
+            {loading ? 'Creando...' : 'Crear Almacén'}
           </MtButton>
         </div>
       </div>
@@ -748,7 +748,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
         <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--mt-bg-surface-2)' }}>
           <div>
             <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>
-              {part ? '✏️ Editar Refacción' : '➕ Nueva Refacción'}
+              {part ? 'Editar Refacción' : 'Nueva Refacción'}
             </h2>
             <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
               {part ? `ID: ${part.code}` : 'Completa los campos requeridos (*)'}
@@ -890,7 +890,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
         <div style={{ padding: '20px 24px', borderTop: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <MtButton variant="secondary" onClick={onClose} disabled={loading}>Cancelar</MtButton>
           <MtButton variant="primary" onClick={() => document.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true }))} disabled={loading}>
-            {loading ? '⏳ Guardando...' : (part ? '✓ Actualizar' : '✓ Crear')}
+            {loading ? 'Guardando...' : (part ? 'Actualizar' : 'Crear')}
           </MtButton>
         </div>
       </div>
@@ -922,10 +922,10 @@ function MovementsModal({ part, onClose }) {
 
   const getMovementIcon = (type) => {
     switch (type) {
-      case 'IN': return '📥';
-      case 'OUT': return '📤';
-      case 'TRANSFER': return '🔄';
-      case 'ADJUST': return '⚙️';
+      case 'IN': return '';
+      case 'OUT': return '';
+      case 'TRANSFER': return '';
+      case 'ADJUST': return '';
       default: return '📝';
     }
   };
@@ -946,7 +946,7 @@ function MovementsModal({ part, onClose }) {
         {/* Header */}
         <div style={{ padding: '24px', borderBottom: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>📜 Historial de Movimientos</h2>
+            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: 'var(--mt-text-primary)' }}>Historial de Movimientos</h2>
             <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
               <strong>{part.code}</strong> · {part.name}
             </p>
@@ -986,7 +986,7 @@ function MovementsModal({ part, onClose }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
                       <span style={{ fontWeight: '700', fontSize: '15px', color: getMovementColor(movement.type) }}>
-                        {movement.type === 'IN' ? '📥 Entrada' : movement.type === 'OUT' ? '📤 Salida' : movement.type === 'TRANSFER' ? '🔄 Transferencia' : '⚙️ Ajuste'}
+                        {movement.type === 'IN' ? 'Entrada' : movement.type === 'OUT' ? 'Salida' : movement.type === 'TRANSFER' ? 'Transferencia' : 'Ajuste'}
                       </span>
                       <span style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', fontWeight: '500' }}>
                         {new Date(movement.createdAt).toLocaleString('es-ES')}
