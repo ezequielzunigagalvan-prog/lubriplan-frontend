@@ -521,10 +521,27 @@ export default function Inventory() {
       {showCreateWarehouseModal && (
         <WarehouseModal
           onClose={() => setShowCreateWarehouseModal(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowCreateWarehouseModal(false);
-            // Recargar inventario
-            window.location.reload();
+            // Recargar inventario sin reload
+            try {
+              const warehousesData = await maintenanceApi.getWarehouses();
+              if (Array.isArray(warehousesData)) {
+                const warehousesWithStock = await Promise.all(
+                  warehousesData.map(async (wh) => {
+                    try {
+                      const stock = await maintenanceApi.getWarehouseStock(wh.id);
+                      return { ...wh, spareParts: Array.isArray(stock) ? stock : [] };
+                    } catch {
+                      return { ...wh, spareParts: [] };
+                    }
+                  })
+                );
+                setWarehouses(warehousesWithStock);
+              }
+            } catch (err) {
+              console.error('Error recargando:', err);
+            }
           }}
         />
       )}
@@ -534,10 +551,27 @@ export default function Inventory() {
         <SparePartModal
           warehouses={warehouses}
           onClose={() => setShowCreatePartModal(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowCreatePartModal(false);
-            // Recargar inventario
-            window.location.reload();
+            // Recargar inventario sin reload
+            try {
+              const warehousesData = await maintenanceApi.getWarehouses();
+              if (Array.isArray(warehousesData)) {
+                const warehousesWithStock = await Promise.all(
+                  warehousesData.map(async (wh) => {
+                    try {
+                      const stock = await maintenanceApi.getWarehouseStock(wh.id);
+                      return { ...wh, spareParts: Array.isArray(stock) ? stock : [] };
+                    } catch {
+                      return { ...wh, spareParts: [] };
+                    }
+                  })
+                );
+                setWarehouses(warehousesWithStock);
+              }
+            } catch (err) {
+              console.error('Error recargando:', err);
+            }
           }}
         />
       )}
@@ -551,11 +585,28 @@ export default function Inventory() {
             setShowEditPartModal(false);
             setSelectedPartForEdit(null);
           }}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowEditPartModal(false);
             setSelectedPartForEdit(null);
-            // Recargar inventario
-            window.location.reload();
+            // Recargar inventario sin reload
+            try {
+              const warehousesData = await maintenanceApi.getWarehouses();
+              if (Array.isArray(warehousesData)) {
+                const warehousesWithStock = await Promise.all(
+                  warehousesData.map(async (wh) => {
+                    try {
+                      const stock = await maintenanceApi.getWarehouseStock(wh.id);
+                      return { ...wh, spareParts: Array.isArray(stock) ? stock : [] };
+                    } catch {
+                      return { ...wh, spareParts: [] };
+                    }
+                  })
+                );
+                setWarehouses(warehousesWithStock);
+              }
+            } catch (err) {
+              console.error('Error recargando:', err);
+            }
           }}
         />
       )}
@@ -648,6 +699,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
     brand: part.brand || '',
     partNumber: part.partNumber || part.sku || '',
     unit: part.unit || 'pz',
+    initialQuantity: part.qty || 0,
     minStock: part.minQty || 10,
     maxStock: part.maxStock || part.minQty * 2 || 20,
     costPerUnit: part.price || 0,
@@ -659,6 +711,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
     brand: '',
     partNumber: '',
     unit: 'pz',
+    initialQuantity: 0,
     minStock: 10,
     maxStock: 20,
     costPerUnit: 0,
@@ -775,6 +828,17 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
               <option value="kg">Kilogramo</option>
               <option value="ft">Pie</option>
             </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Cantidad Inicial</label>
+            <input
+              type="number"
+              value={formData.initialQuantity}
+              onChange={(e) => setFormData({ ...formData, initialQuantity: parseInt(e.target.value) || 0 })}
+              placeholder="0"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
           </div>
 
           <div>
