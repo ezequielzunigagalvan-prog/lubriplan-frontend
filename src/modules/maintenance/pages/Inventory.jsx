@@ -787,7 +787,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
     try {
       setLoading(true);
       if (part) {
-        // Actualizar: solo enviar campos de refacción (no warehouseId ni initialQuantity)
+        // Actualizar refacción: solo campos de refacción
         const updateData = {
           code: formData.code,
           name: formData.name,
@@ -801,6 +801,24 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
           costPerUnit: formData.costPerUnit,
         };
         await maintenanceApi.updateSparePart(part.id, updateData);
+
+        // Si cambió la cantidad, registrar movimiento de ajuste en el almacén
+        if (formData.warehouseId && formData.initialQuantity !== (part.qty || 0)) {
+          const diff = formData.initialQuantity - (part.qty || 0);
+          if (diff !== 0) {
+            try {
+              await maintenanceApi.recordStockMovement({
+                warehouseId: formData.warehouseId,
+                sparePartId: part.id,
+                type: diff > 0 ? 'IN' : 'OUT',
+                quantity: Math.abs(diff),
+                notes: 'Ajuste manual por edición',
+              });
+            } catch (err) {
+              console.warn('Error registrando movimiento:', err);
+            }
+          }
+        }
       } else {
         // Crear refacción
         const newPart = await maintenanceApi.createSparePart(formData);
@@ -914,35 +932,33 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
             </select>
           </div>
 
-          {!part && (
-            <>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Almacén *</label>
-                <select
-                  value={formData.warehouseId}
-                  onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
-                  style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
-                  required
-                >
-                  <option value="">-- Selecciona un almacén --</option>
-                  {warehouses.map(wh => (
-                    <option key={wh.id} value={wh.id}>{wh.name} ({wh.location})</option>
-                  ))}
-                </select>
-              </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Almacén {!part && '*'}</label>
+            <select
+              value={formData.warehouseId}
+              onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+              required={!part}
+            >
+              <option value="">-- Selecciona un almacén --</option>
+              {warehouses.map(wh => (
+                <option key={wh.id} value={wh.id}>{wh.name} ({wh.location})</option>
+              ))}
+            </select>
+          </div>
 
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Cantidad Inicial</label>
-                <input
-                  type="number"
-                  value={formData.initialQuantity}
-                  onChange={(e) => setFormData({ ...formData, initialQuantity: parseInt(e.target.value) || 0 })}
-                  placeholder="0"
-                  style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
-                />
-              </div>
-            </>
-          )}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+              {part ? 'Cantidad en Almacén' : 'Cantidad Inicial'}
+            </label>
+            <input
+              type="number"
+              value={formData.initialQuantity}
+              onChange={(e) => setFormData({ ...formData, initialQuantity: parseInt(e.target.value) || 0 })}
+              placeholder="0"
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
 
           <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Stock Mínimo</label>
