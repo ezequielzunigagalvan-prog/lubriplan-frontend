@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MtCard, MtBadge } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
@@ -42,25 +42,28 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
   const [search, setSearch] = useState('');
   const [deleting, setDeleting] = useState(null);
 
-  useImperativeHandle(ref, () => ({
-    reload: loadAssets,
-  }));
-
-  useEffect(() => {
-    loadAssets();
-  }, []);
-
-  const loadAssets = async () => {
+  const loadAssets = useCallback(async () => {
     try {
+      console.log('[ASSETSLIST] Loading assets...');
       setLoading(true);
       const response = await maintenanceApi.getAssets();
+      console.log('[ASSETSLIST] Assets loaded:', response?.data?.length, 'items');
       setAssets(response?.data || []);
     } catch (error) {
+      console.error('[ASSETSLIST] Error loading assets:', error);
       toast.error('Error cargando activos');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    reload: loadAssets,
+  }), [loadAssets]);
+
+  useEffect(() => {
+    loadAssets();
+  }, [loadAssets]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este activo?')) {
