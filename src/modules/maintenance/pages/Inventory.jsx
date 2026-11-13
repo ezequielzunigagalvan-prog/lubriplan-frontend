@@ -1045,7 +1045,7 @@ function MovementsModal({ part, onClose }) {
     const fetchMovements = async () => {
       try {
         setLoading(true);
-        const data = await maintenanceApi.getStockMovementHistory(part.id, 50);
+        const data = await maintenanceApi.getStockMovementHistory(part.stockId, 50);
         setMovements(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error cargando movimientos:', err);
@@ -1056,7 +1056,7 @@ function MovementsModal({ part, onClose }) {
     };
 
     fetchMovements();
-  }, [part.id]);
+  }, [part.stockId]);
 
   const getMovementIcon = (type) => {
     switch (type) {
