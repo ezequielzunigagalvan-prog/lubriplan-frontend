@@ -671,6 +671,17 @@ export default function Inventory() {
           }}
         />
       )}
+
+      {/* Modal Historial de Movimientos */}
+      {showMovementsModal && selectedPartForMovements && (
+        <MovementsModal
+          part={selectedPartForMovements}
+          onClose={() => {
+            setShowMovementsModal(false);
+            setSelectedPartForMovements(null);
+          }}
+        />
+      )}
     </div>
   );
 }
