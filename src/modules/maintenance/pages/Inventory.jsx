@@ -4,6 +4,36 @@ import { Plus, Search, Package, Building2, AlertTriangle, DollarSign, ChevronDow
 import { maintenanceApi } from '../services/maintenanceApi';
 import { httpDelete } from '../../../services/http';
 
+// Función para enriquecer stock con datos de refacción
+const enrichStockData = (stock) => {
+  return (Array.isArray(stock) ? stock : []).map(s => {
+    const part = s.sparePart || {};
+    const minStock = Number(part.minStock) || 10;
+    const maxStock = Number(part.maxStock) || minStock * 2;
+    return {
+      id: s.sparePartId || s.id,
+      stockId: s.id,
+      qty: Number(s.quantity) || 0,
+      minQty: minStock,
+      maxStock: maxStock,
+      criticalQty: Math.floor(minStock / 3),
+      code: part.code || 'N/A',
+      name: part.name || 'Sin nombre',
+      description: part.description || '',
+      brand: part.brand || '',
+      partNumber: String(part.partNumber || ''),
+      sku: part.id || '',
+      unit: part.unit || 'pz',
+      price: Number(part.costPerUnit) || 0,
+      category: part.category || '',
+      supplier: '',
+      location: '',
+      lastMovement: new Date().toISOString().split('T')[0],
+      notes: '',
+    };
+  });
+};
+
 export default function Inventory() {
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,34 +66,7 @@ export default function Inventory() {
           warehousesData.map(async (warehouse) => {
             try {
               const stock = await maintenanceApi.getWarehouseStock(warehouse.id);
-
-              const enrichedStock = (Array.isArray(stock) ? stock : []).map(s => {
-                // El stock ya viene con sparePart incluido del backend
-                const part = s.sparePart || {};
-                const minStock = Number(part.minStock) || 10;
-                const maxStock = Number(part.maxStock) || minStock * 2;
-                return {
-                  id: s.sparePartId || s.id,
-                  stockId: s.id,
-                  qty: Number(s.quantity) || 0,
-                  minQty: minStock,
-                  maxStock: maxStock,
-                  criticalQty: Math.floor(minStock / 3),
-                  code: part.code || 'N/A',
-                  name: part.name || 'Sin nombre',
-                  description: part.description || '',
-                  brand: part.brand || '',
-                  partNumber: String(part.partNumber || ''),
-                  sku: part.id || '',
-                  unit: part.unit || 'pz',
-                  price: Number(part.costPerUnit) || 0,
-                  category: part.category || '',
-                  supplier: '',
-                  location: '',
-                  lastMovement: new Date().toISOString().split('T')[0],
-                  notes: '',
-                };
-              });
+              const enrichedStock = enrichStockData(stock);
               return { ...warehouse, spareParts: enrichedStock };
             } catch (err) {
               console.warn(`Error cargando stock para almacén ${warehouse.id}:`, err);
@@ -613,7 +616,8 @@ export default function Inventory() {
                   warehousesData.map(async (wh) => {
                     try {
                       const stock = await maintenanceApi.getWarehouseStock(wh.id);
-                      return { ...wh, spareParts: Array.isArray(stock) ? stock : [] };
+                      const enrichedStock = enrichStockData(stock);
+                      return { ...wh, spareParts: enrichedStock };
                     } catch {
                       return { ...wh, spareParts: [] };
                     }
@@ -648,7 +652,8 @@ export default function Inventory() {
                   warehousesData.map(async (wh) => {
                     try {
                       const stock = await maintenanceApi.getWarehouseStock(wh.id);
-                      return { ...wh, spareParts: Array.isArray(stock) ? stock : [] };
+                      const enrichedStock = enrichStockData(stock);
+                      return { ...wh, spareParts: enrichedStock };
                     } catch {
                       return { ...wh, spareParts: [] };
                     }
