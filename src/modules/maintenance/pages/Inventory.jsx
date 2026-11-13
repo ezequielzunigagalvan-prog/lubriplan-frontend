@@ -800,6 +800,7 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
           maxStock: formData.maxStock,
           costPerUnit: formData.costPerUnit,
         };
+        console.log('Enviando PATCH con:', updateData);
         await maintenanceApi.updateSparePart(part.id, updateData);
       } else {
         // Crear refacción
