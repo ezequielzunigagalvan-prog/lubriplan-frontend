@@ -48,7 +48,14 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
       setLoading(true);
       const response = await maintenanceApi.getAssets();
       console.log('[ASSETSLIST] Assets loaded:', response?.data?.length, 'items');
+
+      if (response?.data && response.data.length > 0) {
+        console.log('[ASSETSLIST] First asset data:');
+        console.table(response.data[0]);
+      }
+
       setAssets(response?.data || []);
+      console.log('[ASSETSLIST] setAssets called with new data');
     } catch (error) {
       console.error('[ASSETSLIST] Error loading assets:', error);
       toast.error('Error cargando activos');
