@@ -40,17 +40,20 @@ export default function Inventory() {
               const enrichedStock = (Array.isArray(stock) ? stock : []).map(s => {
                 // El stock ya viene con sparePart incluido del backend
                 const part = s.sparePart || {};
+                const minStock = Number(part.minStock) || 10;
+                const maxStock = Number(part.maxStock) || minStock * 2;
                 return {
                   id: s.sparePartId || s.id,
                   stockId: s.id,
-                  qty: s.quantity || 0,
-                  minQty: part.minStock || 10,
-                  criticalQty: Math.floor((part.minStock || 10) / 3),
+                  qty: Number(s.quantity) || 0,
+                  minQty: minStock,
+                  maxStock: maxStock,
+                  criticalQty: Math.floor(minStock / 3),
                   code: part.code || 'N/A',
                   name: part.name || 'Sin nombre',
                   sku: part.id || '',
                   unit: part.unit || 'pz',
-                  price: part.costPerUnit || 0,
+                  price: Number(part.costPerUnit) || 0,
                   category: part.category || '',
                   supplier: '',
                   location: '',
