@@ -740,16 +740,6 @@ function WarehouseModal({ onClose, onSuccess }) {
 
 // Modal para crear/editar refacciones
 function SparePartModal({ warehouses, part, onClose, onSuccess }) {
-  useEffect(() => {
-    if (part) {
-      console.log('Modal abierto con part:', part);
-      console.log('part.qty:', part.qty, 'type:', typeof part.qty);
-      console.log('part.minQty:', part.minQty, 'type:', typeof part.minQty);
-      console.log('part.maxStock:', part.maxStock, 'type:', typeof part.maxStock);
-      console.log('part.price:', part.price, 'type:', typeof part.price);
-    }
-  }, [part]);
-
   const [formData, setFormData] = useState(part ? {
     code: part.code || '',
     name: part.name || '',
@@ -813,7 +803,6 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
           maxStock: formData.maxStock,
           costPerUnit: formData.costPerUnit,
         };
-        console.log('Enviando PATCH con:', updateData);
         await maintenanceApi.updateSparePart(part.id, updateData);
       } else {
         // Crear refacción
