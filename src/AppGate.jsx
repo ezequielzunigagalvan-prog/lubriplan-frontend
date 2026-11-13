@@ -75,9 +75,27 @@ export default function AppGate() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 20, fontWeight: 700, fontFamily: EXEC_DISPLAY_FONT, letterSpacing: "-.02em" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, fontFamily: EXEC_DISPLAY_FONT, letterSpacing: "-.02em", marginBottom: 24 }}>
             No tienes plantas asignadas
           </div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "12px 24px",
+              borderRadius: "8px",
+              background: "#38bdf8",
+              color: "#fff",
+              border: "none",
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+              transition: "opacity 150ms ease",
+            }}
+            onMouseEnter={(e) => e.target.style.opacity = "0.8"}
+            onMouseLeave={(e) => e.target.style.opacity = "1"}
+          >
+            Recarga la página
+          </button>
         </div>
       </div>
     );

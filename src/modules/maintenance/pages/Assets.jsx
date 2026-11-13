@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MtButton, MtCard } from '../ui';
 import AssetFormModal from '../components/AssetFormModal';
 import AssetsList from '../components/AssetsList';
+import { maintenanceApi } from '../services/maintenanceApi';
 import { Plus, Package, Activity, CheckCircle, Pause, XCircle, AlertTriangle } from 'lucide-react';
 
 export default function Assets() {
@@ -10,17 +11,45 @@ export default function Assets() {
   const [filterCriticality, setFilterCriticality] = useState('all');
   const [filterState, setFilterState] = useState('all');
   const listRef = useRef(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    operating: 0,
+    stopped: 0,
+    outOfService: 0,
+    criticalA: 0,
+    criticalB: 0,
+    criticalC: 0,
+  });
 
-  // Mock stats
-  const stats = {
-    total: 45,
-    operating: 42,
-    stopped: 2,
-    outOfService: 1,
-    criticalA: 12,
-    criticalB: 18,
-    criticalC: 15,
-  };
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await maintenanceApi.getAssets({ limit: 1000 });
+        const assets = response?.data || [];
+
+        const total = assets.length;
+        const operating = assets.filter(a => a.status === 'OPERATING').length;
+        const stopped = assets.filter(a => a.status === 'STOPPED').length;
+        const outOfService = assets.filter(a => a.status === 'OUT_OF_SERVICE').length;
+        const criticalA = assets.filter(a => a.criticality === 'A').length;
+        const criticalB = assets.filter(a => a.criticality === 'B').length;
+        const criticalC = assets.filter(a => a.criticality === 'C').length;
+
+        setStats({
+          total,
+          operating,
+          stopped,
+          outOfService,
+          criticalA,
+          criticalB,
+          criticalC,
+        });
+      } catch (err) {
+        console.error('Error loading asset stats:', err);
+      }
+    };
+    loadStats();
+  }, []);
 
   const handleEdit = (asset) => {
     setEditingAsset(asset);
@@ -34,6 +63,34 @@ export default function Assets() {
 
   const handleSuccess = () => {
     listRef.current?.reload?.();
+    // Recarga también las estadísticas
+    const loadStats = async () => {
+      try {
+        const response = await maintenanceApi.getAssets({ limit: 1000 });
+        const assets = response?.data || [];
+
+        const total = assets.length;
+        const operating = assets.filter(a => a.status === 'OPERATING').length;
+        const stopped = assets.filter(a => a.status === 'STOPPED').length;
+        const outOfService = assets.filter(a => a.status === 'OUT_OF_SERVICE').length;
+        const criticalA = assets.filter(a => a.criticality === 'A').length;
+        const criticalB = assets.filter(a => a.criticality === 'B').length;
+        const criticalC = assets.filter(a => a.criticality === 'C').length;
+
+        setStats({
+          total,
+          operating,
+          stopped,
+          outOfService,
+          criticalA,
+          criticalB,
+          criticalC,
+        });
+      } catch (err) {
+        console.error('Error loading asset stats:', err);
+      }
+    };
+    loadStats();
   };
 
   return (

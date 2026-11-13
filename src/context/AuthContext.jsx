@@ -17,6 +17,9 @@ const AuthContext = createContext(null);
 const INACTIVITY_TIMEOUT_MS = 16 * 60 * 60 * 1000;
 const WARNING_BEFORE_LOGOUT_MS = 2 * 60 * 1000;
 
+// Global abort controller para cancelar todas las requests en logout
+const globalAbortController = new AbortController();
+
 export function AuthProvider({ children }) {
   const boot = loadAuth();
 
@@ -76,6 +79,13 @@ export function AuthProvider({ children }) {
 
       try {
         stopSSE();
+      } catch {
+        // noop
+      }
+
+      // Cancelar todas las requests pendientes
+      try {
+        globalAbortController.abort();
       } catch {
         // noop
       }

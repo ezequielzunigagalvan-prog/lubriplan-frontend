@@ -16,7 +16,7 @@ export default function Dashboard() {
     const load = async () => {
       try {
         const res = await maintenanceApi.getDashboardSummary();
-        setSummary(res?.data || null);
+        setSummary(res?.data?.data || res?.data || null);
       } catch (err) {
         setError(err?.message || 'Error cargando dashboard');
       } finally {

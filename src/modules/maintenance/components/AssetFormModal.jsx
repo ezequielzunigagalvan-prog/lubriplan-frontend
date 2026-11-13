@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MtButton } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { toast } from 'sonner';
@@ -33,7 +33,7 @@ function FormField({ label, placeholder, value, onChange, error, required }) {
       <input
         type="text"
         placeholder={placeholder}
-        value={value}
+        value={value ?? ''}
         onChange={onChange}
         style={{ width: '100%', padding: 'var(--mt-space-md)', borderRadius: 'var(--mt-radius-md)', border: error ? '2px solid var(--mt-danger)' : '1px solid var(--mt-border)', background: 'var(--mt-bg-base)', color: 'var(--mt-text-primary)', fontFamily: 'inherit', fontSize: '14px' }}
       />
@@ -50,7 +50,7 @@ function FormSelect({ label, value, onChange, options, error, required }) {
         {required && <span style={{ color: 'var(--mt-danger)' }}> *</span>}
       </label>
       <select
-        value={value}
+        value={value ?? ''}
         onChange={onChange}
         style={{ width: '100%', padding: 'var(--mt-space-md)', borderRadius: 'var(--mt-radius-md)', border: error ? '2px solid var(--mt-danger)' : '1px solid var(--mt-border)', background: 'var(--mt-bg-base)', color: 'var(--mt-text-primary)', fontFamily: 'inherit', fontSize: '14px' }}
       >
@@ -65,29 +65,73 @@ function FormSelect({ label, value, onChange, options, error, required }) {
   );
 }
 
-export default function AssetFormModal({ isOpen, onClose, asset = null, onSuccess }) {
-  const [formData, setFormData] = useState(asset || {
-    code: '',
-    name: '',
-    level: 'EQUIPMENT',
-    location: '',
-    manufacturer: '',
-    model: '',
-    serialNumber: '',
-    criticality: 'B',
-    status: 'OPERATING',
-    notes: '',
-  });
+const INITIAL_FORM_STATE = {
+  code: '',
+  name: '',
+  level: 'EQUIPMENT',
+  location: '',
+  manufacturer: '',
+  model: '',
+  serialNumber: '',
+  criticality: 'B',
+  status: 'OPERATING',
+  notes: '',
+};
 
+export default function AssetFormModal({ isOpen, onClose, asset = null, onSuccess }) {
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // Resetear formulario cuando se abre/cierra o cambia el asset
+  useEffect(() => {
+    if (isOpen) {
+      if (asset?.id) {
+        // Editando: llenar con datos del activo, asegurar strings
+        setFormData({
+          code: asset.code ?? '',
+          name: asset.name ?? '',
+          level: asset.level ?? 'EQUIPMENT',
+          location: asset.location ?? '',
+          manufacturer: asset.manufacturer ?? '',
+          model: asset.model ?? '',
+          serialNumber: asset.serialNumber ?? '',
+          criticality: asset.criticality ?? 'B',
+          status: asset.status ?? 'OPERATING',
+          notes: asset.notes ?? '',
+        });
+      } else {
+        // Creando: resetear formulario
+        setFormData(INITIAL_FORM_STATE);
+      }
+      setErrors({});
+    }
+  }, [isOpen, asset?.id, asset?.name, asset?.code]);
+
   const validate = () => {
     const newErrors = {};
-    if (!formData.code.trim()) newErrors.code = 'Código es requerido';
-    if (!formData.name.trim()) newErrors.name = 'Nombre es requerido';
-    if (!formData.level) newErrors.level = 'Nivel es requerido';
-    if (!formData.criticality) newErrors.criticality = 'Criticidad es requerida';
+
+    // Validaciones de campos requeridos
+    if (!formData.code?.trim()) {
+      newErrors.code = 'Código es requerido';
+    } else if (formData.code.trim().length < 2) {
+      newErrors.code = 'Código debe tener al menos 2 caracteres';
+    }
+
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Nombre es requerido';
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = 'Nombre debe tener al menos 3 caracteres';
+    }
+
+    if (!formData.level) {
+      newErrors.level = 'Nivel es requerido';
+    }
+
+    if (!formData.criticality) {
+      newErrors.criticality = 'Criticidad es requerida';
+    }
+
     return newErrors;
   };
 
@@ -104,22 +148,39 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      toast.error('Por favor, completa todos los campos requeridos');
       return;
     }
 
     try {
       setLoading(true);
+      const dataToSubmit = {
+        ...formData,
+        code: formData.code?.trim() || '',
+        name: formData.name?.trim() || '',
+        location: formData.location?.trim() || '',
+        manufacturer: formData.manufacturer?.trim() || '',
+        model: formData.model?.trim() || '',
+        serialNumber: formData.serialNumber?.trim() || '',
+        notes: formData.notes?.trim() || '',
+      };
+
       if (asset?.id) {
-        await maintenanceApi.updateAsset(asset.id, formData);
-        toast.success('Activo actualizado correctamente');
+        await maintenanceApi.updateAsset(asset.id, dataToSubmit);
+        toast.success('✓ Activo actualizado correctamente');
       } else {
-        await maintenanceApi.createAsset(formData);
-        toast.success('Activo creado correctamente');
+        const response = await maintenanceApi.createAsset(dataToSubmit);
+        toast.success('✓ Activo creado correctamente');
       }
+
       onSuccess?.();
+      setFormData(INITIAL_FORM_STATE);
+      setErrors({});
       onClose();
     } catch (error) {
-      toast.error('Error: ' + error.message);
+      const errorMsg = error?.response?.data?.error || error?.message || 'Error al guardar el activo';
+      toast.error('✗ ' + errorMsg);
+      console.error('Error submitting form:', error);
     } finally {
       setLoading(false);
     }

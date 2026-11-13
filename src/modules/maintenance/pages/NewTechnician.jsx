@@ -1,38 +1,31 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MtCard, MtBadge, MtButton, MtInput } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
+import { toast } from 'sonner';
 import {
-  ChevronLeft, Save, X, Wrench, Zap, Gauge, Flame, Droplet, Shield, Award
+  ChevronLeft, Save, Wrench, Zap, Gauge, Flame, Droplet, Shield, Award, Plus, Trash2, User, Mail, Phone, Badge
 } from 'lucide-react';
 import '../ui/tokens.css';
 
 const SPECIALITIES = {
-  MECHANIC: { label: 'Mecánica', icon: Wrench, color: 'var(--mt-warning)' },
-  ELECTRICAL: { label: 'Eléctrica', icon: Zap, color: 'var(--mt-danger)' },
-  INSTRUMENTS: { label: 'Instrumentación', icon: Gauge, color: 'var(--mt-info)' },
-  WELDING: { label: 'Soldadura', icon: Flame, color: 'var(--mt-warning)' },
-  LUBRICATION: { label: 'Lubricación', icon: Droplet, color: 'var(--mt-accent)' },
-  SUPERVISOR: { label: 'Supervisor', icon: Shield, color: 'var(--mt-success)' },
-  MANAGER: { label: 'Jefe de Mantenimiento', icon: Award, color: 'var(--mt-accent)' },
+  MECHANIC: { label: 'Mecánica', icon: Wrench, color: '#f59e0b' },
+  ELECTRICAL: { label: 'Eléctrica', icon: Zap, color: '#ef4444' },
+  INSTRUMENTS: { label: 'Instrumentación', icon: Gauge, color: '#3b82f6' },
+  WELDING: { label: 'Soldadura', icon: Flame, color: '#f59e0b' },
+  LUBRICATION: { label: 'Lubricación', icon: Droplet, color: '#38bdf8' },
+  SUPERVISOR: { label: 'Supervisor', icon: Shield, color: '#22c55e' },
+  MANAGER: { label: 'Jefe de Mantenimiento', icon: Award, color: '#38bdf8' },
 };
-
-const PLANTS = [
-  'Planta Jilotepec',
-  'Planta Toluca',
-  'Planta Mexico City',
-  'Planta Guadalajara',
-  'Planta Monterrey',
-];
 
 export default function NewTechnician() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     speciality: 'MECHANIC',
-    plant: 'Planta Jilotepec',
+    code: '',
     certifications: [],
     newCertification: '',
   });
@@ -48,7 +41,7 @@ export default function NewTechnician() {
     if ((formData.newCertification || '').trim()) {
       setFormData(prev => ({
         ...prev,
-        certifications: [...prev.certifications, prev.newCertification],
+        certifications: [...prev.certifications, prev.newCertification.trim()],
         newCertification: '',
       }));
     }
@@ -65,122 +58,162 @@ export default function NewTechnician() {
     e.preventDefault();
 
     if (!formData.name || !formData.email || !formData.phone) {
-      alert('Por favor completa todos los campos requeridos');
+      toast.error('Por favor completa los campos requeridos');
       return;
     }
 
     try {
+      setLoading(true);
+
       const technicianData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         speciality: formData.speciality,
-        plant: formData.plant,
+        code: formData.code || undefined,
         certifications: formData.certifications,
-        status: 'active',
-        joinDate: new Date().toISOString().split('T')[0],
+        status: 'Activo',
       };
 
       await maintenanceApi.createTechnician(technicianData);
+      toast.success('Técnico creado exitosamente');
       navigate('/maintenance/app/personnel');
     } catch (error) {
       console.error('Error creating technician:', error);
-      alert('Error al crear técnico. Intenta de nuevo.');
+      toast.error('Error al crear técnico');
+    } finally {
+      setLoading(false);
     }
   };
 
   const spec = SPECIALITIES[formData.speciality];
+  const SpecIcon = spec?.icon || User;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <button
           onClick={() => navigate('/maintenance/app/personnel')}
           style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            width: '40px',
-            height: '40px',
-            borderRadius: 'var(--mt-radius-md)',
-            border: '1px solid var(--mt-border)',
-            background: 'transparent',
-            cursor: 'pointer',
+            gap: '8px',
             color: 'var(--mt-text-secondary)',
+            fontWeight: 'bold'
           }}
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} /> Volver
         </button>
-        <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: 0 }}>
-            Nuevo Técnico
-          </h1>
-          <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-            Ingresa los datos del nuevo personal técnico
-          </p>
-        </div>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
-        {/* Basic Information */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: '0 0 var(--mt-space-lg) 0' }}>
-              Información Básica
+      {/* Formulario */}
+      <div style={{
+        background: 'var(--mt-bg-surface)',
+        borderRadius: '12px',
+        border: '1px solid var(--mt-border)',
+        overflow: 'hidden'
+      }}>
+        {/* Encabezado */}
+        <div style={{
+          background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+          color: '#fff',
+          padding: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <User size={32} />
+          <div>
+            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
+              Crear Nuevo Técnico
+            </h1>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', opacity: 0.9 }}>
+              Registra un nuevo miembro al equipo de mantenimiento
+            </p>
+          </div>
+        </div>
+
+        {/* Contenido */}
+        <form onSubmit={handleSubmit} style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Sección: Información Personal */}
+          <div>
+            <h2 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--mt-text-primary)' }}>
+              Información Personal
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              {/* Nombre */}
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--mt-text-secondary)', display: 'block', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
                   Nombre Completo *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  placeholder="Juan Pérez García"
-                  required
+                  placeholder="Ej: Juan Pérez"
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    borderRadius: 'var(--mt-radius-md)',
-                    fontSize: '13px',
+                    borderRadius: '6px',
                     border: '1px solid var(--mt-border)',
-                    background: 'var(--mt-bg-surface)',
-                    color: 'var(--mt-text-primary)',
-                    outline: 'none',
-                    boxSizing: 'border-box',
+                    background: 'var(--mt-bg-base)',
+                    fontSize: '14px',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
 
+              {/* Código */}
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--mt-text-secondary)', display: 'block', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                  Código (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => handleChange('code', e.target.value)}
+                  placeholder="Ej: TEC-001"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--mt-border)',
+                    background: 'var(--mt-bg-base)',
+                    fontSize: '14px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
                   Email *
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="juan.perez@company.com"
-                  required
+                  placeholder="tecnico@company.com"
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    borderRadius: 'var(--mt-radius-md)',
-                    fontSize: '13px',
+                    borderRadius: '6px',
                     border: '1px solid var(--mt-border)',
-                    background: 'var(--mt-bg-surface)',
-                    color: 'var(--mt-text-primary)',
-                    outline: 'none',
-                    boxSizing: 'border-box',
+                    background: 'var(--mt-bg-base)',
+                    fontSize: '14px',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
 
+              {/* Teléfono */}
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--mt-text-secondary)', display: 'block', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
                   Teléfono *
                 </label>
                 <input
@@ -188,195 +221,190 @@ export default function NewTechnician() {
                   value={formData.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
                   placeholder="+56 9 1234 5678"
-                  required
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    borderRadius: 'var(--mt-radius-md)',
-                    fontSize: '13px',
+                    borderRadius: '6px',
                     border: '1px solid var(--mt-border)',
-                    background: 'var(--mt-bg-surface)',
-                    color: 'var(--mt-text-primary)',
-                    outline: 'none',
-                    boxSizing: 'border-box',
+                    background: 'var(--mt-bg-base)',
+                    fontSize: '14px',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
             </div>
           </div>
-        </MtCard>
 
-        {/* Assignment */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: '0 0 var(--mt-space-lg) 0' }}>
-              Asignación
+          {/* Sección: Especialidad */}
+          <div>
+            <h2 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--mt-text-primary)' }}>
+              Especialidad
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--mt-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                  Especialidad *
-                </label>
-                <select
-                  value={formData.speciality}
-                  onChange={(e) => handleChange('speciality', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 'var(--mt-radius-md)',
-                    fontSize: '13px',
-                    border: '1px solid var(--mt-border)',
-                    background: 'var(--mt-bg-surface)',
-                    color: 'var(--mt-text-primary)',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {Object.entries(SPECIALITIES).map(([key, val]) => (
-                    <option key={key} value={key}>
-                      {val.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--mt-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                  Planta Asignada *
-                </label>
-                <select
-                  value={formData.plant}
-                  onChange={(e) => handleChange('plant', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 'var(--mt-radius-md)',
-                    fontSize: '13px',
-                    border: '1px solid var(--mt-border)',
-                    background: 'var(--mt-bg-surface)',
-                    color: 'var(--mt-text-primary)',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {PLANTS.map(plant => (
-                    <option key={plant} value={plant}>
-                      {plant}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
+              {Object.entries(SPECIALITIES).map(([key, sp]) => {
+                const Icon = sp.icon;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleChange('speciality', key)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: formData.speciality === key ? `2px solid ${sp.color}` : '1px solid var(--mt-border)',
+                      background: formData.speciality === key ? `${sp.color}10` : 'var(--mt-bg-base)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 200ms'
+                    }}
+                  >
+                    <Icon size={24} style={{ color: sp.color }} />
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--mt-text-primary)' }}>
+                      {sp.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </MtCard>
 
-        {/* Certifications */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: '0 0 var(--mt-space-lg) 0' }}>
+          {/* Sección: Certificaciones */}
+          <div>
+            <h2 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--mt-text-primary)' }}>
               Certificaciones
             </h2>
 
-            <div style={{ marginBottom: 'var(--mt-space-lg)' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--mt-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Agregar Certificación
-              </label>
-              <div style={{ display: 'flex', gap: 'var(--mt-space-sm)' }}>
-                <input
-                  type="text"
-                  value={formData.newCertification}
-                  onChange={(e) => handleChange('newCertification', e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddCertification();
-                    }
-                  }}
-                  placeholder="Ej: Mecánica Industrial, Seguridad en Altura"
-                  style={{
-                    flex: 1,
-                    padding: '10px 12px',
-                    borderRadius: 'var(--mt-radius-md)',
-                    fontSize: '13px',
-                    border: '1px solid var(--mt-border)',
-                    background: 'var(--mt-bg-surface)',
-                    color: 'var(--mt-text-primary)',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCertification}
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: 'var(--mt-radius-md)',
-                    background: 'var(--mt-accent)',
-                    color: '#fff',
-                    border: 'none',
-                    fontWeight: '700',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Agregar
-                </button>
-              </div>
+            {/* Agregar certificación */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <input
+                type="text"
+                value={formData.newCertification}
+                onChange={(e) => handleChange('newCertification', e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddCertification()}
+                placeholder="Ej: Certificación ISO 9001"
+                style={{
+                  flex: 1,
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--mt-border)',
+                  background: 'var(--mt-bg-base)',
+                  fontSize: '14px',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddCertification}
+                style={{
+                  padding: '10px 16px',
+                  background: '#38bdf8',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Plus size={18} /> Agregar
+              </button>
             </div>
 
-            {formData.certifications.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--mt-space-sm)' }}>
+            {/* Lista de certificaciones */}
+            {formData.certifications.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {formData.certifications.map((cert, idx) => (
                   <div
                     key={idx}
                     style={{
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      padding: '6px 12px',
-                      borderRadius: 'var(--mt-radius-full)',
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      border: '1px solid var(--mt-accent)',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      background: 'var(--mt-bg-base)',
+                      borderRadius: '6px',
+                      border: '1px solid var(--mt-border)'
                     }}
                   >
-                    <Award size={14} style={{ color: 'var(--mt-accent)' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--mt-text-primary)' }}>{cert}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Badge size={16} style={{ color: '#38bdf8' }} />
+                      <span style={{ fontSize: '13px' }}>{cert}</span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveCertification(idx)}
                       style={{
                         background: 'none',
                         border: 'none',
+                        color: '#ef4444',
                         cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        marginLeft: '4px',
+                        padding: '4px'
                       }}
                     >
-                      <X size={14} style={{ color: 'var(--mt-text-tertiary)' }} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 ))}
               </div>
+            ) : (
+              <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', fontStyle: 'italic' }}>
+                Sin certificaciones agregadas
+              </p>
             )}
           </div>
-        </MtCard>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 'var(--mt-space-md)', justifyContent: 'flex-end' }}>
-          <MtButton
-            type="button"
-            variant="secondary"
-            onClick={() => navigate('/maintenance/app/personnel')}
-          >
-            Cancelar
-          </MtButton>
-          <MtButton type="submit">
-            <Save size={16} />
-            Guardar Técnico
-          </MtButton>
-        </div>
-      </form>
+          {/* Botones de acción */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--mt-border)' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/maintenance/app/personnel')}
+              style={{
+                flex: 1,
+                padding: '12px 20px',
+                background: 'var(--mt-bg-base)',
+                color: 'var(--mt-text-primary)',
+                border: '1px solid var(--mt-border)',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: '12px 20px',
+                background: loading ? '#9ca3af' : '#38bdf8',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              {loading ? '⏳ Guardando...' : (
+                <>
+                  <Save size={18} /> Crear Técnico
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

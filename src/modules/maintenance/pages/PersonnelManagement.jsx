@@ -1,415 +1,459 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MtCard, MtBadge, MtButton, MtInput } from '../ui';
+import { maintenanceApi } from '../services/maintenanceApi';
+import { toast } from 'sonner';
 import {
   Users, Search, Plus, Filter, Award, Clock, TrendingUp, AlertCircle,
-  Wrench, Zap, Droplet, Flame, Gauge, Shield, ChevronRight, Grid3x3
+  Wrench, Zap, Droplet, Flame, Gauge, Shield, ChevronRight, Trash2, Edit2, Mail, Phone, LayoutGrid, List
 } from 'lucide-react';
 import '../ui/tokens.css';
 
-// Speciality definitions
 const SPECIALITIES = {
-  MECHANIC: { label: 'Mecánica', icon: Wrench, color: 'var(--mt-warning)' },
-  ELECTRICAL: { label: 'Eléctrica', icon: Zap, color: 'var(--mt-danger)' },
-  INSTRUMENTS: { label: 'Instrumentación', icon: Gauge, color: 'var(--mt-info)' },
-  WELDING: { label: 'Soldadura', icon: Flame, color: 'var(--mt-warning)' },
-  LUBRICATION: { label: 'Lubricación', icon: Droplet, color: 'var(--mt-accent)' },
-  SUPERVISOR: { label: 'Supervisor', icon: Shield, color: 'var(--mt-success)' },
-  MANAGER: { label: 'Jefe de Mantenimiento', icon: Award, color: 'var(--mt-accent)' },
+  MECHANIC: { label: 'Mecánica', icon: Wrench, color: '#f59e0b' },
+  ELECTRICAL: { label: 'Eléctrica', icon: Zap, color: '#ef4444' },
+  INSTRUMENTS: { label: 'Instrumentación', icon: Gauge, color: '#3b82f6' },
+  WELDING: { label: 'Soldadura', icon: Flame, color: '#f59e0b' },
+  LUBRICATION: { label: 'Lubricación', icon: Droplet, color: '#38bdf8' },
+  SUPERVISOR: { label: 'Supervisor', icon: Shield, color: '#22c55e' },
+  MANAGER: { label: 'Jefe', icon: Award, color: '#38bdf8' },
 };
-
-const MOCK_TECHNICIANS = [
-  {
-    id: 1,
-    name: 'Juan Pérez',
-    speciality: 'MECHANIC',
-    plant: 'Planta Jilotepec',
-    email: 'juan.perez@company.com',
-    phone: '+56 9 1234 5678',
-    status: 'active',
-    hoursThisMonth: 168,
-    ordersCompleted: 24,
-    compliance: 96,
-    certifications: ['Mecánica Industrial', 'Seguridad en Altura'],
-    joinDate: '2020-03-15',
-  },
-  {
-    id: 2,
-    name: 'Carlos López',
-    speciality: 'ELECTRICAL',
-    plant: 'Planta Jilotepec',
-    email: 'carlos.lopez@company.com',
-    phone: '+56 9 2345 6789',
-    status: 'active',
-    hoursThisMonth: 156,
-    ordersCompleted: 19,
-    compliance: 88,
-    certifications: ['Electricidad Industrial', 'NEC 2020'],
-    joinDate: '2021-06-20',
-  },
-  {
-    id: 3,
-    name: 'Roberto García',
-    speciality: 'INSTRUMENTS',
-    plant: 'Planta Toluca',
-    email: 'roberto.garcia@company.com',
-    phone: '+56 9 3456 7890',
-    status: 'active',
-    hoursThisMonth: 172,
-    ordersCompleted: 21,
-    compliance: 92,
-    certifications: ['Instrumentación ISA', 'Calibración'],
-    joinDate: '2019-11-10',
-  },
-  {
-    id: 4,
-    name: 'Miguel Torres',
-    speciality: 'LUBRICATION',
-    plant: 'Planta Jilotepec',
-    email: 'miguel.torres@company.com',
-    phone: '+56 9 4567 8901',
-    status: 'active',
-    hoursThisMonth: 160,
-    ordersCompleted: 28,
-    compliance: 98,
-    certifications: ['Lubricación ISO', 'Análisis de Aceites'],
-    joinDate: '2022-01-05',
-  },
-  {
-    id: 5,
-    name: 'Ana Martínez',
-    speciality: 'SUPERVISOR',
-    plant: 'Planta Jilotepec',
-    email: 'ana.martinez@company.com',
-    phone: '+56 9 5678 9012',
-    status: 'active',
-    hoursThisMonth: 140,
-    ordersCompleted: 15,
-    compliance: 100,
-    certifications: ['Supervisión de Mantenimiento', 'ISO 14224'],
-    joinDate: '2018-05-12',
-  },
-];
 
 export default function PersonnelManagement() {
   const navigate = useNavigate();
-  const [technicians, setTechnicians] = useState(MOCK_TECHNICIANS);
-  const [search, setSearch] = useState('');
-  const [filterSpeciality, setFilterSpeciality] = useState('all');
-  const [filterPlant, setFilterPlant] = useState('all');
+  const [technicians, setTechnicians] = useState([]);
+  const [filteredTechnicians, setFilteredTechnicians] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Activo');
+  const [specialtyFilter, setSpecialtyFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('grid'); // grid or list
 
-  const plants = [...new Set(technicians.map(t => t.plant))];
-  const specialities = Object.keys(SPECIALITIES);
+  useEffect(() => {
+    loadTechnicians();
+  }, []);
 
-  const filtered = technicians.filter(tech => {
-    const matchSearch = tech.name?.toLowerCase().includes(search.toLowerCase()) ?? false;
-    const matchSpeciality = filterSpeciality === 'all' || tech.speciality === filterSpeciality;
-    const matchPlant = filterPlant === 'all' || tech.plant === filterPlant;
-    return matchSearch && matchSpeciality && matchPlant;
-  });
+  useEffect(() => {
+    filterTechnicians();
+  }, [technicians, searchTerm, statusFilter, specialtyFilter]);
+
+  const loadTechnicians = async () => {
+    try {
+      setLoading(true);
+      const response = await maintenanceApi.getTechnicians({ limit: 1000 });
+      setTechnicians(response?.data || []);
+    } catch (err) {
+      console.error('Error loading technicians:', err);
+      toast.error('Error al cargar técnicos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterTechnicians = () => {
+    let filtered = [...technicians];
+
+    // Filtrar por estado
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(t => t.status === statusFilter);
+    }
+
+    // Filtrar por especialidad
+    if (specialtyFilter !== 'all') {
+      filtered = filtered.filter(t => t.specialty === specialtyFilter);
+    }
+
+    // Filtrar por búsqueda
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(t =>
+        t.name.toLowerCase().includes(term) ||
+        t.email?.toLowerCase().includes(term) ||
+        t.code?.toLowerCase().includes(term)
+      );
+    }
+
+    setFilteredTechnicians(filtered);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Estás seguro de que deseas desactivar este técnico?')) {
+      try {
+        await maintenanceApi.deleteTechnician(id);
+        toast.success('Técnico desactivado');
+        loadTechnicians();
+      } catch (err) {
+        toast.error('Error al desactivar técnico');
+      }
+    }
+  };
+
+  const stats = {
+    total: technicians.filter(t => t.status === 'Activo').length,
+    bySpecialty: SPECIALITIES,
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '32px', marginBottom: '16px' }}>⏳</div>
+          <p style={{ color: 'var(--mt-text-secondary)' }}>Cargando personal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--mt-space-lg)' }}>
-        <div>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-            Gestión de Personal
-          </h1>
-          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-            {technicians.length} técnicos | {technicians.filter(t => t.status === 'active').length} activos
-          </p>
+      <div style={{
+        background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+        color: '#fff',
+        padding: '32px',
+        borderRadius: '12px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Users size={40} />
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>Gestión de Personal</h1>
+            <p style={{ fontSize: '14px', margin: '4px 0 0 0', opacity: 0.9 }}>Administra técnicos y personal de mantenimiento</p>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 'var(--mt-space-md)' }}>
-          <MtButton variant="secondary" onClick={() => navigate('/maintenance/app/skills-matrix')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Grid3x3 size={20} />
-            Matriz Habilidades
-          </MtButton>
-          <MtButton onClick={() => navigate('/maintenance/app/personnel/new')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Plus size={20} />
-            Agregar Técnico
-          </MtButton>
-        </div>
+        <button
+          onClick={() => navigate('/maintenance/app/personnel/new')}
+          style={{
+            background: '#fff',
+            color: '#38bdf8',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <Plus size={20} /> Nuevo Técnico
+        </button>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Users size={16} style={{ color: 'var(--mt-accent)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>TOTAL</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-accent)' }}>
-              {technicians.length}
-            </div>
-          </div>
-        </MtCard>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '16px'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(2, 132, 199, 0.05))',
+          padding: '20px',
+          borderRadius: '8px',
+          border: '1px solid var(--mt-border)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#38bdf8' }}>{stats.total}</div>
+          <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginTop: '4px' }}>Técnicos Activos</div>
+        </div>
 
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <TrendingUp size={16} style={{ color: 'var(--mt-success)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>ACTIVOS</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-success)' }}>
-              {technicians.filter(t => t.status === 'active').length}
-            </div>
-          </div>
-        </MtCard>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(20, 184, 60, 0.05))',
+          padding: '20px',
+          borderRadius: '8px',
+          border: '1px solid var(--mt-border)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#22c55e' }}>{technicians.length}</div>
+          <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginTop: '4px' }}>Total Registrados</div>
+        </div>
 
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Clock size={16} style={{ color: 'var(--mt-info)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>HORAS MES</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-info)' }}>
-              {Math.round(technicians.reduce((sum, t) => sum + t.hoursThisMonth, 0) / technicians.length)}h
-            </div>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.1), rgba(239, 68, 68, 0.05))',
+          padding: '20px',
+          borderRadius: '8px',
+          border: '1px solid var(--mt-border)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ef4444' }}>
+            {technicians.filter(t => t.status === 'Inactivo').length}
           </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Award size={16} style={{ color: 'var(--mt-warning)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>CUMPLIM.</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-warning)' }}>
-              {Math.round(technicians.reduce((sum, t) => sum + t.compliance, 0) / technicians.length)}%
-            </div>
-          </div>
-        </MtCard>
-      </div>
-
-      {/* Filters */}
-      <div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
-          {/* Search */}
-          <div style={{ position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
-            <input
-              type="text"
-              placeholder="Buscar técnico..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px 10px 40px',
-                borderRadius: 'var(--mt-radius-md)',
-                fontSize: '14px',
-                border: '1px solid var(--mt-border)',
-                background: 'var(--mt-bg-surface)',
-                color: 'var(--mt-text-primary)',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          {/* Filter buttons */}
-          <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', overflowX: 'auto', paddingBottom: 'var(--mt-space-sm)' }}>
-            <button
-              onClick={() => setFilterSpeciality('all')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 'var(--mt-radius-full)',
-                fontWeight: '600',
-                fontSize: '13px',
-                whiteSpace: 'nowrap',
-                border: filterSpeciality === 'all' ? '2px solid var(--mt-accent)' : '1px solid var(--mt-border)',
-                cursor: 'pointer',
-                background: filterSpeciality === 'all' ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
-                color: filterSpeciality === 'all' ? 'var(--mt-accent)' : 'var(--mt-text-secondary)',
-              }}
-            >
-              Todas las especialidades
-            </button>
-            {specialities.map(spec => (
-              <button
-                key={spec}
-                onClick={() => setFilterSpeciality(spec)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 'var(--mt-radius-full)',
-                  fontWeight: '600',
-                  fontSize: '13px',
-                  whiteSpace: 'nowrap',
-                  border: filterSpeciality === spec ? `2px solid ${SPECIALITIES[spec].color}` : '1px solid var(--mt-border)',
-                  cursor: 'pointer',
-                  background: filterSpeciality === spec ? `${SPECIALITIES[spec].color}20` : 'transparent',
-                  color: filterSpeciality === spec ? SPECIALITIES[spec].color : 'var(--mt-text-secondary)',
-                }}
-              >
-                {SPECIALITIES[spec].label}
-              </button>
-            ))}
-          </div>
+          <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginTop: '4px' }}>Inactivos</div>
         </div>
       </div>
 
-      {/* Technicians Grid */}
-      {filtered.length === 0 ? (
-        <MtCard elevated>
-          <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
-            <Users size={48} style={{ color: 'var(--mt-accent)', marginBottom: 'var(--mt-space-md)', opacity: 0.6 }} />
-            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-              Sin técnicos
-            </h3>
-            <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-              No hay técnicos que coincidan con tu búsqueda
-            </p>
-          </div>
-        </MtCard>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-          {filtered.map((tech) => {
-            const SpecIcon = SPECIALITIES[tech.speciality].icon;
+      {/* Filtros y Búsqueda */}
+      <div style={{
+        background: 'var(--mt-bg-surface)',
+        padding: '20px',
+        borderRadius: '8px',
+        border: '1px solid var(--mt-border)',
+        display: 'flex',
+        gap: '16px',
+        alignItems: 'center',
+        flexWrap: 'wrap'
+      }}>
+        {/* Búsqueda */}
+        <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="Buscar técnico..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 12px 10px 36px',
+              borderRadius: '6px',
+              border: '1px solid var(--mt-border)',
+              background: 'var(--mt-bg-base)',
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          />
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--mt-text-tertiary)' }} />
+        </div>
+
+        {/* Filtro de Estado */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{
+            padding: '10px 12px',
+            borderRadius: '6px',
+            border: '1px solid var(--mt-border)',
+            background: 'var(--mt-bg-base)',
+            fontSize: '14px'
+          }}
+        >
+          <option value="all">Todos los estados</option>
+          <option value="Activo">Activos</option>
+          <option value="Inactivo">Inactivos</option>
+        </select>
+
+        {/* Filtro de Especialidad */}
+        <select
+          value={specialtyFilter}
+          onChange={(e) => setSpecialtyFilter(e.target.value)}
+          style={{
+            padding: '10px 12px',
+            borderRadius: '6px',
+            border: '1px solid var(--mt-border)',
+            background: 'var(--mt-bg-base)',
+            fontSize: '14px'
+          }}
+        >
+          <option value="all">Todas las especialidades</option>
+          {Object.entries(SPECIALITIES).map(([key, spec]) => (
+            <option key={key} value={key}>{spec.label}</option>
+          ))}
+        </select>
+
+        {/* Vista */}
+        <div style={{ display: 'flex', gap: '8px', borderLeft: '1px solid var(--mt-border)', paddingLeft: '16px' }}>
+          <button
+            onClick={() => setViewMode('grid')}
+            style={{
+              padding: '8px',
+              background: viewMode === 'grid' ? '#38bdf8' : 'transparent',
+              color: viewMode === 'grid' ? '#fff' : 'var(--mt-text-secondary)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            <LayoutGrid size={18} />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            style={{
+              padding: '8px',
+              background: viewMode === 'list' ? '#38bdf8' : 'transparent',
+              color: viewMode === 'list' ? '#fff' : 'var(--mt-text-secondary)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            <List size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* Lista de Técnicos */}
+      {filteredTechnicians.length > 0 ? (
+        <div style={{ display: viewMode === 'grid' ? 'grid' : 'flex', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', flexDirection: viewMode === 'list' ? 'column' : undefined }}>
+          {filteredTechnicians.map(tech => {
+            const spec = SPECIALITIES[tech.specialty];
+            const Icon = spec?.icon || Users;
+
             return (
-              <MtCard
+              <div
                 key={tech.id}
-                elevated
-                style={{ cursor: 'pointer', transition: 'all 200ms ease' }}
-                onClick={() => navigate(`/maintenance/app/personnel/${tech.id}`)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(56, 189, 248, 0.2)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
+                style={{
+                  background: 'var(--mt-bg-surface)',
+                  border: '1px solid var(--mt-border)',
+                  borderRadius: '8px',
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  transition: 'all 200ms'
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
+                onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
               >
-                <div style={{ padding: 'var(--mt-space-lg)' }}>
-                  {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-lg)' }}>
-                    <div
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: 'var(--mt-radius-md)',
-                        background: `${SPECIALITIES[tech.speciality].color}20`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <SpecIcon size={24} style={{ color: SPECIALITIES[tech.speciality].color }} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0, marginBottom: '4px', color: 'var(--mt-text-primary)' }}>
-                        {tech.name}
-                      </h3>
-                      <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                        {SPECIALITIES[tech.speciality].label}
-                      </p>
-                    </div>
-                    <MtBadge variant="success" size="sm">
-                      Activo
-                    </MtBadge>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: 'var(--mt-text-primary)' }}>
+                      {tech.name}
+                    </h3>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
+                      {tech.code}
+                    </p>
                   </div>
-
-                  {/* Contact Info */}
-                  <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', marginBottom: 'var(--mt-space-lg)', paddingBottom: 'var(--mt-space-lg)', borderBottom: '1px solid var(--mt-border)' }}>
-                    <div style={{ marginBottom: '4px' }}>📧 {tech.email}</div>
-                    <div>📱 {tech.phone}</div>
-                  </div>
-
-                  {/* Stats */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-lg)' }}>
-                    <div>
-                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', marginBottom: '2px' }}>HORAS</div>
-                      <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--mt-accent)' }}>{tech.hoursThisMonth}h</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', marginBottom: '2px' }}>ÓRDENES</div>
-                      <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--mt-info)' }}>{tech.ordersCompleted}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', marginBottom: '2px' }}>CUMPLIM.</div>
-                      <div style={{ fontSize: '14px', fontWeight: '900', color: tech.compliance >= 95 ? 'var(--mt-success)' : 'var(--mt-warning)' }}>
-                        {tech.compliance}%
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', marginBottom: '2px' }}>DESDE</div>
-                      <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
-                        {new Date(tech.joinDate).getFullYear()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Certifications */}
-                  {tech.certifications.length > 0 && (
-                    <div style={{ marginBottom: 'var(--mt-space-md)' }}>
-                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', marginBottom: '4px' }}>CERTIFICACIONES</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {tech.certifications.slice(0, 2).map((cert, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              fontSize: '11px',
-                              background: 'var(--mt-bg-base)',
-                              padding: '2px 6px',
-                              borderRadius: 'var(--mt-radius-full)',
-                              color: 'var(--mt-text-secondary)',
-                            }}
-                          >
-                            {cert}
-                          </span>
-                        ))}
-                        {tech.certifications.length > 2 && (
-                          <span
-                            style={{
-                              fontSize: '11px',
-                              background: 'var(--mt-bg-base)',
-                              padding: '2px 6px',
-                              borderRadius: 'var(--mt-radius-full)',
-                              color: 'var(--mt-text-tertiary)',
-                            }}
-                          >
-                            +{tech.certifications.length - 2} más
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* View Button */}
-                  <button
-                    onClick={() => navigate(`/maintenance/app/personnel/${tech.id}`)}
+                  <div
                     style={{
-                      width: '100%',
-                      padding: 'var(--mt-space-md)',
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      border: '1px solid var(--mt-accent)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      color: 'var(--mt-accent)',
-                      fontWeight: '600',
-                      fontSize: '12px',
-                      cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '6px',
-                      transition: 'all 200ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(56, 189, 248, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(56, 189, 248, 0.1)';
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      background: `${spec?.color}20`,
+                      color: spec?.color
                     }}
                   >
-                    Ver Perfil
-                    <ChevronRight size={14} />
+                    <Icon size={20} />
+                  </div>
+                </div>
+
+                {/* Especialidad */}
+                {spec && (
+                  <div style={{
+                    display: 'inline-block',
+                    background: `${spec.color}20`,
+                    color: spec.color,
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    width: 'fit-content'
+                  }}>
+                    {spec.label}
+                  </div>
+                )}
+
+                {/* Contacto */}
+                {(tech.email || tech.phone) && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+                    {tech.email && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Mail size={14} />
+                        {tech.email}
+                      </div>
+                    )}
+                    {tech.phone && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Phone size={14} />
+                        {tech.phone}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Estado */}
+                <div style={{
+                  display: 'inline-block',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  width: 'fit-content',
+                  background: tech.status === 'Activo' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                  color: tech.status === 'Activo' ? '#22c55e' : '#6b7280'
+                }}>
+                  {tech.status}
+                </div>
+
+                {/* Acciones */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                  <button
+                    onClick={() => navigate(`/maintenance/app/personnel/${tech.id}`)}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      background: '#38bdf8',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Edit2 size={14} /> Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(tech.id)}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      color: '#ef4444',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Trash2 size={14} /> Desactivar
                   </button>
                 </div>
-              </MtCard>
+              </div>
             );
           })}
+        </div>
+      ) : (
+        <div style={{
+          background: 'var(--mt-bg-surface)',
+          padding: '60px 20px',
+          borderRadius: '8px',
+          textAlign: 'center',
+          border: '1px solid var(--mt-border)'
+        }}>
+          <AlertCircle size={40} style={{ margin: '0 auto 16px', color: 'var(--mt-text-tertiary)' }} />
+          <p style={{ color: 'var(--mt-text-secondary)', marginBottom: '16px' }}>
+            No se encontraron técnicos que coincidan con los filtros
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setStatusFilter('all');
+              setSpecialtyFilter('all');
+            }}
+            style={{
+              background: '#38bdf8',
+              color: '#fff',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Limpiar filtros
+          </button>
         </div>
       )}
     </div>
