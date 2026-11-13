@@ -228,7 +228,34 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
 
         <form onSubmit={handleSubmit} style={{ padding: 'var(--mt-space-2xl)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-lg)' }}>
-            <FormField label="Código del Activo" placeholder="EQ-001" value={formData.code} onChange={(e) => handleChange('code', e.target.value)} error={errors.code} required />
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', marginBottom: 'var(--mt-space-sm)', color: 'var(--mt-text-secondary)' }}>
+                Código del Activo
+                <span style={{ color: 'var(--mt-danger)' }}> *</span>
+              </label>
+              <input
+                type="text"
+                placeholder="EQ-001"
+                value={formData.code ?? ''}
+                disabled={!!asset?.id}
+                title={asset?.id ? "El código no puede ser editado después de crear el activo" : ""}
+                style={{
+                  width: '100%',
+                  padding: 'var(--mt-space-md)',
+                  borderRadius: 'var(--mt-radius-md)',
+                  border: errors.code ? '2px solid var(--mt-danger)' : '1px solid var(--mt-border)',
+                  background: asset?.id ? 'var(--mt-bg-base)' : 'var(--mt-bg-surface)',
+                  color: asset?.id ? 'var(--mt-text-tertiary)' : 'var(--mt-text-primary)',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  opacity: asset?.id ? 0.6 : 1,
+                  cursor: asset?.id ? 'not-allowed' : 'text'
+                }}
+                onChange={(e) => !asset?.id && handleChange('code', e.target.value)}
+              />
+              {errors.code && <p style={{ fontSize: '12px', color: 'var(--mt-danger)', marginTop: '4px' }}>{errors.code}</p>}
+              {asset?.id && <p style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)', marginTop: '4px', fontStyle: 'italic' }}>El código es inmutable</p>}
+            </div>
             <FormField label="Nombre" placeholder="Bomba Centrífuga Principal" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} error={errors.name} required />
           </div>
 
