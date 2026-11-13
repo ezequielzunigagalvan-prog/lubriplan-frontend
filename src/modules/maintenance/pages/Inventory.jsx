@@ -812,6 +812,17 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
           costPerUnit: formData.costPerUnit,
         };
         await maintenanceApi.updateSparePart(part.id, updateData);
+
+        // Si cambió la cantidad, actualizar stock también
+        if (formData.warehouseId && formData.initialQuantity !== (part.qty || 0)) {
+          try {
+            await maintenanceApi.updateStock(part.stockId, {
+              quantity: formData.initialQuantity,
+            });
+          } catch (err) {
+            console.warn('Error actualizando cantidad de stock:', err);
+          }
+        }
       } else {
         // Crear refacción
         const newPart = await maintenanceApi.createSparePart(formData);

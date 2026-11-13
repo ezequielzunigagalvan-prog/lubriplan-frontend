@@ -133,6 +133,10 @@ export const maintenanceApi = {
     return httpPost("/maintenance/inventory/stock", data);
   },
 
+  async updateStock(stockId, data) {
+    return httpPatch(`/maintenance/inventory/stock/${stockId}`, data);
+  },
+
   async recordStockMovement(data) {
     return httpPost("/maintenance/inventory/movements", data);
   },
@@ -358,5 +362,92 @@ export const maintenanceApi = {
 
   async rejectWorkOrder(id, data) {
     return httpPost(`/maintenance/work-orders/${id}/reject`, data);
+  },
+
+  // ============================================================
+  // PLANS MODULE (Nuevo - Módulo de Planes Mejorado)
+  // ============================================================
+
+  // Plans CRUD
+  async getAllPlans(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return httpGet(`/maintenance/plans?${params}`);
+  },
+
+  async getPlan(id) {
+    return httpGet(`/maintenance/plans/${id}`);
+  },
+
+  async createPlan(data) {
+    return httpPost("/maintenance/plans", data);
+  },
+
+  async updatePlan(id, data) {
+    return httpPatch(`/maintenance/plans/${id}`, data);
+  },
+
+  async deletePlan(id) {
+    return httpDelete(`/maintenance/plans/${id}`);
+  },
+
+  // Plans - Roadmap & History
+  async getPlanRoadmap(id) {
+    return httpGet(`/maintenance/plans/${id}/roadmap`);
+  },
+
+  async getPlanHistory(id, limit = 10) {
+    return httpGet(`/maintenance/plans/${id}/history?limit=${limit}`);
+  },
+
+  // Plans - Execution
+  async executePlan(id, data = {}) {
+    return httpPost(`/maintenance/plans/${id}/execute`, data);
+  },
+
+  async completePlanExecution(executionId, data) {
+    return httpPost(`/maintenance/execution/${executionId}/complete`, data);
+  },
+
+  // Plans - Technicians
+  async addTechnicianToPlan(planId, data) {
+    return httpPost(`/maintenance/plans/${planId}/technicians`, data);
+  },
+
+  async removeTechnicianFromPlan(planId, technicianId) {
+    return httpDelete(`/maintenance/plans/${planId}/technicians/${technicianId}`);
+  },
+
+  // Plans - Spare Parts
+  async addSparePartToPlan(planId, data) {
+    return httpPost(`/maintenance/plans/${planId}/spareparts`, data);
+  },
+
+  async removeSparePartFromPlan(planId, sparePartId) {
+    return httpDelete(`/maintenance/plans/${planId}/spareparts/${sparePartId}`);
+  },
+
+  // Plans - Lists
+  async getOverduePlans() {
+    return httpGet("/maintenance/plans/list/overdue");
+  },
+
+  async getUpcomingPlans(days = 7) {
+    return httpGet(`/maintenance/plans/list/upcoming?days=${days}`);
+  },
+
+  // Search
+  async searchAssets(params) {
+    const queryParams = new URLSearchParams(params);
+    return httpGet(`/maintenance/plans/search/assets?${queryParams}`);
+  },
+
+  async searchTechnicians(params) {
+    const queryParams = new URLSearchParams(params);
+    return httpGet(`/maintenance/plans/search/technicians?${queryParams}`);
+  },
+
+  async searchSpareParts(params) {
+    const queryParams = new URLSearchParams(params);
+    return httpGet(`/maintenance/plans/search/spareparts?${queryParams}`);
   },
 };
