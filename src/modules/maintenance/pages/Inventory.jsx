@@ -10,6 +10,10 @@ const enrichStockData = (stock) => {
     const part = s.sparePart || {};
     const minStock = Number(part.minStock) || 10;
     const maxStock = Number(part.maxStock) || minStock * 2;
+    // Usar updatedAt del stock si existe, sino createdAt
+    const lastDate = s.updatedAt || s.createdAt;
+    const lastMovement = lastDate ? new Date(lastDate).toISOString().split('T')[0] : '';
+
     return {
       id: s.sparePartId || s.id,
       stockId: s.id,
@@ -28,7 +32,7 @@ const enrichStockData = (stock) => {
       category: part.category || '',
       supplier: '',
       location: '',
-      lastMovement: new Date().toISOString().split('T')[0],
+      lastMovement: lastMovement,
       notes: '',
     };
   });
