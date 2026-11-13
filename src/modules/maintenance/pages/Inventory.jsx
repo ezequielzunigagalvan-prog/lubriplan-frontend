@@ -737,6 +737,16 @@ function WarehouseModal({ onClose, onSuccess }) {
 
 // Modal para crear/editar refacciones
 function SparePartModal({ warehouses, part, onClose, onSuccess }) {
+  useEffect(() => {
+    if (part) {
+      console.log('Modal abierto con part:', part);
+      console.log('part.qty:', part.qty, 'type:', typeof part.qty);
+      console.log('part.minQty:', part.minQty, 'type:', typeof part.minQty);
+      console.log('part.maxStock:', part.maxStock, 'type:', typeof part.maxStock);
+      console.log('part.price:', part.price, 'type:', typeof part.price);
+    }
+  }, [part]);
+
   const [formData, setFormData] = useState(part ? {
     code: part.code || '',
     name: part.name || '',
@@ -746,10 +756,10 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
     partNumber: part.partNumber || part.sku || '',
     unit: part.unit || 'pz',
     warehouseId: '',
-    initialQuantity: Number.isNaN(parseInt(part.qty)) ? 0 : parseInt(part.qty),
-    minStock: Number.isNaN(parseInt(part.minQty)) ? 10 : parseInt(part.minQty),
-    maxStock: Number.isNaN(parseInt(part.maxStock)) ? (Number.isNaN(parseInt(part.minQty)) ? 20 : parseInt(part.minQty) * 2) : parseInt(part.maxStock),
-    costPerUnit: Number.isNaN(parseFloat(part.price)) ? 0 : parseFloat(part.price),
+    initialQuantity: typeof part.qty === 'number' ? part.qty : 0,
+    minStock: typeof part.minQty === 'number' ? part.minQty : 10,
+    maxStock: typeof part.maxStock === 'number' ? part.maxStock : (typeof part.minQty === 'number' ? part.minQty * 2 : 20),
+    costPerUnit: typeof part.price === 'number' ? part.price : 0,
   } : {
     code: '',
     name: '',
