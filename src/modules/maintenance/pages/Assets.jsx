@@ -61,36 +61,41 @@ export default function Assets() {
     setIsModalOpen(true);
   };
 
-  const handleSuccess = () => {
-    listRef.current?.reload?.();
-    // Recarga también las estadísticas
-    const loadStats = async () => {
-      try {
-        const response = await maintenanceApi.getAssets({ limit: 1000 });
-        const assets = response?.data || [];
+  const handleSuccess = async () => {
+    console.log('[ASSETS PAGE] handleSuccess called - reloading list and stats');
 
-        const total = assets.length;
-        const operating = assets.filter(a => a.status === 'OPERATING').length;
-        const stopped = assets.filter(a => a.status === 'STOPPED').length;
-        const outOfService = assets.filter(a => a.status === 'OUT_OF_SERVICE').length;
-        const criticalA = assets.filter(a => a.criticality === 'A').length;
-        const criticalB = assets.filter(a => a.criticality === 'B').length;
-        const criticalC = assets.filter(a => a.criticality === 'C').length;
+    // Primero recarga la lista
+    if (listRef.current?.reload) {
+      await listRef.current.reload();
+      console.log('[ASSETS PAGE] List reloaded');
+    }
 
-        setStats({
-          total,
-          operating,
-          stopped,
-          outOfService,
-          criticalA,
-          criticalB,
-          criticalC,
-        });
-      } catch (err) {
-        console.error('Error loading asset stats:', err);
-      }
-    };
-    loadStats();
+    // Luego recarga las estadísticas
+    try {
+      const response = await maintenanceApi.getAssets({ limit: 1000 });
+      const assets = response?.data || [];
+
+      const total = assets.length;
+      const operating = assets.filter(a => a.status === 'OPERATING').length;
+      const stopped = assets.filter(a => a.status === 'STOPPED').length;
+      const outOfService = assets.filter(a => a.status === 'OUT_OF_SERVICE').length;
+      const criticalA = assets.filter(a => a.criticality === 'A').length;
+      const criticalB = assets.filter(a => a.criticality === 'B').length;
+      const criticalC = assets.filter(a => a.criticality === 'C').length;
+
+      setStats({
+        total,
+        operating,
+        stopped,
+        outOfService,
+        criticalA,
+        criticalB,
+        criticalC,
+      });
+      console.log('[ASSETS PAGE] Stats updated');
+    } catch (err) {
+      console.error('[ASSETS PAGE] Error loading asset stats:', err);
+    }
   };
 
   return (

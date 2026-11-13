@@ -154,24 +154,38 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
 
     try {
       setLoading(true);
-      const dataToSubmit = {
-        ...formData,
-        code: formData.code?.trim() || '',
-        name: formData.name?.trim() || '',
-        location: formData.location?.trim() || '',
-        manufacturer: formData.manufacturer?.trim() || '',
-        model: formData.model?.trim() || '',
-        serialNumber: formData.serialNumber?.trim() || '',
-        notes: formData.notes?.trim() || '',
-      };
 
-      console.log('[ASSET FORM] Submitting:', { assetId: asset?.id, dataToSubmit });
+      // Para edición, solo enviar campos permitidos (sin code y level que son identificadores)
+      // Para creación, enviar todos los campos incluyendo code y level
+      const allowedFields = asset?.id
+        ? ['name', 'location', 'manufacturer', 'model', 'serialNumber', 'criticality', 'status', 'notes']
+        : ['code', 'name', 'level', 'location', 'manufacturer', 'model', 'serialNumber', 'criticality', 'status', 'notes'];
+
+      const dataToSubmit = {};
+      for (const field of allowedFields) {
+        let value = formData[field];
+        // Trim string fields
+        if (typeof value === 'string') {
+          value = value?.trim() || '';
+        }
+        dataToSubmit[field] = value;
+      }
+
+      console.log('[ASSET FORM] Submitting:', {
+        assetId: asset?.id,
+        mode: asset?.id ? 'UPDATE' : 'CREATE',
+        dataToSubmit,
+        formDataKeys: Object.keys(formData),
+        submittedKeys: Object.keys(dataToSubmit)
+      });
 
       if (asset?.id) {
+        console.log('[ASSET FORM] Calling updateAsset with ID:', asset.id);
         const response = await maintenanceApi.updateAsset(asset.id, dataToSubmit);
         console.log('[ASSET FORM] Update response:', response);
         toast.success('✓ Activo actualizado correctamente');
       } else {
+        console.log('[ASSET FORM] Calling createAsset');
         const response = await maintenanceApi.createAsset(dataToSubmit);
         console.log('[ASSET FORM] Create response:', response);
         toast.success('✓ Activo creado correctamente');
@@ -189,7 +203,7 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
         response: error?.response?.data,
         fullError: error
       });
-      const errorMsg = error?.response?.data?.error || error?.message || 'Error al guardar el activo';
+      const errorMsg = error?.response?.data?.error || error?.response?.data?.details || error?.message || 'Error al guardar el activo';
       toast.error('✗ ' + errorMsg);
     } finally {
       setLoading(false);
