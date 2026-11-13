@@ -165,22 +165,32 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
         notes: formData.notes?.trim() || '',
       };
 
+      console.log('[ASSET FORM] Submitting:', { assetId: asset?.id, dataToSubmit });
+
       if (asset?.id) {
-        await maintenanceApi.updateAsset(asset.id, dataToSubmit);
+        const response = await maintenanceApi.updateAsset(asset.id, dataToSubmit);
+        console.log('[ASSET FORM] Update response:', response);
         toast.success('✓ Activo actualizado correctamente');
       } else {
         const response = await maintenanceApi.createAsset(dataToSubmit);
+        console.log('[ASSET FORM] Create response:', response);
         toast.success('✓ Activo creado correctamente');
       }
 
+      console.log('[ASSET FORM] Calling onSuccess callback');
       onSuccess?.();
       setFormData(INITIAL_FORM_STATE);
       setErrors({});
       onClose();
     } catch (error) {
+      console.error('[ASSET FORM] Error details:', {
+        message: error?.message,
+        status: error?.status,
+        response: error?.response?.data,
+        fullError: error
+      });
       const errorMsg = error?.response?.data?.error || error?.message || 'Error al guardar el activo';
       toast.error('✗ ' + errorMsg);
-      console.error('Error submitting form:', error);
     } finally {
       setLoading(false);
     }
