@@ -14,6 +14,14 @@ const enrichStockData = (stock) => {
     const lastDate = s.updatedAt || s.createdAt;
     const lastMovement = lastDate ? new Date(lastDate).toISOString().split('T')[0] : '';
 
+    console.log('[enrichStockData]', {
+      sparePartId: s.sparePartId,
+      createdAt: s.createdAt,
+      updatedAt: s.updatedAt,
+      lastDate,
+      lastMovement,
+    });
+
     return {
       id: s.sparePartId || s.id,
       stockId: s.id,
