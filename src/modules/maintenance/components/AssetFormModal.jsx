@@ -155,10 +155,10 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
     try {
       setLoading(true);
 
-      // Para edición, solo enviar campos permitidos (sin code y level que son identificadores)
+      // Para edición, enviar TODOS los campos incluyendo code
       // Para creación, enviar todos los campos incluyendo code y level
       const allowedFields = asset?.id
-        ? ['name', 'location', 'manufacturer', 'model', 'serialNumber', 'criticality', 'status', 'notes']
+        ? ['code', 'name', 'location', 'manufacturer', 'model', 'serialNumber', 'criticality', 'status', 'notes']
         : ['code', 'name', 'level', 'location', 'manufacturer', 'model', 'serialNumber', 'criticality', 'status', 'notes'];
 
       const dataToSubmit = {};
