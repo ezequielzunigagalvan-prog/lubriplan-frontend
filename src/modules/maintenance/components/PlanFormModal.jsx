@@ -40,7 +40,10 @@ const TASK_TYPES = [
 const calculateNextDate = (anchorDate, frequencyUnit, frequencyEvery) => {
   if (!anchorDate) return '';
 
-  const date = new Date(anchorDate);
+  // Parsear fecha como YYYY-MM-DD para evitar problemas de zona horaria
+  const [year, month, day] = anchorDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+
   const unit = frequencyUnit;
   const increment = parseInt(frequencyEvery) || 1;
 
@@ -61,7 +64,11 @@ const calculateNextDate = (anchorDate, frequencyUnit, frequencyEvery) => {
       break;
   }
 
-  return date.toISOString().split('T')[0];
+  // Retornar en formato YYYY-MM-DD sin problemas de zona horaria
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 };
 
 export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = [], technicians = [], spareParts = [] }) {
