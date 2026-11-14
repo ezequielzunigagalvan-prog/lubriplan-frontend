@@ -1,7 +1,7 @@
 // src/services/api.js
 import { getToken, clearAuth } from "../auth/auth.js";
 
-const RAW_API_URL = String(import.meta.env.VITE_API_URL || "http://localhost:3001/api").trim();
+const RAW_API_URL = String(import.meta.env.VITE_API_URL || "http://localhost:5000/api").trim();
 
 export const API_URL = RAW_API_URL.replace(/\/+$/, "");
 export const API_BASE_URL = API_URL.replace(/\/api\/?$/i, "");
