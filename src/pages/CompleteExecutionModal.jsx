@@ -25,7 +25,7 @@ const isTechActive = (t) => {
   return st === "activo";
 };
 
-const API_BASE = String(API_ASSETS_URL || "http://localhost:3001").replace(/\/+$/, "");
+const API_BASE = String(API_ASSETS_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 const buildAssetUrl = (raw) => {
   if (!raw) return "";
