@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react';
 import { MtButton, MtCard, MtBadge } from '../ui';
 import {
-  Plus, X, Trash2, Edit2, Check, AlertCircle, Users, Package, CheckSquare
+  Plus, X, Trash2, Edit2, Check, AlertCircle, Users, Package, CheckSquare,
+  Calendar, Clock, Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { maintenanceApi } from '../services/maintenanceApi';
 
-const FREQUENCY_UNITS = [
-  { value: 'DAY', label: 'Días' },
-  { value: 'WEEK', label: 'Semanas' },
-  { value: 'MONTH', label: 'Meses' },
-  { value: 'YEAR', label: 'Años' },
+const FREQUENCY_OPTIONS = [
+  { value: 'DAY', label: 'Cada día', increment: 1 },
+  { value: 'DAY', label: 'Cada 2 días', increment: 2 },
+  { value: 'DAY', label: 'Cada 3 días', increment: 3 },
+  { value: 'DAY', label: 'Cada 7 días', increment: 7 },
+  { value: 'WEEK', label: 'Cada semana', increment: 1 },
+  { value: 'WEEK', label: 'Cada 2 semanas', increment: 2 },
+  { value: 'WEEK', label: 'Cada 3 semanas', increment: 3 },
+  { value: 'WEEK', label: 'Cada 4 semanas', increment: 4 },
+  { value: 'MONTH', label: 'Cada mes', increment: 1 },
+  { value: 'MONTH', label: 'Cada 2 meses', increment: 2 },
+  { value: 'MONTH', label: 'Cada 3 meses', increment: 3 },
+  { value: 'MONTH', label: 'Cada 6 meses', increment: 6 },
+  { value: 'YEAR', label: 'Cada año', increment: 1 },
+  { value: 'YEAR', label: 'Cada 2 años', increment: 2 },
 ];
 
 const PRIORITIES = [
@@ -25,6 +36,33 @@ const TASK_TYPES = [
   { value: 'MEASURE', label: 'Medición' },
   { value: 'TEXT', label: 'Texto Libre' },
 ];
+
+const calculateNextDate = (anchorDate, frequencyUnit, frequencyEvery) => {
+  if (!anchorDate) return '';
+
+  const date = new Date(anchorDate);
+  const unit = frequencyUnit;
+  const increment = parseInt(frequencyEvery) || 1;
+
+  switch (unit) {
+    case 'DAY':
+      date.setDate(date.getDate() + increment);
+      break;
+    case 'WEEK':
+      date.setDate(date.getDate() + (increment * 7));
+      break;
+    case 'MONTH':
+      date.setMonth(date.getMonth() + increment);
+      break;
+    case 'YEAR':
+      date.setFullYear(date.getFullYear() + increment);
+      break;
+    default:
+      break;
+  }
+
+  return date.toISOString().split('T')[0];
+};
 
 export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = [], technicians = [], spareParts = [] }) {
   const [formData, setFormData] = useState({
@@ -307,9 +345,19 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
         <div style={{ padding: 'var(--mt-space-2xl)' }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--mt-space-lg)' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '900', margin: 0, color: 'var(--mt-text-primary)' }}>
-              📋 {plan?.id ? 'Editar' : 'Crear'} Plan de Mantenimiento
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, var(--mt-accent), var(--mt-accent-strong))', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Calendar size={24} style={{ color: '#fff' }} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: '24px', fontWeight: '900', margin: 0, color: 'var(--mt-text-primary)' }}>
+                  {plan?.id ? 'Editar' : 'Crear'} Plan
+                </h2>
+                <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                  Gestión de mantenimiento preventivo
+                </p>
+              </div>
+            </div>
             <button
               onClick={onClose}
               style={{
@@ -326,12 +374,12 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-lg)', borderBottom: '2px solid var(--mt-border)', paddingBottom: 'var(--mt-space-md)' }}>
+          <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-lg)', borderBottom: '2px solid var(--mt-border)', paddingBottom: 'var(--mt-space-md)', overflowX: 'auto' }}>
             {[
-              { id: 'general', label: '📋 General', icon: null },
-              { id: 'actividades', label: '✓ Actividades', icon: CheckSquare },
-              { id: 'tecnicos', label: '👥 Técnicos', icon: Users },
-              { id: 'repuestos', label: '🔧 Refacciones', icon: Package },
+              { id: 'general', label: 'General', Icon: Settings },
+              { id: 'actividades', label: 'Actividades', Icon: CheckSquare },
+              { id: 'tecnicos', label: 'Técnicos', Icon: Users },
+              { id: 'repuestos', label: 'Refacciones', Icon: Package },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -346,8 +394,13 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                   fontWeight: '600',
                   fontSize: '13px',
                   transition: 'all 200ms',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
                 }}
               >
+                <tab.Icon size={16} />
                 {tab.label}
               </button>
             ))}
@@ -386,7 +439,7 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                   </select>
                 </div>
 
-                {/* Grid 2 columnas: Código y Título */}
+                {/* Código y Título */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-md)' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
@@ -456,55 +509,74 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                   />
                 </div>
 
-                {/* Grid Frecuencia */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-md)' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                      Frecuencia (cada)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.frequencyEvery}
-                      onChange={(e) => setFormData(prev => ({ ...prev, frequencyEvery: e.target.value }))}
-                      style={{
-                        width: '100%',
-                        padding: 'var(--mt-space-md)',
-                        fontSize: '14px',
-                        border: '1px solid var(--mt-border)',
-                        borderRadius: 'var(--mt-radius-md)',
-                        background: 'var(--mt-bg-base)',
-                        color: 'var(--mt-text-primary)',
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                      Unidad
-                    </label>
-                    <select
-                      value={formData.frequencyUnit}
-                      onChange={(e) => setFormData(prev => ({ ...prev, frequencyUnit: e.target.value }))}
-                      style={{
-                        width: '100%',
-                        padding: 'var(--mt-space-md)',
-                        fontSize: '14px',
-                        border: '1px solid var(--mt-border)',
-                        borderRadius: 'var(--mt-radius-md)',
-                        background: 'var(--mt-bg-base)',
-                        color: 'var(--mt-text-primary)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {FREQUENCY_UNITS.map(unit => (
-                        <option key={unit.value} value={unit.value}>{unit.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Fecha de Inicio */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
+                    Fecha de Inicio * {errors.anchorDate && <span style={{ color: 'var(--mt-danger)' }}>({errors.anchorDate})</span>}
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.anchorDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, anchorDate: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: 'var(--mt-space-md)',
+                      fontSize: '14px',
+                      border: errors.anchorDate ? '2px solid var(--mt-danger)' : '1px solid var(--mt-border)',
+                      borderRadius: 'var(--mt-radius-md)',
+                      background: 'var(--mt-bg-base)',
+                      color: 'var(--mt-text-primary)',
+                      cursor: 'pointer',
+                    }}
+                  />
                 </div>
 
-                {/* Grid Prioridad y Fecha */}
+                {/* Frecuencia de Programación */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
+                    Frecuencia de Programación Automática
+                  </label>
+                  <select
+                    value={`${formData.frequencyUnit}-${formData.frequencyEvery}`}
+                    onChange={(e) => {
+                      const [unit, every] = e.target.value.split('-');
+                      setFormData(prev => ({ ...prev, frequencyUnit: unit, frequencyEvery: every }));
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: 'var(--mt-space-md)',
+                      fontSize: '14px',
+                      border: '1px solid var(--mt-border)',
+                      borderRadius: 'var(--mt-radius-md)',
+                      background: 'var(--mt-bg-base)',
+                      color: 'var(--mt-text-primary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {FREQUENCY_OPTIONS.map((opt, idx) => (
+                      <option key={idx} value={`${opt.value}-${opt.increment}`}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Próxima Fecha Calculada */}
+                <div style={{ padding: 'var(--mt-space-md)', background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.05))', borderRadius: 'var(--mt-radius-md)', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <Clock size={16} style={{ color: 'var(--mt-accent)' }} />
+                    <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
+                      Próxima Programación Automática
+                    </p>
+                  </div>
+                  <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--mt-accent)', margin: 0 }}>
+                    {calculateNextDate(formData.anchorDate, formData.frequencyUnit, formData.frequencyEvery)
+                      ? new Date(calculateNextDate(formData.anchorDate, formData.frequencyUnit, formData.frequencyEvery)).toLocaleDateString('es-MX')
+                      : 'Selecciona fecha de inicio'}
+                  </p>
+                </div>
+
+                {/* Prioridad y Minutos Estimados */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-md)' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
@@ -532,47 +604,25 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
 
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                      Fecha de Inicio * {errors.anchorDate && <span style={{ color: 'var(--mt-danger)' }}>({errors.anchorDate})</span>}
+                      Minutos Estimados
                     </label>
                     <input
-                      type="date"
-                      value={formData.anchorDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, anchorDate: e.target.value }))}
+                      type="number"
+                      min="0"
+                      placeholder="120"
+                      value={formData.estimatedMinutes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, estimatedMinutes: e.target.value }))}
                       style={{
                         width: '100%',
                         padding: 'var(--mt-space-md)',
                         fontSize: '14px',
-                        border: errors.anchorDate ? '2px solid var(--mt-danger)' : '1px solid var(--mt-border)',
+                        border: '1px solid var(--mt-border)',
                         borderRadius: 'var(--mt-radius-md)',
                         background: 'var(--mt-bg-base)',
                         color: 'var(--mt-text-primary)',
-                        cursor: 'pointer',
                       }}
                     />
                   </div>
-                </div>
-
-                {/* Minutos estimados */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                    Minutos Estimados
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="120"
-                    value={formData.estimatedMinutes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, estimatedMinutes: e.target.value }))}
-                    style={{
-                      width: '100%',
-                      padding: 'var(--mt-space-md)',
-                      fontSize: '14px',
-                      border: '1px solid var(--mt-border)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      background: 'var(--mt-bg-base)',
-                      color: 'var(--mt-text-primary)',
-                    }}
-                  />
                 </div>
               </div>
             )}
@@ -583,15 +633,16 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                 {errors.tasks && (
                   <div style={{ padding: 'var(--mt-space-md)', background: 'rgba(244, 65, 82, 0.1)', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-danger)' }}>
                     <p style={{ fontSize: '13px', color: 'var(--mt-danger)', margin: 0 }}>
-                      ⚠️ {errors.tasks}
+                      Advertencia: {errors.tasks}
                     </p>
                   </div>
                 )}
 
                 {/* Agregar Actividad */}
                 <div style={{ padding: 'var(--mt-space-lg)', background: 'var(--mt-bg-base)', borderRadius: 'var(--mt-radius-md)' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)' }}>
-                    {editingTaskIdx !== null ? '✎ Editar Actividad' : '➕ Agregar Nueva Actividad'}
+                  <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Plus size={16} />
+                    {editingTaskIdx !== null ? 'Editar Actividad' : 'Agregar Nueva Actividad'}
                   </h3>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
@@ -761,8 +812,9 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                 {/* Lista de Actividades */}
                 {formData.tasks.length > 0 && (
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)' }}>
-                      ✓ Actividades Agregadas ({formData.tasks.length})
+                    <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Check size={16} />
+                      Actividades Agregadas ({formData.tasks.length})
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {formData.tasks.map((task, idx) => (
@@ -830,8 +882,9 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
                 {/* Agregar Técnico */}
                 <div style={{ padding: 'var(--mt-space-lg)', background: 'var(--mt-bg-base)', borderRadius: 'var(--mt-radius-md)' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)' }}>
-                    ➕ Asignar Técnico
+                  <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Plus size={16} />
+                    Asignar Técnico
                   </h3>
 
                   <div style={{ display: 'flex', gap: 'var(--mt-space-md)' }}>
@@ -866,8 +919,9 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                 {/* Técnicos Asignados */}
                 {formData.assignedTechnicians.length > 0 ? (
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)' }}>
-                      ✓ Técnicos Asignados ({formData.assignedTechnicians.length})
+                    <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Check size={16} />
+                      Técnicos Asignados ({formData.assignedTechnicians.length})
                     </h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
                       {formData.assignedTechnicians.map(techId => {
@@ -925,8 +979,9 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
                 {/* Agregar Refacción */}
                 <div style={{ padding: 'var(--mt-space-lg)', background: 'var(--mt-bg-base)', borderRadius: 'var(--mt-radius-md)' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)' }}>
-                    ➕ Asignar Refacción
+                  <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Plus size={16} />
+                    Asignar Refacción
                   </h3>
 
                   <div style={{ display: 'flex', gap: 'var(--mt-space-md)' }}>
@@ -939,7 +994,7 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                         fontSize: '14px',
                         border: '1px solid var(--mt-border)',
                         borderRadius: 'var(--mt-radius-md)',
-                        background: 'var(--mt-bg-surface)',
+                        background: 'var(--mt-bg-base)',
                         color: 'var(--mt-text-primary)',
                         cursor: 'pointer',
                       }}
@@ -956,13 +1011,22 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                       Asignar
                     </MtButton>
                   </div>
+
+                  {spareParts.length === 0 && (
+                    <div style={{ marginTop: 'var(--mt-space-md)', padding: 'var(--mt-space-md)', background: 'rgba(251, 191, 36, 0.1)', borderRadius: 'var(--mt-radius-md)', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                      <p style={{ fontSize: '12px', color: 'var(--mt-warning)', margin: 0 }}>
+                        No hay refacciones disponibles. Verifica tu inventario.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Refacciones Asignadas */}
                 {formData.assignedSpareParts.length > 0 ? (
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)' }}>
-                      ✓ Refacciones Asignadas ({formData.assignedSpareParts.length})
+                    <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-md)', color: 'var(--mt-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Check size={16} />
+                      Refacciones Asignadas ({formData.assignedSpareParts.length})
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {formData.assignedSpareParts.map(spare => {
