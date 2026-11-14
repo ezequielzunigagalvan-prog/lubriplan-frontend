@@ -143,13 +143,23 @@ export default function PreventivePlans() {
 
   const handleSavePlan = async (planData) => {
     try {
+      console.log('Guardando plan con datos:', planData);
+
       if (editingPlan?.id) {
+        console.log('Actualizando plan:', editingPlan.id);
         await maintenanceApi.updatePlan(editingPlan.id, planData);
       } else {
+        console.log('Creando nuevo plan');
         const newPlan = await maintenanceApi.createPlan(planData);
+        console.log('Plan creado:', newPlan);
+
+        if (!newPlan?.id) {
+          throw new Error('El servidor no retornó ID del plan creado');
+        }
 
         // Asignar técnicos
         if (planData.assignedTechnicians && planData.assignedTechnicians.length > 0) {
+          console.log('Asignando técnicos:', planData.assignedTechnicians);
           for (const techId of planData.assignedTechnicians) {
             try {
               await maintenanceApi.addTechnicianToPlan(newPlan.id, {
@@ -164,6 +174,7 @@ export default function PreventivePlans() {
 
         // Asignar refacciones
         if (planData.assignedSpareParts && planData.assignedSpareParts.length > 0) {
+          console.log('Asignando refacciones:', planData.assignedSpareParts);
           for (const spare of planData.assignedSpareParts) {
             try {
               await maintenanceApi.addSparePartToPlan(newPlan.id, {
@@ -177,7 +188,8 @@ export default function PreventivePlans() {
         }
       }
 
-      loadPlans();
+      console.log('Plan guardado exitosamente, recargando lista');
+      await loadPlans();
     } catch (error) {
       console.error('Error guardando plan:', error);
       throw error;

@@ -178,7 +178,6 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
     if (!formData.assetId) newErrors.assetId = 'Equipo requerido';
     if (!formData.title) newErrors.title = 'Título requerido';
     if (!formData.anchorDate) newErrors.anchorDate = 'Fecha de inicio requerida';
-    if (formData.tasks.length === 0) newErrors.tasks = 'Al menos una actividad requerida';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
