@@ -13,6 +13,7 @@ export default function PlanRoadmapModal({ isOpen, onClose, plan }) {
     if (isOpen && plan?.id) {
       loadRoadmap();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, plan?.id]);
 
   const loadRoadmap = async () => {

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { MtButton, MtCard, MtBadge, MtSkeleton } from '../ui';
 import {
-  Plus, Trash2, Edit2, Eye, CheckCircle2, Clock, AlertCircle, Power,
-  RotateCw, Search, Zap
+  Plus, Trash2, Edit2, Eye, CheckCircle2, Clock, AlertCircle, Power, Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { maintenanceApi } from '../services/maintenanceApi';
 import PlanRoadmapModal from '../components/PlanRoadmapModal';
+import PlanFormModal from '../components/PlanFormModal';
 import '../ui/tokens.css';
 
 const FREQUENCY_UNIT_LABELS = {
@@ -25,7 +24,6 @@ const PRIORITY_LABELS = {
 };
 
 export default function PreventivePlans() {
-  const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -38,7 +36,6 @@ export default function PreventivePlans() {
   const [assets, setAssets] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [spareParts, setSpareParts] = useState([]);
-  const [loadingData, setLoadingData] = useState(false);
   const [overduePlans, setOverduePlans] = useState([]);
   const [upcomingPlans, setUpcomingPlans] = useState([]);
 
@@ -143,51 +140,46 @@ export default function PreventivePlans() {
     setEditingPlan(null);
   };
 
-  const handleSavePlan = async (e) => {
-    e.preventDefault();
-    if (!formData.assetId || !formData.title) {
-      toast.error('Completa los campos requeridos');
-      return;
-    }
-
+  const handleSavePlan = async (planData) => {
     try {
-      setSubmitting(true);
-      const planData = {
-        assetId: parseInt(formData.assetId),
-        code: formData.code,
-        title: formData.title,
-        description: formData.description,
-        type: formData.type,
-        triggerType: formData.triggerType,
-        frequencyUnit: formData.frequencyUnit,
-        frequencyEvery: parseInt(formData.frequencyEvery) || 1,
-        scheduleMode: formData.scheduleMode,
-        anchorDate: formData.anchorDate,
-        leadDays: parseInt(formData.leadDays) || 0,
-        graceDays: parseInt(formData.graceDays) || 0,
-        priority: formData.priority,
-        estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
-        defaultAssigneeId: formData.defaultAssigneeId ? parseInt(formData.defaultAssigneeId) : undefined,
-        skipIfOpen: formData.skipIfOpen,
-        tasks: formData.tasks,
-      };
-
-      if (editingPlan) {
+      if (editingPlan?.id) {
         await maintenanceApi.updatePlan(editingPlan.id, planData);
-        toast.success('Plan actualizado');
       } else {
-        await maintenanceApi.createPlan(planData);
-        toast.success('Plan creado exitosamente');
+        const newPlan = await maintenanceApi.createPlan(planData);
+
+        // Asignar técnicos
+        if (planData.assignedTechnicians && planData.assignedTechnicians.length > 0) {
+          for (const techId of planData.assignedTechnicians) {
+            try {
+              await maintenanceApi.addTechnicianToPlan(newPlan.id, {
+                technicianId: techId,
+                role: 'EXECUTOR'
+              });
+            } catch (err) {
+              console.error('Error asignando técnico:', err);
+            }
+          }
+        }
+
+        // Asignar refacciones
+        if (planData.assignedSpareParts && planData.assignedSpareParts.length > 0) {
+          for (const spare of planData.assignedSpareParts) {
+            try {
+              await maintenanceApi.addSparePartToPlan(newPlan.id, {
+                sparePartId: spare.id,
+                quantityRequired: spare.quantity
+              });
+            } catch (err) {
+              console.error('Error asignando refacción:', err);
+            }
+          }
+        }
       }
 
-      setShowForm(false);
-      resetForm();
       loadPlans();
     } catch (error) {
       console.error('Error guardando plan:', error);
-      toast.error(error?.message || 'Error guardando plan');
-    } finally {
-      setSubmitting(false);
+      throw error;
     }
   };
 
@@ -198,7 +190,7 @@ export default function PreventivePlans() {
       await maintenanceApi.deletePlan(id);
       toast.success('Plan eliminado');
       loadPlans();
-    } catch (error) {
+    } catch (err) {
       toast.error('Error al eliminar plan');
     }
   };
@@ -568,249 +560,19 @@ export default function PreventivePlans() {
         </div>
       )}
 
-      {/* Form Modal */}
-      {showForm && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: 'var(--mt-space-lg)',
-          }}
-          onClick={() => setShowForm(false)}
-        >
-          <MtCard
-            elevated
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-          >
-            <div style={{ padding: 'var(--mt-space-2xl)' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '900', margin: 0, marginBottom: 'var(--mt-space-lg)', color: 'var(--mt-text-primary)' }}>
-                {editingPlan ? 'Editar Plan' : 'Nuevo Plan de Mantenimiento'}
-              </h2>
-
-              <form onSubmit={handleSavePlan} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
-                {/* Asset Selection */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                    Equipo *
-                  </label>
-                  <select
-                    value={formData.assetId}
-                    onChange={(e) => setFormData(prev => ({ ...prev, assetId: e.target.value }))}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: 'var(--mt-space-md)',
-                      fontSize: '14px',
-                      border: '1px solid var(--mt-border)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      background: 'var(--mt-bg-surface)',
-                      color: 'var(--mt-text-primary)',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="">-- Selecciona un equipo --</option>
-                    {assets.map(asset => (
-                      <option key={asset.id} value={asset.id}>
-                        {asset.name} ({asset.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Title */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                    Título del Plan *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej: Mantenimiento preventivo de motor"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: 'var(--mt-space-md)',
-                      fontSize: '14px',
-                      border: '1px solid var(--mt-border)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      background: 'var(--mt-bg-surface)',
-                      color: 'var(--mt-text-primary)',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-
-                {/* Frequency Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-md)' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                      Cada (cantidad)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="365"
-                      value={formData.frequencyEvery}
-                      onChange={(e) => setFormData(prev => ({ ...prev, frequencyEvery: e.target.value }))}
-                      style={{
-                        width: '100%',
-                        padding: 'var(--mt-space-md)',
-                        fontSize: '14px',
-                        border: '1px solid var(--mt-border)',
-                        borderRadius: 'var(--mt-radius-md)',
-                        background: 'var(--mt-bg-surface)',
-                        color: 'var(--mt-text-primary)',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                      Unidad de tiempo
-                    </label>
-                    <select
-                      value={formData.frequencyUnit}
-                      onChange={(e) => setFormData(prev => ({ ...prev, frequencyUnit: e.target.value }))}
-                      style={{
-                        width: '100%',
-                        padding: 'var(--mt-space-md)',
-                        fontSize: '14px',
-                        border: '1px solid var(--mt-border)',
-                        borderRadius: 'var(--mt-radius-md)',
-                        background: 'var(--mt-bg-surface)',
-                        color: 'var(--mt-text-primary)',
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {Object.entries(FREQUENCY_UNIT_LABELS).map(([key, label]) => (
-                        <option key={key} value={key}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Priority */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                    Prioridad
-                  </label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                    style={{
-                      width: '100%',
-                      padding: 'var(--mt-space-md)',
-                      fontSize: '14px',
-                      border: '1px solid var(--mt-border)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      background: 'var(--mt-bg-surface)',
-                      color: 'var(--mt-text-primary)',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {Object.entries(PRIORITY_LABELS).map(([key, { label }]) => (
-                      <option key={key} value={key}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Anchor Date */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                    Fecha de Inicio *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.anchorDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, anchorDate: e.target.value }))}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: 'var(--mt-space-md)',
-                      fontSize: '14px',
-                      border: '1px solid var(--mt-border)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      background: 'var(--mt-bg-surface)',
-                      color: 'var(--mt-text-primary)',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                    }}
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '6px' }}>
-                    Descripción (opcional)
-                  </label>
-                  <textarea
-                    placeholder="Detalles del plan..."
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                    style={{
-                      width: '100%',
-                      padding: 'var(--mt-space-md)',
-                      fontSize: '14px',
-                      border: '1px solid var(--mt-border)',
-                      borderRadius: 'var(--mt-radius-md)',
-                      background: 'var(--mt-bg-surface)',
-                      color: 'var(--mt-text-primary)',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-
-                {/* Buttons */}
-                <div style={{ display: 'flex', gap: 'var(--mt-space-md)', marginTop: 'var(--mt-space-lg)' }}>
-                  <MtButton
-                    variant="secondary"
-                    onClick={() => {
-                      setShowForm(false);
-                      resetForm();
-                    }}
-                    style={{ flex: 1 }}
-                    disabled={submitting}
-                  >
-                    Cancelar
-                  </MtButton>
-                  <MtButton
-                    type="submit"
-                    style={{ flex: 1 }}
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Guardando...' : 'Guardar Plan'}
-                  </MtButton>
-                </div>
-              </form>
-            </div>
-          </MtCard>
-        </div>
-      )}
+      {/* Form Modal - Componente Professional */}
+      <PlanFormModal
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false);
+          resetForm();
+        }}
+        plan={editingPlan}
+        onSave={handleSavePlan}
+        assets={assets}
+        technicians={technicians}
+        spareParts={spareParts}
+      />
 
       {/* Roadmap Modal */}
       <PlanRoadmapModal isOpen={showRoadmap} onClose={() => setShowRoadmap(false)} plan={selectedPlan} />
