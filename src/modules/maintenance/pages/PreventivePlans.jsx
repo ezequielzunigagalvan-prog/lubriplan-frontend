@@ -106,13 +106,10 @@ export default function PreventivePlans() {
 
   const loadSpareParts = async () => {
     try {
-      setLoadingData(true);
       const response = await maintenanceApi.getSpareParts({ limit: 500 });
       setSpareParts(response?.data || response || []);
     } catch (err) {
       console.error('Error cargando refacciones:', err);
-    } finally {
-      setLoadingData(false);
     }
   };
 
