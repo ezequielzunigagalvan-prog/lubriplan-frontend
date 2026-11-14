@@ -297,8 +297,15 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
 
     try {
       setSubmitting(true);
+
+      // Convert YYYY-MM-DD to ISO datetime string
+      const anchorDateISO = formData.anchorDate
+        ? new Date(formData.anchorDate + 'T00:00:00').toISOString()
+        : undefined;
+
       await onSave({
         ...formData,
+        anchorDate: anchorDateISO,
         assetId: parseInt(formData.assetId),
         frequencyEvery: parseInt(formData.frequencyEvery) || 1,
         leadDays: parseInt(formData.leadDays) || 0,
