@@ -303,8 +303,21 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
         ? new Date(formData.anchorDate + 'T00:00:00').toISOString()
         : undefined;
 
+      // Clean up tasks: remove empty strings, convert minValue/maxValue to numbers
+      const cleanedTasks = formData.tasks.map(task => ({
+        position: task.position,
+        description: task.description,
+        kind: task.kind,
+        unit: task.unit && task.unit.trim() ? task.unit.trim() : undefined,
+        minValue: task.minValue && task.minValue !== '' ? parseFloat(task.minValue) : undefined,
+        maxValue: task.maxValue && task.maxValue !== '' ? parseFloat(task.maxValue) : undefined,
+        required: task.required,
+        createsCorrectiveOnFail: task.createsCorrectiveOnFail || false,
+      }));
+
       await onSave({
         ...formData,
+        tasks: cleanedTasks,
         anchorDate: anchorDateISO,
         assetId: parseInt(formData.assetId),
         frequencyEvery: parseInt(formData.frequencyEvery) || 1,
