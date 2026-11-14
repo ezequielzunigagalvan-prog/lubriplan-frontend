@@ -106,14 +106,11 @@ export default function PreventivePlans() {
 
   const loadSpareParts = async () => {
     try {
-      const response = await maintenanceApi.getSpareParts({ limit: 500 });
+      const response = await maintenanceApi.getSpareParts({ take: 500 });
       let parts = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
 
-      // Filtrar duplicados por ID
-      const uniqueParts = Array.from(new Map(parts.map(p => [p.id, p])).values());
-
-      console.log('Refacciones cargadas:', uniqueParts);
-      setSpareParts(uniqueParts);
+      console.log('Refacciones cargadas (total):', parts.length);
+      setSpareParts(parts);
     } catch (err) {
       console.error('Error cargando refacciones:', err);
       setSpareParts([]);

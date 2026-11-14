@@ -577,9 +577,13 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                     </p>
                   </div>
                   <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--mt-accent)', margin: 0 }}>
-                    {calculateNextDate(formData.anchorDate, formData.frequencyUnit, formData.frequencyEvery)
-                      ? new Date(calculateNextDate(formData.anchorDate, formData.frequencyUnit, formData.frequencyEvery)).toLocaleDateString('es-MX')
-                      : 'Selecciona fecha de inicio'}
+                    {(() => {
+                      const nextDate = calculateNextDate(formData.anchorDate, formData.frequencyUnit, formData.frequencyEvery);
+                      if (!nextDate) return 'Selecciona fecha de inicio';
+                      const [year, month, day] = nextDate.split('-').map(Number);
+                      const date = new Date(year, month - 1, day);
+                      return date.toLocaleDateString('es-MX');
+                    })()}
                   </p>
                 </div>
 
