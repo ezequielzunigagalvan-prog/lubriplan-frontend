@@ -52,30 +52,25 @@ export default function WorkOrderReview() {
     comments: '',
   });
 
-  // Mock work order
-  const mockOrder = {
-    id: id || '000123',
-    type: 'CORRECTIVE',
-    status: 'PENDING_APPROVAL',
-    priority: 'HIGH',
-    title: 'Ruido anormal en bomba principal',
-    description: 'Se detectó ruido anormal en la bomba principal. Requiere inspección urgente. El operador reporta que comenzó a las 14:00 horas.',
-    asset: { id: 1, name: 'Bomba Principal', code: 'EQ-001', location: 'Producción - Línea 01' },
-    reportedBy: { name: 'José López', role: 'Operador', time: '2025-11-28 14:30' },
-    createdAt: '2025-11-28 14:30',
-    photos: [
-      { id: 1, url: 'https://via.placeholder.com/400x300?text=Foto+1', caption: 'Vista general' },
-      { id: 2, url: 'https://via.placeholder.com/400x300?text=Foto+2', caption: 'Detalle de motor' },
-    ],
-    comments: 'El equipo dejó de funcionar correctamente. Es crítico para la línea de producción.',
-  };
-
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(false);
-        setWorkOrder(mockOrder);
-        setPhotos(mockOrder.photos || []);
+        const res = await maintenanceApi.getWorkOrder(id);
+        const wo = res?.data || null;
+
+        if (!wo) {
+          setWorkOrder(null);
+        } else {
+          setWorkOrder({
+            ...wo,
+            reportedBy: { name: 'Usuario', role: 'Reportante', time: wo.createdAt },
+          });
+        }
+
+        // Load photos if available
+        if (wo?.photos) {
+          setPhotos(wo.photos);
+        }
       } catch (error) {
         console.error('Error loading:', error);
         setLoading(false);
