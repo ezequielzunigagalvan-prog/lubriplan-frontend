@@ -807,17 +807,32 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
 
                     {/* Botones */}
                     <div style={{ display: 'flex', gap: 'var(--mt-space-md)' }}>
-                      <MtButton
+                      <button
+                        type="button"
                         onClick={handleAddTask}
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          padding: 'var(--mt-space-md)',
+                          background: 'var(--mt-accent)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 'var(--mt-radius-md)',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                        }}
                       >
                         {editingTaskIdx !== null ? <Check size={16} /> : <Plus size={16} />}
                         {editingTaskIdx !== null ? 'Guardar Cambios' : 'Agregar Actividad'}
-                      </MtButton>
+                      </button>
 
                       {editingTaskIdx !== null && (
-                        <MtButton
-                          variant="secondary"
+                        <button
+                          type="button"
                           onClick={() => {
                             setEditingTaskIdx(null);
                             setNewTask({
@@ -830,10 +845,20 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                               required: true,
                             });
                           }}
-                          style={{ flex: 1 }}
+                          style={{
+                            flex: 1,
+                            padding: 'var(--mt-space-md)',
+                            background: 'var(--mt-bg-base)',
+                            color: 'var(--mt-text-primary)',
+                            border: '1px solid var(--mt-border)',
+                            borderRadius: 'var(--mt-radius-md)',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                          }}
                         >
                           Cancelar
-                        </MtButton>
+                        </button>
                       )}
                     </div>
                   </div>
@@ -873,6 +898,7 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                           </div>
                           <div style={{ display: 'flex', gap: '6px' }}>
                             <button
+                              type="button"
                               onClick={() => handleEditTask(idx)}
                               style={{
                                 background: 'rgba(56, 189, 248, 0.1)',
@@ -886,6 +912,7 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                               <Edit2 size={14} />
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleDeleteTask(idx)}
                               style={{
                                 background: 'rgba(244, 65, 82, 0.1)',
@@ -939,10 +966,26 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                         </option>
                       ))}
                     </select>
-                    <MtButton onClick={handleAddTechnician} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={handleAddTechnician}
+                      style={{
+                        padding: 'var(--mt-space-md) var(--mt-space-lg)',
+                        background: 'var(--mt-accent)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 'var(--mt-radius-md)',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
                       <Plus size={16} />
                       Asignar
-                    </MtButton>
+                    </button>
                   </div>
                 </div>
 
@@ -1036,10 +1079,26 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                         </option>
                       ))}
                     </select>
-                    <MtButton onClick={handleAddSparePart} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={handleAddSparePart}
+                      style={{
+                        padding: 'var(--mt-space-md) var(--mt-space-lg)',
+                        background: 'var(--mt-accent)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 'var(--mt-radius-md)',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
                       <Plus size={16} />
                       Asignar
-                    </MtButton>
+                    </button>
                   </div>
 
                   {spareParts.length === 0 && (
@@ -1136,9 +1195,24 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
               >
                 Cancelar
               </MtButton>
-              <MtButton
-                onClick={handleSubmit}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              <button
+                type="submit"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  padding: 'var(--mt-space-md) var(--mt-space-lg)',
+                  background: 'var(--mt-accent)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 'var(--mt-radius-md)',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  opacity: submitting ? 0.6 : 1,
+                }}
                 disabled={submitting}
               >
                 {submitting ? (
@@ -1149,7 +1223,7 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                     {plan?.id ? 'Actualizar Plan' : 'Crear Plan'}
                   </>
                 )}
-              </MtButton>
+              </button>
             </div>
           </form>
         </div>
