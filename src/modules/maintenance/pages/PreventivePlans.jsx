@@ -260,7 +260,8 @@ export default function PreventivePlans() {
       defaultAssigneeId: (plan.defaultAssigneeId || '').toString(),
       skipIfOpen: plan.skipIfOpen ?? true,
       tasks: plan.tasks || [],
-      selectedSpareParts: [],
+      assignedTechnicians: plan.planTechnicians?.map(pt => pt.technicianId) || [],
+      assignedSpareParts: plan.planSpareParts?.map(psp => ({ id: psp.sparePartId, quantity: psp.quantityRequired })) || [],
     });
     setShowForm(true);
   };
