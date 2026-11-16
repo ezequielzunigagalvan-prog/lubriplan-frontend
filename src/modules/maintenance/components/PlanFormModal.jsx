@@ -112,6 +112,12 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
 
   useEffect(() => {
     if (isOpen && plan?.id) {
+      console.log('[PlanFormModal] Loading plan:', {
+        id: plan.id,
+        tasksCount: plan.tasks?.length,
+        techniciansCount: plan.planTechnicians?.length,
+        sparePartsCount: plan.planSpareParts?.length,
+      });
       setFormData({
         assetId: plan.assetId?.toString() || '',
         code: plan.code || '',
@@ -129,9 +135,9 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
         estimatedMinutes: (plan.estimatedMinutes || '').toString(),
         defaultAssigneeId: (plan.defaultAssigneeId || '').toString(),
         skipIfOpen: plan.skipIfOpen ?? true,
-        tasks: plan.tasks || [],
-        assignedTechnicians: plan.technicians?.map(t => t.id) || [],
-        assignedSpareParts: plan.spareParts?.map(sp => ({ id: sp.id, quantity: sp.quantity })) || [],
+        tasks: Array.isArray(plan.tasks) ? plan.tasks : [],
+        assignedTechnicians: Array.isArray(plan.planTechnicians) ? plan.planTechnicians.map(pt => pt.technicianId) : [],
+        assignedSpareParts: Array.isArray(plan.planSpareParts) ? plan.planSpareParts.map(psp => ({ id: psp.sparePartId, quantity: psp.quantityRequired })) : [],
       });
     } else {
       resetForm();
