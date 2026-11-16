@@ -152,15 +152,63 @@ export default function PreventivePlans() {
         await maintenanceApi.updatePlan(editingPlan.id, planData);
 
         // Sincronizar técnicos
+        console.log('Sincronizando técnicos. Previos:', editingPlan.planTechnicians?.length, 'Nuevos:', planData.assignedTechnicians?.length);
+
+        // Remover técnicos previos
+        if (editingPlan.planTechnicians && editingPlan.planTechnicians.length > 0) {
+          for (const pt of editingPlan.planTechnicians) {
+            try {
+              await maintenanceApi.removeTechnicianFromPlan(editingPlan.id, pt.technicianId);
+              console.log('Técnico removido:', pt.technicianId);
+            } catch (err) {
+              console.error('Error removiendo técnico:', err);
+            }
+          }
+        }
+
+        // Agregar nuevos técnicos
         if (planData.assignedTechnicians && planData.assignedTechnicians.length > 0) {
-          console.log('Actualizando técnicos:', planData.assignedTechnicians);
-          // Aquí se podrían sincronizar los técnicos si hay un endpoint para eso
+          for (const techId of planData.assignedTechnicians) {
+            try {
+              await maintenanceApi.addTechnicianToPlan(editingPlan.id, {
+                technicianId: techId,
+                role: 'EXECUTOR'
+              });
+              console.log('Técnico agregado:', techId);
+            } catch (err) {
+              console.error('Error agregando técnico:', err);
+            }
+          }
         }
 
         // Sincronizar refacciones
+        console.log('Sincronizando refacciones. Previas:', editingPlan.planSpareParts?.length, 'Nuevas:', planData.assignedSpareParts?.length);
+
+        // Remover refacciones previas
+        if (editingPlan.planSpareParts && editingPlan.planSpareParts.length > 0) {
+          for (const psp of editingPlan.planSpareParts) {
+            try {
+              await maintenanceApi.removeSparePartFromPlan(editingPlan.id, psp.sparePartId);
+              console.log('Refacción removida:', psp.sparePartId);
+            } catch (err) {
+              console.error('Error removiendo refacción:', err);
+            }
+          }
+        }
+
+        // Agregar nuevas refacciones
         if (planData.assignedSpareParts && planData.assignedSpareParts.length > 0) {
-          console.log('Actualizando refacciones:', planData.assignedSpareParts);
-          // Aquí se podrían sincronizar las refacciones si hay un endpoint para eso
+          for (const spare of planData.assignedSpareParts) {
+            try {
+              await maintenanceApi.addSparePartToPlan(editingPlan.id, {
+                sparePartId: spare.id,
+                quantityRequired: spare.quantity
+              });
+              console.log('Refacción agregada:', spare.id);
+            } catch (err) {
+              console.error('Error agregando refacción:', err);
+            }
+          }
         }
       } else {
         console.log('Creando nuevo plan...');
