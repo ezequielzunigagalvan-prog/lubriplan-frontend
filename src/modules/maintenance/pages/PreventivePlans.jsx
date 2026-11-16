@@ -150,6 +150,18 @@ export default function PreventivePlans() {
       if (editingPlan?.id) {
         console.log('Actualizando plan:', editingPlan.id);
         await maintenanceApi.updatePlan(editingPlan.id, planData);
+
+        // Sincronizar técnicos
+        if (planData.assignedTechnicians && planData.assignedTechnicians.length > 0) {
+          console.log('Actualizando técnicos:', planData.assignedTechnicians);
+          // Aquí se podrían sincronizar los técnicos si hay un endpoint para eso
+        }
+
+        // Sincronizar refacciones
+        if (planData.assignedSpareParts && planData.assignedSpareParts.length > 0) {
+          console.log('Actualizando refacciones:', planData.assignedSpareParts);
+          // Aquí se podrían sincronizar las refacciones si hay un endpoint para eso
+        }
       } else {
         console.log('Creando nuevo plan...');
         const newPlan = await maintenanceApi.createPlan(planData);
