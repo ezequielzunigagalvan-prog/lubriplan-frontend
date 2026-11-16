@@ -25,18 +25,30 @@ export default function ReportFailure() {
   const [showAssetList, setShowAssetList] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const defaultFormData = {
+    assetId: '',
+    assetName: '',
+    assetCode: '',
+    title: '',
+    description: '',
+    priority: 'HIGH',
+    photos: [],
+    comments: '',
+  };
+
   const [formData, setFormData] = useState(() => {
     const draft = localStorage.getItem(DRAFT_KEY);
-    return draft ? JSON.parse(draft) : {
-      assetId: '',
-      assetName: '',
-      assetCode: '',
-      title: '',
-      description: '',
-      priority: 'HIGH',
-      photos: [],
-      comments: '',
-    };
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        // Merge with defaults to ensure all fields exist
+        return { ...defaultFormData, ...parsed };
+      } catch (err) {
+        console.error('Error parsing draft:', err);
+        return defaultFormData;
+      }
+    }
+    return defaultFormData;
   });
 
   // Load assets on mount
