@@ -45,72 +45,23 @@ export default function WorkOrders() {
   useEffect(() => {
     const load = async () => {
       try {
-        // Mock data - replace with API call
-        const mockOrders = [
-          {
-            id: 1,
-            type: 'CORRECTIVE',
-            status: 'PENDING_APPROVAL',
-            priority: 'HIGH',
-            title: 'Ruido anormal en bomba principal',
-            assetName: 'Bomba Principal',
-            assetCode: 'EQ-001',
-            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            reportedBy: 'José López',
-            daysOpen: 0.08,
-          },
-          {
-            id: 2,
-            type: 'PREVENTIVE',
-            status: 'ASSIGNED',
-            priority: 'MEDIUM',
-            title: 'Mantenimiento preventivo Compresor',
-            assetName: 'Compresor de Aire',
-            assetCode: 'EQ-003',
-            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            assignedTo: 'Carlos López',
-            daysOpen: 1,
-          },
-          {
-            id: 3,
-            type: 'CORRECTIVE',
-            status: 'IN_PROGRESS',
-            priority: 'CRITICAL',
-            title: 'Falla en motor principal',
-            assetName: 'Motor Línea 01',
-            assetCode: 'EQ-002',
-            createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-            assignedTo: 'Juan Pérez',
-            daysOpen: 0.13,
-          },
-          {
-            id: 4,
-            type: 'CORRECTIVE',
-            status: 'FINISHED',
-            priority: 'MEDIUM',
-            title: 'Reparación válvula bloqueada',
-            assetName: 'Válvula Principal',
-            assetCode: 'EQ-004',
-            createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-            assignedTo: 'Roberto García',
-            daysOpen: 0.21,
-          },
-          {
-            id: 5,
-            type: 'PREVENTIVE',
-            status: 'VALIDATED',
-            priority: 'LOW',
-            title: 'Lubricación de rodamientos',
-            assetName: 'Bomba Secundaria',
-            assetCode: 'EQ-005',
-            createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            assignedTo: 'Miguel Torres',
-            daysOpen: 1,
-          },
-        ];
-        setOrders(mockOrders);
+        const res = await maintenanceApi.getWorkOrders({ limit: 100 });
+        const orders = res?.data || [];
+
+        // Map API response to component format
+        const formattedOrders = orders.map(order => ({
+          ...order,
+          assetName: order.asset?.name || 'Sin especificar',
+          assetCode: order.asset?.code || '-',
+          reportedBy: order.requestedBy?.name || 'Desconocido',
+          assignedTo: order.assignedTo?.name || null,
+          daysOpen: order.createdAt ? (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60 * 24) : 0,
+        }));
+
+        setOrders(formattedOrders);
       } catch (err) {
-        setError(err?.message);
+        console.error('Error loading work orders:', err);
+        setError(err?.message || 'Error al cargar órdenes de trabajo');
       } finally {
         setLoading(false);
       }
