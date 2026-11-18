@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MtButton, MtCard, MtBadge, MtSkeleton } from '../ui';
 import {
-  Plus, Trash2, Edit2, Eye, CheckCircle2, Clock, AlertCircle, Power, Search
+  Plus, Trash2, Edit2, Eye, AlertCircle, Power, Search, PlayCircle, Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { maintenanceApi } from '../services/maintenanceApi';
@@ -10,10 +10,10 @@ import PlanFormModal from '../components/PlanFormModal';
 import '../ui/tokens.css';
 
 const FREQUENCY_UNIT_LABELS = {
-  DAY: 'Diariamente',
-  WEEK: 'Semanalmente',
-  MONTH: 'Mensualmente',
-  YEAR: 'Anualmente',
+  DAY: 'día(s)',
+  WEEK: 'semana(s)',
+  MONTH: 'mes(es)',
+  YEAR: 'año(s)',
 };
 
 const PRIORITY_LABELS = {
@@ -22,6 +22,59 @@ const PRIORITY_LABELS = {
   MEDIUM: { label: 'Medio', color: 'var(--mt-info)' },
   LOW: { label: 'Bajo', color: 'var(--mt-success)' },
 };
+
+const DECISION_LABELS = {
+  GENERATED: 'OT generada',
+  WOULD_GENERATE: 'Se generaría OT',
+  SKIPPED_NOT_DUE: 'Aún no vence',
+  SKIPPED_OPEN: 'Tiene una OT abierta',
+  SKIPPED_DUPLICATE: 'La OT de este ciclo ya existe',
+  SKIPPED_INACTIVE: 'Plan pausado',
+  SKIPPED_NOT_SCHEDULABLE: 'Sin programación por tiempo',
+  ERROR: 'Error',
+};
+
+const errorMessage = (err, fallback) => err?.data?.error || err?.message || fallback;
+
+/**
+ * Sincroniza técnicos y refacciones del plan con lo elegido en el formulario,
+ * aplicando solo las diferencias. Devuelve la lista de errores (si hubo).
+ */
+async function syncAssignments(planId, previous, planData) {
+  const failures = [];
+  const run = async (label, fn) => {
+    try {
+      await fn();
+    } catch (err) {
+      failures.push(`${label}: ${errorMessage(err, 'error')}`);
+    }
+  };
+
+  const prevTechIds = new Set((previous?.technicians || []).map((t) => t.technicianId));
+  const nextTechIds = new Set(planData.assignedTechnicians || []);
+  for (const id of prevTechIds) {
+    if (!nextTechIds.has(id)) await run(`Quitar técnico ${id}`, () => maintenanceApi.removeTechnicianFromPlan(planId, id));
+  }
+  for (const id of nextTechIds) {
+    if (!prevTechIds.has(id)) {
+      await run(`Asignar técnico ${id}`, () => maintenanceApi.addTechnicianToPlan(planId, { technicianId: id, role: 'EXECUTOR' }));
+    }
+  }
+
+  const prevParts = new Map((previous?.spareParts || []).map((p) => [p.sparePartId, Number(p.quantityRequired)]));
+  const nextParts = new Map((planData.assignedSpareParts || []).map((p) => [p.id, Number(p.quantity) || 1]));
+  for (const id of prevParts.keys()) {
+    if (!nextParts.has(id)) await run(`Quitar refacción ${id}`, () => maintenanceApi.removeSparePartFromPlan(planId, id));
+  }
+  for (const [id, qty] of nextParts) {
+    if (prevParts.get(id) !== qty) {
+      // El endpoint hace upsert: sirve para agregar o para actualizar la cantidad
+      await run(`Asignar refacción ${id}`, () => maintenanceApi.addSparePartToPlan(planId, { sparePartId: id, quantityRequired: qty }));
+    }
+  }
+
+  return failures;
+}
 
 export default function PreventivePlans() {
   const [plans, setPlans] = useState([]);
@@ -32,286 +85,139 @@ export default function PreventivePlans() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const [submitting, setSubmitting] = useState(false);
+  const [busyPlanId, setBusyPlanId] = useState(null);
+  const [launching, setLaunching] = useState(false);
   const [assets, setAssets] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [spareParts, setSpareParts] = useState([]);
   const [overduePlans, setOverduePlans] = useState([]);
   const [upcomingPlans, setUpcomingPlans] = useState([]);
 
-  const [formData, setFormData] = useState({
-    assetId: '',
-    code: '',
-    title: '',
-    description: '',
-    type: 'PREVENTIVE',
-    triggerType: 'TIME',
-    frequencyUnit: 'MONTH',
-    frequencyEvery: '1',
-    scheduleMode: 'FIXED',
-    anchorDate: '',
-    leadDays: '0',
-    graceDays: '0',
-    priority: 'MEDIUM',
-    estimatedMinutes: '',
-    defaultAssigneeId: '',
-    skipIfOpen: true,
-    tasks: [],
-    selectedSpareParts: [],
-  });
-
-  useEffect(() => {
-    loadPlans();
-    loadAssets();
-    loadTechnicians();
-    loadSpareParts();
-  }, []);
-
-  const loadPlans = async () => {
+  const loadPlans = useCallback(async () => {
     try {
-      setLoading(true);
-      const response = await maintenanceApi.getAllPlans({ limit: 100 });
+      const [response, overdue, upcoming] = await Promise.all([
+        maintenanceApi.getAllPlans({ limit: 200 }),
+        maintenanceApi.getOverduePlans(),
+        maintenanceApi.getUpcomingPlans(7),
+      ]);
       setPlans(response?.data || []);
-
-      const overdue = await maintenanceApi.getOverduePlans();
       setOverduePlans(overdue || []);
-
-      const upcoming = await maintenanceApi.getUpcomingPlans(7);
       setUpcomingPlans(upcoming || []);
     } catch (err) {
-      console.error('Error cargando planes:', err);
-      toast.error('Error cargando planes');
+      console.error('[PreventivePlans] Error cargando planes:', err);
+      toast.error(errorMessage(err, 'Error cargando planes'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadAssets = async () => {
-    try {
-      const response = await maintenanceApi.getAssets({ limit: 500 });
-      setAssets(response?.data || []);
-    } catch (err) {
-      console.error('Error cargando activos:', err);
-    }
-  };
+  useEffect(() => {
+    loadPlans();
 
-  const loadTechnicians = async () => {
-    try {
-      const response = await maintenanceApi.getTechnicians({ limit: 500 });
-      setTechnicians(response?.data || response || []);
-    } catch (err) {
-      console.error('Error cargando técnicos:', err);
-    }
-  };
+    // Catálogos para el formulario
+    maintenanceApi.getAssets({ limit: 500 }).then((r) => setAssets(r?.data || [])).catch(() => setAssets([]));
+    maintenanceApi.getTechnicians({ limit: 500 }).then((r) => setTechnicians(r?.data || r || [])).catch(() => setTechnicians([]));
+    maintenanceApi
+      .getSpareParts({ take: 500 })
+      .then((r) => setSpareParts(Array.isArray(r?.data) ? r.data : Array.isArray(r) ? r : []))
+      .catch(() => setSpareParts([]));
+  }, [loadPlans]);
 
-  const loadSpareParts = async () => {
-    try {
-      const response = await maintenanceApi.getSpareParts({ take: 500 });
-      let parts = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
-
-      console.log('Refacciones cargadas (total):', parts.length);
-      setSpareParts(parts);
-    } catch (err) {
-      console.error('Error cargando refacciones:', err);
-      setSpareParts([]);
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      assetId: '',
-      code: '',
-      title: '',
-      description: '',
-      type: 'PREVENTIVE',
-      triggerType: 'TIME',
-      frequencyUnit: 'MONTH',
-      frequencyEvery: '1',
-      scheduleMode: 'FIXED',
-      anchorDate: '',
-      leadDays: '0',
-      graceDays: '0',
-      priority: 'MEDIUM',
-      estimatedMinutes: '',
-      defaultAssigneeId: '',
-      skipIfOpen: true,
-      tasks: [],
-      selectedSpareParts: [],
-    });
-    setEditingPlan(null);
-  };
+  const resetForm = () => setEditingPlan(null);
 
   const handleSavePlan = async (planData) => {
-    try {
-      console.log('=== INICIANDO GUARDADO DE PLAN ===');
-      console.log('Datos completos:', planData);
-      console.log('Tareas a guardar:', planData.tasks);
+    // Técnicos y refacciones se guardan con sus propios endpoints; el código lo asigna el servidor
+    const { assignedTechnicians: _t, assignedSpareParts: _s, code: _c, ...payload } = planData;
+    const saved = editingPlan?.id
+      ? await maintenanceApi.updatePlan(editingPlan.id, payload)
+      : await maintenanceApi.createPlan(payload);
 
-      if (editingPlan?.id) {
-        console.log('Actualizando plan:', editingPlan.id);
-        await maintenanceApi.updatePlan(editingPlan.id, planData);
+    if (!saved?.id) throw new Error('El servidor no devolvió el plan guardado');
 
-        // Sincronizar técnicos
-        console.log('Sincronizando técnicos. Previos:', editingPlan.planTechnicians?.length, 'Nuevos:', planData.assignedTechnicians?.length);
-
-        // Remover técnicos previos
-        if (editingPlan.planTechnicians && editingPlan.planTechnicians.length > 0) {
-          for (const pt of editingPlan.planTechnicians) {
-            try {
-              await maintenanceApi.removeTechnicianFromPlan(editingPlan.id, pt.technicianId);
-              console.log('Técnico removido:', pt.technicianId);
-            } catch (err) {
-              console.error('Error removiendo técnico:', err);
-            }
-          }
-        }
-
-        // Agregar nuevos técnicos
-        if (planData.assignedTechnicians && planData.assignedTechnicians.length > 0) {
-          for (const techId of planData.assignedTechnicians) {
-            try {
-              await maintenanceApi.addTechnicianToPlan(editingPlan.id, {
-                technicianId: techId,
-                role: 'EXECUTOR'
-              });
-              console.log('Técnico agregado:', techId);
-            } catch (err) {
-              console.error('Error agregando técnico:', err);
-            }
-          }
-        }
-
-        // Sincronizar refacciones
-        console.log('Sincronizando refacciones. Previas:', editingPlan.planSpareParts?.length, 'Nuevas:', planData.assignedSpareParts?.length);
-
-        // Remover refacciones previas
-        if (editingPlan.planSpareParts && editingPlan.planSpareParts.length > 0) {
-          for (const psp of editingPlan.planSpareParts) {
-            try {
-              await maintenanceApi.removeSparePartFromPlan(editingPlan.id, psp.sparePartId);
-              console.log('Refacción removida:', psp.sparePartId);
-            } catch (err) {
-              console.error('Error removiendo refacción:', err);
-            }
-          }
-        }
-
-        // Agregar nuevas refacciones
-        if (planData.assignedSpareParts && planData.assignedSpareParts.length > 0) {
-          for (const spare of planData.assignedSpareParts) {
-            try {
-              await maintenanceApi.addSparePartToPlan(editingPlan.id, {
-                sparePartId: spare.id,
-                quantityRequired: spare.quantity
-              });
-              console.log('Refacción agregada:', spare.id);
-            } catch (err) {
-              console.error('Error agregando refacción:', err);
-            }
-          }
-        }
-      } else {
-        console.log('Creando nuevo plan...');
-        const newPlan = await maintenanceApi.createPlan(planData);
-        console.log('✓ Plan creado exitosamente:', newPlan);
-
-        if (!newPlan?.id) {
-          throw new Error('El servidor no retornó ID del plan creado');
-        }
-
-        // Asignar técnicos
-        if (planData.assignedTechnicians && planData.assignedTechnicians.length > 0) {
-          console.log('Asignando técnicos:', planData.assignedTechnicians);
-          for (const techId of planData.assignedTechnicians) {
-            try {
-              await maintenanceApi.addTechnicianToPlan(newPlan.id, {
-                technicianId: techId,
-                role: 'EXECUTOR'
-              });
-            } catch (err) {
-              console.error('Error asignando técnico:', err);
-            }
-          }
-        }
-
-        // Asignar refacciones
-        if (planData.assignedSpareParts && planData.assignedSpareParts.length > 0) {
-          console.log('Asignando refacciones:', planData.assignedSpareParts);
-          for (const spare of planData.assignedSpareParts) {
-            try {
-              await maintenanceApi.addSparePartToPlan(newPlan.id, {
-                sparePartId: spare.id,
-                quantityRequired: spare.quantity
-              });
-            } catch (err) {
-              console.error('Error asignando refacción:', err);
-            }
-          }
-        }
-      }
-
-      console.log('✓ Plan guardado exitosamente, recargando lista');
-      await loadPlans();
-    } catch (error) {
-      console.error('✗ ERROR GUARDANDO PLAN:', error);
-      console.error('Mensaje:', error?.message);
-      console.error('Status:', error?.status);
-      console.error('Response:', error?.response?.data);
-      throw error;
+    const failures = await syncAssignments(saved.id, editingPlan, planData);
+    if (failures.length > 0) {
+      toast.warning(`Plan guardado, pero hubo problemas con técnicos/refacciones: ${failures.join(' · ')}`);
     }
+    await loadPlans();
   };
 
-  const handleDeletePlan = async (id) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este plan?')) return;
+  const handleDeletePlan = async (plan) => {
+    if (!window.confirm(`¿Eliminar el plan ${plan.code} · ${plan.title}? Ya no generará órdenes.`)) return;
 
     try {
-      await maintenanceApi.deletePlan(id);
+      await maintenanceApi.deletePlan(plan.id);
       toast.success('Plan eliminado');
       loadPlans();
     } catch (err) {
-      toast.error('Error al eliminar plan');
+      toast.error(errorMessage(err, 'Error al eliminar plan'));
     }
   };
 
-  const handleTogglePlan = async (id, isActive) => {
+  const handleTogglePlan = async (plan) => {
     try {
-      if (isActive) {
-        await maintenanceApi.updatePlan(id, { active: false });
-        toast.success('Plan pausado');
+      setBusyPlanId(plan.id);
+      if (plan.active) {
+        await maintenanceApi.pausePlan(plan.id);
+        toast.success('Plan pausado: no generará órdenes hasta reanudarlo');
       } else {
-        await maintenanceApi.updatePlan(id, { active: true });
-        toast.success('Plan reanudado');
+        await maintenanceApi.resumePlan(plan.id);
+        toast.success('Plan reanudado: la programación sigue desde hoy');
       }
-      loadPlans();
-    } catch (error) {
-      toast.error('Error actualizando plan');
+      await loadPlans();
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error actualizando plan'));
+    } finally {
+      setBusyPlanId(null);
     }
   };
 
-  const handleEditPlan = (plan) => {
-    setEditingPlan(plan);
-    setFormData({
-      assetId: plan.assetId?.toString() || '',
-      code: plan.code || '',
-      title: plan.title || '',
-      description: plan.description || '',
-      type: plan.type || 'PREVENTIVE',
-      triggerType: plan.triggerType || 'TIME',
-      frequencyUnit: plan.frequencyUnit || 'MONTH',
-      frequencyEvery: (plan.frequencyEvery || 1).toString(),
-      scheduleMode: plan.scheduleMode || 'FIXED',
-      anchorDate: plan.anchorDate ? new Date(plan.anchorDate).toISOString().split('T')[0] : '',
-      leadDays: (plan.leadDays || 0).toString(),
-      graceDays: (plan.graceDays || 0).toString(),
-      priority: plan.priority || 'MEDIUM',
-      estimatedMinutes: (plan.estimatedMinutes || '').toString(),
-      defaultAssigneeId: (plan.defaultAssigneeId || '').toString(),
-      skipIfOpen: plan.skipIfOpen ?? true,
-      tasks: plan.tasks || [],
-      assignedTechnicians: plan.planTechnicians?.map(pt => pt.technicianId) || [],
-      assignedSpareParts: plan.planSpareParts?.map(psp => ({ id: psp.sparePartId, quantity: psp.quantityRequired })) || [],
-    });
-    setShowForm(true);
+  const handleGenerateNow = async (plan) => {
+    if (!window.confirm(`¿Generar ahora una orden de trabajo del plan ${plan.code}? No cambia su programación.`)) return;
+    try {
+      setBusyPlanId(plan.id);
+      const result = await maintenanceApi.executePlan(plan.id);
+      toast.success(`OT #${result?.workOrder?.number ?? ''} generada desde ${plan.code}`);
+      await loadPlans();
+    } catch (err) {
+      toast.error(errorMessage(err, 'No se pudo generar la orden'));
+    } finally {
+      setBusyPlanId(null);
+    }
+  };
+
+  const handleLaunchDue = async () => {
+    try {
+      setLaunching(true);
+      const summary = await maintenanceApi.launchPreventives();
+      const details = (summary?.results || [])
+        .filter((r) => r.decision !== 'SKIPPED_NOT_DUE')
+        .map((r) => `${r.planCode}: ${DECISION_LABELS[r.decision] || r.decision}${r.workOrderNumber ? ` (OT #${r.workOrderNumber})` : ''}`);
+      if (summary?.generated > 0) {
+        toast.success(`${summary.generated} orden(es) preventiva(s) generada(s)`, { description: details.join(' · ') });
+      } else {
+        toast.info('No hay planes vencidos por generar', { description: details.join(' · ') || undefined });
+      }
+      if (summary?.errors > 0) toast.error(`${summary.errors} plan(es) con error al generar`);
+      await loadPlans();
+    } catch (err) {
+      toast.error(errorMessage(err, 'No se pudieron generar las órdenes'));
+    } finally {
+      setLaunching(false);
+    }
+  };
+
+  const handleEditPlan = async (plan) => {
+    // La lista no trae tareas, técnicos ni refacciones: se carga el plan completo para no perderlos al guardar
+    try {
+      setBusyPlanId(plan.id);
+      const full = await maintenanceApi.getPlan(plan.id);
+      setEditingPlan(full);
+      setShowForm(true);
+    } catch (err) {
+      toast.error(errorMessage(err, 'No se pudo cargar el plan'));
+    } finally {
+      setBusyPlanId(null);
+    }
   };
 
   const handleViewRoadmap = (plan) => {
@@ -320,10 +226,14 @@ export default function PreventivePlans() {
   };
 
   const filteredPlans = plans.filter(plan => {
+    const term = search.trim().toLowerCase();
     const matchesFilter = filter === 'all' || (filter === 'active' && plan.active) || (filter === 'inactive' && !plan.active);
     const matchesSearch =
-      plan.title?.toLowerCase().includes(search.toLowerCase()) ||
-      plan.code?.toLowerCase().includes(search.toLowerCase());
+      !term ||
+      plan.title?.toLowerCase().includes(term) ||
+      plan.code?.toLowerCase().includes(term) ||
+      plan.asset?.code?.toLowerCase().includes(term) ||
+      plan.asset?.name?.toLowerCase().includes(term);
     return matchesFilter && matchesSearch;
   });
 
@@ -344,16 +254,22 @@ export default function PreventivePlans() {
             Programación automática y gestión de mantenimiento preventivo
           </p>
         </div>
-        <MtButton
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Plus size={20} />
-          Nuevo Plan
-        </MtButton>
+        <div style={{ display: 'flex', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
+          <MtButton variant="secondary" onClick={handleLaunchDue} disabled={launching}>
+            <Zap size={18} />
+            {launching ? 'Generando...' : 'Generar OTs vencidas'}
+          </MtButton>
+          <MtButton
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Plus size={20} />
+            Nuevo Plan
+          </MtButton>
+        </div>
       </div>
 
       {/* Stats */}
@@ -497,6 +413,7 @@ export default function PreventivePlans() {
                     </h3>
                     <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
                       {plan.code}
+                      {plan.asset && ` · ${plan.asset.code} ${plan.asset.name}`}
                     </p>
                   </div>
                   <MtBadge variant={plan.active ? 'success' : 'default'} size="sm">
@@ -511,7 +428,10 @@ export default function PreventivePlans() {
                       Frecuencia
                     </div>
                     <div style={{ fontWeight: '700', color: 'var(--mt-text-primary)' }}>
-                      Cada {plan.frequencyEvery} {FREQUENCY_UNIT_LABELS[plan.frequencyUnit] || plan.frequencyUnit}
+                      {plan.triggerType === 'TIME' && plan.frequencyUnit
+                        ? `Cada ${plan.frequencyEvery} ${FREQUENCY_UNIT_LABELS[plan.frequencyUnit] || plan.frequencyUnit}`
+                        : 'Por contador'}
+                      {plan.scheduleMode === 'FLOATING' && ' (flotante)'}
                     </div>
                   </div>
                   <div>
@@ -526,13 +446,13 @@ export default function PreventivePlans() {
                     <div style={{ color: 'var(--mt-text-tertiary)', marginBottom: '2px', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
                       Próximo Vencimiento
                     </div>
-                    <div style={{ fontWeight: '700', color: 'var(--mt-text-primary)' }}>
-                      {plan.nextDueAt ? new Date(plan.nextDueAt).toLocaleDateString('es-MX') : 'N/A'}
+                    <div style={{ fontWeight: '700', color: plan.active && plan.nextDueAt && new Date(plan.nextDueAt) < new Date() ? 'var(--mt-danger)' : 'var(--mt-text-primary)' }}>
+                      {!plan.active ? 'Pausado' : plan.nextDueAt ? new Date(plan.nextDueAt).toLocaleDateString('es-MX') : 'Sin calcular'}
                     </div>
                   </div>
                   <div>
                     <div style={{ color: 'var(--mt-text-tertiary)', marginBottom: '2px', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
-                      Última Ejecución
+                      Última Realización
                     </div>
                     <div style={{ fontWeight: '700', color: 'var(--mt-text-primary)' }}>
                       {plan.lastCompletedAt ? new Date(plan.lastCompletedAt).toLocaleDateString('es-MX') : 'Nunca'}
@@ -572,6 +492,7 @@ export default function PreventivePlans() {
                   </button>
                   <button
                     onClick={() => handleEditPlan(plan)}
+                    disabled={busyPlanId === plan.id}
                     style={{
                       flex: 1,
                       padding: '8px',
@@ -593,7 +514,8 @@ export default function PreventivePlans() {
                     Editar
                   </button>
                   <button
-                    onClick={() => handleTogglePlan(plan.id, plan.active)}
+                    onClick={() => handleTogglePlan(plan)}
+                    disabled={busyPlanId === plan.id}
                     style={{
                       flex: 1,
                       padding: '8px',
@@ -612,10 +534,34 @@ export default function PreventivePlans() {
                     }}
                   >
                     <Power size={14} />
-                    {plan.active ? 'Pausar' : 'Reanud.'}
+                    {plan.active ? 'Pausar' : 'Reanudar'}
                   </button>
+                  {plan.active && (
+                    <button
+                      onClick={() => handleGenerateNow(plan)}
+                      disabled={busyPlanId === plan.id}
+                      title="Generar una OT de este plan ahora"
+                      aria-label="Generar OT ahora"
+                      style={{
+                        width: '40px',
+                        padding: '8px',
+                        background: 'transparent',
+                        border: '1px solid var(--mt-border)',
+                        borderRadius: 'var(--mt-radius-md)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--mt-accent)',
+                      }}
+                    >
+                      <PlayCircle size={14} />
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleDeletePlan(plan.id)}
+                    onClick={() => handleDeletePlan(plan)}
+                    title="Eliminar plan"
+                    aria-label="Eliminar plan"
                     style={{
                       width: '40px',
                       padding: '8px',

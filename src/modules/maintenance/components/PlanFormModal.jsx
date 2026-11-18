@@ -5,7 +5,6 @@ import {
   Calendar, Clock, Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { maintenanceApi } from '../services/maintenanceApi';
 
 const FREQUENCY_OPTIONS = [
   { value: 'DAY', label: 'Cada día', increment: 1 },
@@ -112,12 +111,6 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
 
   useEffect(() => {
     if (isOpen && plan?.id) {
-      console.log('[PlanFormModal] Loading plan:', {
-        id: plan.id,
-        tasksCount: plan.tasks?.length,
-        techniciansCount: plan.planTechnicians?.length,
-        sparePartsCount: plan.planSpareParts?.length,
-      });
       setFormData({
         assetId: plan.assetId?.toString() || '',
         code: plan.code || '',
@@ -136,8 +129,8 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
         defaultAssigneeId: (plan.defaultAssigneeId || '').toString(),
         skipIfOpen: plan.skipIfOpen ?? true,
         tasks: Array.isArray(plan.tasks) ? plan.tasks : [],
-        assignedTechnicians: Array.isArray(plan.planTechnicians) ? plan.planTechnicians.map(pt => pt.technicianId) : [],
-        assignedSpareParts: Array.isArray(plan.planSpareParts) ? plan.planSpareParts.map(psp => ({ id: psp.sparePartId, quantity: psp.quantityRequired })) : [],
+        assignedTechnicians: Array.isArray(plan.technicians) ? plan.technicians.map(pt => pt.technicianId) : [],
+        assignedSpareParts: Array.isArray(plan.spareParts) ? plan.spareParts.map(psp => ({ id: psp.sparePartId, quantity: Number(psp.quantityRequired) || 1 })) : [],
       });
     } else {
       resetForm();
@@ -304,19 +297,18 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
     try {
       setSubmitting(true);
 
-      // Convert YYYY-MM-DD to ISO datetime string
-      const anchorDateISO = formData.anchorDate
-        ? new Date(formData.anchorDate + 'T00:00:00').toISOString()
-        : undefined;
+      // Se manda YYYY-MM-DD: el servidor lo interpreta como medianoche en la zona horaria de la planta
+      const anchorDate = formData.anchorDate || undefined;
 
       // Clean up tasks: remove empty strings, convert minValue/maxValue to numbers
-      const cleanedTasks = formData.tasks.map(task => ({
-        position: task.position,
+      const toNumber = (v) => (v === '' || v === null || v === undefined || Number.isNaN(parseFloat(v)) ? undefined : parseFloat(v));
+      const cleanedTasks = formData.tasks.map((task, idx) => ({
+        position: idx,
         description: task.description,
         kind: task.kind,
         unit: task.unit && task.unit.trim() ? task.unit.trim() : undefined,
-        minValue: task.minValue && task.minValue !== '' ? parseFloat(task.minValue) : undefined,
-        maxValue: task.maxValue && task.maxValue !== '' ? parseFloat(task.maxValue) : undefined,
+        minValue: toNumber(task.minValue),
+        maxValue: toNumber(task.maxValue),
         required: task.required,
         createsCorrectiveOnFail: task.createsCorrectiveOnFail || false,
       }));
@@ -324,21 +316,22 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
       await onSave({
         ...formData,
         tasks: cleanedTasks,
-        anchorDate: anchorDateISO,
+        anchorDate,
         assetId: parseInt(formData.assetId),
         frequencyEvery: parseInt(formData.frequencyEvery) || 1,
         leadDays: parseInt(formData.leadDays) || 0,
         graceDays: parseInt(formData.graceDays) || 0,
-        estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : undefined,
-        defaultAssigneeId: formData.defaultAssigneeId ? parseInt(formData.defaultAssigneeId) : undefined,
+        // null borra el valor al editar; al crear el servidor lo trata como vacío
+        estimatedMinutes: formData.estimatedMinutes ? parseInt(formData.estimatedMinutes) : null,
+        defaultAssigneeId: formData.defaultAssigneeId ? parseInt(formData.defaultAssigneeId) : null,
       });
 
       toast.success(plan?.id ? 'Plan actualizado' : 'Plan creado');
       onClose();
       resetForm();
     } catch (err) {
-      console.error('Error:', err);
-      toast.error(err.message || 'Error guardando plan');
+      console.error('[PlanFormModal] Error guardando plan:', err);
+      toast.error(err?.data?.error || err?.message || 'Error guardando plan');
     } finally {
       setSubmitting(false);
     }

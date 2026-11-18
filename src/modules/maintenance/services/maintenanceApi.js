@@ -390,6 +390,19 @@ export const maintenanceApi = {
     return httpPatch(`/maintenance/plans/${id}`, data);
   },
 
+  async pausePlan(id) {
+    return httpPost(`/maintenance/plans/${id}/pause`, {});
+  },
+
+  async resumePlan(id) {
+    return httpPost(`/maintenance/plans/${id}/resume`, {});
+  },
+
+  // Genera ahora las OTs preventivas vencidas de la planta (misma lógica que el scheduler)
+  async launchPreventives({ dryRun = false } = {}) {
+    return httpPost(`/maintenance/scheduler/launch-preventives${dryRun ? '?dryRun=1' : ''}`, {});
+  },
+
   async deletePlan(id) {
     return httpDelete(`/maintenance/plans/${id}`);
   },
