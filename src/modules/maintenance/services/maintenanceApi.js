@@ -45,6 +45,12 @@ export const maintenanceApi = {
     return httpGet(`/maintenance/work-orders/${id}`);
   },
 
+  // Tablero del técnico (el propio, o el elegido si eres supervisor/admin)
+  async getTechnicianDashboard({ technicianId } = {}) {
+    const res = await httpGet(`/maintenance/work-orders/technician-dashboard${technicianId ? `?technicianId=${technicianId}` : ''}`);
+    return res?.data ?? res;
+  },
+
   // Registrar resultado de una tarea del checklist: { result, valueNumber, valueText, note }
   async updateWorkOrderTask(workOrderId, taskId, data) {
     return httpPatch(`/maintenance/work-orders/${workOrderId}/tasks/${taskId}`, data);

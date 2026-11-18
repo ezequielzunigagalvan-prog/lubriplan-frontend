@@ -1,300 +1,249 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MtCard, MtBadge, MtButton } from '../ui';
 import {
-  Wrench, Calendar, Clock, CheckCircle2, AlertCircle, ChevronRight,
-  User, Briefcase, BarChart3, History, Plus
+  Wrench, Clock, CheckCircle2, AlertCircle, ChevronRight, User, Briefcase, History, Plus, PauseCircle, CalendarClock,
 } from 'lucide-react';
+import { maintenanceApi } from '../services/maintenanceApi';
+import { STATE_LABELS, PRIORITY_LABELS } from '../constants/maintenance';
 import '../ui/tokens.css';
 
-// Mock technician data
-const MOCK_TECHNICIAN = {
-  id: 1,
-  name: 'Juan Pérez',
-  speciality: 'Mecánica',
-  phone: '+56 9 1234 5678',
-};
+const STORAGE_KEY = 'mt.technicianDashboard.technicianId';
+const TYPE_LABELS = { CORRECTIVE: 'Correctiva', PREVENTIVE: 'Preventiva', INSPECTION: 'Inspección' };
+const PRIORITY_COLOR = { CRITICAL: 'var(--mt-danger)', HIGH: 'var(--mt-warning)', MEDIUM: 'var(--mt-accent)', LOW: 'var(--mt-info)' };
+const woNumber = (n) => `OT-${String(n).padStart(5, '0')}`;
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : null);
 
-// Mock work orders for technician
-const MOCK_WORK_ORDERS = [
-  {
-    id: 1,
-    type: 'CORRECTIVE',
-    priority: 'HIGH',
-    title: 'Ruido anormal en bomba',
-    assetName: 'Bomba Principal',
-    assetCode: 'EQ-001',
-    status: 'ASSIGNED',
-    daysOpen: 0.1,
-    reportedBy: 'José López',
-    createdAt: '2025-11-28 14:30',
-  },
-  {
-    id: 2,
-    type: 'PREVENTIVE',
-    priority: 'MEDIUM',
-    title: 'Mantenimiento Motor',
-    assetName: 'Motor eléctrico',
-    assetCode: 'EQ-001',
-    status: 'ASSIGNED',
-    daysOpen: 0.5,
-    scheduledDate: '2025-12-15',
-    createdAt: '2025-11-28 10:00',
-  },
-  {
-    id: 3,
-    type: 'CORRECTIVE',
-    priority: 'CRITICAL',
-    title: 'Falla en reductor',
-    assetName: 'Reductor',
-    assetCode: 'EQ-002',
-    status: 'IN_PROGRESS',
-    daysOpen: 0.08,
-    reportedBy: 'Carlos García',
-    createdAt: '2025-11-28 15:00',
-  },
-  {
-    id: 4,
-    type: 'PREVENTIVE',
-    priority: 'LOW',
-    title: 'Inspección Compresor',
-    assetName: 'Compresor',
-    assetCode: 'EQ-004',
-    status: 'ASSIGNED',
-    daysOpen: 1,
-    scheduledDate: '2025-12-20',
-    createdAt: '2025-11-27 09:00',
-  },
-];
-
-// Mock completed work orders
-const MOCK_COMPLETED_ORDERS = [
-  {
-    id: 101,
-    title: 'Cambio de aceite',
-    assetName: 'Motor A',
-    status: 'VALIDATED',
-    completedAt: '2025-11-26 16:30',
-    timeSpent: 2.5,
-  },
-  {
-    id: 102,
-    title: 'Reparación válvula',
-    assetName: 'Bomba B',
-    status: 'VALIDATED',
-    completedAt: '2025-11-25 14:00',
-    timeSpent: 1.5,
-  },
-];
+function Stat({ icon: Icon, label, value, color }) {
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+          <Icon size={16} style={{ color }} />
+          <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', textTransform: 'uppercase' }}>{label}</div>
+        </div>
+        <div style={{ fontSize: '24px', fontWeight: '900', color }}>{value}</div>
+      </div>
+    </MtCard>
+  );
+}
 
 export default function TechnicianDashboard() {
   const navigate = useNavigate();
-  const [technician] = useState(MOCK_TECHNICIAN);
-  const [workOrders] = useState(MOCK_WORK_ORDERS);
-  const [completedOrders] = useState(MOCK_COMPLETED_ORDERS);
+  const [selectedId, setSelectedId] = useState(() => localStorage.getItem(STORAGE_KEY) || '');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const assignedCount = workOrders.filter(o => o.status === 'ASSIGNED').length;
-  const inProgressCount = workOrders.filter(o => o.status === 'IN_PROGRESS').length;
-  const totalHours = completedOrders.reduce((sum, o) => sum + o.timeSpent, 0);
-
-  const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case 'CRITICAL':
-        return <AlertCircle size={16} style={{ color: 'var(--mt-danger)' }} />;
-      case 'HIGH':
-        return <AlertCircle size={16} style={{ color: 'var(--mt-warning)' }} />;
-      default:
-        return <Wrench size={16} style={{ color: 'var(--mt-accent)' }} />;
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setData(await maintenanceApi.getTechnicianDashboard({ technicianId: selectedId || undefined }));
+    } catch (err) {
+      console.error('[TechnicianDashboard] Error loading dashboard:', err);
+      // Si el técnico guardado ya no existe, se vuelve a la vista propia
+      if (err?.status === 404 && selectedId) {
+        localStorage.removeItem(STORAGE_KEY);
+        setSelectedId('');
+        return;
+      }
+      setError(err?.data?.error || err?.message || 'No se pudo cargar el tablero');
+    } finally {
+      setLoading(false);
     }
+  }, [selectedId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const chooseTechnician = (id) => {
+    if (id) localStorage.setItem(STORAGE_KEY, id);
+    else localStorage.removeItem(STORAGE_KEY);
+    setSelectedId(id);
   };
 
+  if (loading && !data) {
+    return (
+      <MtCard elevated>
+        <p style={{ padding: 'var(--mt-space-3xl)', margin: 0, textAlign: 'center', color: 'var(--mt-text-secondary)' }}>Cargando tablero...</p>
+      </MtCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <MtCard elevated>
+        <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+          <p style={{ margin: 0, color: 'var(--mt-danger)', fontWeight: 700 }}>{error}</p>
+          <MtButton onClick={load}>Reintentar</MtButton>
+        </div>
+      </MtCard>
+    );
+  }
+
+  const { technician, technicians = [], openOrders = [], recentCompleted = [], stats } = data || {};
+  const canChoose = technicians.length > 0;
+
+  const picker = canChoose && (
+    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
+      Ver técnico:
+      <select
+        value={selectedId || technician?.id || ''}
+        onChange={(e) => chooseTechnician(e.target.value)}
+        style={{ padding: '8px 10px', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface)', color: 'var(--mt-text-primary)', fontSize: '13px' }}
+      >
+        <option value="">— Selecciona —</option>
+        {technicians.map((t) => (
+          <option key={t.id} value={t.id}>{t.name}{t.specialty ? ` · ${t.specialty}` : ''}</option>
+        ))}
+      </select>
+    </label>
+  );
+
+  // Usuario sin ficha de técnico y sin técnico elegido
+  if (!technician) {
+    return (
+      <MtCard elevated>
+        <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+          <User size={40} style={{ color: 'var(--mt-accent)' }} />
+          <h2 style={{ margin: 0, fontSize: '18px' }}>Tu usuario no está vinculado a un técnico</h2>
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--mt-text-secondary)', maxWidth: '420px' }}>
+            {canChoose
+              ? 'Como supervisor puedes ver el tablero de cualquier técnico de la planta.'
+              : 'Pide a un administrador que vincule tu usuario con tu ficha de técnico para ver tus órdenes.'}
+          </p>
+          {picker}
+        </div>
+      </MtCard>
+    );
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
-      {/* Technician Profile Card */}
-      <MtCard elevated style={{ background: 'linear-gradient(135deg, var(--mt-bg-surface) 0%, var(--mt-bg-surface-2) 100%)' }}>
-        <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--mt-space-lg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)', paddingBottom: '72px' }}>
+      {/* Perfil */}
+      <MtCard elevated>
+        <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--mt-space-lg)', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: 'var(--mt-radius-md)',
-                background: 'linear-gradient(135deg, var(--mt-accent), var(--mt-accent-strong))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)',
-              }}
-            >
+            <div style={{ width: '56px', height: '56px', borderRadius: 'var(--mt-radius-md)', background: 'linear-gradient(135deg, var(--mt-accent), var(--mt-accent-strong))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <User size={28} style={{ color: '#fff' }} />
             </div>
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: '900', margin: 0, color: 'var(--mt-text-primary)' }}>
-                {technician.name}
-              </h2>
+              <h2 style={{ fontSize: '18px', fontWeight: '900', margin: 0 }}>{technician.name}</h2>
               <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                {technician.speciality}
+                {[technician.code, technician.specialty].filter(Boolean).join(' · ')}
               </p>
-              <p style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)', margin: '2px 0 0 0' }}>
-                {technician.phone}
-              </p>
+              {(technician.phone || technician.email) && (
+                <p style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)', margin: '2px 0 0 0' }}>
+                  {[technician.phone, technician.email].filter(Boolean).join(' · ')}
+                </p>
+              )}
             </div>
           </div>
+          {picker}
         </div>
       </MtCard>
 
-      {/* Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--mt-space-lg)' }}>
-        <MtCard elevated style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Briefcase size={16} style={{ color: 'var(--mt-warning)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>ASIGNADAS</div>
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--mt-warning)' }}>
-              {assignedCount}
-            </div>
-          </div>
-        </MtCard>
-
-        <MtCard elevated style={{ background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Wrench size={16} style={{ color: 'var(--mt-accent)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>EN PROCESO</div>
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--mt-accent)' }}>
-              {inProgressCount}
-            </div>
-          </div>
-        </MtCard>
-
-        <MtCard elevated style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <CheckCircle2 size={16} style={{ color: 'var(--mt-success)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>COMPLETADAS</div>
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--mt-success)' }}>
-              {completedOrders.length}
-            </div>
-          </div>
-        </MtCard>
-
-        <MtCard elevated style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Clock size={16} style={{ color: 'var(--mt-info)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>HORAS HOY</div>
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--mt-info)' }}>
-              {totalHours.toFixed(1)}h
-            </div>
-          </div>
-        </MtCard>
+      {/* Indicadores */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <Stat icon={Briefcase} label="Asignadas" value={stats.assigned} color="var(--mt-warning)" />
+        <Stat icon={Wrench} label="En proceso" value={stats.inProgress} color="var(--mt-accent)" />
+        <Stat icon={PauseCircle} label="En espera" value={stats.waiting} color="var(--mt-text-secondary)" />
+        <Stat icon={CalendarClock} label="Vencidas" value={stats.overdue} color={stats.overdue ? 'var(--mt-danger)' : 'var(--mt-success)'} />
+        <Stat icon={CheckCircle2} label="Completadas (30d)" value={stats.completed30d} color="var(--mt-success)" />
+        <Stat icon={Clock} label="Horas hoy" value={`${stats.hoursToday}h`} color="var(--mt-info)" />
       </div>
 
-      {/* Assigned Work Orders */}
+      {/* Órdenes abiertas */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--mt-space-lg)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Wrench size={20} />
-            Mis Órdenes
+          <h3 style={{ fontSize: '16px', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Wrench size={20} /> {technician.id === data.technician?.id && !selectedId ? 'Mis órdenes' : 'Órdenes asignadas'}
           </h3>
-          <span style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)', fontWeight: '700' }}>
-            {workOrders.length} pendientes
-          </span>
+          <span style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)', fontWeight: '700' }}>{openOrders.length} pendientes</span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
-          {workOrders.map((order) => (
-            <MtCard
-              key={order.id}
-              elevated
-              style={{
-                borderLeft: order.priority === 'CRITICAL' ? '4px solid var(--mt-danger)' : order.priority === 'HIGH' ? '4px solid var(--mt-warning)' : '4px solid var(--mt-accent)',
-                cursor: 'pointer',
-                transition: 'all 200ms ease',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(56, 189, 248, 0.2)'}
-              onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
-            >
-              <div
-                style={{ padding: 'var(--mt-space-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
-                onClick={() => navigate(`/maintenance/app/work-orders/${order.id}/execute`)}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-sm)' }}>
-                    <div>{getPriorityIcon(order.priority)}</div>
-                    <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0, color: 'var(--mt-text-primary)' }}>
-                      {order.title}
-                    </h4>
-                    <MtBadge size="sm" variant={order.type === 'CORRECTIVE' ? 'danger' : 'info'}>
-                      {order.type === 'CORRECTIVE' ? 'Correctiva' : 'Preventiva'}
-                    </MtBadge>
+        {openOrders.length === 0 ? (
+          <MtCard elevated>
+            <p style={{ padding: 'var(--mt-space-xl)', margin: 0, textAlign: 'center', color: 'var(--mt-text-tertiary)', fontSize: '13px' }}>
+              No hay órdenes asignadas pendientes. 🎉
+            </p>
+          </MtCard>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
+            {openOrders.map((order) => {
+              const due = order.dueAt || order.scheduledAt;
+              return (
+                <MtCard key={order.id} elevated interactive onClick={() => navigate(`/maintenance/app/work-orders/${order.id}`)}>
+                  <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', borderLeft: `4px solid ${PRIORITY_COLOR[order.priority]}` }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: '6px', flexWrap: 'wrap' }}>
+                        {['CRITICAL', 'HIGH'].includes(order.priority) && <AlertCircle size={16} style={{ color: PRIORITY_COLOR[order.priority] }} />}
+                        <code style={{ fontSize: '12px', fontWeight: 700, color: 'var(--mt-accent)' }}>{woNumber(order.number)}</code>
+                        <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>{order.title}</h4>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                        <MtBadge size="sm" variant={order.status === 'IN_PROGRESS' ? 'warning' : order.status === 'ASSIGNED' ? 'accent' : 'neutral'}>
+                          {STATE_LABELS[order.status] || order.status}
+                        </MtBadge>
+                        <MtBadge size="sm" variant={order.type === 'CORRECTIVE' ? 'danger' : 'info'}>{TYPE_LABELS[order.type] || order.type}</MtBadge>
+                        <MtBadge size="sm" variant="neutral">Prioridad {PRIORITY_LABELS[order.priority] || order.priority}</MtBadge>
+                        {order.overdue && <MtBadge size="sm" variant="danger">Vencida</MtBadge>}
+                      </div>
+                      <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                        {order.asset ? `${order.asset.code} · ${order.asset.name}${order.asset.location ? ` · ${order.asset.location}` : ''}` : 'Sin activo'}
+                        {due && ` · Programada ${fmtDate(due)}`}
+                        {order._count?.tasks > 0 && ` · ${order._count.tasks} tarea(s)`}
+                      </p>
+                    </div>
+                    <ChevronRight size={20} style={{ color: 'var(--mt-text-tertiary)' }} />
                   </div>
-                  <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: '6px' }}>
-                    {order.assetName} ({order.assetCode})
-                  </p>
-                  <div style={{ display: 'flex', gap: 'var(--mt-space-md)', fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>
-                    <span>{order.status === 'IN_PROGRESS' ? 'En curso' : 'Pendiente'}</span>
-                    <span>•</span>
-                    <span>{order.daysOpen < 1 ? `${Math.round(order.daysOpen * 24)}h` : `${order.daysOpen.toFixed(1)}d`}</span>
-                  </div>
-                </div>
-                <ChevronRight size={20} style={{ color: 'var(--mt-text-tertiary)' }} />
-              </div>
-            </MtCard>
-          ))}
-        </div>
+                </MtCard>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Completed Work Orders */}
-      {completedOrders.length > 0 && (
-        <div>
-          <h3 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: '0 0 var(--mt-space-lg) 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <History size={20} />
-            Historial Reciente
-          </h3>
-
+      {/* Historial reciente */}
+      <div>
+        <h3 style={{ fontSize: '16px', fontWeight: '900', margin: '0 0 var(--mt-space-lg) 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <History size={20} /> Terminadas en los últimos 30 días
+          <span style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)', fontWeight: 700 }}>· {stats.hours30d}h trabajadas</span>
+        </h3>
+        {recentCompleted.length === 0 ? (
+          <MtCard elevated>
+            <p style={{ padding: 'var(--mt-space-xl)', margin: 0, textAlign: 'center', color: 'var(--mt-text-tertiary)', fontSize: '13px' }}>Sin órdenes terminadas recientemente.</p>
+          </MtCard>
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
-            {completedOrders.map((order) => (
-              <MtCard key={order.id} elevated style={{ borderLeft: '4px solid var(--mt-success)', opacity: 0.8 }}>
-                <div style={{ padding: 'var(--mt-space-lg)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--mt-space-sm)' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0, color: 'var(--mt-text-primary)' }}>
-                      {order.title}
+            {recentCompleted.map((order) => (
+              <MtCard key={order.id} elevated interactive onClick={() => navigate(`/maintenance/app/work-orders/${order.id}`)}>
+                <div style={{ padding: 'var(--mt-space-lg)', borderLeft: '4px solid var(--mt-success)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>
+                      <code style={{ color: 'var(--mt-accent)', marginRight: '6px' }}>{woNumber(order.number)}</code>{order.title}
                     </h4>
-                    <MtBadge variant="success" size="sm">Completada</MtBadge>
+                    <MtBadge variant="success" size="sm">{STATE_LABELS[order.status] || order.status}</MtBadge>
                   </div>
-                  <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: '6px' }}>
-                    {order.assetName}
+                  <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                    {order.asset ? `${order.asset.code} · ${order.asset.name}` : 'Sin activo'} · Terminada {fmtDate(order.finishedAt)} · {order.hours}h
                   </p>
-                  <div style={{ display: 'flex', gap: 'var(--mt-space-md)', fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>
-                    <span>{new Date(order.completedAt).toLocaleDateString('es-MX')}</span>
-                    <span>•</span>
-                    <span>{order.timeSpent}h</span>
-                  </div>
                 </div>
               </MtCard>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Quick Action Button */}
+      {/* Acción rápida: reportar falla */}
       <div style={{ position: 'fixed', bottom: 'var(--mt-space-lg)', right: 'var(--mt-space-lg)', zIndex: 40 }}>
         <MtButton
           onClick={() => navigate('/maintenance/app/report-failure')}
-          style={{
-            borderRadius: '50%',
-            width: '56px',
-            height: '56px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(56, 189, 248, 0.4)',
-          }}
+          aria-label="Reportar falla"
+          title="Reportar falla"
+          style={{ borderRadius: '50%', width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(56, 189, 248, 0.4)' }}
         >
           <Plus size={24} />
         </MtButton>
