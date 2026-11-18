@@ -128,33 +128,39 @@ export default function ReportFailure() {
 
     try {
       setSubmitting(true);
+      const comments = (formData.comments || '').trim();
       const res = await maintenanceApi.createWorkOrder({
-        assetId: formData.assetId,
-        title: formData.title,
-        description: formData.description,
+        assetId: Number(formData.assetId),
+        title: formData.title.trim(),
+        // Los comentarios adicionales se guardan junto con la descripción
+        description: comments ? `${formData.description.trim()}
+
+Comentarios: ${comments}` : formData.description.trim(),
         priority: formData.priority,
         type: 'CORRECTIVE',
-        status: 'REQUESTED',
-        comments: formData.comments,
       });
+      const workOrderId = res?.id ?? res?.data?.id;
 
-      // Upload photos
-      if (formData.photos.length > 0 && res?.data?.id) {
+      // Fotos de evidencia de la falla (estado "antes")
+      let failedPhotos = 0;
+      if (formData.photos.length > 0 && workOrderId) {
         for (const photo of formData.photos) {
           try {
-            await maintenanceApi.uploadPhoto(res.data.id, photo.file, 'FAILURE_REPORT');
+            await maintenanceApi.uploadPhoto(workOrderId, photo.file, 'BEFORE');
           } catch (err) {
-            console.error('Photo upload error:', err);
+            failedPhotos++;
+            console.error('[ReportFailure] Photo upload error:', err);
           }
         }
       }
+      if (failedPhotos > 0) toast.warning(`${failedPhotos} foto(s) no se pudieron subir`);
 
       localStorage.removeItem(DRAFT_KEY);
       toast.success('Falla reportada exitosamente');
 
       // Redirect to success or order detail
       setTimeout(() => {
-        navigate(`/maintenance/app/work-orders/${res?.data?.id}`);
+        navigate(workOrderId ? `/maintenance/app/work-orders/${workOrderId}` : '/maintenance/app/work-orders');
       }, 500);
     } catch (err) {
       toast.error(err?.message || 'Error al reportar falla');

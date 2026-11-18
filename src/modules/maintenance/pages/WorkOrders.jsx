@@ -7,15 +7,18 @@ import '../ui/tokens.css';
 
 const STATUS_CONFIG = {
   REQUESTED: { label: 'Solicitada', color: 'var(--mt-info)', icon: FileText, stage: 1 },
-  PENDING_APPROVAL: { label: 'Pendiente Aprobación', color: 'var(--mt-warning)', icon: Clock, stage: 1 },
   APPROVED: { label: 'Aprobada', color: 'var(--mt-info)', icon: CheckCircle2, stage: 2 },
   ASSIGNED: { label: 'Asignada', color: 'var(--mt-accent)', icon: Wrench, stage: 2 },
   IN_PROGRESS: { label: 'En ejecución', color: 'var(--mt-warning)', icon: Wrench, stage: 3 },
   WAITING_PARTS: { label: 'Esperando partes', color: 'var(--mt-warning)', icon: Pause, stage: 3 },
+  WAITING_PRODUCTION: { label: 'Esperando producción', color: 'var(--mt-warning)', icon: Clock, stage: 3 },
   FINISHED: { label: 'Finalizada', color: 'var(--mt-success)', icon: CheckCircle2, stage: 4 },
   VALIDATED: { label: 'Validada', color: 'var(--mt-success)', icon: CheckCircle2, stage: 5 },
   REJECTED: { label: 'Rechazada', color: 'var(--mt-danger)', icon: XCircle, stage: 0 },
+  CANCELLED: { label: 'Cancelada', color: 'var(--mt-text-tertiary)', icon: XCircle, stage: 0 },
 };
+
+const TYPE_LABELS = { CORRECTIVE: 'Correctiva', PREVENTIVE: 'Preventiva', INSPECTION: 'Inspección' };
 
 const PRIORITY_CONFIG = {
   CRITICAL: { label: 'Crítica', color: 'var(--mt-danger)', bg: 'rgba(244, 65, 82, 0.1)' },
@@ -24,15 +27,6 @@ const PRIORITY_CONFIG = {
   LOW: { label: 'Baja', color: 'var(--mt-accent)', bg: 'rgba(56, 189, 248, 0.1)' },
 };
 
-// Mock data - stages
-const WORKFLOW_STAGES = [
-  { id: 1, name: 'Reportada', color: 'var(--mt-info)' },
-  { id: 2, name: 'Aprobada', color: 'var(--mt-accent)' },
-  { id: 3, name: 'En Ejecución', color: 'var(--mt-warning)' },
-  { id: 4, name: 'Finalizada', color: 'var(--mt-success)' },
-  { id: 5, name: 'Validada', color: 'var(--mt-success)' },
-];
-
 export default function WorkOrders() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
@@ -40,25 +34,26 @@ export default function WorkOrders() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [view, setView] = useState('grid'); // 'grid' or 'list'
+  const [counts, setCounts] = useState({});
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await maintenanceApi.getWorkOrders({ limit: 100 });
+        const res = await maintenanceApi.getWorkOrders({ limit: 200 });
         const orders = res?.data || [];
 
-        // Map API response to component format
         const formattedOrders = orders.map(order => ({
           ...order,
-          assetName: order.asset?.name || 'Sin especificar',
-          assetCode: order.asset?.code || '-',
-          reportedBy: order.requestedBy?.name || 'Desconocido',
-          assignedTo: order.assignedTo?.name || null,
+          numberLabel: `OT-${String(order.number).padStart(5, '0')}`,
+          assetName: order.asset?.name || null,
+          assetCode: order.asset?.code || null,
+          reportedBy: order.requester?.name || null,
+          assignedName: order.assignee?.name || null,
           daysOpen: order.createdAt ? (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60 * 24) : 0,
         }));
 
         setOrders(formattedOrders);
+        setCounts(res?.countsByStatus || {});
       } catch (err) {
         console.error('Error loading work orders:', err);
         setError(err?.message || 'Error al cargar órdenes de trabajo');
@@ -72,51 +67,52 @@ export default function WorkOrders() {
   const statusFilters = [
     'all',
     'REQUESTED',
-    'PENDING_APPROVAL',
     'APPROVED',
     'ASSIGNED',
     'IN_PROGRESS',
+    'WAITING_PARTS',
+    'WAITING_PRODUCTION',
     'FINISHED',
     'VALIDATED',
+    'REJECTED',
+    'CANCELLED',
   ];
+  const countOf = (...statuses) => statuses.reduce((sum, st) => sum + (counts[st] || 0), 0);
 
+  const term = search.trim().toLowerCase();
   const filtered = orders.filter((order) => {
     const matchesFilter = filter === 'all' || order.status === filter;
     const matchesSearch =
-      String(order.id).toLowerCase().includes(search.toLowerCase()) ||
-      (order.title?.toLowerCase?.().includes(search.toLowerCase()) || false) ||
-      (order.assetName?.toLowerCase?.().includes(search.toLowerCase()) || false);
+      !term ||
+      order.numberLabel.toLowerCase().includes(term) ||
+      String(order.number) === term.replace(/^ot-?0*/, '') ||
+      order.title?.toLowerCase().includes(term) ||
+      order.assetName?.toLowerCase().includes(term) ||
+      order.assetCode?.toLowerCase().includes(term);
     return matchesFilter && matchesSearch;
   });
 
   const getActionButton = (order) => {
     switch (order.status) {
       case 'REQUESTED':
-      case 'PENDING_APPROVAL':
-        return { label: 'Revisar', action: 'review', color: 'warning' };
+        return { label: 'Revisar', color: 'warning' };
       case 'APPROVED':
-        return { label: 'Asignar', action: 'review', color: 'info' };
+        return { label: 'Asignar', color: 'info' };
       case 'ASSIGNED':
-        return { label: 'Ejecutar', action: 'execute', color: 'warning' };
+        return { label: 'Ejecutar', color: 'warning' };
       case 'IN_PROGRESS':
       case 'WAITING_PARTS':
-        return { label: 'Continuar', action: 'execute', color: 'warning' };
+      case 'WAITING_PRODUCTION':
+        return { label: 'Continuar', color: 'warning' };
       case 'FINISHED':
-        return { label: 'Validar', action: 'validate', color: 'info' };
+        return { label: 'Validar', color: 'info' };
       default:
         return null;
     }
   };
 
-  const handleAction = (order, action) => {
-    if (action === 'review') {
-      navigate(`/maintenance/app/work-orders/${order.id}/review`);
-    } else if (action === 'execute') {
-      navigate(`/maintenance/app/work-orders/${order.id}/execute`);
-    } else if (action === 'validate') {
-      navigate(`/maintenance/app/work-orders/${order.id}`);
-    }
-  };
+  // Todas las acciones (revisar, asignar, ejecutar, validar) se hacen en el detalle de la OT
+  const handleAction = (order) => navigate(`/maintenance/app/work-orders/${order.id}`);
 
   if (loading) return <MtSkeleton type="card" count={3} />;
   if (error)
@@ -209,6 +205,7 @@ export default function WorkOrders() {
               {status === 'all'
                 ? 'Todas'
                 : STATUS_CONFIG[status]?.label || status}
+              {status !== 'all' && counts[status] ? ` (${counts[status]})` : ''}
             </button>
           ))}
         </div>
@@ -222,7 +219,7 @@ export default function WorkOrders() {
               Pendientes Revisión
             </div>
             <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--mt-warning)' }}>
-              {orders.filter(o => o.status === 'PENDING_APPROVAL').length}
+              {countOf('REQUESTED')}
             </div>
           </div>
         </MtCard>
@@ -232,7 +229,7 @@ export default function WorkOrders() {
               En Ejecución
             </div>
             <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--mt-accent)' }}>
-              {orders.filter(o => o.status === 'IN_PROGRESS').length}
+              {countOf('IN_PROGRESS', 'WAITING_PARTS', 'WAITING_PRODUCTION')}
             </div>
           </div>
         </MtCard>
@@ -242,7 +239,7 @@ export default function WorkOrders() {
               Finalizadas
             </div>
             <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--mt-success)' }}>
-              {orders.filter(o => o.status === 'FINISHED' || o.status === 'VALIDATED').length}
+              {countOf('FINISHED', 'VALIDATED')}
             </div>
           </div>
         </MtCard>
@@ -315,7 +312,7 @@ export default function WorkOrders() {
                           color: 'var(--mt-accent)',
                         }}
                       >
-                        OT-{String(order.id).padStart(5, '0')}
+                        {order.numberLabel}
                       </code>
                       <MtBadge
                         variant={
@@ -330,7 +327,7 @@ export default function WorkOrders() {
                         {PRIORITY_CONFIG[order.priority]?.label || order.priority}
                       </MtBadge>
                       <MtBadge size="sm">
-                        {order.type === 'CORRECTIVE' ? 'Correctiva' : 'Preventiva'}
+                        {TYPE_LABELS[order.type] || order.type}
                       </MtBadge>
                     </div>
 
@@ -354,7 +351,7 @@ export default function WorkOrders() {
                         marginBottom: 'var(--mt-space-lg)',
                       }}
                     >
-                      {order.assetName} ({order.assetCode})
+                      {order.assetName ? `${order.assetName} (${order.assetCode})` : 'Sin activo'}
                     </p>
 
                     {/* Details Grid */}
@@ -393,13 +390,13 @@ export default function WorkOrders() {
                           </div>
                         </div>
                       )}
-                      {order.assignedTo && (
+                      {order.assignedName && (
                         <div>
                           <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '2px' }}>
                             Asignado a
                           </div>
                           <div style={{ fontSize: '13px', color: 'var(--mt-text-primary)' }}>
-                            {order.assignedTo}
+                            {order.assignedName}
                           </div>
                         </div>
                       )}
@@ -412,7 +409,7 @@ export default function WorkOrders() {
                       <MtButton
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleAction(order, actionBtn.action);
+                          handleAction(order);
                         }}
                         size="sm"
                         variant={actionBtn.color === 'warning' ? 'primary' : 'secondary'}

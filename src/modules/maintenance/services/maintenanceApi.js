@@ -1,4 +1,4 @@
-import { httpGet, httpPost, httpPatch, httpDelete, httpForm } from "../../../services/http";
+import { httpGet, httpPost, httpPut, httpPatch, httpDelete, httpForm } from "../../../services/http";
 
 export const maintenanceApi = {
   // Check if user has access to maintenance module
@@ -40,8 +40,18 @@ export const maintenanceApi = {
     return httpGet(`/maintenance/work-orders?${params}`);
   },
 
+  // Detalle completo: { workOrder, events, photos, permissions }
   async getWorkOrder(id) {
     return httpGet(`/maintenance/work-orders/${id}`);
+  },
+
+  // Registrar resultado de una tarea del checklist: { result, valueNumber, valueText, note }
+  async updateWorkOrderTask(workOrderId, taskId, data) {
+    return httpPatch(`/maintenance/work-orders/${workOrderId}/tasks/${taskId}`, data);
+  },
+
+  async deleteWorkOrderPhoto(workOrderId, photoId) {
+    return httpDelete(`/maintenance/work-orders/${workOrderId}/photos/${photoId}`);
   },
 
   async createWorkOrder(data) {
@@ -61,7 +71,7 @@ export const maintenanceApi = {
   // Upload photo to work order
   async uploadPhoto(id, file, kind) {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("image", file); // el backend recibe el archivo en el campo "image"
     formData.append("kind", kind);
     return httpForm(`/maintenance/work-orders/${id}/photos`, formData, "POST");
   },
@@ -181,12 +191,9 @@ export const maintenanceApi = {
     return httpPatch(`/maintenance/failure-codes/${id}`, data);
   },
 
+  // Clasificación de la falla: { failureModeId, mechanismId, rootCauseId, productionEffect }
   async assignFailureToWorkOrder(workOrderId, data) {
-    return httpPost(`/maintenance/work-orders/${workOrderId}/failure`, data);
-  },
-
-  async getWorkOrderFailure(workOrderId) {
-    return httpGet(`/maintenance/work-orders/${workOrderId}/failure`);
+    return httpPut(`/maintenance/work-orders/${workOrderId}/failure`, data);
   },
 
   // ============================================================
@@ -355,18 +362,6 @@ export const maintenanceApi = {
     return httpPatch(`/maintenance/preventive-orders/${workOrderId}/checklist/${itemId}`, data);
   },
 
-  // Work Order Status Management
-  async updateWorkOrderStatus(id, data) {
-    return httpPatch(`/maintenance/work-orders/${id}/status`, data);
-  },
-
-  async approveWorkOrder(id, data) {
-    return httpPost(`/maintenance/work-orders/${id}/approve`, data);
-  },
-
-  async rejectWorkOrder(id, data) {
-    return httpPost(`/maintenance/work-orders/${id}/reject`, data);
-  },
 
   // ============================================================
   // PLANS MODULE (Nuevo - Módulo de Planes Mejorado)

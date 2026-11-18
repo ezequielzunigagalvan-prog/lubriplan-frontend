@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
 // Pages
@@ -13,7 +13,6 @@ const MaintenanceAssetHistory = lazy(() => import("../pages/AssetHistoryPage"));
 const MaintenanceWorkOrders = lazy(() => import("../pages/WorkOrders"));
 const MaintenanceWorkOrderDetail = lazy(() => import("../pages/WorkOrderDetail"));
 const MaintenanceReportFailure = lazy(() => import("../pages/ReportFailure"));
-const MaintenanceExecution = lazy(() => import("../pages/Execution"));
 const AccessDenied = lazy(() => import("../pages/AccessDenied"));
 const MaintenanceInventory = lazy(() => import("../pages/Inventory"));
 const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
@@ -23,7 +22,6 @@ const AssetHierarchy = lazy(() => import("../pages/AssetHierarchy"));
 const AssetExpedient = lazy(() => import("../pages/AssetExpedient"));
 const NotificationCenter = lazy(() => import("../pages/NotificationCenter"));
 const NotificationPreferences = lazy(() => import("../pages/NotificationPreferences"));
-const WorkOrderReview = lazy(() => import("../pages/WorkOrderReview"));
 const PreventivePlans = lazy(() => import("../pages/PreventivePlans"));
 const MaintenanceCalendar = lazy(() => import("../pages/MaintenanceCalendar"));
 const TechnicianDashboard = lazy(() => import("../pages/TechnicianDashboard"));
@@ -36,6 +34,12 @@ const HistoryDashboard = lazy(() => import("../pages/HistoryDashboard"));
 
 // Protected Route Component
 import MaintenanceProtectedRoute from "../hooks/useMaintenanceProtectedRoute.jsx";
+
+// Rutas antiguas de revisión/ejecución: todo el ciclo de vida se maneja en el detalle de la OT
+function RedirectToWorkOrder() {
+  const { id } = useParams();
+  return <Navigate to={`/maintenance/app/work-orders/${id}`} replace />;
+}
 
 function PageLoader() {
   return (
@@ -67,9 +71,10 @@ export default function MaintenanceRouter() {
           <Route path="assets/:id/history" element={<MaintenanceAssetHistory />} />
           <Route path="work-orders" element={<MaintenanceWorkOrders />} />
           <Route path="work-orders/:id" element={<MaintenanceWorkOrderDetail />} />
-          <Route path="work-orders/:id/review" element={<WorkOrderReview />} />
+          {/* Revisión y ejecución se hacen en el detalle de la OT */}
+          <Route path="work-orders/:id/review" element={<RedirectToWorkOrder />} />
           <Route path="report-failure" element={<MaintenanceReportFailure />} />
-          <Route path="work-orders/:id/execute" element={<MaintenanceExecution />} />
+          <Route path="work-orders/:id/execute" element={<RedirectToWorkOrder />} />
 
           {/* Phase 3A: Inventory & Spare Parts (Unified) */}
           <Route path="inventory" element={<MaintenanceInventory />} />
