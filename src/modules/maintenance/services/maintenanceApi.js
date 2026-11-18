@@ -45,6 +45,18 @@ export const maintenanceApi = {
     return httpGet(`/maintenance/work-orders/${id}`);
   },
 
+  // Historial unificado de la planta: { data, total, page, totalPages, stats, periodDays }
+  async getHistory(filters = {}) {
+    const params = new URLSearchParams(Object.entries(filters).filter(([, v]) => v !== '' && v != null));
+    return httpGet(`/maintenance/history?${params}`);
+  },
+
+  // Analítica de equipos: { summary, kpis, monthly, equipment[] }
+  async getEquipmentAnalytics({ days = 90 } = {}) {
+    const res = await httpGet(`/maintenance/analytics/equipment?days=${days}`);
+    return res?.data ?? res;
+  },
+
   // Tablero del técnico (el propio, o el elegido si eres supervisor/admin)
   async getTechnicianDashboard({ technicianId } = {}) {
     const res = await httpGet(`/maintenance/work-orders/technician-dashboard${technicianId ? `?technicianId=${technicianId}` : ''}`);

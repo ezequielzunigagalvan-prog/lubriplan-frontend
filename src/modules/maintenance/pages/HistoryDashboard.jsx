@@ -1,556 +1,257 @@
-import { useState, useMemo } from 'react';
-import { MtCard, MtBadge } from '../ui';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MtCard, MtBadge, MtButton } from '../ui';
 import {
-  Search, Filter, Download, Clock, AlertCircle, Wrench, Droplet,
-  TrendingDown, Calendar, ChevronDown, ChevronUp, Zap, Package,
-  CheckCircle2, AlertTriangle
+  Search, Clock, AlertCircle, Wrench, Package, CheckCircle2, CalendarClock, ChevronDown, ChevronUp, Download,
 } from 'lucide-react';
+import { maintenanceApi } from '../services/maintenanceApi';
+import { STATE_LABELS, PRIORITY_LABELS } from '../constants/maintenance';
 import '../ui/tokens.css';
 
-// Mock history data
-const MOCK_HISTORY = [
-  {
-    id: 1,
-    timestamp: '2025-11-28 14:30',
-    type: 'WORK_ORDER_COMPLETED',
-    category: 'ASSET_MAINTENANCE',
-    asset: 'Bomba Principal',
-    assetCode: 'EQ-001',
-    title: 'Cambio de aceite - Mantenimiento preventivo',
-    description: 'Se realizó cambio de aceite a la bomba. Aceite SAE 40 de 5 litros. Funcionamiento normal.',
-    technician: 'Juan Pérez',
-    status: 'COMPLETED',
-    priority: 'MEDIUM',
-    details: {
-      hoursSpent: 2.5,
-      partsUsed: ['Aceite SAE 40 (5L)', 'Filtro Hidráulico'],
-      notes: 'Bomba funcionando correctamente',
-    },
-  },
-  {
-    id: 2,
-    timestamp: '2025-11-27 10:15',
-    type: 'FAILURE_REPORTED',
-    category: 'FAILURE',
-    asset: 'Motor Eléctrico B',
-    assetCode: 'EQ-002',
-    title: 'Ruido anormal en motor',
-    description: 'Operador reporta ruido anormal en motor durante operación normal.',
-    technician: 'José López (Operador)',
-    status: 'REPORTED',
-    priority: 'HIGH',
-    details: {
-      failureCode: 'MEC-002-NOISE',
-      symptom: 'Ruido de fricción',
-      reportedBy: 'José López',
-      location: 'Planta Jilotepec',
-    },
-  },
-  {
-    id: 3,
-    timestamp: '2025-11-26 16:45',
-    type: 'SPARE_PART_USED',
-    category: 'SPARE_PARTS',
-    asset: 'Compresor Principal',
-    assetCode: 'EQ-003',
-    title: 'Reemplazo de válvula de descarga',
-    description: 'Se reemplazó válvula de descarga dañada por nueva.',
-    technician: 'Carlos López',
-    status: 'COMPLETED',
-    priority: 'HIGH',
-    details: {
-      partCode: 'VALVE-DSC-001',
-      partName: 'Válvula Descarga Compresor',
-      quantity: 1,
-      costPerUnit: 450,
-      totalCost: 450,
-      replacedPart: 'VALVE-DSC-OLD-012',
-    },
-  },
-  {
-    id: 4,
-    timestamp: '2025-11-25 09:20',
-    type: 'PREVENTIVE_PLAN_EXECUTED',
-    category: 'PREVENTIVE_MAINTENANCE',
-    asset: 'Reductor Principal',
-    assetCode: 'EQ-004',
-    title: 'Mantenimiento preventivo mensual',
-    description: 'Ejecutado plan preventivo mensual para reductor.',
-    technician: 'Juan Pérez',
-    status: 'COMPLETED',
-    priority: 'LOW',
-    details: {
-      planId: 'PREV-004-MONTHLY',
-      frequency: 'Monthly',
-      nextDue: '2025-12-25',
-      checklist: ['Inspección visual', 'Medición de temperatura', 'Análisis de vibración'],
-    },
-  },
-  {
-    id: 5,
-    timestamp: '2025-11-24 14:00',
-    type: 'INVENTORY_MOVEMENT',
-    category: 'SPARE_PARTS',
-    asset: 'Almacén Jilotepec',
-    assetCode: 'STG-001',
-    title: 'Entrada de refacciones',
-    description: 'Recepción de nuevas refacciones del proveedor.',
-    technician: 'Supervisor Almacén',
-    status: 'COMPLETED',
-    priority: 'LOW',
-    details: {
-      movement: 'IN',
-      partCode: 'BEARING-SKF-6205',
-      partName: 'Rodamiento SKF 6205',
-      quantity: 12,
-      cost: 3600,
-      supplier: 'Distribuidora Azpiazu',
-      invoiceNumber: 'INV-2025-1234',
-    },
-  },
-  {
-    id: 6,
-    timestamp: '2025-11-23 11:30',
-    type: 'ASSET_INSPECTION',
-    category: 'ASSET_MAINTENANCE',
-    asset: 'Bomba Principal',
-    assetCode: 'EQ-001',
-    title: 'Inspección técnica mensual',
-    description: 'Inspección visual y técnica del activo.',
-    technician: 'Roberto García',
-    status: 'COMPLETED',
-    priority: 'MEDIUM',
-    details: {
-      condition: 'GOOD',
-      temperature: '65°C',
-      vibration: '2.5 mm/s',
-      nextInspection: '2025-12-23',
-      recommendations: 'Continuar monitoreo mensual',
-    },
-  },
-  {
-    id: 7,
-    timestamp: '2025-11-22 08:45',
-    type: 'WORK_ORDER_REJECTED',
-    category: 'WORK_ORDER',
-    asset: 'Motor Eléctrico B',
-    assetCode: 'EQ-002',
-    title: 'Orden rechazada - Falta de información',
-    description: 'Orden de mantenimiento rechazada por falta de información técnica.',
-    technician: 'Supervisor Mantenimiento',
-    status: 'REJECTED',
-    priority: 'MEDIUM',
-    details: {
-      rejectionReason: 'Información incompleta',
-      rejectedBy: 'Ana Martínez',
-      requiredInfo: ['Diagnóstico completo', 'Estimación de horas'],
-    },
-  },
-  {
-    id: 8,
-    timestamp: '2025-11-21 15:00',
-    type: 'CALIBRATION_PERFORMED',
-    category: 'ASSET_MAINTENANCE',
-    asset: 'Sensor Presión PT-001',
-    assetCode: 'INSTR-001',
-    title: 'Calibración de sensor de presión',
-    description: 'Calibración según estándar ISO 9001.',
-    technician: 'Roberto García',
-    status: 'COMPLETED',
-    priority: 'HIGH',
-    details: {
-      calibrationStandard: 'ISO 9001',
-      certificateNumber: 'CAL-2025-0145',
-      rangeStart: 0,
-      rangeEnd: 100,
-      errorMargin: '±0.5%',
-      nextCalibration: '2026-11-21',
-    },
-  },
+const PAGE_SIZE = 50;
+const PERIODS = [7, 30, 90, 180, 365];
+const CATEGORIES = [
+  { value: '', label: 'Todas las categorías' },
+  { value: 'WORK_ORDER', label: 'Órdenes correctivas' },
+  { value: 'FAILURE', label: 'Fallas reportadas' },
+  { value: 'PREVENTIVE_MAINTENANCE', label: 'Mantenimiento preventivo' },
+  { value: 'SPARE_PARTS', label: 'Refacciones' },
 ];
 
-const HISTORY_TYPES = {
-  WORK_ORDER_COMPLETED: { label: 'Orden Completada', icon: CheckCircle2, color: '#10B981' },
-  FAILURE_REPORTED: { label: 'Falla Reportada', icon: AlertCircle, color: '#EF4444' },
-  SPARE_PART_USED: { label: 'Refacción Usada', icon: Package, color: '#F59E0B' },
-  PREVENTIVE_PLAN_EXECUTED: { label: 'Plan Preventivo', icon: Wrench, color: '#38BDF8' },
-  INVENTORY_MOVEMENT: { label: 'Movimiento Inventario', icon: TrendingDown, color: '#8B5CF6' },
-  ASSET_INSPECTION: { label: 'Inspección Activo', icon: Zap, color: '#06B6D4' },
-  WORK_ORDER_REJECTED: { label: 'Orden Rechazada', icon: AlertTriangle, color: '#DC2626' },
-  CALIBRATION_PERFORMED: { label: 'Calibración', icon: Droplet, color: '#7C3AED' },
+const TYPE_INFO = {
+  FAILURE_REPORTED: { label: 'Falla reportada', badge: 'danger', icon: AlertCircle },
+  WORK_ORDER_CREATED: { label: 'OT creada', badge: 'info', icon: Wrench },
+  WORK_ORDER_ASSIGNED: { label: 'OT asignada', badge: 'accent', icon: Wrench },
+  WORK_ORDER_STARTED: { label: 'Trabajo iniciado', badge: 'warning', icon: Wrench },
+  WORK_ORDER_FINISHED: { label: 'Trabajo terminado', badge: 'success', icon: CheckCircle2 },
+  WORK_ORDER_VALIDATED: { label: 'OT validada', badge: 'success', icon: CheckCircle2 },
+  WORK_ORDER_REJECTED: { label: 'OT rechazada', badge: 'danger', icon: AlertCircle },
+  WORK_ORDER_CANCELLED: { label: 'OT cancelada', badge: 'neutral', icon: AlertCircle },
+  WORK_ORDER_STATUS: { label: 'Cambio de estado', badge: 'neutral', icon: Wrench },
+  SPARE_PART_USED: { label: 'Refacción usada', badge: 'info', icon: Package },
+  PREVENTIVE_GENERATED: { label: 'Preventivo generado', badge: 'accent', icon: CalendarClock },
+  PREVENTIVE_SKIPPED: { label: 'Ciclo omitido', badge: 'warning', icon: CalendarClock },
+  PREVENTIVE_ERROR: { label: 'Error de generación', badge: 'danger', icon: AlertCircle },
 };
 
-const CATEGORIES = {
-  ASSET_MAINTENANCE: 'Mantenimiento de Activos',
-  FAILURE: 'Fallas',
-  SPARE_PARTS: 'Refacciones',
-  PREVENTIVE_MAINTENANCE: 'Mantenimiento Preventivo',
-  WORK_ORDER: 'Órdenes de Trabajo',
-};
+const money = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n || 0);
+const fmtDateTime = (d) => new Date(d).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+const woNumber = (n) => (typeof n === 'number' ? `OT-${String(n).padStart(5, '0')}` : n);
+const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 'var(--mt-radius-md)', fontSize: '14px', border: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface)', color: 'var(--mt-text-primary)', outline: 'none', boxSizing: 'border-box' };
+
+function Stat({ icon: Icon, label, value, color }) {
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+          <Icon size={16} style={{ color }} />
+          <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', textTransform: 'uppercase' }}>{label}</div>
+        </div>
+        <div style={{ fontSize: '28px', fontWeight: '900', color }}>{value}</div>
+      </div>
+    </MtCard>
+  );
+}
+
+/** CSV del resultado filtrado actual (se descarga en el navegador). */
+function exportCsv(items, days) {
+  const header = ['Fecha', 'Tipo', 'Categoría', 'Título', 'Activo', 'OT', 'Usuario', 'Detalle'];
+  const rows = items.map((i) => [
+    fmtDateTime(i.timestamp),
+    TYPE_INFO[i.type]?.label || i.type,
+    CATEGORIES.find((c) => c.value === i.category)?.label || i.category,
+    i.title,
+    i.asset ? `${i.asset.code} ${i.asset.name}` : '',
+    i.workOrder?.number ? woNumber(i.workOrder.number) : '',
+    i.user || '',
+    i.description || '',
+  ]);
+  const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([String.fromCharCode(0xfeff) + csv], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `historial-mantenimiento-${days}d.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function HistoryDashboard() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterDateRange, setFilterDateRange] = useState('all');
+  const navigate = useNavigate();
+  const [days, setDays] = useState(30);
+  const [category, setCategory] = useState('');
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
 
-  const filtered = useMemo(() => {
-    return MOCK_HISTORY.filter(item => {
-      const matchSearch =
-        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.asset?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.assetCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.technician?.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+      setPage(1); // cambiar filtros vuelve a la primera página
+    }, 300);
+    return () => clearTimeout(id);
+  }, [search]);
 
-      const matchCategory = filterCategory === 'all' || item.category === filterCategory;
-      const matchStatus = filterStatus === 'all' || item.status === filterStatus;
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setResult(await maintenanceApi.getHistory({ days, category, search: debouncedSearch, page, limit: PAGE_SIZE }));
+    } catch (err) {
+      console.error('[HistoryDashboard] Error loading history:', err);
+      setError(err?.data?.error || err?.message || 'No se pudo cargar el historial');
+    } finally {
+      setLoading(false);
+    }
+  }, [days, category, debouncedSearch, page]);
 
-      return matchSearch && matchCategory && matchStatus;
-    });
-  }, [searchTerm, filterCategory, filterStatus]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const stats = {
-    total: MOCK_HISTORY.length,
-    completedOrders: MOCK_HISTORY.filter(h => h.type === 'WORK_ORDER_COMPLETED').length,
-    failuresReported: MOCK_HISTORY.filter(h => h.type === 'FAILURE_REPORTED').length,
-    partsUsed: MOCK_HISTORY.filter(h => h.type === 'SPARE_PART_USED').length,
+  const handleExport = async () => {
+    // Se exporta todo lo filtrado, no solo la página visible
+    const all = await maintenanceApi.getHistory({ days, category, search: debouncedSearch, page: 1, limit: 200 });
+    exportCsv(all.data || [], days);
   };
+
+  const stats = result?.stats;
+  const items = result?.data || [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
-      {/* Header */}
-      <div>
-        <h1 style={{ fontSize: '32px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-          Historial del Sistema
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-          Registro completo de eventos, mantenimiento, fallas y refacciones
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
+        <div>
+          <h1 style={{ fontSize: '32px', fontWeight: '900', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>Historial del Sistema</h1>
+          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+            Órdenes de trabajo, fallas, preventivos y refacciones de los últimos {days} días
+          </p>
+        </div>
+        <MtButton variant="secondary" onClick={handleExport} disabled={!items.length}>
+          <Download size={16} /> Exportar CSV
+        </MtButton>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Clock size={16} style={{ color: 'var(--mt-accent)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>TOTAL EVENTOS</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-accent)' }}>
-              {stats.total}
-            </div>
-          </div>
-        </MtCard>
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+          <Stat icon={Clock} label="Eventos" value={stats.total} color="var(--mt-accent)" />
+          <Stat icon={CheckCircle2} label="Trabajos terminados" value={stats.ordersFinished} color="var(--mt-success)" />
+          <Stat icon={AlertCircle} label="Fallas reportadas" value={stats.failuresReported} color="var(--mt-danger)" />
+          <Stat icon={CalendarClock} label="Preventivos generados" value={stats.preventivesGenerated} color="var(--mt-warning)" />
+          <Stat icon={Package} label="Refacciones" value={`${stats.partsUsed} · ${money(stats.partsCost)}`} color="var(--mt-info)" />
+        </div>
+      )}
 
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Wrench size={16} style={{ color: 'var(--mt-success)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>ÓRDENES COMPLETADAS</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-success)' }}>
-              {stats.completedOrders}
-            </div>
-          </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <AlertCircle size={16} style={{ color: 'var(--mt-danger)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>FALLAS REPORTADAS</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-danger)' }}>
-              {stats.failuresReported}
-            </div>
-          </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Package size={16} style={{ color: 'var(--mt-info)' }} />
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)' }}>REFACCIONES USADAS</div>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-info)' }}>
-              {stats.partsUsed}
-            </div>
-          </div>
-        </MtCard>
-      </div>
-
-      {/* Filters */}
       <MtCard elevated>
-        <div style={{ padding: 'var(--mt-space-lg)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-            {/* Search */}
-            <div style={{ position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
-              <input
-                type="text"
-                placeholder="Buscar por activo, técnico, descripción..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px 10px 40px',
-                  borderRadius: 'var(--mt-radius-md)',
-                  fontSize: '14px',
-                  border: '1px solid var(--mt-border)',
-                  background: 'var(--mt-bg-surface)',
-                  color: 'var(--mt-text-primary)',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 'var(--mt-radius-md)',
-                  fontSize: '14px',
-                  border: '1px solid var(--mt-border)',
-                  background: 'var(--mt-bg-surface)',
-                  color: 'var(--mt-text-primary)',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <option value="all">Todas las categorías</option>
-                {Object.entries(CATEGORIES).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 'var(--mt-radius-md)',
-                  fontSize: '14px',
-                  border: '1px solid var(--mt-border)',
-                  background: 'var(--mt-bg-surface)',
-                  color: 'var(--mt-text-primary)',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <option value="all">Todos los estados</option>
-                <option value="COMPLETED">Completado</option>
-                <option value="REPORTED">Reportado</option>
-                <option value="IN_PROGRESS">En Proceso</option>
-                <option value="REJECTED">Rechazado</option>
-              </select>
-            </div>
-
-            {/* Export Button */}
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 'var(--mt-radius-md)',
-                  background: 'var(--mt-accent)',
-                  color: '#fff',
-                  border: 'none',
-                  fontWeight: '700',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                }}
-              >
-                <Download size={16} />
-                Exportar CSV
-              </button>
-            </div>
+        <div style={{ padding: 'var(--mt-space-lg)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
+            <input
+              type="text"
+              placeholder="Buscar por activo, OT, usuario, descripción..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ ...inputStyle, paddingLeft: '40px' }}
+            />
           </div>
+          <select value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }} style={inputStyle} aria-label="Categoría">
+            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+          <select value={days} onChange={(e) => { setDays(Number(e.target.value)); setPage(1); }} style={inputStyle} aria-label="Periodo">
+            {PERIODS.map((p) => <option key={p} value={p}>Últimos {p} días</option>)}
+          </select>
         </div>
       </MtCard>
 
-      {/* History Timeline */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--mt-text-primary)', margin: 0 }}>
-          {filtered.length} Evento{filtered.length !== 1 ? 's' : ''} Encontrado{filtered.length !== 1 ? 's' : ''}
-        </h2>
+      {error && (
+        <MtCard elevated>
+          <div style={{ padding: 'var(--mt-space-xl)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+            <p style={{ margin: 0, color: 'var(--mt-danger)', fontWeight: 700 }}>{error}</p>
+            <MtButton onClick={load}>Reintentar</MtButton>
+          </div>
+        </MtCard>
+      )}
 
-        {filtered.length === 0 ? (
-          <MtCard elevated>
-            <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
-              <Clock size={48} style={{ color: 'var(--mt-accent)', marginBottom: 'var(--mt-space-md)', opacity: 0.6 }} />
-              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-                Sin eventos
-              </h3>
-              <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                No hay eventos que coincidan con los filtros seleccionados
+      {!error && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)', opacity: loading ? 0.6 : 1 }}>
+          {!loading && items.length === 0 && (
+            <MtCard elevated>
+              <p style={{ padding: 'var(--mt-space-xl)', margin: 0, textAlign: 'center', color: 'var(--mt-text-tertiary)' }}>
+                No hay eventos con esos filtros en el periodo.
               </p>
-            </div>
-          </MtCard>
-        ) : (
-          filtered.map((item) => {
-            const TypeIcon = HISTORY_TYPES[item.type]?.icon || Clock;
-            const isExpanded = expandedId === item.id;
-
+            </MtCard>
+          )}
+          {items.map((item) => {
+            const info = TYPE_INFO[item.type] || { label: item.type, badge: 'neutral', icon: Clock };
+            const Icon = info.icon;
+            const expanded = expandedId === item.id;
+            const hasDetails = Boolean(item.description || Object.keys(item.details || {}).length || item.fromStatus);
             return (
-              <MtCard key={item.id} elevated style={{ background: 'var(--mt-bg-surface)' }}>
-                <div
-                  style={{
-                    padding: 'var(--mt-space-lg)',
-                    borderLeft: `4px solid ${HISTORY_TYPES[item.type]?.color || 'var(--mt-accent)'}`,
-                  }}
-                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                >
-                  {/* Main Row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', gap: 'var(--mt-space-md)', flex: 1 }}>
-                      {/* Icon */}
-                      <div
-                        style={{
-                          width: '44px',
-                          height: '44px',
-                          borderRadius: 'var(--mt-radius-md)',
-                          background: `${HISTORY_TYPES[item.type]?.color}20`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <TypeIcon size={22} style={{ color: HISTORY_TYPES[item.type]?.color }} />
-                      </div>
-
-                      {/* Content */}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-sm)' }}>
-                          <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--mt-text-primary)', margin: 0 }}>
-                            {item.title}
-                          </h3>
-                          <MtBadge
-                            variant={item.status === 'COMPLETED' ? 'success' : item.status === 'REJECTED' ? 'danger' : 'info'}
-                            size="sm"
-                          >
-                            {item.status}
-                          </MtBadge>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--mt-space-md)', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
-                          <div>
-                            <span style={{ fontWeight: '700' }}>Activo:</span> {item.asset} ({item.assetCode})
-                          </div>
-                          <div>
-                            <span style={{ fontWeight: '700' }}>Técnico:</span> {item.technician}
-                          </div>
-                          <div>
-                            <span style={{ fontWeight: '700' }}>Fecha:</span> {item.timestamp}
-                          </div>
-                          <div>
-                            <span style={{ fontWeight: '700' }}>Categoría:</span> {CATEGORIES[item.category]}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Expand Button */}
-                    <button
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginLeft: 'var(--mt-space-md)',
-                      }}
-                    >
-                      {isExpanded ? (
-                        <ChevronUp size={20} style={{ color: 'var(--mt-text-secondary)' }} />
-                      ) : (
-                        <ChevronDown size={20} style={{ color: 'var(--mt-text-secondary)' }} />
-                      )}
-                    </button>
+              <MtCard key={item.id} elevated>
+                <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', gap: 'var(--mt-space-md)', alignItems: 'flex-start' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: 'var(--mt-radius-md)', background: 'var(--mt-bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={18} style={{ color: 'var(--mt-accent)' }} />
                   </div>
-
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div style={{ marginTop: 'var(--mt-space-lg)', paddingTop: 'var(--mt-space-lg)', borderTop: '1px solid var(--mt-border)' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-                        {/* Description */}
-                        <div>
-                          <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                            Descripción
-                          </div>
-                          <p style={{ fontSize: '13px', color: 'var(--mt-text-primary)', margin: 0, lineHeight: '1.5' }}>
-                            {item.description}
-                          </p>
-                        </div>
-
-                        {/* Details Object */}
-                        {item.details && Object.entries(item.details).map(([key, value]) => (
-                          <div key={key}>
-                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mt-text-tertiary)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </div>
-                            {Array.isArray(value) ? (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                {value.map((v, idx) => (
-                                  <span
-                                    key={idx}
-                                    style={{
-                                      fontSize: '12px',
-                                      background: 'var(--mt-bg-base)',
-                                      padding: '4px 8px',
-                                      borderRadius: '4px',
-                                      color: 'var(--mt-text-secondary)',
-                                    }}
-                                  >
-                                    {v}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : typeof value === 'object' ? (
-                              <pre
-                                style={{
-                                  fontSize: '11px',
-                                  background: 'var(--mt-bg-base)',
-                                  padding: 'var(--mt-space-sm)',
-                                  borderRadius: '4px',
-                                  overflow: 'auto',
-                                  margin: 0,
-                                  color: 'var(--mt-text-secondary)',
-                                }}
-                              >
-                                {JSON.stringify(value, null, 2)}
-                              </pre>
-                            ) : (
-                              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--mt-text-primary)' }}>
-                                {String(value)}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '4px' }}>
+                      <MtBadge size="sm" variant={info.badge}>{info.label}</MtBadge>
+                      {item.priority && <MtBadge size="sm" variant="neutral">{PRIORITY_LABELS[item.priority] || item.priority}</MtBadge>}
+                      <span style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)' }}>{fmtDateTime(item.timestamp)}</span>
                     </div>
+                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>{item.title}</h4>
+                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
+                      {item.asset ? `${item.asset.code} · ${item.asset.name}` : 'Sin activo'}
+                      {item.workOrder?.number && (
+                        <>
+                          {' · '}
+                          <button
+                            onClick={() => navigate(`/maintenance/app/work-orders/${item.workOrder.id}`)}
+                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--mt-accent)', fontSize: '12px', fontWeight: 700 }}
+                          >
+                            {woNumber(item.workOrder.number)}
+                          </button>
+                        </>
+                      )}
+                      {item.user && ` · ${item.user}`}
+                    </p>
+                    {expanded && (
+                      <div style={{ marginTop: 'var(--mt-space-sm)', fontSize: '13px', color: 'var(--mt-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {item.fromStatus && <div>{STATE_LABELS[item.fromStatus] || item.fromStatus} → {STATE_LABELS[item.toStatus] || item.toStatus}</div>}
+                        {item.description && <div style={{ whiteSpace: 'pre-wrap' }}>{item.description}</div>}
+                        {item.details?.assignedTo && <div>Asignada a: {item.details.assignedTo}</div>}
+                        {item.details?.workDone && <div>Trabajo realizado: {item.details.workDone}</div>}
+                        {item.details?.downtimeMinutes != null && <div>Tiempo de paro: {item.details.downtimeMinutes} min</div>}
+                        {item.details?.totalCost != null && <div>Costo: {item.details.quantity} × {money(item.details.unitCost)} = {money(item.details.totalCost)}</div>}
+                        {item.details?.missedCycles > 0 && <div>Ciclos perdidos: {item.details.missedCycles}</div>}
+                      </div>
+                    )}
+                  </div>
+                  {hasDetails && (
+                    <button
+                      onClick={() => setExpandedId(expanded ? null : item.id)}
+                      aria-label={expanded ? 'Ocultar detalle' : 'Ver detalle'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mt-text-tertiary)', padding: '4px' }}
+                    >
+                      {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
                   )}
                 </div>
               </MtCard>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
+
+      {result && result.totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+          <MtButton size="sm" variant="secondary" disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>Anterior</MtButton>
+          <span style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)' }}>Página {page} de {result.totalPages} · {result.total} eventos</span>
+          <MtButton size="sm" variant="secondary" disabled={page >= result.totalPages || loading} onClick={() => setPage(page + 1)}>Siguiente</MtButton>
+        </div>
+      )}
     </div>
   );
 }
