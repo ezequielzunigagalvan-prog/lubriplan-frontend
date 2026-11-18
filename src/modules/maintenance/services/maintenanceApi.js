@@ -66,6 +66,12 @@ export const maintenanceApi = {
     return httpForm(`/maintenance/work-orders/${id}/photos`, formData, "POST");
   },
 
+  // Executive dashboard: KPIs reales de la planta actual
+  async getExecutiveDashboard({ days = 30 } = {}) {
+    const res = await httpGet(`/maintenance/dashboard/executive?days=${days}`);
+    return res?.data ?? res;
+  },
+
   // Dashboard summary (stub - returns mock until backend ready)
   async getDashboardSummary(filters = {}) {
     try {

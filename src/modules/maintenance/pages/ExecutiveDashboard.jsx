@@ -1,105 +1,134 @@
-import { useState, useEffect } from 'react';
-import { MtCard, MtBadge } from '../ui';
+import { useState, useEffect, useCallback } from 'react';
+import { MtCard, MtButton } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
-import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, Zap, Wrench, AlertTriangle, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, Wrench, AlertTriangle, BarChart3, RefreshCw } from 'lucide-react';
+
+const REFRESH_MS = 5 * 60 * 1000;
+const PERIODS = [30, 90, 180];
+const SPECIALTY_COLORS = ['#38BDF8', '#FBBF24', '#22C55E', '#F44152', '#A78BFA', '#FB923C', '#94A3B8'];
+
+const money = (n) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: n >= 1000 ? 0 : 2 }).format(n || 0);
+
+const pct = (value, max) => (max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0);
+
+const getKpiColor = (value, thresholds) => {
+  if (value == null) return 'var(--mt-text-tertiary)';
+  if (value >= thresholds.good) return 'var(--mt-success)';
+  if (value >= thresholds.warning) return 'var(--mt-warning)';
+  return 'var(--mt-danger)';
+};
+
+const labelStyle = {
+  fontSize: '11px',
+  fontWeight: 'var(--mt-font-weight-bold)',
+  textTransform: 'uppercase',
+  color: 'var(--mt-text-tertiary)',
+  margin: 0,
+};
+const hintStyle = { fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginTop: '4px' };
+const titleStyle = { fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' };
+
+function NoData({ text = 'Sin datos en el periodo' }) {
+  return <p style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)', margin: 0 }}>{text}</p>;
+}
+
+function CountCard({ icon: Icon, label, value, color, tint, note, accentBorder }) {
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)', ...(accentBorder && { borderLeft: `4px solid ${color}` }) }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
+          <div style={{ width: '40px', height: '40px', background: tint, borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon size={20} style={{ color }} />
+          </div>
+          <p style={labelStyle}>{label}</p>
+        </div>
+        <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color }}>{value}</p>
+        {note && <p style={{ fontSize: '11px', color, margin: 0, marginTop: '4px', fontWeight: 'var(--mt-font-weight-bold)' }}>{note}</p>}
+      </div>
+    </MtCard>
+  );
+}
+
+function PercentCard({ label, value, thresholds, hint }) {
+  const color = getKpiColor(value, thresholds);
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)' }}>
+        <p style={{ ...labelStyle, marginBottom: 'var(--mt-space-md)' }}>{label}</p>
+        <p style={{ fontSize: value == null ? '20px' : '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-sm)', color }}>
+          {value == null ? 'Sin datos' : `${value}%`}
+        </p>
+        <Bar value={value ?? 0} max={100} color={color} />
+        {hint && <p style={hintStyle}>{hint}</p>}
+      </div>
+    </MtCard>
+  );
+}
+
+function ValueCard({ label, value, hint, color }) {
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)' }}>
+        <p style={{ ...labelStyle, marginBottom: 'var(--mt-space-md)' }}>{label}</p>
+        <p style={{ fontSize: value == null ? '20px' : '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: value == null ? 'var(--mt-text-tertiary)' : color }}>
+          {value == null ? 'Sin datos' : value}
+        </p>
+        {hint && <p style={hintStyle}>{hint}</p>}
+      </div>
+    </MtCard>
+  );
+}
+
+function Bar({ value, max, color, height = '6px' }) {
+  return (
+    <div style={{ width: '100%', height, background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
+      <div style={{ height: '100%', background: color, width: `${pct(value, max)}%`, transition: 'width 300ms ease' }} />
+    </div>
+  );
+}
+
+function ChartCard({ title, children }) {
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)' }}>
+        <h3 style={titleStyle}>{title}</h3>
+        {children}
+      </div>
+    </MtCard>
+  );
+}
 
 export default function ExecutiveDashboard() {
-  const [dashboardData, setDashboardData] = useState(null);
+  const [data, setData] = useState(null);
+  const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const load = useCallback(async (silent = false) => {
+    if (silent) setRefreshing(true);
+    else setLoading(true);
     try {
-      let dashboardData;
-      try {
-        dashboardData = await maintenanceApi.getDashboardSummary();
-      } catch (apiError) {
-        console.warn('API unavailable, using fallback data:', apiError);
-        dashboardData = null;
-      }
-
-      const mockData = {
-        openOrders: 23,
-        correctivePending: 8,
-        preventivePending: 15,
-        overdueOrders: 3,
-        completedOrders: 156,
-        preventiveCompliance: 87,
-        operationalAvailability: 94,
-        mttr: 4.2,
-        mtbf: 720,
-        maintenanceBacklog: 12,
-        maintenanceCosts: 185400,
-        costsTrend: -5, // Porcentaje
-
-        // Gráficas
-        correctiveVsPreventive: {
-          corrective: 8,
-          preventive: 15,
-        },
-        maintenanceByPlant: [
-          { plant: 'Planta 1', orders: 12, cost: 45000 },
-          { plant: 'Planta 2', orders: 8, cost: 38000 },
-          { plant: 'Planta 3', orders: 3, cost: 18500 },
-        ],
-        failuresByEquipment: [
-          { equipment: 'Bomba Principal', failures: 12 },
-          { equipment: 'Compresor', failures: 8 },
-          { equipment: 'Motor', failures: 6 },
-          { equipment: 'Válvula', failures: 5 },
-          { equipment: 'Convertidor', failures: 4 },
-        ],
-        equipmentDowntime: [
-          { equipment: 'Bomba Principal', hours: 18.5 },
-          { equipment: 'Compresor', hours: 12.3 },
-          { equipment: 'Motor', hours: 8.7 },
-        ],
-        monthlyCosts: [
-          { month: 'Sep', cost: 175000 },
-          { month: 'Oct', cost: 195000 },
-          { month: 'Nov', cost: 185400 },
-        ],
-        maintenanceCompliance: [
-          { plan: 'Plan A', compliance: 92 },
-          { plan: 'Plan B', compliance: 78 },
-          { plan: 'Plan C', compliance: 88 },
-        ],
-        ordersBySpecialty: [
-          { specialty: 'Mecánica', orders: 9, color: '#38BDF8' },
-          { specialty: 'Eléctrica', orders: 7, color: '#FBBF24' },
-          { specialty: 'Hidráulica', orders: 4, color: '#22C55E' },
-          { specialty: 'Instrumentación', orders: 3, color: '#F44152' },
-        ],
-      };
-
-      const finalData = dashboardData || mockData;
-
-      // Ensure all required nested objects exist
-      const safeData = {
-        ...finalData,
-        correctiveVsPreventive: finalData.correctiveVsPreventive || mockData.correctiveVsPreventive,
-        maintenanceByPlant: finalData.maintenanceByPlant || mockData.maintenanceByPlant,
-        failuresByEquipment: finalData.failuresByEquipment || mockData.failuresByEquipment,
-        equipmentDowntime: finalData.equipmentDowntime || mockData.equipmentDowntime,
-        monthlyCosts: finalData.monthlyCosts || mockData.monthlyCosts,
-        maintenanceCompliance: finalData.maintenanceCompliance || mockData.maintenanceCompliance,
-        ordersBySpecialty: finalData.ordersBySpecialty || mockData.ordersBySpecialty,
-      };
-
-      setDashboardData(safeData);
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-      // Fallback to mock data on error
-      setDashboardData(mockData);
+      const res = await maintenanceApi.getExecutiveDashboard({ days });
+      setData(res);
+      setError(null);
+    } catch (err) {
+      console.error('Error loading executive dashboard:', err);
+      setError(err?.message || 'No se pudo cargar el dashboard');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [days]);
 
-  if (loading) {
+  useEffect(() => {
+    load();
+    const id = setInterval(() => load(true), REFRESH_MS);
+    return () => clearInterval(id);
+  }, [load]);
+
+  if (loading && !data) {
     return (
       <MtCard elevated>
         <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center' }}>
@@ -110,26 +139,29 @@ export default function ExecutiveDashboard() {
     );
   }
 
-  if (!dashboardData) {
+  if (!data) {
     return (
       <MtCard elevated>
-        <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center' }}>
-          <p style={{ color: 'var(--mt-text-secondary)', margin: 0 }}>Error cargando datos</p>
+        <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+          <p style={{ color: 'var(--mt-danger)', margin: 0, fontWeight: 'var(--mt-font-weight-bold)' }}>Error cargando el dashboard</p>
+          <p style={{ color: 'var(--mt-text-secondary)', margin: 0, fontSize: '13px' }}>{error}</p>
+          <MtButton onClick={() => load()}>Reintentar</MtButton>
         </div>
       </MtCard>
     );
   }
 
-  const getKpiColor = (value, thresholds) => {
-    if (value >= thresholds.good) return 'var(--mt-success)';
-    if (value >= thresholds.warning) return 'var(--mt-warning)';
-    return 'var(--mt-danger)';
-  };
+  const cvp = data.correctiveVsPreventive;
+  const cvpMax = Math.max(cvp.corrective, cvp.preventive, 1);
+  const plantMax = Math.max(...data.maintenanceByPlant.map((p) => p.orders), 1);
+  const downtimeMax = Math.max(...data.equipmentDowntime.map((e) => e.hours), 1);
+  const costMax = Math.max(...data.monthlyCosts.map((m) => m.cost), 0);
+  const updatedAt = new Date(data.generatedAt);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--mt-space-md)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
           <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, var(--mt-accent), var(--mt-accent-strong))', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <BarChart3 size={28} style={{ color: '#fff' }} />
@@ -139,219 +171,93 @@ export default function ExecutiveDashboard() {
               Dashboard Ejecutivo
             </h1>
             <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-              Estado operacional en tiempo real
+              Indicadores de los últimos {data.periodDays} días · {data.activeAssets} activos registrados
             </p>
           </div>
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)' }}>
-          Actualizado: {new Date().toLocaleTimeString('es-ES')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)' }}>
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            aria-label="Periodo"
+            style={{ height: '36px', padding: '0 10px', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-border)', background: 'var(--mt-bg-surface)', color: 'var(--mt-text-primary)', fontSize: '13px' }}
+          >
+            {PERIODS.map((p) => <option key={p} value={p}>Últimos {p} días</option>)}
+          </select>
+          <MtButton size="sm" variant="secondary" onClick={() => load(true)} disabled={refreshing}>
+            <RefreshCw size={14} style={refreshing ? { animation: 'spin 1s linear infinite' } : undefined} /> Actualizar
+          </MtButton>
         </div>
       </div>
 
+      {error && (
+        <p style={{ margin: 0, fontSize: '12px', color: 'var(--mt-warning)' }}>
+          No se pudo actualizar ({error}). Se muestran los datos de las {updatedAt.toLocaleTimeString('es-MX')}.
+        </p>
+      )}
+
       {/* KPI Row 1: Órdenes */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-        {/* Órdenes Abiertas */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
-              <div style={{ width: '40px', height: '40px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AlertCircle size={20} style={{ color: 'var(--mt-accent)' }} />
-              </div>
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Abiertas
-              </p>
-            </div>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-accent)' }}>
-              {dashboardData.openOrders}
-            </p>
-          </div>
-        </MtCard>
-
-        {/* Correctivas Pendientes */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
-              <div style={{ width: '40px', height: '40px', background: 'rgba(244, 65, 82, 0.1)', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AlertTriangle size={20} style={{ color: 'var(--mt-danger)' }} />
-              </div>
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Correctivas
-              </p>
-            </div>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-danger)' }}>
-              {dashboardData.correctivePending}
-            </p>
-          </div>
-        </MtCard>
-
-        {/* Preventivas Pendientes */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
-              <div style={{ width: '40px', height: '40px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Wrench size={20} style={{ color: 'var(--mt-warning)' }} />
-              </div>
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Preventivas
-              </p>
-            </div>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-warning)' }}>
-              {dashboardData.preventivePending}
-            </p>
-          </div>
-        </MtCard>
-
-        {/* Órdenes Vencidas */}
-        <MtCard elevated style={{ borderLeft: '4px solid var(--mt-danger)' }}>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
-              <div style={{ width: '40px', height: '40px', background: 'rgba(244, 65, 82, 0.15)', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Clock size={20} style={{ color: 'var(--mt-danger)' }} />
-              </div>
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Vencidas
-              </p>
-            </div>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-danger)' }}>
-              {dashboardData.overdueOrders}
-            </p>
-            <p style={{ fontSize: '11px', color: 'var(--mt-danger)', margin: 0, marginTop: '4px', fontWeight: 'var(--mt-font-weight-bold)' }}>
-              ⚠️ Requieren atención
-            </p>
-          </div>
-        </MtCard>
-
-        {/* Completadas */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-md)' }}>
-              <div style={{ width: '40px', height: '40px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle size={20} style={{ color: 'var(--mt-success)' }} />
-              </div>
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Completadas
-              </p>
-            </div>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-success)' }}>
-              {dashboardData.completedOrders}
-            </p>
-          </div>
-        </MtCard>
+        <CountCard icon={AlertCircle} label="Abiertas" value={data.openOrders} color="var(--mt-accent)" tint="rgba(56, 189, 248, 0.1)" />
+        <CountCard icon={AlertTriangle} label="Correctivas" value={data.correctivePending} color="var(--mt-danger)" tint="rgba(244, 65, 82, 0.1)" />
+        <CountCard icon={Wrench} label="Preventivas" value={data.preventivePending} color="var(--mt-warning)" tint="rgba(251, 191, 36, 0.1)" />
+        <CountCard
+          icon={Clock}
+          label="Vencidas"
+          value={data.overdueOrders}
+          color={data.overdueOrders > 0 ? 'var(--mt-danger)' : 'var(--mt-success)'}
+          tint="rgba(244, 65, 82, 0.15)"
+          note={data.overdueOrders > 0 ? 'Requieren atención' : 'Al día'}
+          accentBorder
+        />
+        <CountCard icon={CheckCircle} label={`Completadas (${data.periodDays}d)`} value={data.completedOrders} color="var(--mt-success)" tint="rgba(34, 197, 94, 0.1)" />
       </div>
 
       {/* KPI Row 2: Métricas Operacionales */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-        {/* Cumplimiento Preventivo */}
+        <PercentCard
+          label="Cumplimiento Preventivo"
+          value={data.preventiveCompliance}
+          thresholds={{ good: 85, warning: 70 }}
+          hint={data.preventiveDueCount ? `${data.preventiveDueCount} preventivas programadas` : 'Sin preventivas programadas'}
+        />
+        <PercentCard
+          label="Disponibilidad Operacional"
+          value={data.operationalAvailability}
+          thresholds={{ good: 95, warning: 90 }}
+          hint={data.activeAssets ? 'Descontando paros por correctivos' : 'Sin activos registrados'}
+        />
+        <ValueCard label="MTTR (Horas)" value={data.mttr == null ? null : `${data.mttr}h`} hint="Tiempo promedio de reparación" />
+        <ValueCard
+          label="MTBF (Horas)"
+          value={data.mtbf == null ? null : `${data.mtbf.toLocaleString('es-MX')}h`}
+          hint={data.correctiveFailures ? `Tiempo entre fallas · ${data.correctiveFailures} fallas` : 'Sin fallas en el periodo'}
+        />
+        <ValueCard
+          label="Backlog"
+          value={data.maintenanceBacklog}
+          color={data.maintenanceBacklog > 10 ? 'var(--mt-warning)' : 'var(--mt-success)'}
+          hint="Órdenes pendientes sin iniciar"
+        />
         <MtCard elevated>
           <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              Cumplimiento Preventivo
-            </p>
-            <p style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-sm)', color: getKpiColor(dashboardData.preventiveCompliance, { good: 85, warning: 70 }) }}>
-              {dashboardData.preventiveCompliance}%
-            </p>
-            <div style={{ width: '100%', height: '6px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
-              <div
-                style={{
-                  height: '100%',
-                  background: getKpiColor(dashboardData.preventiveCompliance, { good: 85, warning: 70 }),
-                  width: `${dashboardData.preventiveCompliance}%`,
-                  transition: 'width 300ms ease',
-                }}
-              ></div>
-            </div>
-          </div>
-        </MtCard>
-
-        {/* Disponibilidad Operacional */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              Disponibilidad Operacional
-            </p>
-            <p style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-sm)', color: getKpiColor(dashboardData.operationalAvailability, { good: 95, warning: 90 }) }}>
-              {dashboardData.operationalAvailability}%
-            </p>
-            <div style={{ width: '100%', height: '6px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
-              <div
-                style={{
-                  height: '100%',
-                  background: getKpiColor(dashboardData.operationalAvailability, { good: 95, warning: 90 }),
-                  width: `${dashboardData.operationalAvailability}%`,
-                  transition: 'width 300ms ease',
-                }}
-              ></div>
-            </div>
-          </div>
-        </MtCard>
-
-        {/* MTTR */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              MTTR (Horas)
-            </p>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-              {dashboardData.mttr}h
-            </p>
-            <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginTop: '4px' }}>
-              Tiempo promedio de reparación
-            </p>
-          </div>
-        </MtCard>
-
-        {/* MTBF */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              MTBF (Horas)
-            </p>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-              {dashboardData.mtbf}h
-            </p>
-            <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginTop: '4px' }}>
-              Tiempo entre fallas
-            </p>
-          </div>
-        </MtCard>
-
-        {/* Backlog */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              Backlog
-            </p>
-            <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: dashboardData.maintenanceBacklog > 10 ? 'var(--mt-warning)' : 'var(--mt-success)' }}>
-              {dashboardData.maintenanceBacklog}
-            </p>
-            <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, marginTop: '4px' }}>
-              Órdenes pendientes
-            </p>
-          </div>
-        </MtCard>
-
-        {/* Costos */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              Costos Mensuales
-            </p>
-            <p style={{ fontSize: '24px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-              ${(dashboardData.maintenanceCosts / 1000).toFixed(0)}K
-            </p>
+            <p style={{ ...labelStyle, marginBottom: 'var(--mt-space-md)' }}>Costo del Mes</p>
+            <p style={{ fontSize: '24px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>{money(data.maintenanceCosts)}</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-              {dashboardData.costsTrend < 0 ? (
+              {data.costsTrend == null ? (
+                <span style={hintStyle}>Refacciones consumidas · sin mes previo para comparar</span>
+              ) : data.costsTrend <= 0 ? (
                 <>
                   <TrendingDown size={14} style={{ color: 'var(--mt-success)' }} />
                   <span style={{ fontSize: '12px', color: 'var(--mt-success)', fontWeight: 'var(--mt-font-weight-bold)' }}>
-                    {Math.abs(dashboardData.costsTrend)}% ↓
+                    {Math.abs(data.costsTrend)}% vs mes anterior
                   </span>
                 </>
               ) : (
                 <>
                   <TrendingUp size={14} style={{ color: 'var(--mt-danger)' }} />
                   <span style={{ fontSize: '12px', color: 'var(--mt-danger)', fontWeight: 'var(--mt-font-weight-bold)' }}>
-                    {dashboardData.costsTrend}% ↑
+                    +{data.costsTrend}% vs mes anterior
                   </span>
                 </>
               )}
@@ -362,226 +268,121 @@ export default function ExecutiveDashboard() {
 
       {/* Charts Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-        {/* Correctivos vs Preventivos */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-              Correctivos vs Preventivos
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--mt-space-lg)', height: '150px' }}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div
-                  style={{
-                    width: '60px',
-                    height: `${(dashboardData.correctiveVsPreventive.corrective / 15) * 120}px`,
-                    background: 'linear-gradient(180deg, var(--mt-danger), var(--mt-warning))',
-                    borderRadius: 'var(--mt-radius-md)',
-                    marginBottom: 'var(--mt-space-md)',
-                  }}
-                ></div>
-                <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px' }}>
-                  Correctivos
-                </p>
-                <p style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-danger)' }}>
-                  {dashboardData.correctiveVsPreventive.corrective}
-                </p>
+        <ChartCard title="Correctivos vs Preventivos (abiertas)">
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--mt-space-lg)', height: '150px' }}>
+            {[
+              { key: 'corrective', label: 'Correctivos', color: 'var(--mt-danger)', gradient: 'linear-gradient(180deg, var(--mt-danger), var(--mt-warning))' },
+              { key: 'preventive', label: 'Preventivos', color: 'var(--mt-info)', gradient: 'linear-gradient(180deg, var(--mt-info), var(--mt-accent))' },
+            ].map((b) => (
+              <div key={b.key} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '60px', height: `${Math.max(4, (cvp[b.key] / cvpMax) * 100)}px`, background: b.gradient, borderRadius: 'var(--mt-radius-md)', marginBottom: 'var(--mt-space-md)' }} />
+                <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px' }}>{b.label}</p>
+                <p style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: b.color }}>{cvp[b.key]}</p>
               </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div
-                  style={{
-                    width: '60px',
-                    height: `${(dashboardData.correctiveVsPreventive.preventive / 15) * 120}px`,
-                    background: 'linear-gradient(180deg, var(--mt-info), var(--mt-accent))',
-                    borderRadius: 'var(--mt-radius-md)',
-                    marginBottom: 'var(--mt-space-md)',
-                  }}
-                ></div>
-                <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px' }}>
-                  Preventivos
-                </p>
-                <p style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-info)' }}>
-                  {dashboardData.correctiveVsPreventive.preventive}
-                </p>
+            ))}
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Mantenimiento por Planta">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
+            {data.maintenanceByPlant.length === 0 && <NoData text="Sin plantas con Maintenance habilitado" />}
+            {data.maintenanceByPlant.map((plant) => (
+              <div key={plant.plantId}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', gap: '8px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
+                    {plant.plant}{plant.current ? ' (actual)' : ''}
+                  </p>
+                  <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0, whiteSpace: 'nowrap' }}>
+                    {plant.orders} abiertas · {money(plant.cost)} este mes
+                  </p>
+                </div>
+                <Bar value={plant.orders} max={plantMax} color="linear-gradient(90deg, var(--mt-accent), var(--mt-info))" />
               </div>
-            </div>
+            ))}
           </div>
-        </MtCard>
+        </ChartCard>
 
-        {/* Mantenimiento por Planta */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-              Mantenimiento por Planta
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
-              {dashboardData.maintenanceByPlant.map((plant) => (
-                <div key={plant.plant}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                      {plant.plant}
-                    </p>
-                    <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                      {plant.orders} órdenes · ${(plant.cost / 1000).toFixed(0)}K
-                    </p>
-                  </div>
-                  <div style={{ width: '100%', height: '6px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        background: 'linear-gradient(90deg, var(--mt-accent), var(--mt-info))',
-                        width: `${(plant.orders / 12) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
+        <ChartCard title="Fallas por Equipo (Top 5)">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-sm)' }}>
+            {data.failuresByEquipment.length === 0 && <NoData text="Sin correctivos cerrados en el periodo" />}
+            {data.failuresByEquipment.map((item) => (
+              <div key={item.assetId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                <p style={{ fontSize: '12px', margin: 0, color: 'var(--mt-text-secondary)' }}>{item.equipment}</p>
+                <span style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-danger)' }}>{item.failures}</span>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Mayor Tiempo de Paro">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-sm)' }}>
+            {data.equipmentDowntime.length === 0 && <NoData text="Sin paros registrados en el periodo" />}
+            {data.equipmentDowntime.map((item) => (
+              <div key={item.assetId}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', gap: '8px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>{item.equipment}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-warning)', margin: 0 }}>{item.hours}h</p>
+                </div>
+                <Bar value={item.hours} max={downtimeMax} color="var(--mt-warning)" height="4px" />
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Costo de Refacciones (6 meses)">
+          {costMax === 0 ? (
+            <NoData text="Sin refacciones consumidas en OTs cerradas" />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: '120px', gap: '8px' }}>
+              {data.monthlyCosts.map((item) => (
+                <div key={`${item.year}-${item.month}`} style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ height: `${Math.max(2, (item.cost / costMax) * 80)}px`, background: 'linear-gradient(180deg, var(--mt-accent), var(--mt-accent-strong))', borderRadius: 'var(--mt-radius-sm)', marginBottom: '8px' }} />
+                  <p style={{ fontSize: '11px', margin: 0, color: 'var(--mt-text-secondary)' }}>{item.month}</p>
+                  <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>{money(item.cost)}</p>
                 </div>
               ))}
             </div>
-          </div>
-        </MtCard>
+          )}
+        </ChartCard>
 
-        {/* Fallas por Equipo */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-              Fallas por Equipo (Top 5)
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-sm)' }}>
-              {dashboardData.failuresByEquipment.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <p style={{ fontSize: '12px', margin: 0, color: 'var(--mt-text-secondary)' }}>
-                    {item.equipment}
-                  </p>
-                  <span style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-danger)' }}>
-                    {item.failures}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </MtCard>
-
-        {/* Equipos con Mayor Tiempo de Paro */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-              Mayor Tiempo de Paro
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-sm)' }}>
-              {dashboardData.equipmentDowntime.map((item, idx) => (
-                <div key={idx}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                      {item.equipment}
-                    </p>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-black)', color: 'var(--mt-warning)', margin: 0 }}>
-                      {item.hours}h
+        <ChartCard title="Cumplimiento por Plan (menor primero)">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
+            {data.maintenanceCompliance.length === 0 && <NoData text="Sin preventivas de planes vencidas en el periodo" />}
+            {data.maintenanceCompliance.map((item) => {
+              const color = item.compliance >= 85 ? 'var(--mt-success)' : item.compliance >= 75 ? 'var(--mt-warning)' : 'var(--mt-danger)';
+              return (
+                <div key={item.planId}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', gap: '8px' }}>
+                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>{item.plan}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, whiteSpace: 'nowrap' }}>
+                      {item.compliance}% <span style={{ color: 'var(--mt-text-tertiary)', fontWeight: 'normal' }}>({item.orders})</span>
                     </p>
                   </div>
-                  <div style={{ width: '100%', height: '4px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        background: 'var(--mt-warning)',
-                        width: `${(item.hours / 20) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
+                  <Bar value={item.compliance} max={100} color={color} />
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        </MtCard>
+        </ChartCard>
 
-        {/* Costos Mensuales */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-              Costos Mensuales (Trend)
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: '100px', gap: '8px' }}>
-              {dashboardData.monthlyCosts.map((item, idx) => (
-                <div key={idx} style={{ textAlign: 'center', flex: 1 }}>
-                  <div
-                    style={{
-                      height: `${(item.cost / 200000) * 80}px`,
-                      background: 'linear-gradient(180deg, var(--mt-accent), var(--mt-accent-strong))',
-                      borderRadius: 'var(--mt-radius-sm)',
-                      marginBottom: '8px',
-                    }}
-                  ></div>
-                  <p style={{ fontSize: '11px', margin: 0, color: 'var(--mt-text-secondary)' }}>
-                    {item.month}
-                  </p>
-                  <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                    ${(item.cost / 1000).toFixed(0)}K
-                  </p>
-                </div>
-              ))}
-            </div>
+        <ChartCard title="Órdenes Abiertas por Especialidad">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
+            {data.ordersBySpecialty.length === 0 && <NoData text="Sin órdenes abiertas" />}
+            {data.ordersBySpecialty.map((item, idx) => (
+              <div key={item.specialty} style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+                <div style={{ width: '12px', height: '12px', background: SPECIALTY_COLORS[idx % SPECIALTY_COLORS.length], borderRadius: '2px' }} />
+                <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, flex: 1 }}>{item.specialty}</p>
+                <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>{item.orders}</p>
+              </div>
+            ))}
           </div>
-        </MtCard>
-
-        {/* Cumplimiento de Mantenimiento */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-              Cumplimiento por Plan
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
-              {dashboardData.maintenanceCompliance.map((item, idx) => (
-                <div key={idx}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                      {item.plan}
-                    </p>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-                      {item.compliance}%
-                    </p>
-                  </div>
-                  <div style={{ width: '100%', height: '6px', background: 'var(--mt-bg-surface-2)', borderRadius: 'var(--mt-radius-full)', overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        background: item.compliance >= 85 ? 'var(--mt-success)' : item.compliance >= 75 ? 'var(--mt-warning)' : 'var(--mt-danger)',
-                        width: `${item.compliance}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </MtCard>
-
-        {/* Distribución por Especialidad */}
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-              Distribución por Especialidad
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
-              {dashboardData.ordersBySpecialty.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
-                  <div style={{ width: '12px', height: '12px', background: item.color, borderRadius: '2px' }}></div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                      {item.specialty}
-                    </p>
-                  </div>
-                  <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-                    {item.orders}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </MtCard>
+        </ChartCard>
       </div>
 
       {/* Footer */}
       <div style={{ padding: 'var(--mt-space-lg)', background: 'var(--mt-bg-surface)', borderRadius: 'var(--mt-radius-md)', marginTop: 'var(--mt-space-xl)' }}>
         <p style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)', margin: 0, textAlign: 'center' }}>
-          Dashboard actualizado cada 5 minutos. Último update: {new Date().toLocaleString('es-ES')}
+          Se actualiza automáticamente cada 5 minutos. Último update: {updatedAt.toLocaleString('es-MX')}
         </p>
       </div>
     </div>
