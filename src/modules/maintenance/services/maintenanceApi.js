@@ -45,6 +45,20 @@ export const maintenanceApi = {
     return httpGet(`/maintenance/work-orders/${id}`);
   },
 
+  // Calendario: OTs programadas + ciclos proyectados de planes, con carga por técnico
+  async getCalendar({ from, to, technicianId } = {}) {
+    const params = new URLSearchParams({ from, to });
+    if (technicianId) params.set('technicianId', technicianId);
+    const res = await httpGet(`/maintenance/calendar?${params}`);
+    return res?.data ?? res;
+  },
+
+  // Cronograma de preventivos: { overdue, upcoming, stats }
+  async getPreventiveSchedule({ days = 30 } = {}) {
+    const res = await httpGet(`/maintenance/calendar/preventive?days=${days}`);
+    return res?.data ?? res;
+  },
+
   // Historial unificado de la planta: { data, total, page, totalPages, stats, periodDays }
   async getHistory(filters = {}) {
     const params = new URLSearchParams(Object.entries(filters).filter(([, v]) => v !== '' && v != null));
