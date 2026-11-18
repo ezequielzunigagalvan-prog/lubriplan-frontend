@@ -1,7 +1,8 @@
 import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MtCard, MtBadge } from '../ui';
+import { MtCard, MtBadge, MtButton } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
+import { ASSET_LEVEL_LABELS } from '../constants/maintenance';
 import { Edit2, Trash2, Eye, Search, AlertTriangle, Pause, XCircle, CheckCircle2, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,34 +36,66 @@ const STATUS_COLORS = {
   OUT_OF_SERVICE: { badge: 'danger', label: 'Fuera de Servicio' },
 };
 
-const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, ref) {
+const PAGE_SIZE = 30;
+
+const AssetsList = forwardRef(function AssetsList({ criticality = '', status = '', onEditClick, onRefresh }, ref) {
   const navigate = useNavigate();
   const [assets, setAssets] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [deleting, setDeleting] = useState(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Espera a que el usuario deje de escribir antes de buscar en el servidor
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [search]);
+
+  const fetchPage = useCallback(
+    (pageNum) => {
+      const filters = { page: pageNum, limit: PAGE_SIZE };
+      if (debouncedSearch) filters.search = debouncedSearch;
+      if (criticality) filters.criticality = criticality;
+      if (status) filters.status = status;
+      return maintenanceApi.getAssets(filters);
+    },
+    [debouncedSearch, criticality, status]
+  );
 
   const loadAssets = useCallback(async () => {
     try {
-      console.log('[ASSETSLIST] Loading assets...');
       setLoading(true);
-      const response = await maintenanceApi.getAssets();
-      console.log('[ASSETSLIST] Assets loaded:', response?.data?.length, 'items');
-
-      if (response?.data && response.data.length > 0) {
-        console.log('[ASSETSLIST] First asset data:');
-        console.table(response.data[0]);
-      }
-
+      const response = await fetchPage(1);
       setAssets(response?.data || []);
-      console.log('[ASSETSLIST] setAssets called with new data');
+      setTotal(response?.total ?? 0);
+      setPage(1);
+      setHasLoaded(true);
     } catch (error) {
-      console.error('[ASSETSLIST] Error loading assets:', error);
-      toast.error('Error cargando activos');
+      console.error('[AssetsList] Error loading assets:', error);
+      toast.error('Error cargando activos: ' + (error?.message || 'intenta de nuevo'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchPage]);
+
+  const loadMore = async () => {
+    try {
+      setLoadingMore(true);
+      const response = await fetchPage(page + 1);
+      setAssets((prev) => [...prev, ...(response?.data || [])]);
+      setTotal(response?.total ?? total);
+      setPage(page + 1);
+    } catch (error) {
+      toast.error('Error cargando más activos: ' + (error?.message || 'intenta de nuevo'));
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     reload: loadAssets,
@@ -72,32 +105,28 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
     loadAssets();
   }, [loadAssets]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este activo?')) {
+  const handleDelete = async (asset) => {
+    if (!window.confirm(`¿Eliminar el activo ${asset.code} · ${asset.name}?`)) {
       return;
     }
 
     try {
-      setDeleting(id);
-      await maintenanceApi.deleteAsset(id);
+      setDeleting(asset.id);
+      await maintenanceApi.deleteAsset(asset.id);
       toast.success('Activo eliminado');
-      loadAssets();
       onRefresh?.();
     } catch (error) {
-      toast.error('Error al eliminar: ' + error.message);
+      toast.error(error?.message || 'Error al eliminar el activo');
     } finally {
       setDeleting(null);
     }
   };
 
-  const filteredAssets = assets.filter(
-    (asset) =>
-      asset.code.toLowerCase().includes(search.toLowerCase()) ||
-      asset.name.toLowerCase().includes(search.toLowerCase()) ||
-      asset.location?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredAssets = assets;
+  const hasFilters = Boolean(debouncedSearch || criticality || status);
 
-  if (loading) {
+  // El spinner de página completa solo en la primera carga, para no perder el foco del buscador
+  if (loading && !hasLoaded) {
     return (
       <MtCard elevated>
         <div style={{ textAlign: 'center', padding: 'var(--mt-space-3xl)' }}>
@@ -166,7 +195,7 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
               No hay activos
             </h3>
             <p style={{ color: 'var(--mt-text-secondary)', margin: 0, fontSize: '13px' }}>
-              {search ? 'No coinciden con tu búsqueda' : 'Crea tu primer activo para comenzar'}
+              {hasFilters ? 'Ningún activo coincide con la búsqueda o los filtros' : 'Crea tu primer activo para comenzar'}
             </p>
           </div>
         </MtCard>
@@ -226,8 +255,13 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
                           {asset.name}
                         </h3>
                         <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                          {asset.code}
+                          {asset.code} · {ASSET_LEVEL_LABELS[asset.level] || asset.level}
                         </p>
+                        {asset.parent && (
+                          <p style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)', margin: 0, marginTop: '2px' }}>
+                            Dentro de: {asset.parent.code} · {asset.parent.name}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -349,7 +383,7 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDelete(asset.id)}
+                      onClick={() => handleDelete(asset)}
                       disabled={deleting === asset.id}
                       style={{
                         width: '40px',
@@ -384,6 +418,20 @@ const AssetsList = forwardRef(function AssetsList({ onEditClick, onRefresh }, re
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Paginación */}
+      {filteredAssets.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)' }}>
+            Mostrando {filteredAssets.length} de {total} activos
+          </span>
+          {filteredAssets.length < total && (
+            <MtButton variant="secondary" size="sm" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? 'Cargando...' : 'Cargar más'}
+            </MtButton>
+          )}
         </div>
       )}
     </div>

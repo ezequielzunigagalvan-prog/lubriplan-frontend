@@ -1,55 +1,42 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MtButton, MtCard } from '../ui';
 import AssetFormModal from '../components/AssetFormModal';
 import AssetsList from '../components/AssetsList';
 import { maintenanceApi } from '../services/maintenanceApi';
-import { Plus, Package, Activity, CheckCircle, Pause, XCircle, AlertTriangle } from 'lucide-react';
+import { Plus, Package, Activity, CheckCircle, Pause, XCircle, AlertTriangle, TreePine } from 'lucide-react';
+
+const EMPTY_STATS = {
+  total: 0,
+  operating: 0,
+  stopped: 0,
+  outOfService: 0,
+  criticalA: 0,
+  criticalB: 0,
+  criticalC: 0,
+};
 
 export default function Assets() {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
   const [filterCriticality, setFilterCriticality] = useState('all');
   const [filterState, setFilterState] = useState('all');
   const listRef = useRef(null);
-  const [stats, setStats] = useState({
-    total: 0,
-    operating: 0,
-    stopped: 0,
-    outOfService: 0,
-    criticalA: 0,
-    criticalB: 0,
-    criticalC: 0,
-  });
+  const [stats, setStats] = useState(EMPTY_STATS);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const data = await maintenanceApi.getAssetStats();
+      setStats({ ...EMPTY_STATS, ...data });
+    } catch (err) {
+      console.error('Error loading asset stats:', err);
+    }
+  }, []);
 
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await maintenanceApi.getAssets({ limit: 1000 });
-        const assets = response?.data || [];
-
-        const total = assets.length;
-        const operating = assets.filter(a => a.status === 'OPERATING').length;
-        const stopped = assets.filter(a => a.status === 'STOPPED').length;
-        const outOfService = assets.filter(a => a.status === 'OUT_OF_SERVICE').length;
-        const criticalA = assets.filter(a => a.criticality === 'A').length;
-        const criticalB = assets.filter(a => a.criticality === 'B').length;
-        const criticalC = assets.filter(a => a.criticality === 'C').length;
-
-        setStats({
-          total,
-          operating,
-          stopped,
-          outOfService,
-          criticalA,
-          criticalB,
-          criticalC,
-        });
-      } catch (err) {
-        console.error('Error loading asset stats:', err);
-      }
-    };
     loadStats();
-  }, []);
+  }, [loadStats]);
 
   const handleEdit = (asset) => {
     setEditingAsset(asset);
@@ -62,40 +49,7 @@ export default function Assets() {
   };
 
   const handleSuccess = async () => {
-    console.log('[ASSETS PAGE] handleSuccess called - reloading list and stats');
-
-    // Primero recarga la lista
-    if (listRef.current?.reload) {
-      await listRef.current.reload();
-      console.log('[ASSETS PAGE] List reloaded');
-    }
-
-    // Luego recarga las estadísticas
-    try {
-      const response = await maintenanceApi.getAssets({ limit: 1000 });
-      const assets = response?.data || [];
-
-      const total = assets.length;
-      const operating = assets.filter(a => a.status === 'OPERATING').length;
-      const stopped = assets.filter(a => a.status === 'STOPPED').length;
-      const outOfService = assets.filter(a => a.status === 'OUT_OF_SERVICE').length;
-      const criticalA = assets.filter(a => a.criticality === 'A').length;
-      const criticalB = assets.filter(a => a.criticality === 'B').length;
-      const criticalC = assets.filter(a => a.criticality === 'C').length;
-
-      setStats({
-        total,
-        operating,
-        stopped,
-        outOfService,
-        criticalA,
-        criticalB,
-        criticalC,
-      });
-      console.log('[ASSETS PAGE] Stats updated');
-    } catch (err) {
-      console.error('[ASSETS PAGE] Error loading asset stats:', err);
-    }
+    await Promise.all([listRef.current?.reload?.(), loadStats()]);
   };
 
   return (
@@ -136,6 +90,10 @@ export default function Assets() {
             </div>
           </div>
         </div>
+        <div style={{ display: 'flex', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
+        <MtButton variant="secondary" size="lg" onClick={() => navigate('/maintenance/app/assets/hierarchy')}>
+          <TreePine size={18} /> Ver jerarquía
+        </MtButton>
         <MtButton
           variant="primary"
           size="lg"
@@ -151,6 +109,7 @@ export default function Assets() {
         >
           Nuevo Activo
         </MtButton>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -251,7 +210,7 @@ export default function Assets() {
                 <div style={{
                   height: '100%',
                   background: item.color,
-                  width: `${(item.count / stats.total) * 100}%`,
+                  width: `${stats.total > 0 ? (item.count / stats.total) * 100 : 0}%`,
                   transition: 'width 300ms ease'
                 }}></div>
               </div>
@@ -314,6 +273,8 @@ export default function Assets() {
       {/* Assets List */}
       <AssetsList
         ref={listRef}
+        criticality={filterCriticality === 'all' ? '' : filterCriticality}
+        status={filterState === 'all' ? '' : filterState}
         onEditClick={handleEdit}
         onRefresh={handleSuccess}
       />

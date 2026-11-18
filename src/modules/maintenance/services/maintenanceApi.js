@@ -312,22 +312,20 @@ export const maintenanceApi = {
 
   // Asset Expedient & History
   async getAssetExpedient(id) {
-    try {
-      return await httpGet(`/maintenance/assets/${id}/expedient`);
-    } catch (error) {
-      // Fallback: endpoint not yet implemented
-      return null;
-    }
+    const res = await httpGet(`/maintenance/assets/${id}/expedient`);
+    return res?.data ?? res;
   },
 
-  // Asset Hierarchy
+  // Asset Hierarchy: { plant, total, roots: [{ ...asset, children: [...] }] }
   async getAssetHierarchy() {
-    try {
-      return await httpGet("/maintenance/assets/hierarchy");
-    } catch (error) {
-      // Fallback: endpoint not yet implemented
-      return null;
-    }
+    const res = await httpGet("/maintenance/assets/hierarchy");
+    return res?.data ?? res;
+  },
+
+  // Conteos de activos por estado y criticidad
+  async getAssetStats() {
+    const res = await httpGet("/maintenance/assets/stats");
+    return res?.data ?? res;
   },
 
   // Preventive Orders & Checklists

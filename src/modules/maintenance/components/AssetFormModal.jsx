@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { MtButton } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { toast } from 'sonner';
-
-const ASSET_LEVELS = [
-  { value: 'AREA', label: 'Área' },
-  { value: 'LINE', label: 'Línea' },
-  { value: 'EQUIPMENT', label: 'Equipamiento' },
-  { value: 'SUBASSEMBLY', label: 'Subensamblaje' },
-  { value: 'COMPONENT', label: 'Componente' },
-];
+import { ASSET_LEVELS, ASSET_LEVEL_LABELS } from '../constants/maintenance';
 
 const CRITICALITIES = [
   { value: 'A', label: 'Crítica (A) - Impacto Alto' },
@@ -23,7 +16,7 @@ const STATUSES = [
   { value: 'OUT_OF_SERVICE', label: 'Fuera de Servicio' },
 ];
 
-function FormField({ label, placeholder, value, onChange, error, required }) {
+function FormField({ label, placeholder, value, onChange, error, required, type = 'text' }) {
   return (
     <div>
       <label style={{ display: 'block', fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', marginBottom: 'var(--mt-space-sm)', color: 'var(--mt-text-secondary)' }}>
@@ -31,7 +24,7 @@ function FormField({ label, placeholder, value, onChange, error, required }) {
         {required && <span style={{ color: 'var(--mt-danger)' }}> *</span>}
       </label>
       <input
-        type="text"
+        type={type}
         placeholder={placeholder}
         value={value ?? ''}
         onChange={onChange}
@@ -76,12 +69,37 @@ const INITIAL_FORM_STATE = {
   criticality: 'B',
   status: 'OPERATING',
   notes: '',
+  parentId: '',
+  installedAt: '',
 };
+
+// "2024-05-01T00:00:00.000Z" -> "2024-05-01" para el input type="date"
+const toDateInput = (value) => (value ? String(value).slice(0, 10) : '');
 
 export default function AssetFormModal({ isOpen, onClose, asset = null, onSuccess }) {
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [parentOptions, setParentOptions] = useState([]);
+
+  // Activos que pueden ser padre (todos menos el que se está editando)
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    maintenanceApi
+      .getAssets({ limit: 500 })
+      .then((res) => {
+        if (cancelled) return;
+        const options = (res?.data || [])
+          .filter((a) => a.id !== asset?.id)
+          .sort((a, b) => a.code.localeCompare(b.code));
+        setParentOptions(options);
+      })
+      .catch(() => !cancelled && setParentOptions([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, asset?.id]);
 
   // Resetear formulario cuando se abre/cierra o cambia el asset
   useEffect(() => {
@@ -99,6 +117,8 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
           criticality: asset.criticality ?? 'B',
           status: asset.status ?? 'OPERATING',
           notes: asset.notes ?? '',
+          parentId: asset.parentId ? String(asset.parentId) : '',
+          installedAt: toDateInput(asset.installedAt),
         });
       } else {
         // Creando: resetear formulario
@@ -106,7 +126,7 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
       }
       setErrors({});
     }
-  }, [isOpen, asset?.id, asset?.name, asset?.code]);
+  }, [isOpen, asset]);
 
   const validate = () => {
     const newErrors = {};
@@ -155,56 +175,36 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
     try {
       setLoading(true);
 
-      // Para edición, enviar TODOS los campos incluyendo code
-      // Para creación, enviar todos los campos incluyendo code y level
-      const allowedFields = asset?.id
-        ? ['code', 'name', 'location', 'manufacturer', 'model', 'serialNumber', 'criticality', 'status', 'notes']
-        : ['code', 'name', 'level', 'location', 'manufacturer', 'model', 'serialNumber', 'criticality', 'status', 'notes'];
-
-      const dataToSubmit = {};
-      for (const field of allowedFields) {
-        let value = formData[field];
-        // Trim string fields
-        if (typeof value === 'string') {
-          value = value?.trim() || '';
-        }
-        dataToSubmit[field] = value;
-      }
-
-      console.log('[ASSET FORM] Submitting:', {
-        assetId: asset?.id,
-        mode: asset?.id ? 'UPDATE' : 'CREATE',
-        dataToSubmit,
-        formDataKeys: Object.keys(formData),
-        submittedKeys: Object.keys(dataToSubmit)
-      });
+      const dataToSubmit = {
+        code: formData.code.trim(),
+        name: formData.name.trim(),
+        level: formData.level,
+        location: formData.location.trim(),
+        manufacturer: formData.manufacturer.trim(),
+        model: formData.model.trim(),
+        serialNumber: formData.serialNumber.trim(),
+        criticality: formData.criticality,
+        status: formData.status,
+        notes: formData.notes.trim(),
+        parentId: formData.parentId ? Number(formData.parentId) : null,
+        installedAt: formData.installedAt || null,
+      };
 
       if (asset?.id) {
-        console.log('[ASSET FORM] Calling updateAsset with ID:', asset.id);
-        const response = await maintenanceApi.updateAsset(asset.id, dataToSubmit);
-        console.log('[ASSET FORM] Update response:', response);
-        toast.success('✓ Activo actualizado correctamente');
+        await maintenanceApi.updateAsset(asset.id, dataToSubmit);
+        toast.success('Activo actualizado correctamente');
       } else {
-        console.log('[ASSET FORM] Calling createAsset');
-        const response = await maintenanceApi.createAsset(dataToSubmit);
-        console.log('[ASSET FORM] Create response:', response);
-        toast.success('✓ Activo creado correctamente');
+        await maintenanceApi.createAsset(dataToSubmit);
+        toast.success('Activo creado correctamente');
       }
 
-      console.log('[ASSET FORM] Calling onSuccess callback');
       onSuccess?.();
       setFormData(INITIAL_FORM_STATE);
       setErrors({});
       onClose();
     } catch (error) {
-      console.error('[ASSET FORM] Error details:', {
-        message: error?.message,
-        status: error?.status,
-        response: error?.response?.data,
-        fullError: error
-      });
-      const errorMsg = error?.response?.data?.error || error?.response?.data?.details || error?.message || 'Error al guardar el activo';
-      toast.error('✗ ' + errorMsg);
+      console.error('[AssetFormModal] Error saving asset:', error);
+      toast.error(error?.data?.error || error?.message || 'Error al guardar el activo');
     } finally {
       setLoading(false);
     }
@@ -237,7 +237,23 @@ export default function AssetFormModal({ isOpen, onClose, asset = null, onSucces
             <FormSelect label="Criticidad" value={formData.criticality} onChange={(e) => handleChange('criticality', e.target.value)} options={CRITICALITIES} error={errors.criticality} required />
           </div>
 
-          <FormField label="Ubicación" placeholder="Sala de Bombeo - Sector A" value={formData.location} onChange={(e) => handleChange('location', e.target.value)} />
+          <FormSelect
+            label="Activo padre (ubicación en la jerarquía)"
+            value={formData.parentId}
+            onChange={(e) => handleChange('parentId', e.target.value)}
+            options={[
+              { value: '', label: '— Ninguno (nivel superior) —' },
+              ...parentOptions.map((a) => ({
+                value: String(a.id),
+                label: `${a.code} · ${a.name} (${ASSET_LEVEL_LABELS[a.level] || a.level})`,
+              })),
+            ]}
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-lg)' }}>
+            <FormField label="Ubicación" placeholder="Sala de Bombeo - Sector A" value={formData.location} onChange={(e) => handleChange('location', e.target.value)} />
+            <FormField label="Fecha de instalación" type="date" value={formData.installedAt} onChange={(e) => handleChange('installedAt', e.target.value)} />
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--mt-space-lg)' }}>
             <FormField label="Fabricante" placeholder="Ej: Grundfos" value={formData.manufacturer} onChange={(e) => handleChange('manufacturer', e.target.value)} />

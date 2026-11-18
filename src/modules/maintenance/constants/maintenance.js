@@ -130,3 +130,28 @@ export const PHOTO_KINDS = {
   AFTER: "AFTER",
   GENERAL: "GENERAL",
 };
+
+// ---------- Activos ----------
+// Niveles de la jerarquía (de mayor a menor)
+export const ASSET_LEVELS = [
+  { value: "AREA", label: "Área" },
+  { value: "LINE", label: "Línea" },
+  { value: "EQUIPMENT", label: "Equipo" },
+  { value: "SUBASSEMBLY", label: "Subensamble" },
+  { value: "COMPONENT", label: "Componente" },
+];
+export const ASSET_LEVEL_LABELS = Object.fromEntries(ASSET_LEVELS.map((l) => [l.value, l.label]));
+
+export const ASSET_STATUSES = [
+  { value: "OPERATING", label: "Operando", badge: "success" },
+  { value: "STOPPED", label: "Detenido", badge: "warning" },
+  { value: "OUT_OF_SERVICE", label: "Fuera de servicio", badge: "danger" },
+];
+export const ASSET_STATUS_INFO = Object.fromEntries(ASSET_STATUSES.map((s) => [s.value, s]));
+
+export const ASSET_CRITICALITIES = [
+  { value: "A", label: "Crítica (A)", short: "Crítica", badge: "danger" },
+  { value: "B", label: "Moderada (B)", short: "Moderada", badge: "warning" },
+  { value: "C", label: "Baja (C)", short: "Baja", badge: "info" },
+];
+export const ASSET_CRITICALITY_INFO = Object.fromEntries(ASSET_CRITICALITIES.map((c) => [c.value, c]));

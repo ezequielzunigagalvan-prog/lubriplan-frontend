@@ -1,183 +1,93 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { MtCard, MtBadge, MtButton } from '../ui';
-import { ArrowLeft, BarChart3, FileText, Image, Wrench, AlertCircle, DollarSign, Clock, TrendingUp } from 'lucide-react';
-import { toast } from 'sonner';
+import { ArrowLeft, FileText, Wrench, AlertCircle, DollarSign, Clock, CalendarCheck, ChevronRight } from 'lucide-react';
+import {
+  STATE_LABELS,
+  PRIORITY_LABELS,
+  ASSET_LEVEL_LABELS,
+  ASSET_STATUS_INFO,
+  ASSET_CRITICALITY_INFO,
+} from '../constants/maintenance';
+
+const TYPE_INFO = {
+  CORRECTIVE: { label: 'Correctiva', badge: 'danger' },
+  PREVENTIVE: { label: 'Preventiva', badge: 'info' },
+  INSPECTION: { label: 'Inspección', badge: 'accent' },
+};
+const FREQ_LABELS = { DAY: 'día(s)', WEEK: 'semana(s)', MONTH: 'mes(es)', YEAR: 'año(s)' };
+const PRODUCTION_EFFECT = { TOTAL_STOP: 'Paro total', PARTIAL_STOP: 'Paro parcial', NO_EFFECT: 'Sin efecto' };
+
+const money = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n || 0);
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
+const woNumber = (n) => `OT-${String(n).padStart(5, '0')}`;
+
+const labelStyle = { fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' };
+const valueStyle = { fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 };
+
+function Field({ label, value }) {
+  return (
+    <div>
+      <p style={labelStyle}>{label}</p>
+      <p style={{ ...valueStyle, color: value ? 'var(--mt-text-primary)' : 'var(--mt-text-tertiary)' }}>{value || '—'}</p>
+    </div>
+  );
+}
+
+function Kpi({ icon: Icon, label, value, color }) {
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-md)' }}>
+          <Icon size={16} style={{ color }} />
+          <p style={{ ...labelStyle, marginBottom: 0 }}>{label}</p>
+        </div>
+        <p style={{ fontSize: '22px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color }}>{value}</p>
+      </div>
+    </MtCard>
+  );
+}
+
+function Empty({ text }) {
+  return (
+    <MtCard elevated>
+      <p style={{ padding: 'var(--mt-space-xl)', margin: 0, textAlign: 'center', color: 'var(--mt-text-tertiary)', fontSize: '13px' }}>{text}</p>
+    </MtCard>
+  );
+}
+
+function SectionTitle({ children }) {
+  return <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>{children}</h3>;
+}
 
 export default function AssetExpedient() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [asset, setAsset] = useState(null);
-  const [expedient, setExpedient] = useState(null);
+  const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadAssetExpedient();
-  }, [id]);
-
-  const loadAssetExpedient = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
-      let assetData;
-      let expedientData;
-      try {
-        assetData = await maintenanceApi.getAsset(parseInt(id));
-        expedientData = await maintenanceApi.getAssetExpedient(parseInt(id));
-      } catch (apiError) {
-        console.warn('API unavailable, using fallback:', apiError);
-        assetData = null;
-        expedientData = null;
-      }
-
-      const mockAsset = {
-        id: id,
-        code: 'EQ-001',
-        name: 'Molino Principal',
-        manufacturer: 'Siemens',
-        model: 'XYZ-2000',
-        serialNumber: 'SN-12345-678',
-        installationDate: '2019-05-15',
-        criticality: 'A',
-        state: 'OPERATING',
-        responsible: 'Ing. Carlos García',
-        planta: 'Planta Jilotepec',
-        area: 'Producción',
-        linea: 'Línea 01',
-        ubicacion: 'Sector Sur, Columna 5',
-      };
-
-      const mockExpedient = {
-        totalWorkOrders: 47,
-        preventiveOrders: 32,
-        correctiveOrders: 15,
-        totalFailures: 12,
-        totalDowntime: 68.5, // horas
-        accumulatedCost: 285400, // USD
-        lastIntervention: '2026-11-05',
-        maintenanceOrders: [
-          {
-            id: 1,
-            order: 'OT-001156',
-            date: '2026-11-05',
-            type: 'PREVENTIVE',
-            status: 'VALIDATED',
-            technician: 'José López',
-            description: 'Cambio de aceite y filtros',
-            cost: 1500,
-          },
-          {
-            id: 2,
-            order: 'OT-001145',
-            date: '2026-10-28',
-            type: 'CORRECTIVE',
-            status: 'VALIDATED',
-            technician: 'María Pérez',
-            description: 'Reparación de rodamiento',
-            cost: 3200,
-          },
-          {
-            id: 3,
-            order: 'OT-001132',
-            date: '2026-10-15',
-            type: 'PREVENTIVE',
-            status: 'VALIDATED',
-            technician: 'José López',
-            description: 'Inspección general y alineación',
-            cost: 1200,
-          },
-        ],
-        failureHistory: [
-          {
-            id: 1,
-            date: '2026-10-28',
-            failureCode: 'F-001',
-            mode: 'Fuga de aceite',
-            cause: 'Sello mecánico desgastado',
-            downtime: 4.5,
-            cost: 3200,
-            severity: 'HIGH',
-          },
-          {
-            id: 2,
-            date: '2026-09-12',
-            failureCode: 'F-002',
-            mode: 'Ruido anormal',
-            cause: 'Rodamientos desalineados',
-            downtime: 2.3,
-            cost: 1800,
-            severity: 'MEDIUM',
-          },
-        ],
-        spareParts: [
-          {
-            id: 1,
-            part: 'Sello Mecánico MG-1',
-            code: 'SM-001',
-            quantity: 2,
-            unitCost: 850,
-            date: '2026-11-05',
-          },
-          {
-            id: 2,
-            part: 'Filtro de Aceite HF-123',
-            code: 'FO-001',
-            quantity: 3,
-            unitCost: 120,
-            date: '2026-11-05',
-          },
-          {
-            id: 3,
-            part: 'Rodamiento 6205-2RS',
-            code: 'RD-123',
-            quantity: 1,
-            unitCost: 450,
-            date: '2026-10-28',
-          },
-        ],
-        monthlyCosts: [
-          { month: 'Septiembre', maintenance: 28000, spare: 8500 },
-          { month: 'Octubre', maintenance: 35000, spare: 12200 },
-          { month: 'Noviembre', maintenance: 22000, spare: 6800 },
-        ],
-        photos: [
-          { id: 1, date: '2026-11-05', description: 'Estado general post-mantenimiento', thumb: '📸' },
-          { id: 2, date: '2026-10-28', description: 'Rodamiento dañado antes de reparación', thumb: '📸' },
-          { id: 3, date: '2026-09-15', description: 'Instalación de nuevo sello', thumb: '📸' },
-        ],
-        interventions: [
-          {
-            id: 1,
-            date: '2026-11-05',
-            type: 'MANTENIMIENTO',
-            description: 'Cambio de aceite y filtros',
-            technician: 'José López',
-            hours: 2.5,
-            status: 'COMPLETADA',
-          },
-          {
-            id: 2,
-            date: '2026-10-28',
-            type: 'REPARACION',
-            description: 'Reparación de rodamiento',
-            technician: 'María Pérez',
-            hours: 4.5,
-            status: 'COMPLETADA',
-          },
-        ],
-      };
-
-      setAsset(assetData || mockAsset);
-      setExpedient(expedientData || mockExpedient);
-    } catch (error) {
-      toast.error('Error cargando expediente');
+      setError(null);
+      setData(await maintenanceApi.getAssetExpedient(id));
+    } catch (err) {
+      console.error('[AssetExpedient] Error loading expedient:', err);
+      setError(err?.status === 404 ? 'El activo no existe o fue eliminado' : err?.message || 'No se pudo cargar el expediente');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  if (loading || !asset || !expedient) {
+  useEffect(() => {
+    setActiveTab('overview');
+    load();
+  }, [load]);
+
+  if (loading) {
     return (
       <MtCard elevated>
         <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center' }}>
@@ -188,174 +98,85 @@ export default function AssetExpedient() {
     );
   }
 
+  if (error || !data) {
+    return (
+      <MtCard elevated>
+        <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+          <p style={{ color: 'var(--mt-danger)', margin: 0, fontWeight: 'var(--mt-font-weight-bold)' }}>{error || 'Sin datos'}</p>
+          <div style={{ display: 'flex', gap: 'var(--mt-space-md)' }}>
+            <MtButton variant="secondary" onClick={() => navigate('/maintenance/app/assets')}>Volver a activos</MtButton>
+            <MtButton onClick={load}>Reintentar</MtButton>
+          </div>
+        </div>
+      </MtCard>
+    );
+  }
+
+  const { asset, kpis, children, plans, maintenanceOrders, failureHistory, spareParts, photos, monthlyCosts } = data;
+  const statusInfo = ASSET_STATUS_INFO[asset.status];
+  const critInfo = ASSET_CRITICALITY_INFO[asset.criticality];
+  const breadcrumb = [asset.plantName, ...asset.path.map((p) => `${p.code} · ${p.name}`)].filter(Boolean);
+  const maxMonthCost = Math.max(...monthlyCosts.map((m) => m.cost), 0);
+  const openWo = (woId) => navigate(`/maintenance/app/work-orders/${woId}`);
+
   const tabs = [
-    { id: 'overview', label: '📋 Resumen', icon: '📊' },
-    { id: 'maintenance', label: '🔧 Mantenimiento', icon: '🔧' },
-    { id: 'failures', label: '⚠️ Fallas', icon: '⚠️' },
-    { id: 'spareparts', label: '📦 Refacciones', icon: '📦' },
-    { id: 'costs', label: '💰 Costos', icon: '💰' },
-    { id: 'photos', label: '📸 Fotos', icon: '📸' },
+    { id: 'overview', label: 'Resumen' },
+    { id: 'maintenance', label: `Órdenes (${maintenanceOrders.length})` },
+    { id: 'failures', label: `Fallas (${failureHistory.length})` },
+    { id: 'spareparts', label: `Refacciones (${spareParts.length})` },
+    { id: 'costs', label: 'Costos' },
+    { id: 'photos', label: `Fotos (${photos.length})` },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-lg)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
         <button
           onClick={() => navigate(-1)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 'var(--mt-radius-md)',
-            hover: { background: 'var(--mt-bg-surface)' },
-          }}
+          aria-label="Volver"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', borderRadius: 'var(--mt-radius-md)' }}
         >
           <ArrowLeft size={20} style={{ color: 'var(--mt-text-secondary)' }} />
         </button>
-        <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
-            {asset.name}
-          </h1>
+        <div style={{ minWidth: 0 }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>{asset.name}</h1>
           <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-            {asset.code} · {asset.planta} → {asset.area} → {asset.linea}
+            {asset.code} · {ASSET_LEVEL_LABELS[asset.level] || asset.level}
+            {breadcrumb.length > 0 && ` · ${breadcrumb.join(' → ')}`}
           </p>
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--mt-space-md)' }}>
-          <MtBadge label={`Crítica ${asset.criticality}`} variant="danger" size="sm" />
-          <MtBadge label="Operando" variant="success" size="sm" />
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--mt-space-sm)' }}>
+          {critInfo && <MtBadge variant={critInfo.badge} size="sm">{critInfo.label}</MtBadge>}
+          {statusInfo && <MtBadge variant={statusInfo.badge} size="sm">{statusInfo.label}</MtBadge>}
         </div>
       </div>
 
-      {/* Asset Info Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '6px' }}>
-              Fabricante
-            </p>
-            <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              {asset.manufacturer}
-            </p>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '6px' }}>
-              Modelo
-            </p>
-            <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-              {asset.model}
-            </p>
-          </div>
-        </MtCard>
+      {/* Ficha técnica */}
+      <MtCard elevated>
+        <div style={{ padding: 'var(--mt-space-lg)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+          <Field label="Fabricante" value={asset.manufacturer} />
+          <Field label="Modelo" value={asset.model} />
+          <Field label="Número de serie" value={asset.serialNumber} />
+          <Field label="Instalado" value={asset.installedAt ? fmtDate(asset.installedAt) : null} />
+          <Field label="Ubicación" value={asset.location} />
+          <Field label="Última intervención" value={kpis.lastIntervention ? fmtDate(kpis.lastIntervention) : null} />
+        </div>
+        {asset.notes && (
+          <p style={{ margin: 0, padding: '0 var(--mt-space-lg) var(--mt-space-lg)', fontSize: '13px', color: 'var(--mt-text-secondary)' }}>
+            <strong>Notas:</strong> {asset.notes}
+          </p>
+        )}
+      </MtCard>
 
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '6px' }}>
-              Número de Serie
-            </p>
-            <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              {asset.serialNumber}
-            </p>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '6px' }}>
-              Instalado
-            </p>
-            <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-              {new Date(asset.installationDate).toLocaleDateString('es-ES')}
-            </p>
-          </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '6px' }}>
-              Responsable
-            </p>
-            <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-md)' }}>
-              {asset.responsible}
-            </p>
-            <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '6px' }}>
-              Ubicación
-            </p>
-            <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-              {asset.ubicacion}
-            </p>
-          </div>
-        </MtCard>
-      </div>
-
-      {/* KPI Summary */}
+      {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-md)' }}>
-              <FileText size={16} style={{ color: 'var(--mt-accent)' }} />
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Órdenes Totales
-              </p>
-            </div>
-            <p style={{ fontSize: '24px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-              {expedient.totalWorkOrders}
-            </p>
-          </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-md)' }}>
-              <Wrench size={16} style={{ color: 'var(--mt-warning)' }} />
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Preventivas
-              </p>
-            </div>
-            <p style={{ fontSize: '24px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-warning)' }}>
-              {expedient.preventiveOrders}
-            </p>
-          </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-md)' }}>
-              <AlertCircle size={16} style={{ color: 'var(--mt-danger)' }} />
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Correctivas
-              </p>
-            </div>
-            <p style={{ fontSize: '24px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-danger)' }}>
-              {expedient.correctiveOrders}
-            </p>
-          </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-md)' }}>
-              <Clock size={16} style={{ color: 'var(--mt-info)' }} />
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Paro Total
-              </p>
-            </div>
-            <p style={{ fontSize: '20px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-              {expedient.totalDowntime}h
-            </p>
-          </div>
-        </MtCard>
-
-        <MtCard elevated>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-md)' }}>
-              <DollarSign size={16} style={{ color: 'var(--mt-success)' }} />
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                Costo Acumulado
-              </p>
-            </div>
-            <p style={{ fontSize: '20px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-success)' }}>
-              ${(expedient.accumulatedCost / 1000).toFixed(1)}K
-            </p>
-          </div>
-        </MtCard>
+        <Kpi icon={FileText} label="Órdenes totales" value={kpis.totalWorkOrders} color="var(--mt-accent)" />
+        <Kpi icon={AlertCircle} label="Abiertas" value={kpis.openWorkOrders} color={kpis.openWorkOrders ? 'var(--mt-warning)' : 'var(--mt-success)'} />
+        <Kpi icon={Wrench} label="Preventivas" value={kpis.preventiveOrders} color="var(--mt-info)" />
+        <Kpi icon={AlertCircle} label="Correctivas" value={kpis.correctiveOrders} color="var(--mt-danger)" />
+        <Kpi icon={Clock} label="Paro total" value={`${kpis.totalDowntimeHours}h`} color="var(--mt-text-primary)" />
+        <Kpi icon={DollarSign} label="Costo refacciones" value={money(kpis.accumulatedPartsCost)} color="var(--mt-success)" />
       </div>
 
       {/* Tabs */}
@@ -374,7 +195,6 @@ export default function AssetExpedient() {
               fontWeight: 'var(--mt-font-weight-bold)',
               fontSize: '13px',
               whiteSpace: 'nowrap',
-              transition: 'all 200ms ease',
             }}
           >
             {tab.label}
@@ -382,35 +202,97 @@ export default function AssetExpedient() {
         ))}
       </div>
 
-      {/* Tab Content - Maintenance Orders */}
+      {/* Resumen */}
+      {activeTab === 'overview' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+          <MtCard elevated>
+            <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
+              <SectionTitle>Planes de mantenimiento ({plans.length})</SectionTitle>
+              {plans.length === 0 && <p style={{ margin: 0, fontSize: '13px', color: 'var(--mt-text-tertiary)' }}>Este activo no tiene planes preventivos.</p>}
+              {plans.map((p) => (
+                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <div>
+                    <p style={{ ...valueStyle, fontSize: '13px' }}>{p.code} · {p.title}</p>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--mt-text-tertiary)' }}>
+                      {p.frequencyEvery && p.frequencyUnit ? `Cada ${p.frequencyEvery} ${FREQ_LABELS[p.frequencyUnit] || p.frequencyUnit}` : 'Sin frecuencia'}
+                      {' · '}Próxima: {fmtDate(p.nextDueAt)}
+                    </p>
+                  </div>
+                  <MtBadge variant={p.active ? 'success' : 'neutral'} size="sm">{p.active ? 'Activo' : 'Inactivo'}</MtBadge>
+                </div>
+              ))}
+            </div>
+          </MtCard>
+
+          <MtCard elevated>
+            <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
+              <SectionTitle>Componentes / activos hijos ({children.length})</SectionTitle>
+              {children.length === 0 && <p style={{ margin: 0, fontSize: '13px', color: 'var(--mt-text-tertiary)' }}>No tiene activos hijos registrados.</p>}
+              {children.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => navigate(`/maintenance/app/assets/${c.id}`)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit' }}
+                >
+                  <span style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)' }}>
+                    {c.code} · {c.name}{' '}
+                    <span style={{ fontWeight: 'normal', color: 'var(--mt-text-tertiary)' }}>({ASSET_LEVEL_LABELS[c.level] || c.level})</span>
+                  </span>
+                  <ChevronRight size={16} style={{ color: 'var(--mt-text-tertiary)' }} />
+                </button>
+              ))}
+            </div>
+          </MtCard>
+
+          <MtCard elevated>
+            <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
+              <SectionTitle>Órdenes recientes</SectionTitle>
+              {maintenanceOrders.length === 0 && <p style={{ margin: 0, fontSize: '13px', color: 'var(--mt-text-tertiary)' }}>Sin órdenes de trabajo.</p>}
+              {maintenanceOrders.slice(0, 5).map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => openWo(o.id)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit' }}
+                >
+                  <span style={{ fontSize: '13px' }}>
+                    <strong>{woNumber(o.number)}</strong> · {o.title}
+                    <span style={{ display: 'block', fontSize: '12px', color: 'var(--mt-text-tertiary)' }}>
+                      {fmtDate(o.createdAt)} · {STATE_LABELS[o.status] || o.status}
+                    </span>
+                  </span>
+                  <MtBadge variant={TYPE_INFO[o.type]?.badge} size="sm">{TYPE_INFO[o.type]?.label || o.type}</MtBadge>
+                </button>
+              ))}
+            </div>
+          </MtCard>
+        </div>
+      )}
+
+      {/* Órdenes */}
       {activeTab === 'maintenance' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-            Órdenes de Mantenimiento ({expedient.maintenanceOrders.length})
-          </h3>
-          {expedient.maintenanceOrders.map((order) => (
-            <MtCard key={order.id} elevated>
-              <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ display: 'flex', gap: 'var(--mt-space-md)', alignItems: 'center', marginBottom: 'var(--mt-space-sm)' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-                      {order.order}
-                    </p>
-                    <MtBadge
-                      label={order.type === 'PREVENTIVE' ? 'Preventiva' : 'Correctiva'}
-                      variant={order.type === 'PREVENTIVE' ? 'info' : 'danger'}
-                      size="sm"
-                    />
+          {maintenanceOrders.length === 0 && <Empty text="Este activo todavía no tiene órdenes de trabajo." />}
+          {maintenanceOrders.map((order) => (
+            <MtCard key={order.id} elevated interactive onClick={() => openWo(order.id)}>
+              <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--mt-space-md)' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', alignItems: 'center', marginBottom: 'var(--mt-space-sm)', flexWrap: 'wrap' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>{woNumber(order.number)}</p>
+                    <MtBadge variant={TYPE_INFO[order.type]?.badge} size="sm">{TYPE_INFO[order.type]?.label || order.type}</MtBadge>
+                    <MtBadge variant="neutral" size="sm">{STATE_LABELS[order.status] || order.status}</MtBadge>
+                    <MtBadge variant="neutral" size="sm">Prioridad {PRIORITY_LABELS[order.priority] || order.priority}</MtBadge>
                   </div>
-                  <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-                    {order.description}
-                  </p>
+                  <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px' }}>{order.title}</p>
+                  {order.description && <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>{order.description}</p>}
                   <p style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                    {new Date(order.date).toLocaleDateString('es-ES')} · Técnico: {order.technician}
+                    Creada {fmtDate(order.createdAt)}
+                    {order.finishedAt && ` · Terminada ${fmtDate(order.finishedAt)}`}
+                    {' · '}Técnico: {order.technician || 'Sin asignar'}
+                    {order.downtimeHours > 0 && ` · Paro ${order.downtimeHours}h`}
                   </p>
                 </div>
-                <p style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-success)' }}>
-                  ${order.cost.toLocaleString()}
+                <p style={{ fontSize: '15px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-success)', whiteSpace: 'nowrap' }}>
+                  {money(order.partsCost)}
                 </p>
               </div>
             </MtCard>
@@ -418,36 +300,37 @@ export default function AssetExpedient() {
         </div>
       )}
 
-      {/* Tab Content - Failures */}
+      {/* Fallas */}
       {activeTab === 'failures' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-            Historial de Fallas ({expedient.failureHistory.length})
-          </h3>
-          {expedient.failureHistory.map((failure) => (
-            <MtCard key={failure.id} elevated style={{ borderLeft: `4px solid ${failure.severity === 'HIGH' ? 'var(--mt-danger)' : 'var(--mt-warning)'}` }}>
-              <div style={{ padding: 'var(--mt-space-lg)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--mt-space-md)' }}>
+          {failureHistory.length === 0 && <Empty text="Sin órdenes correctivas registradas para este activo." />}
+          {failureHistory.map((f) => (
+            <MtCard key={f.id} elevated interactive onClick={() => openWo(f.workOrderId)}>
+              <div style={{ padding: 'var(--mt-space-lg)', borderLeft: `4px solid ${['CRITICAL', 'HIGH'].includes(f.priority) ? 'var(--mt-danger)' : 'var(--mt-warning)'}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--mt-space-sm)', gap: '8px' }}>
                   <div>
                     <h4 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px' }}>
-                      {failure.mode}
+                      {f.mode ? `${f.mode.code} · ${f.mode.name}` : f.title}
                     </h4>
                     <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                      {failure.failureCode} · {new Date(failure.date).toLocaleDateString('es-ES')}
+                      {woNumber(f.number)} · {fmtDate(f.date)} · {STATE_LABELS[f.status] || f.status}
                     </p>
                   </div>
-                  <MtBadge
-                    label={failure.severity === 'HIGH' ? 'Alta' : 'Media'}
-                    variant={failure.severity === 'HIGH' ? 'danger' : 'warning'}
-                    size="sm"
-                  />
+                  <MtBadge variant={['CRITICAL', 'HIGH'].includes(f.priority) ? 'danger' : 'warning'} size="sm">
+                    {PRIORITY_LABELS[f.priority] || f.priority}
+                  </MtBadge>
                 </div>
-                <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>
-                  <strong>Causa:</strong> {failure.cause}
-                </p>
-                <div style={{ display: 'flex', gap: 'var(--mt-space-lg)', fontSize: '12px' }}>
-                  <span>⏱️ {failure.downtime}h de paro</span>
-                  <span>💰 ${failure.cost.toLocaleString()}</span>
+                {f.mechanism && <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}><strong>Mecanismo:</strong> {f.mechanism.code} · {f.mechanism.name}</p>}
+                {(f.rootCause || f.cause) && (
+                  <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+                    <strong>Causa:</strong> {f.rootCause ? `${f.rootCause.code} · ${f.rootCause.name}` : f.cause}
+                  </p>
+                )}
+                {f.diagnosis && <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}><strong>Diagnóstico:</strong> {f.diagnosis}</p>}
+                <div style={{ display: 'flex', gap: 'var(--mt-space-lg)', fontSize: '12px', marginTop: 'var(--mt-space-sm)', color: 'var(--mt-text-secondary)', flexWrap: 'wrap' }}>
+                  <span>Paro: {f.downtimeHours}h</span>
+                  {f.productionEffect && <span>Efecto: {PRODUCTION_EFFECT[f.productionEffect] || f.productionEffect}</span>}
+                  <span>Refacciones: {money(f.partsCost)}</span>
                 </div>
               </div>
             </MtCard>
@@ -455,108 +338,75 @@ export default function AssetExpedient() {
         </div>
       )}
 
-      {/* Tab Content - Spare Parts */}
+      {/* Refacciones */}
       {activeTab === 'spareparts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-            Refacciones Utilizadas ({expedient.spareParts.length})
-          </h3>
-          {expedient.spareParts.map((part) => (
+          {spareParts.length === 0 && <Empty text="No se han consumido refacciones en las órdenes de este activo." />}
+          {spareParts.map((part) => (
             <MtCard key={part.id} elevated>
-              <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                 <div>
-                  <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px' }}>
-                    {part.part}
-                  </p>
+                  <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '4px' }}>{part.code} · {part.name}</p>
                   <p style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                    {part.code} · {part.quantity} unidad(es) · {new Date(part.date).toLocaleDateString('es-ES')}
+                    {part.quantity} {part.unit || 'pza'} × {money(part.unitCost)} · {woNumber(part.workOrderNumber)} · {fmtDate(part.date)}
                   </p>
                 </div>
-                <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-success)' }}>
-                  ${(part.quantity * part.unitCost).toLocaleString()}
-                </p>
+                <p style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-success)' }}>{money(part.total)}</p>
               </div>
             </MtCard>
           ))}
         </div>
       )}
 
-      {/* Tab Content - Costs */}
+      {/* Costos */}
       {activeTab === 'costs' && (
-        <div>
-          <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-lg)' }}>
-            Evolución de Costos (Últimos 3 meses)
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-lg)' }}>
-            {expedient.monthlyCosts.map((cost, idx) => (
-              <div key={idx}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <p style={{ fontSize: '12px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                    {cost.month}
-                  </p>
-                  <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, color: 'var(--mt-success)' }}>
-                    ${(cost.maintenance + cost.spare).toLocaleString()}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '4px', height: '24px' }}>
-                  <div
-                    style={{
-                      flex: cost.maintenance / (cost.maintenance + cost.spare),
-                      background: 'var(--mt-accent)',
-                      borderRadius: '2px',
-                      position: 'relative',
-                    }}
-                  >
-                    <span style={{ fontSize: '9px', color: '#fff', position: 'absolute', left: '2px', top: '3px' }}>
-                      Mant
-                    </span>
+        <MtCard elevated>
+          <div style={{ padding: 'var(--mt-space-lg)' }}>
+            <SectionTitle>Costo de refacciones por mes (últimos 12 meses)</SectionTitle>
+            {maxMonthCost === 0 ? (
+              <p style={{ margin: 'var(--mt-space-lg) 0 0', fontSize: '13px', color: 'var(--mt-text-tertiary)' }}>
+                Sin costos registrados: las refacciones consumidas en órdenes terminadas aparecerán aquí.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '160px', marginTop: 'var(--mt-space-lg)' }}>
+                {monthlyCosts.map((m) => (
+                  <div key={`${m.year}-${m.month}`} style={{ flex: 1, textAlign: 'center' }} title={`${m.month} ${m.year}: ${money(m.cost)} (${m.orders} OT)`}>
+                    <div style={{ height: `${Math.max(2, (m.cost / maxMonthCost) * 120)}px`, background: 'linear-gradient(180deg, var(--mt-accent), var(--mt-accent-strong))', borderRadius: 'var(--mt-radius-sm)', marginBottom: '6px' }} />
+                    <p style={{ fontSize: '10px', margin: 0, color: 'var(--mt-text-secondary)' }}>{m.month}</p>
                   </div>
-                  <div
-                    style={{
-                      flex: cost.spare / (cost.maintenance + cost.spare),
-                      background: 'var(--mt-warning)',
-                      borderRadius: '2px',
-                      position: 'relative',
-                    }}
-                  >
-                    <span style={{ fontSize: '9px', color: '#fff', position: 'absolute', left: '2px', top: '3px' }}>
-                      Ref
-                    </span>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
+            <p style={{ margin: 'var(--mt-space-md) 0 0', fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>
+              Solo incluye refacciones; la mano de obra todavía no se registra en las órdenes.
+            </p>
           </div>
-        </div>
+        </MtCard>
       )}
 
-      {/* Tab Content - Photos */}
+      {/* Fotos */}
       {activeTab === 'photos' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-          {expedient.photos.map((photo) => (
-            <div
-              key={photo.id}
-              style={{
-                background: 'var(--mt-bg-surface)',
-                borderRadius: 'var(--mt-radius-md)',
-                padding: 'var(--mt-space-lg)',
-                textAlign: 'center',
-                cursor: 'pointer',
-                border: '1px solid var(--mt-border)',
-              }}
-            >
-              <div style={{ fontSize: '32px', marginBottom: 'var(--mt-space-sm)' }}>
-                {photo.thumb}
-              </div>
-              <p style={{ fontSize: '11px', color: 'var(--mt-text-secondary)', margin: 0, marginBottom: '4px' }}>
-                {new Date(photo.date).toLocaleDateString('es-ES')}
-              </p>
-              <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                {photo.description}
-              </p>
-            </div>
-          ))}
-        </div>
+        photos.length === 0 ? (
+          <Empty text="Sin fotografías: las fotos que se suban a las órdenes de este activo aparecerán aquí." />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+            {photos.map((photo) => (
+              <a
+                key={photo.id}
+                href={photo.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{ background: 'var(--mt-bg-surface)', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-border)', overflow: 'hidden', textDecoration: 'none', color: 'inherit' }}
+              >
+                <img src={photo.url} alt={photo.title} loading="lazy" style={{ width: '100%', height: '130px', objectFit: 'cover', display: 'block' }} />
+                <div style={{ padding: 'var(--mt-space-sm)' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>{woNumber(photo.workOrderNumber)} · {photo.kind}</p>
+                  <p style={{ fontSize: '11px', color: 'var(--mt-text-secondary)', margin: 0 }}>{fmtDate(photo.date)}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )
       )}
     </div>
   );

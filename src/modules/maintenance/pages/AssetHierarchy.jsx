@@ -1,232 +1,92 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MtCard, MtBadge, MtButton } from '../ui';
-import { ChevronDown, ChevronRight, Building2, Factory, Grid3x3, Zap, Package, Settings, TreePine, Lightbulb } from 'lucide-react';
-import { toast } from 'sonner';
+import { ChevronDown, ChevronRight, Factory, Grid3x3, Zap, Package, Settings, Cog, TreePine, Lightbulb, Search } from 'lucide-react';
 import { maintenanceApi } from '../services/maintenanceApi';
+import { ASSET_LEVEL_LABELS, ASSET_STATUS_INFO, ASSET_CRITICALITY_INFO } from '../constants/maintenance';
+
+const LEVEL_ICONS = {
+  AREA: Grid3x3,
+  LINE: Zap,
+  EQUIPMENT: Package,
+  SUBASSEMBLY: Settings,
+  COMPONENT: Cog,
+};
+
+/** Devuelve el subárbol que coincide con la búsqueda (conserva los ancestros de cada coincidencia). */
+function filterTree(nodes, term) {
+  if (!term) return nodes;
+  const t = term.toLowerCase();
+  return nodes
+    .map((node) => {
+      const children = filterTree(node.children, term);
+      const match = node.code.toLowerCase().includes(t) || node.name.toLowerCase().includes(t);
+      return match || children.length ? { ...node, children: match ? node.children : children } : null;
+    })
+    .filter(Boolean);
+}
+
+function collectIds(nodes, acc = []) {
+  for (const n of nodes) {
+    if (n.children.length) {
+      acc.push(n.id);
+      collectIds(n.children, acc);
+    }
+  }
+  return acc;
+}
 
 export default function AssetHierarchy() {
   const navigate = useNavigate();
   const [hierarchy, setHierarchy] = useState(null);
-  const [expandedNodes, setExpandedNodes] = useState(new Set(['empresa-1']));
+  const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadHierarchy();
-  }, []);
-
-  const loadHierarchy = async () => {
+  const loadHierarchy = useCallback(async () => {
     try {
       setLoading(true);
-      let hierarchyData;
-      try {
-        hierarchyData = await maintenanceApi.getAssetHierarchy();
-      } catch (apiError) {
-        console.warn('API unavailable, using fallback data:', apiError);
-        hierarchyData = null;
-      }
-
-      const mockData = {
-        id: 'empresa-1',
-        name: 'TechManufacturing S.A.',
-        type: 'EMPRESA',
-        icon: 'building',
-        children: [
-          {
-            id: 'planta-1',
-            name: 'Planta Jilotepec',
-            type: 'PLANTA',
-            location: 'Jilotepec, Edo. Mex.',
-            icon: 'factory',
-            children: [
-              {
-                id: 'area-1',
-                name: 'Producción',
-                type: 'AREA',
-                icon: 'grid',
-                children: [
-                  {
-                    id: 'linea-1',
-                    name: 'Línea 01',
-                    type: 'LINEA',
-                    icon: 'zap',
-                    children: [
-                      {
-                        id: 'equipo-1',
-                        name: 'Molino Principal',
-                        type: 'EQUIPO',
-                        code: 'EQ-001',
-                        criticality: 'A',
-                        state: 'OPERATING',
-                        manufacturer: 'Siemens',
-                        model: 'XYZ-2000',
-                        icon: 'package',
-                        children: [
-                          {
-                            id: 'subconj-1',
-                            name: 'Motor Eléctrico',
-                            type: 'SUBCONJUNTO',
-                            code: 'MC-001',
-                            icon: 'settings',
-                            children: [
-                              {
-                                id: 'comp-1',
-                                name: 'Rodamientos',
-                                type: 'COMPONENTE',
-                                code: 'RD-001',
-                              },
-                              {
-                                id: 'comp-2',
-                                name: 'Bobinado',
-                                type: 'COMPONENTE',
-                                code: 'BN-001',
-                              },
-                            ],
-                          },
-                          {
-                            id: 'subconj-2',
-                            name: 'Caja de Cambios',
-                            type: 'SUBCONJUNTO',
-                            code: 'CC-001',
-                            icon: 'settings',
-                          },
-                        ],
-                      },
-                      {
-                        id: 'equipo-2',
-                        name: 'Bomba Centrífuga',
-                        type: 'EQUIPO',
-                        code: 'EQ-002',
-                        criticality: 'A',
-                        state: 'OPERATING',
-                        manufacturer: 'Grundfos',
-                        model: 'CR15-08',
-                        icon: 'package',
-                      },
-                    ],
-                  },
-                  {
-                    id: 'linea-2',
-                    name: 'Línea 02',
-                    type: 'LINEA',
-                    icon: 'zap',
-                    children: [
-                      {
-                        id: 'equipo-3',
-                        name: 'Compresor de Aire',
-                        type: 'EQUIPO',
-                        code: 'EQ-003',
-                        criticality: 'B',
-                        state: 'OPERATING',
-                        manufacturer: 'Atlas Copco',
-                        model: 'ZR110',
-                        icon: 'package',
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                id: 'area-2',
-                name: 'Mantenimiento',
-                type: 'AREA',
-                icon: 'grid',
-                children: [],
-              },
-            ],
-          },
-          {
-            id: 'planta-2',
-            name: 'Planta Toluca',
-            type: 'PLANTA',
-            location: 'Toluca, Edo. Mex.',
-            icon: 'factory',
-            children: [],
-          },
-        ],
-      };
-
-      setHierarchy(hierarchyData || mockData);
-    } catch (error) {
-      toast.error('Error cargando jerarquía');
+      setError(null);
+      const data = await maintenanceApi.getAssetHierarchy();
+      setHierarchy(data);
+      // Primer nivel abierto por defecto
+      setExpandedNodes(new Set(data.roots.filter((r) => r.children.length).map((r) => r.id)));
+    } catch (err) {
+      console.error('[AssetHierarchy] Error loading hierarchy:', err);
+      setError(err?.message || 'No se pudo cargar la jerarquía');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadHierarchy();
+  }, [loadHierarchy]);
+
+  const visibleRoots = useMemo(() => filterTree(hierarchy?.roots || [], search.trim()), [hierarchy, search]);
+  // Con búsqueda activa se expande todo lo visible para mostrar las coincidencias
+  const expanded = useMemo(() => (search.trim() ? new Set(collectIds(visibleRoots)) : expandedNodes), [search, visibleRoots, expandedNodes]);
 
   const toggleNode = (nodeId) => {
-    const newExpanded = new Set(expandedNodes);
-    if (newExpanded.has(nodeId)) {
-      newExpanded.delete(nodeId);
-    } else {
-      newExpanded.add(nodeId);
-    }
-    setExpandedNodes(newExpanded);
+    setExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) next.delete(nodeId);
+      else next.add(nodeId);
+      return next;
+    });
   };
 
-  const getIcon = (type) => {
-    switch (type) {
-      case 'EMPRESA':
-        return Building2;
-      case 'PLANTA':
-        return Factory;
-      case 'AREA':
-      case 'LINEA':
-        return Grid3x3;
-      case 'EQUIPO':
-        return Package;
-      case 'SUBCONJUNTO':
-      case 'COMPONENTE':
-        return Settings;
-      default:
-        return Package;
-    }
-  };
-
-  const getCriticalityColor = (criticality) => {
-    switch (criticality) {
-      case 'A':
-        return 'danger';
-      case 'B':
-        return 'warning';
-      case 'C':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
-
-  const getStateColor = (state) => {
-    switch (state) {
-      case 'OPERATING':
-        return 'success';
-      case 'STOPPED':
-        return 'warning';
-      case 'OUT_OF_SERVICE':
-        return 'danger';
-      default:
-        return 'default';
-    }
-  };
-
-  const StateLabel = (state) => {
-    switch (state) {
-      case 'OPERATING':
-        return 'Operando';
-      case 'STOPPED':
-        return 'Detenido';
-      case 'OUT_OF_SERVICE':
-        return 'Fuera de servicio';
-      default:
-        return state;
-    }
-  };
+  const setAll = (open) => setExpandedNodes(open ? new Set(collectIds(hierarchy?.roots || [])) : new Set());
 
   const renderNode = (node, level = 0) => {
-    const isExpanded = expandedNodes.has(node.id);
-    const hasChildren = node.children && node.children.length > 0;
-    const IconComponent = getIcon(node.type);
+    const isExpanded = expanded.has(node.id);
+    const hasChildren = node.children.length > 0;
+    const IconComponent = LEVEL_ICONS[node.level] || Package;
+    const crit = ASSET_CRITICALITY_INFO[node.criticality];
+    const status = ASSET_STATUS_INFO[node.status];
+    const isSelected = selectedAsset?.id === node.id;
 
     return (
       <div key={node.id}>
@@ -239,86 +99,45 @@ export default function AssetHierarchy() {
             alignItems: 'center',
             gap: 'var(--mt-space-md)',
             cursor: 'pointer',
-            background: selectedAsset?.id === node.id ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
-            borderLeft: selectedAsset?.id === node.id ? '3px solid var(--mt-accent)' : '3px solid transparent',
+            background: isSelected ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
+            borderLeft: isSelected ? '3px solid var(--mt-accent)' : '3px solid transparent',
             transition: 'all 200ms ease',
           }}
-          onClick={() => {
-            if (hasChildren) toggleNode(node.id);
-            if (node.type === 'EQUIPO') {
-              setSelectedAsset(node);
-              navigate(`/maintenance/app/assets/${node.id}`);
-            }
-          }}
+          onClick={() => setSelectedAsset(node)}
+          onDoubleClick={() => navigate(`/maintenance/app/assets/${node.id}`)}
         >
-          {/* Expand/Collapse Arrow */}
           {hasChildren ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 toggleNode(node.id);
               }}
-              style={{
-                width: '24px',
-                height: '24px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              aria-label={isExpanded ? 'Contraer' : 'Expandir'}
+              style={{ width: '24px', height: '24px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              {isExpanded ? (
-                <ChevronDown size={18} style={{ color: 'var(--mt-accent)' }} />
-              ) : (
-                <ChevronRight size={18} style={{ color: 'var(--mt-text-secondary)' }} />
-              )}
+              {isExpanded ? <ChevronDown size={18} style={{ color: 'var(--mt-accent)' }} /> : <ChevronRight size={18} style={{ color: 'var(--mt-text-secondary)' }} />}
             </button>
           ) : (
-            <div style={{ width: '24px' }}></div>
+            <div style={{ width: '24px' }} />
           )}
 
-          {/* Icon */}
           <IconComponent size={18} style={{ color: 'var(--mt-accent)', minWidth: '18px' }} />
 
-          {/* Node Content */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
-            <div>
-              <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '2px' }}>
-                {node.name}
-              </p>
-              <p style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)', margin: 0 }}>
-                {node.type}
-                {node.code && ` · ${node.code}`}
-              </p>
-            </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: '2px' }}>{node.name}</p>
+            <p style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)', margin: 0 }}>
+              {ASSET_LEVEL_LABELS[node.level] || node.level} · {node.code}
+              {hasChildren && ` · ${node.children.length} hijo(s)`}
+            </p>
           </div>
 
-          {/* Badges */}
           <div style={{ display: 'flex', gap: 'var(--mt-space-sm)', alignItems: 'center' }}>
-            {node.criticality && (
-              <MtBadge
-                label={`Crítica ${node.criticality}`}
-                variant={getCriticalityColor(node.criticality)}
-                size="sm"
-              />
-            )}
-            {node.state && (
-              <MtBadge
-                label={StateLabel(node.state)}
-                variant={getStateColor(node.state)}
-                size="sm"
-              />
-            )}
+            {crit && <MtBadge variant={crit.badge} size="sm">{crit.label}</MtBadge>}
+            {status && <MtBadge variant={status.badge} size="sm">{status.label}</MtBadge>}
           </div>
         </div>
 
-        {/* Render Children */}
-        {hasChildren && isExpanded && (
-          <div>{node.children.map((child) => renderNode(child, level + 1))}</div>
-        )}
+        {hasChildren && isExpanded && <div>{node.children.map((child) => renderNode(child, level + 1))}</div>}
       </div>
     );
   };
@@ -336,110 +155,94 @@ export default function AssetHierarchy() {
     );
   }
 
+  if (error) {
+    return (
+      <MtCard elevated>
+        <div style={{ padding: 'var(--mt-space-3xl)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--mt-space-md)' }}>
+          <p style={{ color: 'var(--mt-danger)', margin: 0, fontWeight: 'var(--mt-font-weight-bold)' }}>{error}</p>
+          <MtButton onClick={loadHierarchy}>Reintentar</MtButton>
+        </div>
+      </MtCard>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
       {/* Header */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-sm)' }}>
-          <TreePine size={32} style={{ color: 'var(--mt-accent)' }} />
-          <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>
-            Jerarquía de Activos
-          </h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--mt-space-md)' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-sm)' }}>
+            <TreePine size={32} style={{ color: 'var(--mt-accent)' }} />
+            <h1 style={{ fontSize: '32px', fontWeight: 'var(--mt-font-weight-black)', margin: 0 }}>Jerarquía de Activos</h1>
+          </div>
+          <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
+            {hierarchy.plant.name} · {hierarchy.total} activo(s)
+          </p>
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-          Estructura completa de equipos por planta, área y línea
-        </p>
+        <MtButton variant="secondary" onClick={() => navigate('/maintenance/app/assets')}>Ir al catálogo</MtButton>
       </div>
 
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: 'var(--mt-space-lg)', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-          <Building2 size={16} style={{ color: 'var(--mt-accent)' }} />
-          <span>Empresa</span>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', gap: 'var(--mt-space-md)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ flex: 1, minWidth: '220px', display: 'flex', alignItems: 'center', gap: 'var(--mt-space-sm)', border: '1px solid var(--mt-border)', borderRadius: 'var(--mt-radius-md)', padding: '8px 12px', background: 'var(--mt-bg-surface)' }}>
+          <Search size={16} style={{ color: 'var(--mt-text-tertiary)' }} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por código o nombre..."
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', color: 'var(--mt-text-primary)', fontSize: '13px', fontFamily: 'inherit' }}
+          />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-          <Factory size={16} style={{ color: 'var(--mt-accent)' }} />
-          <span>Planta</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-          <Grid3x3 size={16} style={{ color: 'var(--mt-accent)' }} />
-          <span>Área/Línea</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-          <Package size={16} style={{ color: 'var(--mt-accent)' }} />
-          <span>Equipo</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-          <Settings size={16} style={{ color: 'var(--mt-accent)' }} />
-          <span>Componentes</span>
-        </div>
+        <MtButton variant="secondary" size="sm" onClick={() => setAll(true)} disabled={Boolean(search)}>Expandir todo</MtButton>
+        <MtButton variant="secondary" size="sm" onClick={() => setAll(false)} disabled={Boolean(search)}>Contraer todo</MtButton>
       </div>
 
       {/* Hierarchy Tree */}
       <MtCard elevated>
         <div style={{ padding: 'var(--mt-space-lg)' }}>
-          {hierarchy && renderNode(hierarchy)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mt-space-md)', paddingBottom: 'var(--mt-space-sm)', marginBottom: 'var(--mt-space-sm)', borderBottom: '1px solid var(--mt-border)' }}>
+            <Factory size={18} style={{ color: 'var(--mt-accent)' }} />
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'var(--mt-font-weight-black)' }}>{hierarchy.plant.name}</p>
+          </div>
+          {hierarchy.total === 0 && (
+            <p style={{ margin: 0, padding: 'var(--mt-space-lg)', textAlign: 'center', fontSize: '13px', color: 'var(--mt-text-tertiary)' }}>
+              Aún no hay activos. Créalos en el catálogo y asígnales un "Activo padre" para armar la jerarquía.
+            </p>
+          )}
+          {hierarchy.total > 0 && visibleRoots.length === 0 && (
+            <p style={{ margin: 0, padding: 'var(--mt-space-lg)', textAlign: 'center', fontSize: '13px', color: 'var(--mt-text-tertiary)' }}>
+              Ningún activo coincide con "{search}".
+            </p>
+          )}
+          {visibleRoots.map((root) => renderNode(root))}
         </div>
       </MtCard>
 
       {/* Selected Asset Info */}
-      {selectedAsset && selectedAsset.type === 'EQUIPO' && (
-        <MtCard elevated style={{ background: 'rgba(56, 189, 248, 0.05)', border: '2px solid var(--mt-accent)' }}>
-          <div style={{ padding: 'var(--mt-space-lg)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--mt-space-lg)' }}>
+      {selectedAsset && (
+        <MtCard elevated>
+          <div style={{ padding: 'var(--mt-space-lg)', borderLeft: '3px solid var(--mt-accent)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--mt-space-lg)', gap: 'var(--mt-space-md)' }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>
-                  {selectedAsset.name}
-                </h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, marginBottom: 'var(--mt-space-xs)' }}>{selectedAsset.name}</h3>
                 <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-                  {selectedAsset.code}
+                  {selectedAsset.code} · {ASSET_LEVEL_LABELS[selectedAsset.level] || selectedAsset.level}
                 </p>
               </div>
-              <MtButton
-                size="sm"
-                onClick={() => navigate(`/maintenance/app/assets/${selectedAsset.id}`)}
-              >
-                Ver Expediente →
-              </MtButton>
+              <MtButton size="sm" onClick={() => navigate(`/maintenance/app/assets/${selectedAsset.id}`)}>Ver expediente →</MtButton>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--mt-space-lg)' }}>
-              <div>
-                <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
-                  Fabricante
-                </p>
-                <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                  {selectedAsset.manufacturer}
-                </p>
-              </div>
-              <div>
-                <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
-                  Modelo
-                </p>
-                <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
-                  {selectedAsset.model}
-                </p>
-              </div>
-              <div>
-                <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
-                  Estado
-                </p>
-                <MtBadge
-                  label={StateLabel(selectedAsset.state)}
-                  variant={getStateColor(selectedAsset.state)}
-                  size="sm"
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>
-                  Criticidad
-                </p>
-                <MtBadge
-                  label={`Crítica ${selectedAsset.criticality}`}
-                  variant={getCriticalityColor(selectedAsset.criticality)}
-                  size="sm"
-                />
-              </div>
+              {[
+                ['Fabricante', selectedAsset.manufacturer],
+                ['Modelo', selectedAsset.model],
+                ['Ubicación', selectedAsset.location],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <p style={{ fontSize: '11px', fontWeight: 'var(--mt-font-weight-bold)', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', margin: 0, marginBottom: '4px' }}>{label}</p>
+                  <p style={{ fontSize: '13px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0, color: value ? 'var(--mt-text-primary)' : 'var(--mt-text-tertiary)' }}>{value || '—'}</p>
+                </div>
+              ))}
             </div>
           </div>
         </MtCard>
@@ -449,7 +252,7 @@ export default function AssetHierarchy() {
       <div style={{ padding: 'var(--mt-space-lg)', background: 'var(--mt-bg-surface)', borderRadius: 'var(--mt-radius-md)', border: '1px solid var(--mt-border)', display: 'flex', gap: 'var(--mt-space-md)' }}>
         <Lightbulb size={18} style={{ color: 'var(--mt-accent)', flexShrink: 0, marginTop: '2px' }} />
         <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-          <strong>Tip:</strong> Click en un equipo para ver su expediente digital completo con historial de mantenimiento, órdenes de trabajo, fotografías y costos acumulados.
+          <strong>Tip:</strong> Click en un activo para ver su ficha; doble click para abrir su expediente. Para mover un activo de lugar, edítalo en el catálogo y cambia su "Activo padre".
         </p>
       </div>
     </div>
