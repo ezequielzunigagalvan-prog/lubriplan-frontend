@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MtIcon } from '../ui';
 import { useMaintenanceAccess } from '../hooks/useMaintenanceAccess';
@@ -16,10 +16,11 @@ export default function MaintenanceLayout() {
     }
   }, [hasAccess, navigate]);
 
-  const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`);
+  // El Dashboard (/maintenance/app) es prefijo de todas las rutas: solo se marca con coincidencia exacta
+  const isActive = (path, exact = false) => pathname === path || (!exact && pathname.startsWith(`${path}/`));
 
   const menuItems = [
-    { path: '/maintenance/app', icon: 'dashboard', label: 'Dashboard' },
+    { path: '/maintenance/app', icon: 'dashboard', label: 'Dashboard', exact: true },
     { path: '/maintenance/app/work-orders', icon: 'clipboard', label: 'Órdenes' },
     { path: '/maintenance/app/report-failure', icon: 'alertCircle', label: 'Reportar Falla' },
     { path: '/maintenance/app/preventive-plans', icon: 'calendar', label: 'Planes' },
@@ -111,17 +112,18 @@ export default function MaintenanceLayout() {
               <NavLink
                 key={item.path}
                 to={item.path}
+                end={item.exact}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
                   padding: '10px 12px',
                   borderRadius: '8px',
-                  border: isActive(item.path) ? '1px solid var(--mt-accent)' : '1px solid transparent',
-                  background: isActive(item.path) ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
-                  color: isActive(item.path) ? 'var(--mt-accent)' : 'var(--mt-text-secondary)',
+                  border: isActive(item.path, item.exact) ? '1px solid var(--mt-accent)' : '1px solid transparent',
+                  background: isActive(item.path, item.exact) ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
+                  color: isActive(item.path, item.exact) ? 'var(--mt-accent)' : 'var(--mt-text-secondary)',
                   textDecoration: 'none',
-                  fontWeight: isActive(item.path) ? 700 : 600,
+                  fontWeight: isActive(item.path, item.exact) ? 700 : 600,
                   fontSize: '13px',
                   cursor: 'pointer',
                   transition: 'all 150ms ease',
@@ -145,7 +147,10 @@ export default function MaintenanceLayout() {
           overflow: 'auto',
           maxWidth: '100%'
         }}>
-          <Outlet />
+          {/* Las páginas se cargan en diferido: solo esta área espera, sin desmontar el layout */}
+          <Suspense fallback={<p style={{ color: 'var(--mt-text-secondary)', fontSize: '14px' }}>Cargando...</p>}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
