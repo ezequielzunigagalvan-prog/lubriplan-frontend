@@ -349,6 +349,35 @@ export const maintenanceApi = {
     return httpPatch(`/maintenance/technicians/${id}`, data);
   },
 
+  // Desactivar (bloqueado si tiene órdenes abiertas)
+  async deleteTechnician(id) {
+    return httpDelete(`/maintenance/technicians/${id}`);
+  },
+
+  // Ficha + usuario vinculado + indicadores + órdenes recientes + planes
+  async getTechnicianProfile(id) {
+    const res = await httpGet(`/maintenance/technicians/${id}/profile`);
+    return res?.data ?? res;
+  },
+
+  // Usuarios con rol TECHNICIAN de la planta (para vincular con su ficha)
+  async getLinkableUsers() {
+    const res = await httpGet('/maintenance/technicians/linkable-users');
+    return res?.data ?? res;
+  },
+
+  // Vincular (userId) o desvincular (null) el usuario de un técnico — solo ADMIN
+  async linkTechnicianUser(technicianId, userId) {
+    const res = await httpPut(`/maintenance/technicians/${technicianId}/user`, { userId });
+    return res?.data ?? res;
+  },
+
+  // Matriz de experiencia: técnicos × equipos con OTs terminadas y horas
+  async getExperienceMatrix({ days = 365 } = {}) {
+    const res = await httpGet(`/maintenance/technicians/experience-matrix?days=${days}`);
+    return res?.data ?? res;
+  },
+
   // Asset Expedient & History
   async getAssetExpedient(id) {
     const res = await httpGet(`/maintenance/assets/${id}/expedient`);

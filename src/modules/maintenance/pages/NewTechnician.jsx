@@ -79,8 +79,8 @@ export default function NewTechnician() {
       toast.success('Técnico creado exitosamente');
       navigate('/maintenance/app/personnel');
     } catch (error) {
-      console.error('Error creating technician:', error);
-      toast.error('Error al crear técnico');
+      console.error('[NewTechnician] Error creating technician:', error);
+      toast.error(error?.data?.error || error?.message || 'Error al crear técnico');
     } finally {
       setLoading(false);
     }

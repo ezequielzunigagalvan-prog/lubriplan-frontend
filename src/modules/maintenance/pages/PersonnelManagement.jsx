@@ -39,11 +39,11 @@ export default function PersonnelManagement() {
   const loadTechnicians = async () => {
     try {
       setLoading(true);
-      const response = await maintenanceApi.getTechnicians({ limit: 1000 });
+      const response = await maintenanceApi.getTechnicians({ limit: 500 });
       setTechnicians(response?.data || []);
     } catch (err) {
-      console.error('Error loading technicians:', err);
-      toast.error('Error al cargar técnicos');
+      console.error('[PersonnelManagement] Error loading technicians:', err);
+      toast.error(err?.data?.error || err?.message || 'Error al cargar técnicos');
     } finally {
       setLoading(false);
     }
@@ -75,15 +75,15 @@ export default function PersonnelManagement() {
     setFilteredTechnicians(filtered);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas desactivar este técnico?')) {
-      try {
-        await maintenanceApi.deleteTechnician(id);
-        toast.success('Técnico desactivado');
-        loadTechnicians();
-      } catch (err) {
-        toast.error('Error al desactivar técnico');
-      }
+  const handleDelete = async (tech) => {
+    if (!window.confirm(`¿Desactivar a ${tech.name}? Dejará de aparecer para asignar órdenes.`)) return;
+    try {
+      await maintenanceApi.deleteTechnician(tech.id);
+      toast.success('Técnico desactivado');
+      loadTechnicians();
+    } catch (err) {
+      // p. ej. "tiene N orden(es) abiertas asignadas"
+      toast.error(err?.data?.error || err?.message || 'Error al desactivar técnico');
     }
   };
 
@@ -122,6 +122,24 @@ export default function PersonnelManagement() {
             <p style={{ fontSize: '14px', margin: '4px 0 0 0', opacity: 0.9 }}>Administra técnicos y personal de mantenimiento</p>
           </div>
         </div>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => navigate('/maintenance/app/skills-matrix')}
+          style={{
+            background: 'rgba(255,255,255,0.15)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.6)',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <LayoutGrid size={18} /> Matriz de experiencia
+        </button>
         <button
           onClick={() => navigate('/maintenance/app/personnel/new')}
           style={{
@@ -139,6 +157,7 @@ export default function PersonnelManagement() {
         >
           <Plus size={20} /> Nuevo Técnico
         </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -363,6 +382,14 @@ export default function PersonnelManagement() {
                   </div>
                 )}
 
+                {/* Usuario vinculado y carga actual */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
+                  <span>
+                    Usuario: {tech.user ? <strong style={{ color: 'var(--mt-text-primary)' }}>{tech.user.name}</strong> : <em>sin vincular</em>}
+                  </span>
+                  <span>Órdenes abiertas: <strong style={{ color: 'var(--mt-text-primary)' }}>{tech.openOrders ?? 0}</strong></span>
+                </div>
+
                 {/* Estado */}
                 <div style={{
                   display: 'inline-block',
@@ -397,10 +424,10 @@ export default function PersonnelManagement() {
                       gap: '6px'
                     }}
                   >
-                    <Edit2 size={14} /> Editar
+                    <Edit2 size={14} /> Ver / editar
                   </button>
                   <button
-                    onClick={() => handleDelete(tech.id)}
+                    onClick={() => handleDelete(tech)}
                     style={{
                       flex: 1,
                       padding: '8px',
