@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MtCard, MtButton } from '../ui';
+import { useNavigate } from 'react-router-dom';
+import { MtCard, MtButton, MtBadge } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, Wrench, AlertTriangle, BarChart3, RefreshCw } from 'lucide-react';
 
@@ -31,6 +32,57 @@ const titleStyle = { fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)',
 
 function NoData({ text = 'Sin datos en el periodo' }) {
   return <p style={{ fontSize: '12px', color: 'var(--mt-text-tertiary)', margin: 0 }}>{text}</p>;
+}
+
+const woNumber = (n) => `OT-${String(n).padStart(5, '0')}`;
+const fmtDay = (d) => new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+
+/** Aviso de atrasos: OTs preventivas/correctivas atrasadas y planes vencidos sin OT generada. */
+function DelayAlerts({ data }) {
+  const navigate = useNavigate();
+  const overdue = data.overdueList || [];
+  const plansDue = data.plans?.dueWithoutOrder || [];
+  if (overdue.length === 0 && plansDue.length === 0) return null;
+
+  const row = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', fontSize: '13px', padding: '6px 0', borderTop: '1px solid rgba(244,65,82,0.15)' };
+  return (
+    <MtCard elevated>
+      <div style={{ padding: 'var(--mt-space-lg)', borderLeft: '4px solid var(--mt-danger)', background: 'rgba(244, 65, 82, 0.05)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-sm)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <strong style={{ color: 'var(--mt-danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <AlertTriangle size={18} />
+            {overdue.length > 0 && `${overdue.length} orden(es) atrasada(s): ${data.overdueBreakdown.corrective} correctiva(s), ${data.overdueBreakdown.preventive} preventiva(s)`}
+            {overdue.length > 0 && plansDue.length > 0 && ' · '}
+            {plansDue.length > 0 && `${plansDue.length} plan(es) vencido(s) sin OT`}
+          </strong>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {overdue.length > 0 && <MtButton size="sm" variant="secondary" onClick={() => navigate('/maintenance/app/work-orders?filter=overdue')}>Ver atrasadas</MtButton>}
+            {plansDue.length > 0 && <MtButton size="sm" onClick={() => navigate('/maintenance/app/preventive-plans')}>Generar OTs en Planes</MtButton>}
+          </div>
+        </div>
+        {overdue.slice(0, 5).map((o) => (
+          <div key={`wo-${o.id}`} style={row}>
+            <button onClick={() => navigate(`/maintenance/app/work-orders/${o.id}`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'var(--mt-text-primary)', fontSize: '13px' }}>
+              <strong>{woNumber(o.number)}</strong> · {o.title}{o.asset ? ` · ${o.asset.code}` : ''}
+            </button>
+            <span style={{ display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <MtBadge size="sm" variant={o.type === 'CORRECTIVE' ? 'danger' : 'info'}>{o.type === 'CORRECTIVE' ? 'Correctiva' : 'Preventiva'}</MtBadge>
+              <span style={{ color: 'var(--mt-danger)', fontWeight: 800 }}>{o.daysOverdue} día(s)</span>
+            </span>
+          </div>
+        ))}
+        {plansDue.map((p) => (
+          <div key={`plan-${p.id}`} style={row}>
+            <span><strong>{p.code}</strong> · {p.title}{p.asset ? ` · ${p.asset.code}` : ''}</span>
+            <span style={{ display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <MtBadge size="sm" variant="warning">Plan sin OT</MtBadge>
+              <span style={{ color: 'var(--mt-warning)', fontWeight: 800 }}>vence {fmtDay(p.nextDueAt)}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </MtCard>
+  );
 }
 
 function CountCard({ icon: Icon, label, value, color, tint, note, accentBorder }) {
@@ -196,18 +248,31 @@ export default function ExecutiveDashboard() {
         </p>
       )}
 
+      <DelayAlerts data={data} />
+
       {/* KPI Row 1: Órdenes */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--mt-space-lg)' }}>
         <CountCard icon={AlertCircle} label="Abiertas" value={data.openOrders} color="var(--mt-accent)" tint="rgba(56, 189, 248, 0.1)" />
         <CountCard icon={AlertTriangle} label="Correctivas" value={data.correctivePending} color="var(--mt-danger)" tint="rgba(244, 65, 82, 0.1)" />
-        <CountCard icon={Wrench} label="Preventivas" value={data.preventivePending} color="var(--mt-warning)" tint="rgba(251, 191, 36, 0.1)" />
+        <CountCard
+          icon={Wrench}
+          label="Preventivas"
+          value={data.preventivePending}
+          color="var(--mt-warning)"
+          tint="rgba(251, 191, 36, 0.1)"
+          note={
+            data.plans?.dueWithoutOrder?.length
+              ? `+${data.plans.dueWithoutOrder.length} plan(es) vencidos sin OT`
+              : `${data.plans?.active ?? 0} plan(es) activo(s)${data.plans?.next ? ` · próximo ${data.plans.next.code} ${fmtDay(data.plans.next.nextDueAt)}` : ''}`
+          }
+        />
         <CountCard
           icon={Clock}
-          label="Vencidas"
+          label="Atrasadas"
           value={data.overdueOrders}
           color={data.overdueOrders > 0 ? 'var(--mt-danger)' : 'var(--mt-success)'}
           tint="rgba(244, 65, 82, 0.15)"
-          note={data.overdueOrders > 0 ? 'Requieren atención' : 'Al día'}
+          note={data.overdueOrders > 0 ? `${data.overdueBreakdown?.corrective ?? 0} correctivas · ${data.overdueBreakdown?.preventive ?? 0} preventivas` : 'Al día'}
           accentBorder
         />
         <CountCard icon={CheckCircle} label={`Completadas (${data.periodDays}d)`} value={data.completedOrders} color="var(--mt-success)" tint="rgba(34, 197, 94, 0.1)" />
@@ -219,7 +284,13 @@ export default function ExecutiveDashboard() {
           label="Cumplimiento Preventivo"
           value={data.preventiveCompliance}
           thresholds={{ good: 85, warning: 70 }}
-          hint={data.preventiveDueCount ? `${data.preventiveDueCount} preventivas programadas` : 'Sin preventivas programadas'}
+          hint={
+            data.preventiveDueCount
+              ? `${data.preventiveDueCount} preventiva(s) con fecha en el periodo`
+              : data.plans?.active
+                ? `${data.plans.active} plan(es) activo(s)${data.plans.next ? ` · próximo ${data.plans.next.code} el ${fmtDay(data.plans.next.nextDueAt)}` : ''} · aún sin órdenes vencidas que medir`
+                : 'No hay planes preventivos activos'
+          }
         />
         <PercentCard
           label="Disponibilidad Operacional"

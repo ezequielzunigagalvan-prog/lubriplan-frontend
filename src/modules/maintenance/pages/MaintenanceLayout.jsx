@@ -2,6 +2,7 @@ import { useEffect, Suspense } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MtIcon } from '../ui';
 import { useMaintenanceAccess } from '../hooks/useMaintenanceAccess';
+import { useAuth } from '../../../context/AuthContext';
 import NotificationBell from '../components/NotificationBell';
 import '../styles.css';
 
@@ -9,6 +10,13 @@ export default function MaintenanceLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { hasAccess } = useMaintenanceAccess();
+  const { logout } = useAuth();
+
+  // "Salir" cierra la sesión (antes solo navegaba a LubriPlan sin cerrarla)
+  const handleLogout = () => {
+    logout();
+    navigate('/maintenance/login', { replace: true });
+  };
 
   useEffect(() => {
     if (hasAccess === false) {
@@ -46,34 +54,17 @@ export default function MaintenanceLayout() {
         zIndex: 50,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--mt-border)',
-              background: 'transparent',
-              color: 'var(--mt-text-secondary)',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '13px',
-              transition: 'all 150ms ease',
-            }}
-            title="Volver a LubriPlan"
-          >
-            <MtIcon name="chevronLeft" size="sm" />
-            LubriPlan
-          </button>
+          {/* Maintenance es un sistema independiente: sin acceso directo a LubriPlan */}
+          <span style={{ fontWeight: 900, fontSize: '15px', color: 'var(--mt-text-primary)' }}>
+            LubriPlan <span style={{ color: 'var(--mt-accent)' }}>Maintenance</span>
+          </span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <NotificationBell />
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
+              onClick={handleLogout}
+              aria-label="Cerrar sesión"
               style={{
                 padding: '8px 12px',
                 borderRadius: '8px',
@@ -85,7 +76,7 @@ export default function MaintenanceLayout() {
                 fontSize: '13px',
                 transition: 'all 150ms ease',
               }}
-              title="Salir"
+              title="Cerrar sesión"
             >
               <MtIcon name="logOut" size="sm" />
             </button>

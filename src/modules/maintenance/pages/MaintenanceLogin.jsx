@@ -265,28 +265,6 @@ export default function MaintenanceLogin() {
               <MtIcon name="chevronLeft" size="sm" />
               Volver al inicio
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--mt-accent)',
-                cursor: 'pointer',
-                fontWeight: 600,
-                textDecoration: 'none',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'opacity 150ms ease',
-              }}
-              onMouseEnter={(e) => e.target.style.opacity = '0.7'}
-              onMouseLeave={(e) => e.target.style.opacity = '1'}
-            >
-              <MtIcon name="home" size="sm" />
-              Ir a LubriPlan
-            </button>
           </div>
         </div>
       </div>

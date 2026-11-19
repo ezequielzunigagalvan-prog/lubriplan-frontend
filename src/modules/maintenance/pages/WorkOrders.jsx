@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { maintenanceApi } from '../services/maintenanceApi';
 import { MtButton, MtCard, MtBadge, MtEmpty, MtSkeleton } from '../ui';
 import { Plus, Search, AlertTriangle, FileText, Clock, CheckCircle2, Wrench, Pause, XCircle, ChevronRight, Filter } from 'lucide-react';
@@ -32,7 +32,10 @@ export default function WorkOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all');
+  const [params] = useSearchParams();
+  // ?filter=overdue llega desde el aviso de atrasos del dashboard
+  const [filter, setFilter] = useState(() => params.get('filter') || 'all');
+  const [overdueCounts, setOverdueCounts] = useState({ total: 0, preventive: 0, corrective: 0 });
   const [search, setSearch] = useState('');
   const [counts, setCounts] = useState({});
 
@@ -54,6 +57,7 @@ export default function WorkOrders() {
 
         setOrders(formattedOrders);
         setCounts(res?.countsByStatus || {});
+        setOverdueCounts(res?.overdueCounts || { total: 0, preventive: 0, corrective: 0 });
       } catch (err) {
         console.error('Error loading work orders:', err);
         setError(err?.message || 'Error al cargar órdenes de trabajo');
@@ -66,6 +70,7 @@ export default function WorkOrders() {
 
   const statusFilters = [
     'all',
+    'overdue',
     'REQUESTED',
     'APPROVED',
     'ASSIGNED',
@@ -81,7 +86,7 @@ export default function WorkOrders() {
 
   const term = search.trim().toLowerCase();
   const filtered = orders.filter((order) => {
-    const matchesFilter = filter === 'all' || order.status === filter;
+    const matchesFilter = filter === 'all' || (filter === 'overdue' ? order.overdue : order.status === filter);
     const matchesSearch =
       !term ||
       order.numberLabel.toLowerCase().includes(term) ||
@@ -204,8 +209,10 @@ export default function WorkOrders() {
             >
               {status === 'all'
                 ? 'Todas'
+                : status === 'overdue'
+                ? `Atrasadas (${overdueCounts.total})`
                 : STATUS_CONFIG[status]?.label || status}
-              {status !== 'all' && counts[status] ? ` (${counts[status]})` : ''}
+              {status !== 'all' && status !== 'overdue' && counts[status] ? ` (${counts[status]})` : ''}
             </button>
           ))}
         </div>
@@ -213,6 +220,19 @@ export default function WorkOrders() {
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <MtCard elevated interactive onClick={() => setFilter('overdue')}>
+          <div style={{ padding: 'var(--mt-space-md)', borderLeft: `4px solid ${overdueCounts.total ? 'var(--mt-danger)' : 'var(--mt-success)'}` }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '4px' }}>
+              Atrasadas
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '900', color: overdueCounts.total ? 'var(--mt-danger)' : 'var(--mt-success)' }}>
+              {overdueCounts.total}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--mt-text-secondary)' }}>
+              {overdueCounts.corrective} correctivas · {overdueCounts.preventive} preventivas
+            </div>
+          </div>
+        </MtCard>
         <MtCard elevated>
           <div style={{ padding: 'var(--mt-space-md)' }}>
             <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)', marginBottom: '4px' }}>
@@ -329,6 +349,11 @@ export default function WorkOrders() {
                       <MtBadge size="sm">
                         {TYPE_LABELS[order.type] || order.type}
                       </MtBadge>
+                      {order.overdue && (
+                        <MtBadge size="sm" variant="danger">
+                          Atrasada {order.daysOverdue} día(s)
+                        </MtBadge>
+                      )}
                     </div>
 
                     {/* Title & Asset */}

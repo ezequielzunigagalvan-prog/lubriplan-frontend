@@ -398,6 +398,7 @@ export default function WorkOrderDetail() {
             <MtBadge variant={PRIORITY_BADGE[wo.priority]}>Prioridad {PRIORITY_LABELS[wo.priority] || wo.priority}</MtBadge>
             <MtBadge variant="neutral">{TYPE_LABELS[wo.type] || wo.type}</MtBadge>
             {wo.plan && <MtBadge variant="accent">Plan {wo.plan.code}</MtBadge>}
+            {wo.overdue && <MtBadge variant="danger">Atrasada {wo.daysOverdue} día(s)</MtBadge>}
           </div>
         </div>
       </div>
@@ -484,6 +485,10 @@ export default function WorkOrderDetail() {
           <Info label="Técnico asignado" value={wo.assignee?.name} />
           <Info label="Creada" value={fmtDateTime(wo.createdAt)} />
           <Info label="Programada" value={wo.scheduledAt ? fmtDateTime(wo.scheduledAt) : null} />
+          <Info
+            label={wo.type === 'CORRECTIVE' && !wo.scheduledAt ? 'Fecha compromiso (SLA)' : 'Fecha compromiso'}
+            value={wo.effectiveDueAt ? <span style={{ color: wo.overdue ? 'var(--mt-danger)' : undefined }}>{fmtDateTime(wo.effectiveDueAt)}</span> : null}
+          />
           <Info label="Inicio" value={wo.startedAt ? fmtDateTime(wo.startedAt) : null} />
           <Info label="Término" value={wo.finishedAt ? fmtDateTime(wo.finishedAt) : null} />
           {wo.validatedAt && <Info label="Validada" value={`${fmtDateTime(wo.validatedAt)}${wo.validator ? ` · ${wo.validator.name}` : ''}`} />}

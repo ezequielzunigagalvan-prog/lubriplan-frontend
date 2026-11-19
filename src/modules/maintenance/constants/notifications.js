@@ -1,10 +1,11 @@
 // Tipos de notificación de Maintenance (deben coincidir con el backend)
 export const NOTIFICATION_TYPES = {
   CRITICAL_FAILURE: { label: 'Falla crítica', badge: 'danger' },
-  OVERDUE_WO: { label: 'OT vencida', badge: 'danger' },
+  OVERDUE_WO: { label: 'OT atrasada', badge: 'danger' },
   WO_ASSIGNED: { label: 'OT asignada', badge: 'accent' },
   LOW_STOCK: { label: 'Stock bajo', badge: 'warning' },
   TECHNICIAN_OVERLOAD: { label: 'Sobrecarga', badge: 'warning' },
+  PLAN_DUE: { label: 'Plan vencido sin OT', badge: 'warning' },
   PREVENTIVE_SOON: { label: 'Preventivo próximo', badge: 'info' },
 };
 

@@ -20,8 +20,8 @@ export default function AccessDenied() {
           Mantenimiento no está habilitado para esta planta. Contacta a tu administrador para habilitar este módulo.
         </p>
 
-        <button onClick={() => navigate("/")} style={button}>
-          Volver a LubriPlan
+        <button onClick={() => navigate("/maintenance")} style={button}>
+          Volver al inicio
         </button>
       </div>
     </div>
