@@ -143,6 +143,17 @@ export const maintenanceApi = {
     return httpPost("/maintenance/spare-parts", data);
   },
 
+  // Baja (INACTIVE); el backend la bloquea si todavía tiene existencia
+  async deleteSparePart(id) {
+    return httpDelete(`/maintenance/spare-parts/${id}`);
+  },
+
+  // Catálogo completo con existencia por almacén: { warehouses, parts, stats }
+  async getInventoryOverview() {
+    const res = await httpGet('/maintenance/inventory/overview');
+    return res?.data ?? res;
+  },
+
   async updateSparePart(id, data) {
     return httpPatch(`/maintenance/spare-parts/${id}`, data);
   },
@@ -202,6 +213,12 @@ export const maintenanceApi = {
   },
 
   // Failure Codes CRUD
+  // Análisis de fallas (Pareto ISO 14224) de las correctivas del periodo
+  async getFailureAnalysis({ days = 180 } = {}) {
+    const res = await httpGet(`/maintenance/analytics/failures?days=${days}`);
+    return res?.data ?? res;
+  },
+
   async seedFailureCodes() {
     return httpPost("/maintenance/failure-codes/seed", {});
   },

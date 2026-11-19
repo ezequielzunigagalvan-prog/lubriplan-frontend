@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MtCard, MtBadge, MtButton } from '../ui';
 import { Activity, AlertTriangle, CheckCircle2, Clock, DollarSign, Gauge, Wrench, ClipboardCheck } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { maintenanceApi } from '../services/maintenanceApi';
+import FailureAnalysisPanel from '../components/FailureAnalysisPanel';
 import { ASSET_CRITICALITY_INFO } from '../constants/maintenance';
 import '../ui/tokens.css';
 
@@ -52,7 +53,7 @@ function ChartCard({ title, children, empty }) {
   );
 }
 
-export default function EquipmentAnalytics() {
+function EquipmentTab() {
   const navigate = useNavigate();
   const [days, setDays] = useState(90);
   const [data, setData] = useState(null);
@@ -116,7 +117,6 @@ export default function EquipmentAnalytics() {
       {/* Encabezado */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', margin: 0, marginBottom: 'var(--mt-space-sm)' }}>Analítica de Equipos</h1>
           <p style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', margin: 0 }}>
             Confiabilidad, costos y fallas de {summary.equipmentCount} equipo(s) en los últimos {data.periodDays} días
           </p>
@@ -322,6 +322,48 @@ export default function EquipmentAnalytics() {
       <p style={{ margin: 0, fontSize: '11px', color: 'var(--mt-text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
         <CheckCircle2 size={12} /> Calculado con órdenes reales. Disponibilidad y MTBF solo descuentan paros de correctivas cerradas; los costos incluyen solo refacciones.
       </p>
+    </div>
+  );
+}
+
+const TABS = [
+  { id: 'equipos', label: 'Equipos' },
+  { id: 'fallas', label: 'Fallas' },
+];
+
+/** Analítica: confiabilidad por equipo y análisis de fallas (incluye el catálogo de códigos). */
+export default function EquipmentAnalytics() {
+  const [params, setParams] = useSearchParams();
+  const tab = TABS.some((t) => t.id === params.get('tab')) ? params.get('tab') : 'equipos';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-xl)' }}>
+      <div>
+        <h1 style={{ fontSize: '32px', fontWeight: '900', margin: 0, marginBottom: 'var(--mt-space-md)' }}>Analítica</h1>
+        <div role="tablist" style={{ display: 'flex', gap: 'var(--mt-space-sm)', borderBottom: '1px solid var(--mt-border)' }}>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setParams(t.id === 'equipos' ? {} : { tab: t.id }, { replace: true })}
+              style={{
+                padding: '10px 18px',
+                border: 'none',
+                borderBottom: tab === t.id ? '3px solid var(--mt-accent)' : '3px solid transparent',
+                background: 'none',
+                color: tab === t.id ? 'var(--mt-accent)' : 'var(--mt-text-secondary)',
+                fontWeight: 800,
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {tab === 'fallas' ? <FailureAnalysisPanel /> : <EquipmentTab />}
     </div>
   );
 }

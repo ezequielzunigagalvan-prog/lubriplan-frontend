@@ -1,42 +1,53 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MtCard, MtButton, MtBadge } from '../ui';
 import { Plus, Search, Package, Building2, AlertTriangle, DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, TrendingUp, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { maintenanceApi } from '../services/maintenanceApi';
-import { httpDelete } from '../../../services/http';
+import { toast } from 'sonner';
 
-// Función para enriquecer stock con datos de refacción
-const enrichStockData = (stock) => {
-  return (Array.isArray(stock) ? stock : []).map(s => {
-    const part = s.sparePart || {};
-    const minStock = Number(part.minStock) || 10;
-    const maxStock = Number(part.maxStock) || minStock * 2;
-    // Usar updatedAt del stock si existe, sino createdAt
-    const lastDate = s.updatedAt || s.createdAt;
-    const lastMovement = lastDate ? new Date(lastDate).toLocaleDateString('es-ES') : '';
+const NO_WAREHOUSE_ID = 'none';
+const errorMessage = (err, fallback) => err?.data?.error || err?.message || fallback;
 
-    return {
-      id: s.sparePartId || s.id,
-      stockId: s.id,
-      qty: Number(s.quantity) || 0,
-      minQty: minStock,
-      maxStock: maxStock,
-      criticalQty: Math.floor(minStock / 3),
-      code: part.code || 'N/A',
-      name: part.name || 'Sin nombre',
-      description: part.description || '',
-      brand: part.brand || '',
-      partNumber: String(part.partNumber || ''),
-      sku: part.id || '',
-      unit: part.unit || 'pz',
-      price: Number(part.costPerUnit) || 0,
-      category: part.category || '',
-      supplier: '',
-      location: '',
-      lastMovement: lastMovement,
-      notes: '',
-    };
+/** Refacción del overview -> fila de la tabla para un almacén (o sin almacén). */
+function toRow(part, stock) {
+  const minQty = Number(part.minStock) || 0;
+  return {
+    id: part.id,
+    stockId: stock?.stockId ?? null,
+    warehouseId: stock?.warehouseId ?? null,
+    qty: stock ? stock.quantity : 0,
+    totalQty: part.totalQuantity,
+    minQty,
+    maxStock: Number(part.maxStock) || 0,
+    // "Crítico" = sin existencia teniendo mínimo, o por debajo de un tercio del mínimo
+    criticalQty: minQty > 0 ? Math.max(1, Math.floor(minQty / 3)) : 0,
+    code: part.code,
+    name: part.name,
+    description: part.description || '',
+    brand: part.brand || '',
+    partNumber: String(part.partNumber || ''),
+    sku: part.partNumber || '',
+    unit: part.unit || 'pz',
+    price: Number(part.costPerUnit) || 0,
+    category: part.category || '',
+    supplier: part.brand || '',
+    location: part.location || 'Sin ubicación',
+    lastMovement: (stock?.updatedAt || part.lastUpdate) ? new Date(stock?.updatedAt || part.lastUpdate).toLocaleDateString('es-MX') : '—',
+    notes: part.description || '',
+  };
+}
+
+/** Agrupa el catálogo por almacén; las refacciones sin existencia van a un grupo propio para que no desaparezcan. */
+function buildWarehouses(overview) {
+  const groups = overview.warehouses.map((w) => {
+    const spareParts = overview.parts.flatMap((p) => p.stocks.filter((st) => st.warehouseId === w.id).map((st) => toRow(p, st)));
+    return { ...w, status: spareParts.some((r) => r.minQty > 0 && r.qty < r.minQty) ? 'LOW' : 'OPTIMAL', spareParts };
   });
-};
+  const orphan = overview.parts.filter((p) => p.stocks.length === 0).map((p) => toRow(p, null));
+  if (orphan.length) {
+    groups.push({ id: NO_WAREHOUSE_ID, name: 'Sin existencia en almacén', location: 'Refacciones registradas sin stock en ningún almacén', status: 'LOW', spareParts: orphan });
+  }
+  return groups;
+}
 
 export default function Inventory() {
   const [warehouses, setWarehouses] = useState([]);
@@ -47,65 +58,23 @@ export default function Inventory() {
   const [expandedPartId, setExpandedPartId] = useState(null);
   const [viewMode, setViewMode] = useState('by-warehouse');
 
-  // Cargar almacenes y stock desde API
-  useEffect(() => {
-    const fetchInventory = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Usar maintenanceApi que incluye autenticación automáticamente
-        const warehousesData = await maintenanceApi.getWarehouses();
-
-        // Si no es array, convertir a array
-        if (!Array.isArray(warehousesData)) {
-          console.warn('Datos no son array, convirtiéndolos a []');
-          setWarehouses([]);
-          return;
-        }
-
-        // Para cada almacén, cargar su stock
-        // El backend ya retorna sparePart incluido en cada stock
-        const warehousesWithStock = await Promise.all(
-          warehousesData.map(async (warehouse) => {
-            try {
-              const stock = await maintenanceApi.getWarehouseStock(warehouse.id);
-              const enrichedStock = enrichStockData(stock);
-              return { ...warehouse, spareParts: enrichedStock };
-            } catch (err) {
-              console.warn(`Error cargando stock para almacén ${warehouse.id}:`, err);
-              return { ...warehouse, spareParts: [] };
-            }
-          })
-        );
-
-        setWarehouses(warehousesWithStock);
-      } catch (err) {
-        console.error('Error cargando inventario:', err);
-        // Mostrar mensaje de error y usar datos demo
-        console.warn('Usando datos demo porque el backend no está disponible');
-        setError(`⚠️ ${err.message || 'Backend no disponible'} - Mostrando datos de demostración`);
-
-        // Cargar datos demo para que el usuario pueda ver la interfaz
-        setWarehouses([
-          {
-            id: 1,
-            name: 'Almacén Principal (DEMO)',
-            location: 'Planta Jilotepec',
-            status: 'OPTIMAL',
-            spareParts: [
-              { id: 'SP-001', code: 'SP-001', name: 'Sello mecánico bomba', sku: 'SEAL-MECH-001', qty: 5, minQty: 10, criticalQty: 2, unit: 'pz', price: 85.50, supplier: 'Hidrolub', category: 'Sellos', location: 'Estante A-01', lastMovement: '2026-11-05', notes: 'Para bomba principal' },
-              { id: 'SP-002', code: 'SP-002', name: 'Correa trapecial', sku: 'BELT-TRAP-005', qty: 12, minQty: 20, criticalQty: 5, unit: 'm', price: 45.00, supplier: 'Industrial', category: 'Correas', location: 'Estante B-03', lastMovement: '2026-11-06', notes: 'Diversos diámetros' },
-            ],
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInventory();
+  // Una sola carga para todo (antes se repetía en 4 lugares con lógicas distintas)
+  const loadInventory = useCallback(async () => {
+    try {
+      setError(null);
+      const overview = await maintenanceApi.getInventoryOverview();
+      setWarehouses(buildWarehouses(overview));
+    } catch (err) {
+      console.error('[Inventory] Error loading inventory:', err);
+      setError(errorMessage(err, 'No se pudo cargar el inventario'));
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadInventory();
+  }, [loadInventory]);
 
   // Estados para modales
   const [showCreateWarehouseModal, setShowCreateWarehouseModal] = useState(false);
@@ -114,6 +83,7 @@ export default function Inventory() {
   const [selectedPartForEdit, setSelectedPartForEdit] = useState(null);
   const [showMovementsModal, setShowMovementsModal] = useState(false);
   const [selectedPartForMovements, setSelectedPartForMovements] = useState(null);
+  const [selectedPartForEntry, setSelectedPartForEntry] = useState(null);
 
   // Calculate total inventory stats
   const allSpareParts = warehouses.flatMap((wh) => wh.spareParts.map((p) => ({ ...p, warehouseId: wh.id })));
@@ -135,30 +105,26 @@ export default function Inventory() {
     p.sku?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalItems = allSpareParts.length;
+  const uniqueParts = [...new Map(allSpareParts.map((p) => [p.id, p])).values()];
+  const totalItems = uniqueParts.length;
   const totalValue = allSpareParts.reduce((sum, p) => sum + (p.qty * p.price), 0);
-  const lowStockItems = allSpareParts.filter((p) => p.qty < p.minQty).length;
-  const criticalStockItems = allSpareParts.filter((p) => p.qty < p.criticalQty).length;
-  const warehousesWithLowStock = warehouses.filter((wh) =>
-    wh.spareParts.some((p) => p.qty < p.minQty)
-  ).length;
+  const lowStockItems = uniqueParts.filter((p) => p.minQty > 0 && p.totalQty < p.minQty).length;
+  const criticalStockItems = uniqueParts.filter((p) => p.minQty > 0 && p.totalQty < p.criticalQty).length;
+  const warehousesWithLowStock = warehouses.filter((wh) => wh.id !== NO_WAREHOUSE_ID && wh.status === 'LOW').length;
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(value);
+    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value || 0);
   };
 
-  const handleDeletePart = async (partId) => {
-    if (confirm('¿Estás seguro de que deseas eliminar esta refacción?')) {
-      try {
-        // Usar httpDelete directamente
-        await httpDelete(`/maintenance/spare-parts/${partId}`);
-        alert('Refacción eliminada exitosamente');
-        // Recargar inventario
-        window.location.reload();
-      } catch (err) {
-        console.error('Error al eliminar:', err);
-        alert('Error al eliminar la refacción: ' + err.message);
-      }
+  const handleDeletePart = async (part) => {
+    if (!window.confirm(`¿Dar de baja la refacción ${part.code} · ${part.name}?`)) return;
+    try {
+      await maintenanceApi.deleteSparePart(part.id);
+      toast.success('Refacción dada de baja');
+      await loadInventory();
+    } catch (err) {
+      // p. ej. "tiene N en existencia: ajusta a 0 primero"
+      toast.error(errorMessage(err, 'No se pudo dar de baja la refacción'));
     }
   };
 
@@ -173,8 +139,6 @@ export default function Inventory() {
     );
   }
 
-  // Mostrar error (pero permitir seguir usando la página con datos demo)
-  // El error ahora se muestra como alerta, no bloquea la interfaz
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-2xl)' }}>
@@ -198,23 +162,13 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* Alerts for API Error or Critical Stock */}
       {error && (
-        <div style={{ background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: 'var(--mt-radius-md)', padding: 'var(--mt-space-lg)', display: 'flex', gap: 'var(--mt-space-md)', marginBottom: 'var(--mt-space-lg)' }}>
-          <AlertTriangle size={24} style={{ color: 'var(--mt-warning)', flexShrink: 0, marginTop: '2px' }} />
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 'var(--mt-font-weight-bold)', color: 'var(--mt-warning)', margin: 0, marginBottom: '4px' }}>
-              {error.includes('Backend') ? '🔌 Conexión Backend' : '⚠️ Advertencia'}
-            </h3>
-            <p style={{ fontSize: '12px', color: 'var(--mt-text-secondary)', margin: 0 }}>
-              {error}
-            </p>
-            {error.includes('Backend') && (
-              <p style={{ fontSize: '11px', color: 'var(--mt-text-secondary)', margin: '8px 0 0 0' }}>
-                💡 Tip: Verifica que el backend esté corriendo con: <code style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px' }}>npm run dev</code>
-              </p>
-            )}
+        <div style={{ background: 'rgba(244, 65, 82, 0.08)', border: '1px solid rgba(244, 65, 82, 0.3)', borderRadius: 'var(--mt-radius-md)', padding: 'var(--mt-space-lg)', display: 'flex', gap: 'var(--mt-space-md)', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 'var(--mt-space-md)', alignItems: 'center' }}>
+            <AlertTriangle size={20} style={{ color: 'var(--mt-danger)' }} />
+            <span style={{ fontSize: '13px', color: 'var(--mt-danger)', fontWeight: 700 }}>{error}</span>
           </div>
+          <MtButton size="sm" onClick={() => { setLoading(true); loadInventory(); }}>Reintentar</MtButton>
         </div>
       )}
 
@@ -258,7 +212,7 @@ export default function Inventory() {
                 Almacenes
               </p>
               <p style={{ fontSize: '28px', fontWeight: 'var(--mt-font-weight-black)', margin: 0, color: 'var(--mt-accent)' }}>
-                {warehouses.length}
+                {warehouses.filter((w) => w.id !== NO_WAREHOUSE_ID).length}
               </p>
             </div>
             <div style={{ width: '40px', height: '40px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -379,9 +333,11 @@ export default function Inventory() {
                           <h3 style={{ fontSize: '16px', fontWeight: 'var(--mt-font-weight-bold)', margin: 0 }}>
                             {warehouse.name}
                           </h3>
-                          <MtBadge variant={warehouse.status === 'OPTIMAL' ? 'success' : 'danger'} size="sm">
-                            {warehouse.status}
-                          </MtBadge>
+                          {warehouse.id !== NO_WAREHOUSE_ID && (
+                            <MtBadge variant={warehouse.status === 'OPTIMAL' ? 'success' : 'danger'} size="sm">
+                              {warehouse.status === 'OPTIMAL' ? 'Stock OK' : 'Con faltantes'}
+                            </MtBadge>
+                          )}
                           <MtBadge variant="info" size="sm">
                             {warehousePartsCount} refacciones
                           </MtBadge>
@@ -522,20 +478,27 @@ export default function Inventory() {
 
                                   {/* Action Buttons */}
                                   <div style={{ display: 'flex', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
-                                    <MtButton variant="secondary" size="sm" icon={<Clock size={14} />} onClick={() => {
-                                      setSelectedPartForMovements(part);
-                                      setShowMovementsModal(true);
-                                    }}>
-                                      Historial
-                                    </MtButton>
+                                    {part.stockId && (
+                                      <MtButton variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setSelectedPartForEntry(part)}>
+                                        Registrar entrada
+                                      </MtButton>
+                                    )}
+                                    {part.stockId && (
+                                      <MtButton variant="secondary" size="sm" icon={<Clock size={14} />} onClick={() => {
+                                        setSelectedPartForMovements(part);
+                                        setShowMovementsModal(true);
+                                      }}>
+                                        Historial
+                                      </MtButton>
+                                    )}
                                     <MtButton variant="secondary" size="sm" icon={<Edit2 size={14} />} onClick={() => {
                                       setSelectedPartForEdit(part);
                                       setShowEditPartModal(true);
                                     }}>
                                       Editar
                                     </MtButton>
-                                    <MtButton variant="secondary" size="sm" icon={<Trash2 size={14} />} onClick={() => handleDeletePart(part.id)}>
-                                      Eliminar
+                                    <MtButton variant="secondary" size="sm" icon={<Trash2 size={14} />} onClick={() => handleDeletePart(part)}>
+                                      Dar de baja
                                     </MtButton>
                                   </div>
                                 </div>
@@ -559,48 +522,7 @@ export default function Inventory() {
           onClose={() => setShowCreateWarehouseModal(false)}
           onSuccess={async () => {
             setShowCreateWarehouseModal(false);
-            // Recargar inventario sin reload
-            try {
-              const [warehousesData, spareParts] = await Promise.all([
-                maintenanceApi.getWarehouses(),
-                maintenanceApi.getSpareParts()
-              ]);
-              if (Array.isArray(warehousesData)) {
-                const sparePartsMap = {};
-                if (Array.isArray(spareParts)) {
-                  spareParts.forEach(part => {
-                    sparePartsMap[part.id] = part;
-                  });
-                }
-                const warehousesWithStock = await Promise.all(
-                  warehousesData.map(async (wh) => {
-                    try {
-                      const stock = await maintenanceApi.getWarehouseStock(wh.id);
-                      const enrichedStock = (Array.isArray(stock) ? stock : []).map(s => {
-                        const sparePart = sparePartsMap[s.sparePartId] || s;
-                        return {
-                          ...s,
-                          ...sparePart,
-                          id: s.sparePartId || s.id,
-                          qty: s.quantity || s.qty || 0,
-                          minQty: s.minStock || s.minQty || 10,
-                          price: sparePart?.costPerUnit || s.price || 0,
-                          code: sparePart?.code || s.code || 'N/A',
-                          name: sparePart?.name || s.name || 'Sin nombre',
-                          unit: sparePart?.unit || s.unit || 'pz',
-                        };
-                      });
-                      return { ...wh, spareParts: enrichedStock };
-                    } catch {
-                      return { ...wh, spareParts: [] };
-                    }
-                  })
-                );
-                setWarehouses(warehousesWithStock);
-              }
-            } catch (err) {
-              console.error('Error recargando:', err);
-            }
+            await loadInventory();
           }}
         />
       )}
@@ -612,26 +534,7 @@ export default function Inventory() {
           onClose={() => setShowCreatePartModal(false)}
           onSuccess={async () => {
             setShowCreatePartModal(false);
-            // Recargar inventario sin reload
-            try {
-              const warehousesData = await maintenanceApi.getWarehouses();
-              if (Array.isArray(warehousesData)) {
-                const warehousesWithStock = await Promise.all(
-                  warehousesData.map(async (wh) => {
-                    try {
-                      const stock = await maintenanceApi.getWarehouseStock(wh.id);
-                      const enrichedStock = enrichStockData(stock);
-                      return { ...wh, spareParts: enrichedStock };
-                    } catch {
-                      return { ...wh, spareParts: [] };
-                    }
-                  })
-                );
-                setWarehouses(warehousesWithStock);
-              }
-            } catch (err) {
-              console.error('Error recargando:', err);
-            }
+            await loadInventory();
           }}
         />
       )}
@@ -648,26 +551,19 @@ export default function Inventory() {
           onSuccess={async () => {
             setShowEditPartModal(false);
             setSelectedPartForEdit(null);
-            // Recargar inventario sin reload
-            try {
-              const warehousesData = await maintenanceApi.getWarehouses();
-              if (Array.isArray(warehousesData)) {
-                const warehousesWithStock = await Promise.all(
-                  warehousesData.map(async (wh) => {
-                    try {
-                      const stock = await maintenanceApi.getWarehouseStock(wh.id);
-                      const enrichedStock = enrichStockData(stock);
-                      return { ...wh, spareParts: enrichedStock };
-                    } catch {
-                      return { ...wh, spareParts: [] };
-                    }
-                  })
-                );
-                setWarehouses(warehousesWithStock);
-              }
-            } catch (err) {
-              console.error('Error recargando:', err);
-            }
+            await loadInventory();
+          }}
+        />
+      )}
+
+      {/* Modal Registrar entrada */}
+      {selectedPartForEntry && (
+        <StockEntryModal
+          part={selectedPartForEntry}
+          onClose={() => setSelectedPartForEntry(null)}
+          onSuccess={async () => {
+            setSelectedPartForEntry(null);
+            await loadInventory();
           }}
         />
       )}
@@ -762,7 +658,9 @@ function WarehouseModal({ onClose, onSuccess }) {
 }
 
 // Modal para crear/editar refacciones
-function SparePartModal({ warehouses, part, onClose, onSuccess }) {
+function SparePartModal({ warehouses: allWarehouses, part, onClose, onSuccess }) {
+  // El grupo "sin existencia" no es un almacén real
+  const warehouses = allWarehouses.filter((w) => w.id !== NO_WAREHOUSE_ID);
   const [formData, setFormData] = useState(part ? {
     code: part.code || '',
     name: part.name || '',
@@ -771,9 +669,9 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
     brand: part.brand || '',
     partNumber: String(part.partNumber || ''),
     unit: part.unit || 'pz',
-    warehouseId: '',
+    warehouseId: part.warehouseId || (warehouses.length > 0 ? warehouses[0].id : ''),
     initialQuantity: typeof part.qty === 'number' ? part.qty : 0,
-    minStock: typeof part.minQty === 'number' ? part.minQty : 10,
+    minStock: typeof part.minQty === 'number' ? part.minQty : 0,
     maxStock: typeof part.maxStock === 'number' ? part.maxStock : (typeof part.minQty === 'number' ? part.minQty * 2 : 20),
     costPerUnit: typeof part.price === 'number' ? part.price : 0,
   } : {
@@ -812,10 +710,9 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
 
     try {
       setLoading(true);
+      const qty = Number(formData.initialQuantity) || 0;
       if (part) {
-        // Actualizar refacción: solo campos de refacción
-        const updateData = {
-          code: formData.code,
+        await maintenanceApi.updateSparePart(part.id, {
           name: formData.name,
           description: formData.description || null,
           category: formData.category,
@@ -825,38 +722,28 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
           minStock: formData.minStock,
           maxStock: formData.maxStock,
           costPerUnit: formData.costPerUnit,
-        };
-        await maintenanceApi.updateSparePart(part.id, updateData);
+        });
 
-        // Si cambió la cantidad, actualizar stock también
-        if (formData.warehouseId && formData.initialQuantity !== (part.qty || 0)) {
-          try {
-            await maintenanceApi.updateStock(part.stockId, {
-              quantity: formData.initialQuantity,
-            });
-          } catch (err) {
-            console.warn('Error actualizando cantidad de stock:', err);
-          }
+        // Cambio de existencia = ajuste registrado (conteo físico)
+        if (part.stockId && qty !== (part.qty || 0)) {
+          await maintenanceApi.updateStock(part.stockId, { quantity: qty, reason: 'Ajuste desde edición de refacción' });
+        } else if (!part.stockId && qty > 0 && formData.warehouseId) {
+          const stock = await maintenanceApi.createStock({ warehouseId: formData.warehouseId, sparePartId: part.id });
+          await maintenanceApi.updateStock(stock.id, { quantity: qty, reason: 'Existencia inicial' });
         }
       } else {
-        // Crear refacción
         const newPart = await maintenanceApi.createSparePart(formData);
-
-        // Crear stock en el almacén seleccionado con cantidad inicial
-        if (formData.initialQuantity > 0 && newPart?.id) {
-          await maintenanceApi.createStock({
-            warehouseId: formData.warehouseId,
-            sparePartId: newPart.id,
-            quantity: formData.initialQuantity,
-            minStock: formData.minStock,
-            maxStock: formData.maxStock,
-          });
+        // El stock se crea en 0 y la cantidad inicial se registra como movimiento
+        if (newPart?.id && formData.warehouseId) {
+          const stock = await maintenanceApi.createStock({ warehouseId: formData.warehouseId, sparePartId: newPart.id });
+          if (qty > 0) await maintenanceApi.updateStock(stock.id, { quantity: qty, reason: 'Existencia inicial' });
         }
       }
+      toast.success(part ? 'Refacción actualizada' : 'Refacción creada');
       onSuccess();
     } catch (err) {
-      console.error('Error:', err);
-      alert(`Error al ${part ? 'actualizar' : 'crear'} refacción: ` + err.message);
+      console.error('[Inventory] Error saving spare part:', err);
+      toast.error(errorMessage(err, `Error al ${part ? 'actualizar' : 'crear'} refacción`));
     } finally {
       setLoading(false);
     }
@@ -1032,6 +919,58 @@ function SparePartModal({ warehouses, part, onClose, onSuccess }) {
           </MtButton>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Modal para registrar una entrada (recepción de refacciones)
+function StockEntryModal({ part, onClose, onSuccess }) {
+  const [quantity, setQuantity] = useState('');
+  const [unitCost, setUnitCost] = useState(part.price || '');
+  const [reason, setReason] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!(Number(quantity) > 0)) return toast.error('La cantidad debe ser mayor a 0');
+    try {
+      setSaving(true);
+      await maintenanceApi.recordStockMovement({
+        stockId: part.stockId,
+        type: 'IN',
+        quantity: Number(quantity),
+        costPerUnit: unitCost === '' ? undefined : Number(unitCost),
+        reason: reason.trim() || 'Entrada de almacén',
+      });
+      toast.success(`Entrada registrada: +${quantity} ${part.unit}`);
+      onSuccess();
+    } catch (err) {
+      toast.error(errorMessage(err, 'No se pudo registrar la entrada'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const input = { width: '100%', padding: '10px', border: '1px solid var(--mt-border)', borderRadius: '8px', boxSizing: 'border-box', fontSize: '14px', background: 'var(--mt-bg-surface)', color: 'var(--mt-text-primary)' };
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+      <form onSubmit={submit} style={{ width: '100%', maxWidth: '440px', background: 'var(--mt-bg-surface)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 900 }}>Registrar entrada</h2>
+        <p style={{ margin: 0, fontSize: '13px', color: 'var(--mt-text-secondary)' }}>{part.code} · {part.name} — existencia actual: {part.qty} {part.unit}</p>
+        <label style={{ fontSize: '13px', fontWeight: 700 }}>Cantidad recibida *
+          <input type="number" min="0" step="any" value={quantity} onChange={(e) => setQuantity(e.target.value)} style={input} autoFocus />
+        </label>
+        <label style={{ fontSize: '13px', fontWeight: 700 }}>Costo unitario (MXN)
+          <input type="number" min="0" step="any" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} style={input} />
+        </label>
+        <label style={{ fontSize: '13px', fontWeight: 700 }}>Referencia / motivo
+          <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ej: Factura 1234, proveedor X" style={input} />
+        </label>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <MtButton type="button" variant="secondary" onClick={onClose} disabled={saving}>Cancelar</MtButton>
+          <MtButton type="submit" disabled={saving}>{saving ? 'Guardando...' : 'Registrar'}</MtButton>
+        </div>
+      </form>
     </div>
   );
 }

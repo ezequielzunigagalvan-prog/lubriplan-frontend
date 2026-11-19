@@ -30,7 +30,6 @@ export default function MaintenanceLayout() {
     { path: '/maintenance/app/personnel', icon: 'users', label: 'Personal' },
     { path: '/maintenance/app/history', icon: 'clock', label: 'Historial' },
     { path: '/maintenance/app/inventory', icon: 'box', label: 'Inventario & Refacciones' },
-    { path: '/maintenance/app/failure-codes', icon: 'zap', label: 'Fallas' },
     { path: '/maintenance/app/analytics', icon: 'trendingUp', label: 'Analítica' },
     { path: '/maintenance/app/notifications', icon: 'bell', label: 'Notificaciones' },
   ];

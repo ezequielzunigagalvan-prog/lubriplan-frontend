@@ -15,7 +15,6 @@ const MaintenanceWorkOrderDetail = lazy(() => import("../pages/WorkOrderDetail")
 const MaintenanceReportFailure = lazy(() => import("../pages/ReportFailure"));
 const AccessDenied = lazy(() => import("../pages/AccessDenied"));
 const MaintenanceInventory = lazy(() => import("../pages/Inventory"));
-const MaintenanceFailureCodes = lazy(() => import("../pages/FailureCodes"));
 const EquipmentAnalytics = lazy(() => import("../pages/EquipmentAnalytics"));
 const ExecutiveDashboard = lazy(() => import("../pages/ExecutiveDashboard"));
 const AssetHierarchy = lazy(() => import("../pages/AssetHierarchy"));
@@ -78,7 +77,8 @@ export default function MaintenanceRouter() {
 
           {/* Phase 3A: Inventory & Spare Parts (Unified) */}
           <Route path="inventory" element={<MaintenanceInventory />} />
-          <Route path="failure-codes" element={<MaintenanceFailureCodes />} />
+          {/* Fallas ahora vive en Analítica (pestaña "Fallas") */}
+          <Route path="failure-codes" element={<Navigate to="/maintenance/app/analytics?tab=fallas" replace />} />
 
           {/* Phase 2: Equipment Analytics */}
           <Route path="analytics" element={<EquipmentAnalytics />} />
