@@ -284,8 +284,16 @@ export const maintenanceApi = {
   // NOTIFICATIONS (Phase 4)
   // ============================================================
 
-  async getNotifications(limit = 50) {
-    return httpGet(`/maintenance/notifications?limit=${limit}`);
+  // filters: { unread: true, type: 'OVERDUE_WO' }
+  async getNotifications(limit = 50, filters = {}) {
+    const params = new URLSearchParams({ limit });
+    if (filters.unread) params.set('unread', '1');
+    if (filters.type) params.set('type', filters.type);
+    return httpGet(`/maintenance/notifications?${params}`);
+  },
+
+  async markAllNotificationsRead() {
+    return httpPatch('/maintenance/notifications/read-all', {});
   },
 
   async getUnreadCount() {
