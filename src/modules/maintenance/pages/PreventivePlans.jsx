@@ -80,15 +80,27 @@ async function syncAssignments(planId, previous, planData) {
 
 const woNumber = (n) => `OT-${String(n ?? '').padStart(5, '0')}`;
 
-/** Texto del próximo vencimiento: atraso en días calendario, "hoy" o la fecha. */
+/**
+ * Texto del vencimiento de la tarjeta.
+ * Mientras el ciclo tiene una OT abierta, la tarjeta muestra esa OT (y su atraso) hasta que se termine;
+ * al terminarla desaparece y queda la siguiente fecha del plan.
+ */
 function dueInfo(plan) {
   if (!plan.active) return { text: 'Pausado', color: 'var(--mt-text-tertiary)' };
-  if (!plan.nextDueAt) return { text: 'Sin calcular', color: 'var(--mt-text-primary)' };
-  const date = new Date(plan.nextDueAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-  if (plan.daysOverdue > 0) {
-    return { text: `Atrasado ${plan.daysOverdue} día${plan.daysOverdue === 1 ? '' : 's'}`, sub: `Vencía el ${date}`, color: 'var(--mt-danger)' };
+  const fmt = (d) => new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  const next = plan.nextDueAt ? `Siguiente: ${fmt(plan.nextDueAt)}` : null;
+  const wo = plan.openWorkOrder;
+  if (wo) {
+    if (wo.overdue) {
+      return { text: `Atrasado ${wo.daysOverdue} día${wo.daysOverdue === 1 ? '' : 's'}`, sub: `${woNumber(wo.number)} pendiente${wo.dueAt ? ` · vencía el ${fmt(wo.dueAt)}` : ''}`, color: 'var(--mt-danger)', late: true };
+    }
+    return { text: `En curso: ${woNumber(wo.number)}`, sub: wo.dueAt ? `Para el ${fmt(wo.dueAt)}` : next, color: 'var(--mt-accent)' };
   }
-  if (plan.dueToday) return { text: 'Vence hoy', sub: date, color: 'var(--mt-warning)' };
+  if (!plan.nextDueAt) return { text: 'Sin calcular', color: 'var(--mt-text-primary)' };
+  if (plan.daysOverdue > 0) {
+    return { text: `Atrasado ${plan.daysOverdue} día${plan.daysOverdue === 1 ? '' : 's'}`, sub: `Vencía el ${fmt(plan.nextDueAt)}`, color: 'var(--mt-danger)', late: true };
+  }
+  if (plan.dueToday) return { text: 'Vence hoy', sub: fmt(plan.nextDueAt), color: 'var(--mt-warning)' };
   return { text: new Date(plan.nextDueAt).toLocaleDateString('es-MX'), color: 'var(--mt-text-primary)' };
 }
 
@@ -107,18 +119,16 @@ export default function PreventivePlans() {
   const [assets, setAssets] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [spareParts, setSpareParts] = useState([]);
-  const [overduePlans, setOverduePlans] = useState([]);
   const [upcomingPlans, setUpcomingPlans] = useState([]);
 
   const loadPlans = useCallback(async () => {
     try {
-      const [response, overdue, upcoming] = await Promise.all([
+      // "Vencidos" se calcula de cada tarjeta (ciclo sin OT atrasado u OT del ciclo atrasada)
+      const [response, upcoming] = await Promise.all([
         maintenanceApi.getAllPlans({ limit: 200 }),
-        maintenanceApi.getOverduePlans(),
         maintenanceApi.getUpcomingPlans(7),
       ]);
       setPlans(response?.data || []);
-      setOverduePlans(overdue || []);
       setUpcomingPlans(upcoming || []);
     } catch (err) {
       console.error('[PreventivePlans] Error cargando planes:', err);
@@ -342,7 +352,7 @@ export default function PreventivePlans() {
               Vencidos
             </div>
             <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--mt-danger)' }}>
-              {overduePlans.length}
+              {plans.filter((p) => p.active && dueInfo(p).late).length}
             </div>
           </div>
         </MtCard>
@@ -443,7 +453,7 @@ export default function PreventivePlans() {
               key={plan.id}
               elevated
               style={{
-                borderLeft: !plan.active ? '4px solid var(--mt-text-tertiary)' : plan.daysOverdue > 0 ? '4px solid var(--mt-danger)' : '4px solid var(--mt-success)',
+                borderLeft: !plan.active ? '4px solid var(--mt-text-tertiary)' : dueInfo(plan).late ? '4px solid var(--mt-danger)' : '4px solid var(--mt-success)',
               }}
             >
               <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
@@ -494,6 +504,9 @@ export default function PreventivePlans() {
                         <>
                           <div style={{ fontWeight: '800', color: due.color }}>{due.text}</div>
                           {due.sub && <div style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>{due.sub}</div>}
+                      {plan.openWorkOrder && plan.nextDueAt && (
+                        <div style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>Siguiente ciclo: {new Date(plan.nextDueAt).toLocaleDateString('es-MX')}</div>
+                      )}
                         </>
                       );
                     })()}
@@ -522,7 +535,7 @@ export default function PreventivePlans() {
                     style={{
                       width: '100%',
                       padding: '10px',
-                      background: plan.daysOverdue > 0 ? 'var(--mt-danger)' : 'var(--mt-accent)',
+                      background: dueInfo(plan).late ? 'var(--mt-danger)' : 'var(--mt-accent)',
                       border: 'none',
                       borderRadius: 'var(--mt-radius-md)',
                       cursor: 'pointer',

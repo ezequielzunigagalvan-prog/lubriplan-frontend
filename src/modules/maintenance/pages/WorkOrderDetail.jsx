@@ -11,6 +11,12 @@ import PhotoCapture from '../components/PhotoCapture';
 import { STATE_LABELS, PRIORITY_LABELS } from '../constants/maintenance';
 import '../ui/tokens.css';
 
+/** YYYY-MM-DD en la hora local (no UTC): una OT creada a las 19:25 del 20 no debe quedar programada el 21. */
+const localYmd = (value) => {
+  const d = new Date(value);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const TYPE_LABELS = { CORRECTIVE: 'Correctiva', PREVENTIVE: 'Preventiva', INSPECTION: 'Inspección' };
 const STATUS_BADGE = {
   REQUESTED: 'info', APPROVED: 'info', ASSIGNED: 'accent', IN_PROGRESS: 'warning', WAITING_PARTS: 'warning',
@@ -240,7 +246,7 @@ export default function WorkOrderDetail() {
       ...f,
       comment: '',
       assignedTo: wo.assignedTo ? String(wo.assignedTo) : '',
-      scheduledAt: wo.scheduledAt ? String(wo.scheduledAt).slice(0, 10) : '',
+      scheduledAt: wo.scheduledAt ? localYmd(wo.scheduledAt) : '',
       workDone: execution.workDone,
       diagnosis: execution.diagnosis,
       failureCause: execution.failureCause,
