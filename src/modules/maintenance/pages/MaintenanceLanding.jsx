@@ -1,478 +1,221 @@
-import { useNavigate } from 'react-router-dom';
-import { MtButton, MtCard, MtIcon } from '../ui';
-import '../ui/tokens.css';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Wrench, ArrowRight, LayoutDashboard, ClipboardList, AlertOctagon, CalendarCheck, CalendarRange,
+  Factory, Users, History, Boxes, BarChart3, Bell, Megaphone, UserCheck, Hammer, BadgeCheck,
+  LineChart, ShieldCheck, Gauge, TimerReset, HardHat,
+} from 'lucide-react';
+import { GearCluster } from './IndustrialArt';
+import './industrial.css';
+
+const MODULES = [
+  { Icon: LayoutDashboard, title: 'Dashboard ejecutivo', text: 'Cumplimiento preventivo, órdenes abiertas, atrasos y backlog de un vistazo.' },
+  { Icon: ClipboardList, title: 'Órdenes de trabajo', text: 'Preventivas y correctivas con checklist, tiempos, refacciones y evidencia.' },
+  { Icon: AlertOctagon, title: 'Reporte de fallas', text: 'Cualquier operador reporta una falla y se convierte en orden en segundos.' },
+  { Icon: CalendarCheck, title: 'Planes preventivos', text: 'Frecuencias fijas o flotantes que generan sus órdenes sin duplicados.' },
+  { Icon: CalendarRange, title: 'Calendarios', text: 'Carga de trabajo por semana y por técnico para planear sin choques.' },
+  { Icon: Factory, title: 'Activos', text: 'Jerarquía de equipos, criticidad, ubicación e historial completo.' },
+  { Icon: Users, title: 'Personal', text: 'Técnicos, especialidades y matriz de experiencia por tipo de equipo.' },
+  { Icon: Boxes, title: 'Inventario', text: 'Refacciones con stock mínimo, consumos por orden y alertas de reorden.' },
+  { Icon: History, title: 'Historial', text: 'Toda la trazabilidad de lo que se hizo, cuándo y quién lo hizo.' },
+  { Icon: BarChart3, title: 'Análisis', text: 'Disponibilidad, MTBF, MTTR y Pareto de códigos de falla.' },
+  { Icon: Bell, title: 'Notificaciones', text: 'Alertas de atraso, stock bajo y asignaciones para cada rol.' },
+  { Icon: HardHat, title: 'Vista del técnico', text: 'Su trabajo del día, ordenado por prioridad y listo para ejecutar.' },
+];
+
+const FLOW = [
+  { Icon: Megaphone, title: 'Reporta', text: 'Falla o plan vencido' },
+  { Icon: UserCheck, title: 'Asigna', text: 'Al técnico adecuado' },
+  { Icon: Hammer, title: 'Ejecuta', text: 'Checklist y refacciones' },
+  { Icon: BadgeCheck, title: 'Valida', text: 'Supervisor cierra' },
+  { Icon: LineChart, title: 'Analiza', text: 'KPIs y mejora' },
+];
+
+const STATS = [
+  { Icon: Gauge, value: 'Disponibilidad', label: 'por equipo y por planta' },
+  { Icon: TimerReset, value: 'MTBF · MTTR', label: 'calculados con cada orden' },
+  { Icon: CalendarCheck, value: 'Preventivo', label: 'cumplimiento a tiempo' },
+  { Icon: ShieldCheck, value: 'Trazabilidad', label: 'de cada intervención' },
+];
+
+const TICKER = ['OT-0142 · Compresor C-2 · Preventiva completada', 'Stock bajo · Rodamiento 6205', 'OT-0143 · Bomba B-7 · Falla reportada', 'Plan PM-COMP · próxima en 3 días', 'OT-0139 · Validada por supervisor', 'Disponibilidad semanal · 97.4 %'];
+
+const BARS = [62, 78, 55, 90, 72, 84, 96];
+
+function MockDashboard() {
+  return (
+    <div className="ind-card ind-fade-up ind-delay-2" style={{ padding: 20, position: 'relative' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ fontWeight: 800, fontSize: 14 }}>Panel de planta</div>
+        <span className="ind-chip" style={{ fontSize: 10 }}><span className="ind-live-dot" /> En vivo</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+        {[{ k: 'Abiertas', v: '12', c: '#38bdf8' }, { k: 'Atrasadas', v: '2', c: '#ef4444' }, { k: 'Preventivo', v: '94%', c: '#22c55e' }].map((x) => (
+          <div key={x.k} style={{ background: '#0b1220', border: '1px solid var(--ind-line)', borderRadius: 10, padding: '10px 12px' }}>
+            <div style={{ fontSize: 11, color: 'var(--ind-muted)', fontWeight: 700 }}>{x.k}</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: x.c }}>{x.v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--ind-muted)', fontWeight: 700, marginBottom: 8 }}>Órdenes completadas por día</div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 110, padding: '0 4px', borderBottom: '1px solid var(--ind-line)' }}>
+        {BARS.map((h, i) => (
+          <div key={i} className="ind-bar" style={{ flex: 1, height: `${h}%`, animationDelay: `${i * 90}ms` }} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
+        {[{ t: 'OT-0143 · Bomba B-7', s: 'Crítica', c: '#ef4444' }, { t: 'OT-0142 · Compresor C-2', s: 'En curso', c: '#f59e0b' }].map((r) => (
+          <div key={r.t} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, background: '#0b1220', border: '1px solid var(--ind-line)', borderRadius: 8, padding: '8px 10px' }}>
+            <span style={{ fontWeight: 700 }}>{r.t}</span>
+            <span style={{ color: r.c, fontWeight: 800 }}>{r.s}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const sectionTitle = { fontSize: 'clamp(26px, 3vw, 36px)', fontWeight: 900, margin: '12px 0 10px', lineHeight: 1.15 };
+const container = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
 
 export default function MaintenanceLanding() {
-  const navigate = useNavigate();
-
-  const scrollToSection = (id) => {
-    setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
+  useEffect(() => { document.title = 'LubriPlan Maintenance | Gestión de mantenimiento industrial'; }, []);
 
   return (
-    <div style={{ background: 'var(--mt-bg-base)', color: 'var(--mt-text-primary)', minHeight: '100vh' }}>
-      {/* Gradient Background */}
-      <div style={{ position: 'fixed', inset: 0, opacity: 0.3, pointerEvents: 'none', zIndex: 0 }} className="mt-grid-pattern" />
-      <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 100%)', pointerEvents: 'none', zIndex: 0 }} />
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Navigation */}
-        <nav style={{ padding: '20px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--mt-border)', backdropFilter: 'blur(10px)', background: 'rgba(15, 23, 42, 0.5)' }}>
-          <div style={{ fontSize: '20px', fontWeight: 900, color: 'var(--mt-accent)' }}>
-            LubriPlan
+    <div className="ind-root">
+      {/* Navegación */}
+      <nav style={{ position: 'sticky', top: 0, zIndex: 20, backdropFilter: 'blur(12px)', background: 'rgba(10,15,26,0.75)', borderBottom: '1px solid var(--ind-line)' }}>
+        <div style={{ ...container, display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 64 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Wrench size={19} color="#111827" />
+            </div>
+            <span style={{ fontWeight: 900, fontSize: 17 }}>LubriPlan <span style={{ color: 'var(--ind-sky)' }}>Maintenance</span></span>
           </div>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <button onClick={() => scrollToSection('features')} style={{ background: 'none', border: 'none', color: 'var(--mt-text-secondary)', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
-              Características
-            </button>
-            <button onClick={() => scrollToSection('benefits')} style={{ background: 'none', border: 'none', color: 'var(--mt-text-secondary)', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
-              Beneficios
-            </button>
-            <MtButton onClick={() => navigate('/maintenance/login')} size="sm">
-              Entrar
-            </MtButton>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+            <a href="#modulos" className="ind-hide-mobile" style={{ color: 'var(--ind-muted)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>Módulos</a>
+            <a href="#flujo" className="ind-hide-mobile" style={{ color: 'var(--ind-muted)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>Flujo</a>
+            <Link to="/maintenance/login" className="ind-btn ind-btn-primary" style={{ padding: '10px 18px', fontSize: 14 }}>Iniciar sesión <ArrowRight size={16} /></Link>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        {/* Hero Section */}
-        <section style={{ padding: '120px 40px', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '80px', alignItems: 'center' }}>
-            {/* Left: Text */}
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '20px', marginBottom: '24px', width: 'fit-content' }}>
-                <MtIcon name="sparkles" size="sm" />
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--mt-accent)' }}>PLATAFORMA INDUSTRIAL</span>
-              </div>
+      {/* Héroe */}
+      <header style={{ position: 'relative', overflow: 'hidden', padding: '80px 0 70px' }}>
+        <div className="ind-blueprint" />
+        <div className="ind-glow" style={{ width: 520, height: 520, background: '#0ea5e9', top: -200, left: -160 }} />
+        <div className="ind-glow" style={{ width: 420, height: 420, background: '#f59e0b', bottom: -220, right: -120, opacity: 0.2 }} />
+        <div className="ind-hide-mobile" style={{ position: 'absolute', right: -60, top: 30, opacity: 0.18, pointerEvents: 'none' }}>
+          <GearCluster width={520} height={400} />
+        </div>
 
-              <h1 style={{ fontSize: '56px', fontWeight: 900, lineHeight: 1.1, marginBottom: '24px', color: 'var(--mt-text-primary)', backgroundImage: 'linear-gradient(135deg, var(--mt-text-primary), var(--mt-accent))', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Mantenimiento predictivo en tiempo real
-              </h1>
-
-              <p style={{ fontSize: '18px', fontWeight: 500, color: 'var(--mt-text-secondary)', marginBottom: '32px', lineHeight: 1.8 }}>
-                Desde el reporte hasta el historial. Controla cada paso del mantenimiento industrial con precisión, trazabilidad y automatización inteligente.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '40px' }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <MtIcon name="checkCircle2" size="lg" style={{ color: 'var(--mt-success)', flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 700 }}>Trazabilidad Completa</div>
-                    <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>Historial inmutable de todas las acciones</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <MtIcon name="zap" size="lg" style={{ color: 'var(--mt-accent)', flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 700 }}>Ejecución Móvil</div>
-                    <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>Fotos, notas y datos en tiempo real</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <MtIcon name="barChart3" size="lg" style={{ color: 'var(--mt-success)', flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 700 }}>Análisis Avanzado</div>
-                    <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>Dashboards y KPIs en vivo</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <MtIcon name="shield" size="lg" style={{ color: 'var(--mt-accent)', flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 700 }}>Seguridad Empresarial</div>
-                    <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>Control de acceso y auditoría</div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <MtButton onClick={() => navigate('/maintenance/login')} size="lg">
-                  <MtIcon name="arrowRight" size="sm" />
-                  Acceder Ahora
-                </MtButton>
-                <MtButton variant="secondary" onClick={() => scrollToSection('features')} size="lg">
-                  Ver Demo
-                </MtButton>
-              </div>
-            </div>
-
-            {/* Right: Visual Stats */}
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* Main Card */}
-              <div style={{ position: 'relative', perspective: '1200px' }}>
-                <div style={{
-                  transform: 'rotateY(-12deg) rotateX(8deg)',
-                  transformStyle: 'preserve-3d',
-                  filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.4))',
-                }}>
-                  <MtCard elevated>
-                    <div style={{ padding: '32px', background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '28px' }}>
-                        <div>
-                          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--mt-accent)', textTransform: 'uppercase', marginBottom: '6px' }}>Orden de Trabajo</div>
-                          <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--mt-accent)' }}>OT-002847</div>
-                        </div>
-                        <div style={{ padding: '8px 12px', background: 'rgba(34, 197, 94, 0.2)', borderRadius: '6px', color: 'var(--mt-success)', fontSize: '12px', fontWeight: 700 }}>
-                          EN EJECUCIÓN
-                        </div>
-                      </div>
-
-                      <div style={{ marginBottom: '24px' }}>
-                        <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '8px' }}>Revisión de bomba centrifuga</div>
-                        <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', marginBottom: '12px' }}>Activo: Bomba Principal · Planta: Toluca</div>
-                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: 'rgba(248, 113, 113, 0.15)', color: 'var(--mt-danger)', borderRadius: '6px', fontSize: '12px', fontWeight: 700 }}>
-                            ● ALTA PRIORIDAD
-                          </span>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6', borderRadius: '6px', fontSize: '12px', fontWeight: 700 }}>
-                            ● PREVENTIVO
-                          </span>
-                        </div>
-                      </div>
-
-                      <div style={{ borderTop: '1px solid var(--mt-border)', paddingTop: '24px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--mt-text-tertiary)', marginBottom: '12px', textTransform: 'uppercase' }}>Progreso</div>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
-                          <div style={{ flex: 1, height: '6px', background: 'var(--mt-border)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: '75%', background: 'linear-gradient(90deg, var(--mt-accent), var(--mt-success))', borderRadius: '3px' }} />
-                          </div>
-                          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--mt-accent)' }}>75%</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: 'var(--mt-text-secondary)' }}>
-                          <span>Reportado: 14/11 09:30</span>
-                          <span>Actualizado: 14/11 14:15</span>
-                        </div>
-                      </div>
-                    </div>
-                  </MtCard>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <MtCard>
-                  <div style={{ padding: '20px' }}>
-                    <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--mt-accent)', marginBottom: '4px' }}>247</div>
-                    <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>Órdenes Completadas</div>
-                  </div>
-                </MtCard>
-                <MtCard>
-                  <div style={{ padding: '20px' }}>
-                    <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--mt-success)', marginBottom: '4px' }}>4.2h</div>
-                    <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>MTTR Promedio</div>
-                  </div>
-                </MtCard>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 5-Step Workflow */}
-        <section id="features" style={{ padding: '100px 40px', background: 'rgba(56, 189, 248, 0.02)', borderTop: '1px solid var(--mt-border)', borderBottom: '1px solid var(--mt-border)' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-              <h2 style={{ fontSize: '44px', fontWeight: 900, marginBottom: '16px' }}>Flujo de Trabajo Optimizado</h2>
-              <p style={{ fontSize: '18px', color: 'var(--mt-text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-                Desde la identificación de la falla hasta el análisis histórico. Un proceso lineal que garantiza la trazabilidad en cada paso.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '32px', position: 'relative' }}>
-              {[
-                { icon: 'alertCircle', label: 'Reportar Falla', desc: 'Operador identifica problema' },
-                { icon: 'checkCircle2', label: 'Evaluar', desc: 'Supervisor analiza' },
-                { icon: 'wrench', label: 'Ejecutar', desc: 'Técnico interviene' },
-                { icon: 'clipboardCheck', label: 'Validar', desc: 'Cierre de orden' },
-                { icon: 'bookOpen', label: 'Archivar', desc: 'Registro histórico' },
-              ].map((step, i) => (
-                <div key={i} style={{ textAlign: 'center', animation: `mt-slide-up 0.6s ease backwards`, animationDelay: `${i * 80}ms` }}>
-                  <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '16px',
-                    background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(139, 92, 246, 0.2))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 16px',
-                    color: 'var(--mt-accent)',
-                    position: 'relative',
-                    border: '2px solid rgba(56, 189, 248, 0.3)',
-                  }}>
-                    <MtIcon name={step.icon} size={32} />
-                    <div style={{
-                      position: 'absolute',
-                      top: '-12px',
-                      right: '-12px',
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: 'var(--mt-accent)',
-                      color: 'var(--mt-bg-base)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      fontWeight: 900,
-                    }}>
-                      {i + 1}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>{step.label}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>{step.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section style={{ padding: '100px 40px' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-              <h2 style={{ fontSize: '44px', fontWeight: 900, marginBottom: '16px' }}>Características Principales</h2>
-              <p style={{ fontSize: '18px', color: 'var(--mt-text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-                Herramientas completas para gestionar el ciclo de vida del mantenimiento industrial
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '28px', marginBottom: '80px' }}>
-              {[
-                { icon: 'package', title: 'Jerarquía de Activos', desc: 'Organiza equipos por planta y ubicación', status: 'Disponible', color: '#38BDF8' },
-                { icon: 'clipboard', title: 'Gestión de Órdenes', desc: 'Reporta, asigna y valida trabajos', status: 'Disponible', color: '#10B981' },
-                { icon: 'smartphone', title: 'Ejecución Móvil', desc: 'Fotos, notas y validación en campo', status: 'Disponible', color: '#F59E0B' },
-                { icon: 'barChart3', title: 'Análisis Avanzado', desc: 'Dashboards de KPIs y tendencias', status: 'Disponible', color: '#8B5CF6' },
-                { icon: 'history', title: 'Historial Completo', desc: 'Registro inmutable de todas las acciones', status: 'Disponible', color: '#EC4899' },
-                { icon: 'box', title: 'Inventario Integrado', desc: 'Gestión de refacciones y stock', status: 'Disponible', color: '#06B6D4' },
-              ].map((item, i) => (
-                <MtCard key={i} elevated>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
-                    <div style={{
-                      width: '56px',
-                      height: '56px',
-                      borderRadius: '12px',
-                      background: `${item.color}20`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: item.color,
-                      fontSize: '28px',
-                    }}>
-                      <MtIcon name={item.icon} size={28} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>{item.title}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', marginBottom: '12px' }}>{item.desc}</div>
-                    </div>
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '6px 10px',
-                      background: 'rgba(34, 197, 94, 0.15)',
-                      color: 'var(--mt-success)',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      width: 'fit-content',
-                      marginTop: 'auto',
-                    }}>
-                      <MtIcon name="check" size="sm" />
-                      {item.status}
-                    </div>
-                  </div>
-                </MtCard>
-              ))}
-            </div>
-
-            <div style={{ background: 'rgba(56, 189, 248, 0.05)', borderRadius: '16px', padding: '48px 40px', textAlign: 'center' }}>
-              <h3 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '32px' }}>Próximas Características</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
-                {[
-                  { label: 'Mantenimiento Preventivo', icon: 'calendar' },
-                  { label: 'Planificación Inteligente', icon: 'calendarDays' },
-                  { label: 'Checklists Digitales', icon: 'checkSquare' },
-                  { label: 'Contadores de Equipos', icon: 'tally' },
-                  { label: 'Notificaciones Smart', icon: 'bell' },
-                  { label: 'Reportes Personalizados', icon: 'fileText' },
-                ].map((item, i) => (
-                  <div key={i} style={{
-                    padding: '16px',
-                    borderRadius: '10px',
-                    border: '2px solid var(--mt-border)',
-                    textAlign: 'center',
-                    background: 'var(--mt-bg-surface)',
-                  }}>
-                    <div style={{ fontSize: '20px', marginBottom: '8px' }}>
-                      <MtIcon name={item.icon} size={24} />
-                    </div>
-                    <div style={{ fontSize: '12px', fontWeight: 700 }}>{item.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Benefits Section */}
-        <section id="benefits" style={{ padding: '100px 40px', background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%)', borderTop: '1px solid var(--mt-border)' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-              <h2 style={{ fontSize: '44px', fontWeight: 900, marginBottom: '16px' }}>Beneficios para tu Operación</h2>
-              <p style={{ fontSize: '18px', color: 'var(--mt-text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-                Mejora tus métricas operacionales y reduce costos de mantenimiento
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '32px' }}>
-              {[
-                { icon: 'trendingDown', title: 'Reduce MTTR', desc: 'Disminuye el tiempo de resolución de problemas hasta 40%', metric: '-40%' },
-                { icon: 'target', title: 'Mejora Disponibilidad', desc: 'Aumenta la disponibilidad de equipos con mantenimiento predictivo', metric: '+25%' },
-                { icon: 'dollarSign', title: 'Optimiza Costos', desc: 'Reduce costos de mantenimiento no planificado significativamente', metric: '-35%' },
-                { icon: 'clipboardCheck', title: 'Auditoría Completa', desc: 'Mantén un registro inmutable de todas las intervenciones', metric: '100%' },
-              ].map((benefit, i) => (
-                <div key={i} style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '12px',
-                    background: 'rgba(56, 189, 248, 0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--mt-accent)',
-                    flexShrink: 0,
-                  }}>
-                    <MtIcon name={benefit.icon} size={28} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '6px' }}>{benefit.title}</div>
-                    <div style={{ fontSize: '14px', color: 'var(--mt-text-secondary)', marginBottom: '8px' }}>{benefit.desc}</div>
-                    <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--mt-accent)' }}>{benefit.metric}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Roles Section */}
-        <section style={{ padding: '100px 40px', borderTop: '1px solid var(--mt-border)' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-              <h2 style={{ fontSize: '44px', fontWeight: 900, marginBottom: '16px' }}>Para Cada Rol</h2>
-              <p style={{ fontSize: '18px', color: 'var(--mt-text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-                Diseñado para adaptarse a la estructura de tu organización
-              </p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
-              {[
-                { role: 'Operador de Planta', desc: 'Reporta fallas desde el terreno con fotos y ubicación', icon: 'hardhats', color: '#F59E0B' },
-                { role: 'Técnico Especialista', desc: 'Ejecuta trabajo y registra actividades en tiempo real', icon: 'wrench', color: '#10B981' },
-                { role: 'Supervisor', desc: 'Aprueba, asigna recursos y valida trabajos completados', icon: 'users', color: '#38BDF8' },
-                { role: 'Gerente Mantenimiento', desc: 'Analiza datos, optimiza procesos y planifica preventivo', icon: 'trendingUp', color: '#8B5CF6' },
-              ].map((r, i) => (
-                <MtCard key={i} elevated>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '10px',
-                      background: `${r.color}20`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: r.color,
-                    }}>
-                      <MtIcon name={r.icon} size={24} />
-                    </div>
-                    <div style={{ fontSize: '15px', fontWeight: 700 }}>{r.role}</div>
-                    <div style={{ fontSize: '13px', color: 'var(--mt-text-secondary)' }}>{r.desc}</div>
-                  </div>
-                </MtCard>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Final */}
-        <section style={{ padding: '120px 40px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)' }}>
-          <div style={{ maxWidth: 700, margin: '0 auto' }}>
-            <h2 style={{ fontSize: '48px', fontWeight: 900, marginBottom: '24px', backgroundImage: 'linear-gradient(135deg, var(--mt-text-primary), var(--mt-accent))', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Comienza Tu Transformación Digital
-            </h2>
-            <p style={{ fontSize: '18px', color: 'var(--mt-text-secondary)', marginBottom: '48px', lineHeight: 1.8 }}>
-              Optimiza tus procesos de mantenimiento industrial. Accede ahora y descubre cómo LubriPlan puede mejorar tu operación.
+        <div className="ind-hero-grid" style={{ ...container, position: 'relative' }}>
+          <div>
+            <span className="ind-chip ind-fade-up"><span className="ind-live-dot" /> Gestión de mantenimiento industrial</span>
+            <h1 className="ind-fade-up ind-delay-1" style={{ fontSize: 'clamp(36px, 5vw, 60px)', lineHeight: 1.04, fontWeight: 900, margin: '20px 0 18px' }}>
+              Menos paros.<br />Más <span style={{ color: 'var(--ind-amber)' }}>producción</span>.
+            </h1>
+            <p className="ind-fade-up ind-delay-2" style={{ color: 'var(--ind-muted)', fontSize: 18, maxWidth: 540, margin: '0 0 30px', lineHeight: 1.55 }}>
+              Controla órdenes de trabajo, planes preventivos, refacciones y la confiabilidad de tus equipos desde una sola plataforma, en planta y en tiempo real.
             </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <MtButton onClick={() => navigate('/maintenance/login')} size="lg">
-                <MtIcon name="login" size="sm" />
-                Acceder Ahora
-              </MtButton>
-              <MtButton variant="secondary" onClick={() => navigate('/')} size="lg">
-                Ir a LubriPlan Principal
-              </MtButton>
-            </div>
-
-            <div style={{ marginTop: '48px', paddingTop: '48px', borderTop: '1px solid var(--mt-border)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '24px' }}>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--mt-accent)', marginBottom: '4px' }}>24/7</div>
-                <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>Disponibilidad</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--mt-success)', marginBottom: '4px' }}>99.9%</div>
-                <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>Uptime Garantizado</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--mt-accent)', marginBottom: '4px' }}>Ilimitado</div>
-                <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>Historial de Datos</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--mt-success)', marginBottom: '4px' }}>∞</div>
-                <div style={{ fontSize: '12px', color: 'var(--mt-text-secondary)' }}>Órdenes de Trabajo</div>
-              </div>
+            <div className="ind-fade-up ind-delay-3" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <Link to="/maintenance/login" className="ind-btn ind-btn-primary">Entrar a la plataforma <ArrowRight size={18} /></Link>
+              <a href="#modulos" className="ind-btn ind-btn-ghost">Ver módulos</a>
             </div>
           </div>
-        </section>
+          <MockDashboard />
+        </div>
+      </header>
 
-        {/* Footer */}
-        <footer style={{ padding: '60px 40px', borderTop: '1px solid var(--mt-border)', background: 'rgba(255,255,255,0.01)' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '40px', marginBottom: '40px' }}>
-              <div>
-                <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--mt-accent)', marginBottom: '16px' }}>LubriPlan</div>
-                <p style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', lineHeight: 1.6 }}>
-                  Plataforma integral para gestión de mantenimiento industrial. Desde el reporte hasta el análisis histórico.
-                </p>
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '12px', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)' }}>Producto</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <a href="#features" style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', textDecoration: 'none', transition: 'color 150ms ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-accent)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>Características</a>
-                  <a href="#benefits" style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', textDecoration: 'none', transition: 'color 150ms ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-accent)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>Beneficios</a>
-                  <a href="/maintenance/login" style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', textDecoration: 'none', transition: 'color 150ms ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-accent)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>Iniciar Sesión</a>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '12px', textTransform: 'uppercase', color: 'var(--mt-text-tertiary)' }}>Empresa</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <a href="/" style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', textDecoration: 'none', transition: 'color 150ms ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-accent)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>LubriPlan Principal</a>
-                  <a href="/" style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', textDecoration: 'none', transition: 'color 150ms ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-accent)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>Acerca de</a>
-                  <a href="/" style={{ fontSize: '13px', color: 'var(--mt-text-secondary)', textDecoration: 'none', transition: 'color 150ms ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--mt-accent)'} onMouseLeave={(e) => e.target.style.color = 'var(--mt-text-secondary)'}>Contacto</a>
-                </div>
-              </div>
-            </div>
+      <div className="ind-hazard" />
 
-            <div style={{ borderTop: '1px solid var(--mt-border)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--mt-text-tertiary)', fontSize: '12px', flexWrap: 'wrap', gap: '16px' }}>
-              <p>© 2026 LubriPlan. Todos los derechos reservados. | Desarrollado por Hidrolub</p>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <a href="/" style={{ color: 'var(--mt-text-tertiary)', textDecoration: 'none' }}>Privacidad</a>
-                <a href="/" style={{ color: 'var(--mt-text-tertiary)', textDecoration: 'none' }}>Términos</a>
-              </div>
-            </div>
-          </div>
-        </footer>
+      {/* Ticker de actividad */}
+      <div style={{ overflow: 'hidden', borderBottom: '1px solid var(--ind-line)', background: '#0b1220', padding: '12px 0' }} aria-hidden="true">
+        <div className="ind-ticker">
+          {[...TICKER, ...TICKER].map((t, i) => (
+            <span key={i} style={{ color: 'var(--ind-muted)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 2, background: i % 3 === 1 ? '#f59e0b' : '#38bdf8' }} /> {t}
+            </span>
+          ))}
+        </div>
       </div>
+
+      {/* Indicadores */}
+      <section style={{ ...container, padding: '56px 24px 10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          {STATS.map(({ Icon, value, label }) => (
+            <div key={value} className="ind-card ind-card-hover" style={{ padding: 20, display: 'flex', gap: 14, alignItems: 'center' }}>
+              <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(56,189,248,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon size={22} color="#38bdf8" />
+              </div>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: 17 }}>{value}</div>
+                <div style={{ color: 'var(--ind-muted)', fontSize: 13 }}>{label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Módulos */}
+      <section id="modulos" style={{ ...container, padding: '70px 24px', scrollMarginTop: 70 }}>
+        <span className="ind-chip">Módulos</span>
+        <h2 style={sectionTitle}>Todo tu mantenimiento, conectado</h2>
+        <p style={{ color: 'var(--ind-muted)', maxWidth: 640, margin: '0 0 34px', fontSize: 16 }}>Cada módulo comparte la misma información: una falla reportada termina en una orden, consume refacciones y alimenta tus indicadores.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+          {MODULES.map(({ Icon, title, text }, i) => (
+            <div key={title} className="ind-card ind-card-hover" style={{ padding: 22 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, background: i % 4 === 1 ? 'rgba(245,158,11,0.14)' : 'rgba(56,189,248,0.12)' }}>
+                <Icon size={22} color={i % 4 === 1 ? '#f59e0b' : '#38bdf8'} />
+              </div>
+              <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 6 }}>{title}</div>
+              <div style={{ color: 'var(--ind-muted)', fontSize: 14, lineHeight: 1.5 }}>{text}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Flujo */}
+      <section id="flujo" style={{ position: 'relative', overflow: 'hidden', padding: '70px 0', background: '#0b1220', borderTop: '1px solid var(--ind-line)', borderBottom: '1px solid var(--ind-line)', scrollMarginTop: 70 }}>
+        <div className="ind-blueprint" />
+        <div style={{ ...container, position: 'relative' }}>
+          <span className="ind-chip">Flujo de trabajo</span>
+          <h2 style={sectionTitle}>De la falla al indicador, sin papeles</h2>
+          <div style={{ position: 'relative', marginTop: 40 }}>
+            <div className="ind-flow-line ind-hide-mobile" style={{ position: 'absolute', top: 34, left: '10%', right: '10%' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 18, position: 'relative' }}>
+              {FLOW.map(({ Icon, title, text }, i) => (
+                <div key={title} className="ind-fade-up" style={{ textAlign: 'center', animationDelay: `${i * 120}ms` }}>
+                  <div style={{ width: 68, height: 68, margin: '0 auto 14px', borderRadius: '50%', background: 'var(--ind-panel-2)', border: '2px solid rgba(56,189,248,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 6px #0b1220' }}>
+                    <Icon size={28} color={i === FLOW.length - 1 ? '#f59e0b' : '#38bdf8'} />
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--ind-amber)', fontWeight: 900, letterSpacing: '0.1em' }}>PASO {i + 1}</div>
+                  <div style={{ fontWeight: 900, fontSize: 18, margin: '4px 0' }}>{title}</div>
+                  <div style={{ color: 'var(--ind-muted)', fontSize: 13 }}>{text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Llamado a la acción */}
+      <section style={{ ...container, padding: '80px 24px' }}>
+        <div className="ind-card" style={{ position: 'relative', overflow: 'hidden', padding: '48px 36px', textAlign: 'center', background: 'linear-gradient(135deg, #1a2333, #0f172a)' }}>
+          <div className="ind-glow" style={{ width: 360, height: 360, background: '#f59e0b', top: -180, left: '40%', opacity: 0.18 }} />
+          <div style={{ position: 'relative' }}>
+            <h2 style={{ ...sectionTitle, marginTop: 0 }}>¿Listo para tomar el control de tu planta?</h2>
+            <p style={{ color: 'var(--ind-muted)', fontSize: 16, margin: '0 auto 26px', maxWidth: 560 }}>Entra con tu cuenta y empieza a registrar órdenes, planes y activos hoy mismo.</p>
+            <Link to="/maintenance/login" className="ind-btn ind-btn-primary">Iniciar sesión <ArrowRight size={18} /></Link>
+          </div>
+        </div>
+      </section>
+
+      <div className="ind-hazard" />
+      <footer style={{ ...container, padding: '28px 24px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, color: 'var(--ind-muted)', fontSize: 13 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Wrench size={15} color="#f59e0b" /> LubriPlan Maintenance</span>
+        <span>© {new Date().getFullYear()} · Desarrollado por Hidrolub</span>
+      </footer>
     </div>
   );
 }

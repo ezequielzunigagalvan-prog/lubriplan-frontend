@@ -1,6 +1,10 @@
 import { useEffect, Suspense } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MtIcon } from '../ui';
+import {
+  LayoutDashboard, ClipboardList, AlertOctagon, CalendarCheck, CalendarRange, CalendarClock, Factory, Users, History,
+  Boxes, BarChart3, Bell,
+} from 'lucide-react';
 import { useMaintenanceAccess } from '../hooks/useMaintenanceAccess';
 import { useAuth } from '../../../context/AuthContext';
 import NotificationBell from '../components/NotificationBell';
@@ -18,6 +22,8 @@ export default function MaintenanceLayout() {
     navigate('/maintenance/login', { replace: true });
   };
 
+  useEffect(() => { document.title = 'LubriPlan Maintenance'; }, []);
+
   useEffect(() => {
     if (hasAccess === false) {
       navigate('/maintenance/access-denied', { replace: true });
@@ -27,19 +33,20 @@ export default function MaintenanceLayout() {
   // El Dashboard (/maintenance/app) es prefijo de todas las rutas: solo se marca con coincidencia exacta
   const isActive = (path, exact = false) => pathname === path || (!exact && pathname.startsWith(`${path}/`));
 
+  // Cada módulo con su ícono (antes varios nombres no existían en MtIcon y se veían sin ícono)
   const menuItems = [
-    { path: '/maintenance/app', icon: 'dashboard', label: 'Dashboard', exact: true },
-    { path: '/maintenance/app/work-orders', icon: 'clipboard', label: 'Órdenes' },
-    { path: '/maintenance/app/report-failure', icon: 'alertCircle', label: 'Reportar Falla' },
-    { path: '/maintenance/app/preventive-plans', icon: 'calendar', label: 'Planes' },
-    { path: '/maintenance/app/planning-calendar', icon: 'calendarDays', label: 'Planificación' },
-    { path: '/maintenance/app/maintenance-calendar', icon: 'calendar', label: 'Mantenimiento' },
-    { path: '/maintenance/app/assets', icon: 'package', label: 'Activos' },
-    { path: '/maintenance/app/personnel', icon: 'users', label: 'Personal' },
-    { path: '/maintenance/app/history', icon: 'clock', label: 'Historial' },
-    { path: '/maintenance/app/inventory', icon: 'box', label: 'Inventario & Refacciones' },
-    { path: '/maintenance/app/analytics', icon: 'trendingUp', label: 'Analítica' },
-    { path: '/maintenance/app/notifications', icon: 'bell', label: 'Notificaciones' },
+    { path: '/maintenance/app', Icon: LayoutDashboard, label: 'Dashboard', exact: true },
+    { path: '/maintenance/app/work-orders', Icon: ClipboardList, label: 'Órdenes' },
+    { path: '/maintenance/app/report-failure', Icon: AlertOctagon, label: 'Reportar Falla' },
+    { path: '/maintenance/app/preventive-plans', Icon: CalendarCheck, label: 'Planes' },
+    { path: '/maintenance/app/planning-calendar', Icon: CalendarRange, label: 'Planificación' },
+    { path: '/maintenance/app/maintenance-calendar', Icon: CalendarClock, label: 'Mantenimiento' },
+    { path: '/maintenance/app/assets', Icon: Factory, label: 'Activos' },
+    { path: '/maintenance/app/personnel', Icon: Users, label: 'Personal' },
+    { path: '/maintenance/app/history', Icon: History, label: 'Historial' },
+    { path: '/maintenance/app/inventory', Icon: Boxes, label: 'Inventario & Refacciones' },
+    { path: '/maintenance/app/analytics', Icon: BarChart3, label: 'Analítica' },
+    { path: '/maintenance/app/notifications', Icon: Bell, label: 'Notificaciones' },
   ];
 
   return (
@@ -123,7 +130,7 @@ export default function MaintenanceLayout() {
                 }}
                 title={item.label}
               >
-                <MtIcon name={item.icon} size="sm" />
+                <item.Icon size={17} strokeWidth={2.2} style={{ flexShrink: 0 }} />
                 <span>{item.label}</span>
               </NavLink>
             ))}

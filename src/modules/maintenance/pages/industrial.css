@@ -1,0 +1,212 @@
+/* Tema visual industrial para el landing y el login de LubriPlan Maintenance */
+
+.ind-root {
+  --ind-bg: #0a0f1a;
+  --ind-panel: #111827;
+  --ind-panel-2: #1a2333;
+  --ind-line: rgba(148, 163, 184, 0.16);
+  --ind-text: #e5e7eb;
+  --ind-muted: #94a3b8;
+  --ind-sky: #38bdf8;
+  --ind-amber: #f59e0b;
+  --ind-green: #22c55e;
+  --ind-red: #ef4444;
+  background: var(--ind-bg);
+  color: var(--ind-text);
+  min-height: 100vh;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Cuadrícula tipo plano técnico */
+.ind-blueprint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+}
+
+.ind-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* Franja de seguridad (amarillo/negro) */
+.ind-hazard {
+  height: 10px;
+  background: repeating-linear-gradient(-45deg, var(--ind-amber) 0 14px, #111 14px 28px);
+  background-size: 200% 100%;
+  animation: ind-hazard-move 6s linear infinite;
+}
+
+.ind-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.08);
+  color: #7dd3fc;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ind-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ind-green);
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: ind-pulse 1.8s infinite;
+}
+
+.ind-gear {
+  animation: ind-spin 18s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.ind-gear.rev { animation-direction: reverse; animation-duration: 12s; }
+.ind-gear.fast { animation-duration: 8s; }
+
+.ind-card {
+  background: linear-gradient(180deg, var(--ind-panel-2), var(--ind-panel));
+  border: 1px solid var(--ind-line);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.ind-card-hover {
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+.ind-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 24px 60px rgba(56, 189, 248, 0.12);
+}
+
+.ind-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  text-decoration: none;
+}
+.ind-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ind-btn-primary {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #111827;
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+}
+.ind-btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(245, 158, 11, 0.45); }
+.ind-btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ind-text);
+  border: 1px solid var(--ind-line);
+}
+.ind-btn-ghost:hover { background: rgba(255, 255, 255, 0.08); }
+
+.ind-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ind-line);
+  background: #0b1220;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.ind-input-wrap:focus-within {
+  border-color: var(--ind-sky);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+.ind-input-wrap input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ind-text);
+  font-size: 15px;
+}
+
+.ind-bar {
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, var(--ind-sky), #0284c7);
+  transform-origin: bottom;
+  animation: ind-grow 1.2s ease-out both;
+}
+
+.ind-fade-up { animation: ind-fade-up 700ms ease-out both; }
+.ind-delay-1 { animation-delay: 120ms; }
+.ind-delay-2 { animation-delay: 240ms; }
+.ind-delay-3 { animation-delay: 360ms; }
+
+.ind-ticker {
+  display: flex;
+  gap: 48px;
+  width: max-content;
+  animation: ind-ticker 40s linear infinite;
+}
+
+.ind-flow-line {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--ind-sky), transparent);
+  background-size: 200% 100%;
+  animation: ind-flow 2.4s linear infinite;
+}
+
+.ind-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(17, 24, 39, 0.3);
+  border-top-color: #111827;
+  border-radius: 50%;
+  animation: ind-spin 0.8s linear infinite;
+}
+
+@keyframes ind-spin { to { transform: rotate(360deg); } }
+@keyframes ind-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+@keyframes ind-hazard-move { to { background-position: 200% 0; } }
+@keyframes ind-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ind-fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes ind-ticker { to { transform: translateX(-50%); } }
+@keyframes ind-flow { to { background-position: -200% 0; } }
+
+/* Diseño adaptable */
+.ind-login-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; min-height: 100vh; }
+.ind-hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+@media (max-width: 960px) {
+  .ind-login-grid { grid-template-columns: 1fr; }
+  .ind-login-showcase { display: none !important; }
+  .ind-hero-grid { grid-template-columns: 1fr; }
+  .ind-hide-mobile { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ind-gear, .ind-live-dot, .ind-hazard, .ind-bar, .ind-fade-up, .ind-ticker, .ind-flow-line { animation: none !important; }
+}
