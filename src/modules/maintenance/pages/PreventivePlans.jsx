@@ -100,8 +100,21 @@ function dueInfo(plan) {
   if (plan.daysOverdue > 0) {
     return { text: `Atrasado ${plan.daysOverdue} día${plan.daysOverdue === 1 ? '' : 's'}`, sub: `Vencía el ${fmt(plan.nextDueAt)}`, color: 'var(--mt-danger)', late: true };
   }
-  if (plan.dueToday) return { text: 'Vence hoy', sub: fmt(plan.nextDueAt), color: 'var(--mt-warning)' };
-  return { text: new Date(plan.nextDueAt).toLocaleDateString('es-MX'), color: 'var(--mt-text-primary)' };
+  if (plan.dueToday) return { text: 'Vence hoy', sub: fmt(plan.nextDueAt), color: 'var(--mt-warning)', dueNow: true };
+  const today = new Date();
+  const startToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const d = new Date(plan.nextDueAt);
+  const days = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - startToday) / 86400000);
+  return { text: d.toLocaleDateString('es-MX'), sub: `En ${days} día${days === 1 ? '' : 's'}`, color: 'var(--mt-text-primary)', upToDate: true };
+}
+
+/** Estado general de la tarjeta (chip superior). */
+function planStatus(plan, due) {
+  if (!plan.active) return { label: 'Pausado', bg: 'rgba(107,114,128,0.12)', fg: 'var(--mt-text-tertiary)' };
+  if (due.late) return { label: 'Atrasado', bg: 'rgba(239,68,68,0.12)', fg: 'var(--mt-danger)' };
+  if (plan.openWorkOrder) return { label: 'En ejecución', bg: 'rgba(56,189,248,0.12)', fg: 'var(--mt-accent)' };
+  if (due.dueNow) return { label: 'Vence hoy', bg: 'rgba(245,158,11,0.14)', fg: 'var(--mt-warning)' };
+  return { label: plan.lastCompletedAt ? '✓ Al día' : 'Programado', bg: 'rgba(34,197,94,0.12)', fg: 'var(--mt-success)' };
 }
 
 export default function PreventivePlans() {
@@ -468,9 +481,14 @@ export default function PreventivePlans() {
                       {plan.asset && ` · ${plan.asset.code} ${plan.asset.name}`}
                     </p>
                   </div>
-                  <MtBadge variant={plan.active ? 'success' : 'default'} size="sm">
-                    {plan.active ? 'Activo' : 'Inactivo'}
-                  </MtBadge>
+                  {(() => {
+                    const st = planStatus(plan, dueInfo(plan));
+                    return (
+                      <span style={{ padding: '4px 10px', borderRadius: '999px', background: st.bg, color: st.fg, fontSize: '12px', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                        {st.label}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Details */}
@@ -483,7 +501,7 @@ export default function PreventivePlans() {
                       {plan.triggerType === 'TIME' && plan.frequencyUnit
                         ? `Cada ${plan.frequencyEvery} ${FREQUENCY_UNIT_LABELS[plan.frequencyUnit] || plan.frequencyUnit}`
                         : 'Por contador'}
-                      {plan.scheduleMode === 'FLOATING' && ' (flotante)'}
+                      {plan.triggerType === 'TIME' && (plan.scheduleMode === 'FLOATING' ? ' (desde la última realización)' : ' (fecha fija)')}
                     </div>
                   </div>
                   <div>
@@ -515,8 +533,8 @@ export default function PreventivePlans() {
                     <div style={{ color: 'var(--mt-text-tertiary)', marginBottom: '2px', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
                       Última Realización
                     </div>
-                    <div style={{ fontWeight: '700', color: 'var(--mt-text-primary)' }}>
-                      {plan.lastCompletedAt ? new Date(plan.lastCompletedAt).toLocaleDateString('es-MX') : 'Nunca'}
+                    <div style={{ fontWeight: '700', color: plan.lastCompletedAt ? 'var(--mt-success)' : 'var(--mt-text-primary)' }}>
+                      {plan.lastCompletedAt ? `✓ ${new Date(plan.lastCompletedAt).toLocaleDateString('es-MX')}` : 'Nunca'}
                     </div>
                   </div>
                 </div>
@@ -535,8 +553,8 @@ export default function PreventivePlans() {
                     style={{
                       width: '100%',
                       padding: '10px',
-                      background: dueInfo(plan).late ? 'var(--mt-danger)' : 'var(--mt-accent)',
-                      border: 'none',
+                      background: dueInfo(plan).late ? 'var(--mt-danger)' : dueInfo(plan).upToDate && !plan.openWorkOrder ? 'transparent' : 'var(--mt-accent)',
+                      border: dueInfo(plan).upToDate && !plan.openWorkOrder ? '1px dashed var(--mt-border)' : 'none',
                       borderRadius: 'var(--mt-radius-md)',
                       cursor: 'pointer',
                       display: 'flex',
@@ -545,13 +563,15 @@ export default function PreventivePlans() {
                       gap: '8px',
                       fontSize: '13px',
                       fontWeight: '800',
-                      color: '#fff',
+                      color: dueInfo(plan).upToDate && !plan.openWorkOrder ? 'var(--mt-text-secondary)' : '#fff',
                     }}
                   >
                     <Wrench size={15} />
                     {plan.openWorkOrder
                       ? `Ejecutar ${woNumber(plan.openWorkOrder.number)} · ${STATE_LABELS[plan.openWorkOrder.status] || plan.openWorkOrder.status}`
-                      : 'Ejecutar (generar orden)'}
+                      : dueInfo(plan).upToDate
+                        ? 'Adelantar ejecución (opcional)'
+                        : 'Ejecutar (generar orden)'}
                     <ArrowRight size={15} />
                   </button>
                 )}
