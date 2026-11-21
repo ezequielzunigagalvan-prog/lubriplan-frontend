@@ -95,6 +95,11 @@ export const maintenanceApi = {
     return httpPost(`/maintenance/work-orders/${id}/transition`, transition);
   },
 
+  // Nota en la bitácora de la orden (no cambia el estado)
+  async addWorkOrderComment(id, comment) {
+    return httpPost(`/maintenance/work-orders/${id}/comments`, { comment });
+  },
+
   // Update execution (diagnosis, work done, downtime, etc.)
   async updateExecution(id, execution) {
     return httpPatch(`/maintenance/work-orders/${id}/execution`, execution);

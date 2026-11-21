@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ArrowLeft, CheckCircle2, XCircle, UserPlus, Play, PauseCircle, Flag, ShieldCheck, RotateCcw, Ban,
-  ClipboardList, Package, AlertTriangle, Camera, History, Save, Trash2,
+  ClipboardList, Package, AlertTriangle, Camera, History, Save, Trash2, UserCog, MessageSquare, Send,
 } from 'lucide-react';
 import { MtCard, MtBadge, MtButton } from '../ui';
 import { maintenanceApi } from '../services/maintenanceApi';
@@ -163,7 +163,8 @@ export default function WorkOrderDetail() {
   const [busy, setBusy] = useState(false);
 
   const [action, setAction] = useState(null); // estado destino seleccionado
-  const [form, setForm] = useState({ comment: '', assignedTo: '', scheduledAt: '', workDone: '', diagnosis: '', failureCause: '', downtimeMinutes: '' });
+  const [form, setForm] = useState({ comment: '', assignedTo: '', scheduledAt: '', workDone: '', diagnosis: '', failureCause: '', downtimeMinutes: '', startedAt: '', finishedAt: '', alsoValidate: false });
+  const [note, setNote] = useState('');
   const [technicians, setTechnicians] = useState([]);
   const [spareParts, setSpareParts] = useState([]);
   const [failureCodes, setFailureCodes] = useState({ FAILURE_MODE: [], MECHANISM: [], ROOT_CAUSE: [] });
@@ -244,6 +245,9 @@ export default function WorkOrderDetail() {
       diagnosis: execution.diagnosis,
       failureCause: execution.failureCause,
       downtimeMinutes: execution.downtimeMinutes,
+      startedAt: '',
+      finishedAt: '',
+      alsoValidate: false,
     }));
     setAction(to);
   };
@@ -252,7 +256,7 @@ export default function WorkOrderDetail() {
     try {
       setBusy(true);
       await maintenanceApi.transitionWorkOrder(wo.id, { to, expectedVersion: wo.version, ...extra });
-      toast.success(`Estado actualizado: ${STATE_LABELS[to] || to}`);
+      toast.success(`Estado actualizado: ${STATE_LABELS[extra.alsoValidate ? 'VALIDATED' : to] || to}`);
       setAction(null);
       await load();
     } catch (err) {
@@ -280,6 +284,13 @@ export default function WorkOrderDetail() {
       if (form.diagnosis.trim()) extra.diagnosis = form.diagnosis.trim();
       if (form.failureCause.trim()) extra.failureCause = form.failureCause.trim();
       if (form.downtimeMinutes !== '') extra.downtimeMinutes = Number(form.downtimeMinutes);
+      if (perms.isManager) {
+        // datetime-local está en hora del navegador: se manda en ISO para no depender de la zona del servidor
+        if (form.startedAt) extra.startedAt = new Date(form.startedAt).toISOString();
+        if (form.finishedAt) extra.finishedAt = new Date(form.finishedAt).toISOString();
+        if (form.startedAt && form.finishedAt && form.startedAt > form.finishedAt) return toast.error('El inicio debe ser anterior al término');
+        if (form.alsoValidate) extra.alsoValidate = true;
+      }
     }
     return runTransition(action, extra);
   };
@@ -347,6 +358,22 @@ export default function WorkOrderDetail() {
     }
   };
 
+  const addNote = async (e) => {
+    e.preventDefault();
+    if (!note.trim()) return;
+    try {
+      setBusy(true);
+      await maintenanceApi.addWorkOrderComment(wo.id, note.trim());
+      setNote('');
+      toast.success('Comentario agregado');
+      await load();
+    } catch (err) {
+      toast.error(errorMessage(err, 'No se pudo guardar el comentario'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const deletePhoto = async (photo) => {
     if (!window.confirm('¿Eliminar esta foto?')) return;
     try {
@@ -403,6 +430,20 @@ export default function WorkOrderDetail() {
         </div>
       </div>
 
+      {/* Captura en nombre del técnico */}
+      {perms.onBehalfOf && !['VALIDATED', 'REJECTED', 'CANCELLED'].includes(wo.status) && (
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', padding: '14px 16px', borderRadius: 'var(--mt-radius-lg)', background: 'var(--mt-accent-soft, rgba(56,189,248,0.1))', border: '1px solid var(--mt-accent)' }}>
+          <UserCog size={22} style={{ color: 'var(--mt-accent)', flexShrink: 0, marginTop: '2px' }} />
+          <div style={{ fontSize: '14px' }}>
+            <strong>Estás registrando esta orden en nombre de {perms.onBehalfOf.technicianName}.</strong>
+            <div style={{ color: 'var(--mt-text-secondary)', marginTop: '2px' }}>
+              {perms.onBehalfOf.hasUser ? 'El técnico tiene usuario, pero puedes capturar por él.' : 'El técnico aún no tiene usuario en el sistema.'}{' '}
+              Inicia el trabajo, llena el checklist, registra refacciones, sube evidencia y comentarios, y termínala. Todo queda a tu nombre como capturista.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Acciones */}
       {actions.length > 0 && (
         <MtCard elevated>
@@ -454,6 +495,22 @@ export default function WorkOrderDetail() {
                         <input type="number" min="0" value={form.downtimeMinutes} onChange={(e) => setForm({ ...form, downtimeMinutes: e.target.value })} style={inputStyle} />
                       </Field>
                     </div>
+                    {perms.isManager && (
+                      <>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--mt-space-md)' }}>
+                          <Field label="Inicio real (opcional)">
+                            <input type="datetime-local" value={form.startedAt} onChange={(e) => setForm({ ...form, startedAt: e.target.value })} style={inputStyle} />
+                          </Field>
+                          <Field label="Término real (opcional, si se hizo antes)">
+                            <input type="datetime-local" value={form.finishedAt} onChange={(e) => setForm({ ...form, finishedAt: e.target.value })} style={inputStyle} />
+                          </Field>
+                        </div>
+                        <label style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '14px', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={form.alsoValidate} onChange={(e) => setForm({ ...form, alsoValidate: e.target.checked })} />
+                          Validar la orden al terminar (queda como realizada y cerrada)
+                        </label>
+                      </>
+                    )}
                   </>
                 )}
 
@@ -631,18 +688,37 @@ export default function WorkOrderDetail() {
         </Section>
 
         {/* Historial */}
-        <Section icon={History} title="Historial">
+        <Section icon={History} title="Bitácora e historial">
+          {perms.canComment && (
+            <form onSubmit={addNote} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              <textarea rows={2} placeholder="Agrega un comentario u observación de la orden..." value={note} onChange={(e) => setNote(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+              <MtButton type="submit" size="sm" disabled={busy || !note.trim()} aria-label="Agregar comentario"><Send size={14} /></MtButton>
+            </form>
+          )}
           {events.length === 0 && <Empty text="Sin movimientos registrados." />}
-          {events.map((ev) => (
-            <div key={ev.id} style={{ borderLeft: '2px solid var(--mt-accent)', paddingLeft: 'var(--mt-space-md)', fontSize: '13px' }}>
-              <div style={{ fontWeight: 'var(--mt-font-weight-bold)' }}>
-                {ev.fromStatus ? `${STATE_LABELS[ev.fromStatus] || ev.fromStatus} → ` : ''}{STATE_LABELS[ev.toStatus] || ev.toStatus}
-                {ev.metadata?.assignedToName && ` (${ev.metadata.assignedToName})`}
+          {[...events].reverse().map((ev) => {
+            const isComment = ev.metadata?.kind === 'COMMENT';
+            return (
+              <div key={ev.id} style={{ borderLeft: `2px solid ${isComment ? 'var(--mt-warning)' : 'var(--mt-accent)'}`, paddingLeft: 'var(--mt-space-md)', fontSize: '13px' }}>
+                <div style={{ fontWeight: 'var(--mt-font-weight-bold)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {isComment ? (
+                    <><MessageSquare size={13} /> Comentario</>
+                  ) : (
+                    <>
+                      {ev.fromStatus ? `${STATE_LABELS[ev.fromStatus] || ev.fromStatus} → ` : ''}{STATE_LABELS[ev.toStatus] || ev.toStatus}
+                      {ev.metadata?.assignedToName && ` (${ev.metadata.assignedToName})`}
+                    </>
+                  )}
+                </div>
+                <div style={{ color: 'var(--mt-text-tertiary)', fontSize: '12px' }}>
+                  {fmtDateTime(ev.createdAt)} · {ev.user?.name || 'Sistema'}
+                  {ev.metadata?.onBehalfOfName && ` · en nombre de ${ev.metadata.onBehalfOfName}`}
+                  {ev.metadata?.realFinishedAt && ` · término real ${fmtDateTime(ev.metadata.realFinishedAt)}`}
+                </div>
+                {ev.comment && <div style={{ color: 'var(--mt-text-secondary)', marginTop: '2px', whiteSpace: 'pre-wrap' }}>{ev.comment}</div>}
               </div>
-              <div style={{ color: 'var(--mt-text-tertiary)', fontSize: '12px' }}>{fmtDateTime(ev.createdAt)} · {ev.user?.name || 'Sistema'}</div>
-              {ev.comment && <div style={{ color: 'var(--mt-text-secondary)', marginTop: '2px' }}>{ev.comment}</div>}
-            </div>
-          ))}
+            );
+          })}
         </Section>
       </div>
     </div>
