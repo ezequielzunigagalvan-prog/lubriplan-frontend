@@ -194,12 +194,16 @@ export default function PreventivePlans() {
       navigate(`/maintenance/app/work-orders/${plan.openWorkOrder.id}`);
       return;
     }
-    if (!window.confirm(`El plan ${plan.code} no tiene una orden abierta. ¿Generarla ahora y abrirla para ejecutarla?`)) return;
+    const due = plan.daysOverdue > 0 || plan.dueToday;
+    const msg = due
+      ? `¿Generar la orden del ciclo vencido de ${plan.code} y abrirla para ejecutarla? Al terminarla, el plan pasa a su siguiente fecha.`
+      : `${plan.code} aún no vence. ¿Generar una orden adelantada y abrirla? Su próxima fecha programada no cambia.`;
+    if (!window.confirm(msg)) return;
     try {
       setBusyPlanId(plan.id);
       const result = await maintenanceApi.executePlan(plan.id);
       const wo = result?.workOrder;
-      toast.success(`${woNumber(wo?.number)} generada desde ${plan.code}`);
+      toast.success(result?.existing ? `${plan.code} ya tenía abierta la ${woNumber(wo?.number)}` : `${woNumber(wo?.number)} generada desde ${plan.code}`);
       if (wo?.id) navigate(`/maintenance/app/work-orders/${wo.id}`);
       else await loadPlans();
     } catch (err) {
@@ -210,11 +214,11 @@ export default function PreventivePlans() {
   };
 
   const handleGenerateNow = async (plan) => {
-    if (!window.confirm(`¿Generar ahora una orden de trabajo del plan ${plan.code}? No cambia su programación.`)) return;
+    if (!window.confirm(`¿Generar ahora una orden de trabajo del plan ${plan.code}? Si el plan ya venció, la orden cubre ese ciclo; si no, es una orden adelantada.`)) return;
     try {
       setBusyPlanId(plan.id);
       const result = await maintenanceApi.executePlan(plan.id);
-      toast.success(`OT #${result?.workOrder?.number ?? ''} generada desde ${plan.code}`);
+      toast.success(result?.existing ? `${plan.code} ya tenía abierta la ${woNumber(result?.workOrder?.number)}` : `${woNumber(result?.workOrder?.number)} generada desde ${plan.code}`);
       await loadPlans();
     } catch (err) {
       toast.error(errorMessage(err, 'No se pudo generar la orden'));
