@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MtButton, MtCard, MtBadge, MtSkeleton } from '../ui';
 import {
-  Plus, Trash2, Edit2, Eye, AlertCircle, Power, Search, PlayCircle, Zap
+  Plus, Trash2, Edit2, Eye, AlertCircle, Power, Search, PlayCircle, Zap, Wrench, ArrowRight
 } from 'lucide-react';
+import { STATE_LABELS } from '../constants/maintenance';
 import { toast } from 'sonner';
 import { maintenanceApi } from '../services/maintenanceApi';
 import PlanRoadmapModal from '../components/PlanRoadmapModal';
@@ -76,6 +78,20 @@ async function syncAssignments(planId, previous, planData) {
   return failures;
 }
 
+const woNumber = (n) => `OT-${String(n ?? '').padStart(5, '0')}`;
+
+/** Texto del próximo vencimiento: atraso en días calendario, "hoy" o la fecha. */
+function dueInfo(plan) {
+  if (!plan.active) return { text: 'Pausado', color: 'var(--mt-text-tertiary)' };
+  if (!plan.nextDueAt) return { text: 'Sin calcular', color: 'var(--mt-text-primary)' };
+  const date = new Date(plan.nextDueAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  if (plan.daysOverdue > 0) {
+    return { text: `Atrasado ${plan.daysOverdue} día${plan.daysOverdue === 1 ? '' : 's'}`, sub: `Vencía el ${date}`, color: 'var(--mt-danger)' };
+  }
+  if (plan.dueToday) return { text: 'Vence hoy', sub: date, color: 'var(--mt-warning)' };
+  return { text: new Date(plan.nextDueAt).toLocaleDateString('es-MX'), color: 'var(--mt-text-primary)' };
+}
+
 export default function PreventivePlans() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +101,7 @@ export default function PreventivePlans() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const navigate = useNavigate();
   const [busyPlanId, setBusyPlanId] = useState(null);
   const [launching, setLaunching] = useState(false);
   const [assets, setAssets] = useState([]);
@@ -166,6 +183,27 @@ export default function PreventivePlans() {
       await loadPlans();
     } catch (err) {
       toast.error(errorMessage(err, 'Error actualizando plan'));
+    } finally {
+      setBusyPlanId(null);
+    }
+  };
+
+  // Ejecutar: abre la OT abierta del plan o, si no hay, la genera y la abre
+  const handleExecute = async (plan) => {
+    if (plan.openWorkOrder) {
+      navigate(`/maintenance/app/work-orders/${plan.openWorkOrder.id}`);
+      return;
+    }
+    if (!window.confirm(`El plan ${plan.code} no tiene una orden abierta. ¿Generarla ahora y abrirla para ejecutarla?`)) return;
+    try {
+      setBusyPlanId(plan.id);
+      const result = await maintenanceApi.executePlan(plan.id);
+      const wo = result?.workOrder;
+      toast.success(`${woNumber(wo?.number)} generada desde ${plan.code}`);
+      if (wo?.id) navigate(`/maintenance/app/work-orders/${wo.id}`);
+      else await loadPlans();
+    } catch (err) {
+      toast.error(errorMessage(err, 'No se pudo generar la orden'));
     } finally {
       setBusyPlanId(null);
     }
@@ -401,7 +439,7 @@ export default function PreventivePlans() {
               key={plan.id}
               elevated
               style={{
-                borderLeft: plan.active ? '4px solid var(--mt-success)' : '4px solid var(--mt-text-tertiary)',
+                borderLeft: !plan.active ? '4px solid var(--mt-text-tertiary)' : plan.daysOverdue > 0 ? '4px solid var(--mt-danger)' : '4px solid var(--mt-success)',
               }}
             >
               <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
@@ -446,9 +484,15 @@ export default function PreventivePlans() {
                     <div style={{ color: 'var(--mt-text-tertiary)', marginBottom: '2px', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
                       Próximo Vencimiento
                     </div>
-                    <div style={{ fontWeight: '700', color: plan.active && plan.nextDueAt && new Date(plan.nextDueAt) < new Date() ? 'var(--mt-danger)' : 'var(--mt-text-primary)' }}>
-                      {!plan.active ? 'Pausado' : plan.nextDueAt ? new Date(plan.nextDueAt).toLocaleDateString('es-MX') : 'Sin calcular'}
-                    </div>
+                    {(() => {
+                      const due = dueInfo(plan);
+                      return (
+                        <>
+                          <div style={{ fontWeight: '800', color: due.color }}>{due.text}</div>
+                          {due.sub && <div style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>{due.sub}</div>}
+                        </>
+                      );
+                    })()}
                   </div>
                   <div>
                     <div style={{ color: 'var(--mt-text-tertiary)', marginBottom: '2px', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
@@ -464,6 +508,35 @@ export default function PreventivePlans() {
                   <div style={{ padding: '8px', background: 'var(--mt-bg-base)', borderRadius: 'var(--mt-radius-sm)', fontSize: '12px', color: 'var(--mt-text-secondary)' }}>
                     {plan.description}
                   </div>
+                )}
+
+                {/* Ejecutar */}
+                {plan.active && (
+                  <button
+                    onClick={() => handleExecute(plan)}
+                    disabled={busyPlanId === plan.id}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: plan.daysOverdue > 0 ? 'var(--mt-danger)' : 'var(--mt-accent)',
+                      border: 'none',
+                      borderRadius: 'var(--mt-radius-md)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '13px',
+                      fontWeight: '800',
+                      color: '#fff',
+                    }}
+                  >
+                    <Wrench size={15} />
+                    {plan.openWorkOrder
+                      ? `Ejecutar ${woNumber(plan.openWorkOrder.number)} · ${STATE_LABELS[plan.openWorkOrder.status] || plan.openWorkOrder.status}`
+                      : 'Ejecutar (generar orden)'}
+                    <ArrowRight size={15} />
+                  </button>
                 )}
 
                 {/* Actions */}

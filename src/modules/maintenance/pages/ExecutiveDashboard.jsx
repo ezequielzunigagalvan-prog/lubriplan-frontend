@@ -76,7 +76,9 @@ function DelayAlerts({ data }) {
             <span><strong>{p.code}</strong> · {p.title}{p.asset ? ` · ${p.asset.code}` : ''}</span>
             <span style={{ display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
               <MtBadge size="sm" variant="warning">Plan sin OT</MtBadge>
-              <span style={{ color: 'var(--mt-warning)', fontWeight: 800 }}>vence {fmtDay(p.nextDueAt)}</span>
+              <span style={{ color: p.daysOverdue > 0 ? 'var(--mt-danger)' : 'var(--mt-warning)', fontWeight: 800 }}>
+                {p.daysOverdue > 0 ? `${p.daysOverdue} día(s)` : 'vence hoy'}
+              </span>
             </span>
           </div>
         ))}
