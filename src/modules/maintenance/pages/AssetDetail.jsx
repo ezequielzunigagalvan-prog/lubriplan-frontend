@@ -26,7 +26,7 @@ export default function AssetDetail() {
       </div>
 
       {/* Specs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px' }}>
         <MtStat label="Estado" value="Operacional" color="var(--mt-success)" icon={<MtIcon name="checkCircle" size="lg" />} />
         <MtStat label="Órdenes (30d)" value="3" color="var(--mt-accent)" icon={<MtIcon name="clipboard" size="lg" />} />
         <MtStat label="MTBF" value="720h" color="var(--mt-info)" icon={<MtIcon name="clock" size="lg" />} />

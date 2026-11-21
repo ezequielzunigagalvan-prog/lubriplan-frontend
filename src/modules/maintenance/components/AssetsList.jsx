@@ -200,7 +200,7 @@ const AssetsList = forwardRef(function AssetsList({ criticality = '', status = '
           </div>
         </MtCard>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
           {filteredAssets.map((asset) => {
             const critIcon = getCriticalityIcon(asset.criticality);
             const CritIconComponent = critIcon.Icon;

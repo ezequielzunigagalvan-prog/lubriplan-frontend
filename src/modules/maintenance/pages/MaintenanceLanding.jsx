@@ -90,12 +90,12 @@ export default function MaintenanceLanding() {
             <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Wrench size={19} color="#111827" />
             </div>
-            <span style={{ fontWeight: 900, fontSize: 17 }}>LubriPlan <span style={{ color: 'var(--ind-sky)' }}>Maintenance</span></span>
+            <span style={{ fontWeight: 900, fontSize: 'clamp(14px, 4vw, 17px)', whiteSpace: 'nowrap' }}>LubriPlan <span style={{ color: 'var(--ind-sky)' }}>Maintenance</span></span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <a href="#modulos" className="ind-hide-mobile" style={{ color: 'var(--ind-muted)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>Módulos</a>
             <a href="#flujo" className="ind-hide-mobile" style={{ color: 'var(--ind-muted)', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>Flujo</a>
-            <Link to="/maintenance/login" className="ind-btn ind-btn-primary" style={{ padding: '10px 18px', fontSize: 14 }}>Iniciar sesión <ArrowRight size={16} /></Link>
+            <Link to="/maintenance/login" className="ind-btn ind-btn-primary" style={{ padding: '10px 14px', fontSize: 14, whiteSpace: 'nowrap' }}>Entrar <ArrowRight size={16} /></Link>
           </div>
         </div>
       </nav>
@@ -142,7 +142,7 @@ export default function MaintenanceLanding() {
 
       {/* Indicadores */}
       <section style={{ ...container, padding: '56px 24px 10px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
           {STATS.map(({ Icon, value, label }) => (
             <div key={value} className="ind-card ind-card-hover" style={{ padding: 20, display: 'flex', gap: 14, alignItems: 'center' }}>
               <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(56,189,248,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -162,7 +162,7 @@ export default function MaintenanceLanding() {
         <span className="ind-chip">Módulos</span>
         <h2 style={sectionTitle}>Todo tu mantenimiento, conectado</h2>
         <p style={{ color: 'var(--ind-muted)', maxWidth: 640, margin: '0 0 34px', fontSize: 16 }}>Cada módulo comparte la misma información: una falla reportada termina en una orden, consume refacciones y alimenta tus indicadores.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 16 }}>
           {MODULES.map(({ Icon, title, text }, i) => (
             <div key={title} className="ind-card ind-card-hover" style={{ padding: 22 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, background: i % 4 === 1 ? 'rgba(245,158,11,0.14)' : 'rgba(56,189,248,0.12)' }}>

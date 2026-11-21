@@ -153,7 +153,7 @@ function EquipmentTab() {
       </div>
 
       {/* Gráficas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
         <ChartCard title="Órdenes por mes (preventivo vs correctivo)" empty={!hasMonthlyActivity && 'Sin órdenes en el periodo'}>
           <BarChart data={monthly}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
@@ -215,7 +215,7 @@ function EquipmentTab() {
             </p>
           </MtCard>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(320px, 2fr)', gap: 'var(--mt-space-lg)', alignItems: 'start' }}>
+          <div className="mt-split mt-split-1-2" style={{ gap: 'var(--mt-space-lg)', alignItems: 'start' }}>
             {/* Lista */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-sm)' }}>
               {equipment.map((e) => (
@@ -284,7 +284,7 @@ function EquipmentTab() {
                     </ResponsiveContainer>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
                     <div>
                       <h3 style={chartTitle}>Modos de falla</h3>
                       {selected.failureModes.length === 0 ? (

@@ -204,7 +204,7 @@ export default function AssetExpedient() {
 
       {/* Resumen */}
       {activeTab === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
           <MtCard elevated>
             <div style={{ padding: 'var(--mt-space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)' }}>
               <SectionTitle>Planes de mantenimiento ({plans.length})</SectionTitle>

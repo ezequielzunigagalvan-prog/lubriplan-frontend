@@ -229,7 +229,7 @@ export default function FailureAnalysisPanel() {
         <Kpi icon={Library} label="Códigos en catálogo" value={summary.catalogSize} color="var(--mt-accent)" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
         <ParetoCard title="Pareto de modos de falla" rows={analysis.modes} />
         <ParetoCard title="Pareto de causas raíz" rows={analysis.rootCauses} />
         <MtCard elevated>
@@ -277,7 +277,7 @@ export default function FailureAnalysisPanel() {
             {isAdmin ? ' Carga el catálogo base o agrega tus propios códigos.' : ' Pide a un administrador que cargue el catálogo base.'}
           </p>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
           {CATEGORIES.map((c) => (
             <CatalogColumn key={c.value} category={c} codes={catalog[c.value] || []} canEdit={canEdit} onCreate={createCode} onToggle={toggleCode} />
           ))}

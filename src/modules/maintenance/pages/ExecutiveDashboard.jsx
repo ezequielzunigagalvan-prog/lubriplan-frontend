@@ -340,7 +340,7 @@ export default function ExecutiveDashboard() {
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
         <ChartCard title="Correctivos vs Preventivos (abiertas)">
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--mt-space-lg)', height: '150px' }}>
             {[

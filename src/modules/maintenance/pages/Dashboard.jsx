@@ -49,7 +49,7 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px' }}>
         <MtStat label="Órdenes Abiertas" value={opened} color="var(--mt-accent)" icon={<MtIcon name="clipboard" size="lg" />} />
         <MtStat label="Vencidas" value={overdue} color="var(--mt-danger)" icon={<MtIcon name="alertCircle" size="lg" />} />
         <MtStat label="En Espera" value={waiting} color="var(--mt-warning)" icon={<MtIcon name="clock" size="lg" />} />

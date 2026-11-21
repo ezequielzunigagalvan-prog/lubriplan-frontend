@@ -147,7 +147,7 @@
   outline: none;
   background: transparent;
   color: var(--ind-text);
-  font-size: 15px;
+  font-size: 16px; /* 16px evita el zoom automático de iOS al enfocar */
 }
 
 .ind-bar {
@@ -198,13 +198,19 @@
 @keyframes ind-flow { to { background-position: -200% 0; } }
 
 /* Diseño adaptable */
-.ind-login-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; min-height: 100vh; }
-.ind-hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+.ind-login-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); min-height: 100vh; min-height: 100dvh; }
+.ind-hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 48px; align-items: center; }
+.ind-mobile-only { display: none; }
 @media (max-width: 960px) {
-  .ind-login-grid { grid-template-columns: 1fr; }
+  .ind-login-grid { grid-template-columns: minmax(0, 1fr); }
   .ind-login-showcase { display: none !important; }
-  .ind-hero-grid { grid-template-columns: 1fr; }
+  .ind-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .ind-hide-mobile { display: none !important; }
+  .ind-mobile-only { display: flex; }
+}
+@media (max-width: 480px) {
+  .ind-card-pad { padding: 22px !important; }
+  .ind-btn { padding: 13px 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

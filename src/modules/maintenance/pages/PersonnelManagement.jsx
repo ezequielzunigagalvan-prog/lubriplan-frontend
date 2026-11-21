@@ -301,7 +301,7 @@ export default function PersonnelManagement() {
 
       {/* Lista de Técnicos */}
       {filteredTechnicians.length > 0 ? (
-        <div style={{ display: viewMode === 'grid' ? 'grid' : 'flex', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', flexDirection: viewMode === 'list' ? 'column' : undefined }}>
+        <div style={{ display: viewMode === 'grid' ? 'grid' : 'flex', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '16px', flexDirection: viewMode === 'list' ? 'column' : undefined }}>
           {filteredTechnicians.map(tech => {
             const spec = SPECIALITIES[tech.specialty];
             const Icon = spec?.icon || Users;

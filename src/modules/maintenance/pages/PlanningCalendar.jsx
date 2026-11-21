@@ -189,7 +189,7 @@ export default function PlanningCalendar() {
         </MtCard>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) minmax(260px, 1fr)', gap: 'var(--mt-space-lg)', alignItems: 'start' }}>
+      <div className="mt-split mt-split-3-1" style={{ gap: 'var(--mt-space-lg)', alignItems: 'start' }}>
         {/* Cuadrícula */}
         <MtCard elevated>
           <div style={{ padding: 'var(--mt-space-md)' }}>
@@ -205,6 +205,7 @@ export default function PlanningCalendar() {
                 return (
                   <div
                     key={key}
+                    className="mt-cal-cell"
                     onClick={() => setSelectedDay(key)}
                     style={{
                       minHeight: viewMode === 'week' ? '280px' : '96px',
@@ -224,11 +225,22 @@ export default function PlanningCalendar() {
                       <span>{d.getDate()}</span>
                       {conflictDays.has(key) && <AlertTriangle size={12} style={{ color: 'var(--mt-danger)' }} aria-label="Sobrecarga" />}
                     </div>
-                    {dayItems.slice(0, maxShown).map((item) => (
-                      <EventChip key={item.id} item={item} compact={viewMode === 'month'} onClick={(e) => { e.stopPropagation(); setSelectedDay(key); }} />
-                    ))}
-                    {dayItems.length > maxShown && (
-                      <span style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>+{dayItems.length - maxShown} más</span>
+                    <div className="mt-cal-chips" style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                      {dayItems.slice(0, maxShown).map((item) => (
+                        <EventChip key={item.id} item={item} compact={viewMode === 'month'} onClick={(e) => { e.stopPropagation(); setSelectedDay(key); }} />
+                      ))}
+                      {dayItems.length > maxShown && (
+                        <span style={{ fontSize: '11px', color: 'var(--mt-text-tertiary)' }}>+{dayItems.length - maxShown} más</span>
+                      )}
+                    </div>
+                    {/* En el celular: un punto de color por trabajo; el detalle se ve abajo al tocar el día */}
+                    {dayItems.length > 0 && (
+                      <div className="mt-cal-dots" aria-label={`${dayItems.length} trabajo(s)`}>
+                        {dayItems.slice(0, 4).map((item) => (
+                          <span key={item.id} style={{ width: '7px', height: '7px', borderRadius: '50%', background: colorOf(item), outline: item.overdue ? '2px solid var(--mt-danger)' : 'none' }} />
+                        ))}
+                        {dayItems.length > 4 && <span style={{ fontSize: '9px', color: 'var(--mt-text-tertiary)' }}>+</span>}
+                      </div>
                     )}
                   </div>
                 );

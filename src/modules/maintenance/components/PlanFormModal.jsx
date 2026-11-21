@@ -995,7 +995,7 @@ export default function PlanFormModal({ isOpen, onClose, plan, onSave, assets = 
                       <Check size={16} />
                       Técnicos Asignados ({formData.assignedTechnicians.length})
                     </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: '8px' }}>
                       {formData.assignedTechnicians.map(techId => {
                         const tech = technicians.find(t => t.id === techId);
                         return tech ? (

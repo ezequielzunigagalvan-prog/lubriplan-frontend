@@ -465,7 +465,7 @@ export default function WorkOrderDetail() {
             {actionDef && (
               <form onSubmit={submitAction} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--mt-space-md)', borderTop: '1px solid var(--mt-border)', paddingTop: 'var(--mt-space-md)' }}>
                 {actionDef.form === 'assign' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--mt-space-md)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 'var(--mt-space-md)' }}>
                     <Field label="Técnico *">
                       <select value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} style={inputStyle}>
                         <option value="">— Selecciona —</option>
@@ -490,7 +490,7 @@ export default function WorkOrderDetail() {
                     <Field label="Trabajo realizado *">
                       <textarea rows={3} value={form.workDone} onChange={(e) => setForm({ ...form, workDone: e.target.value })} style={inputStyle} />
                     </Field>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--mt-space-md)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 'var(--mt-space-md)' }}>
                       <Field label="Diagnóstico">
                         <textarea rows={2} value={form.diagnosis} onChange={(e) => setForm({ ...form, diagnosis: e.target.value })} style={inputStyle} />
                       </Field>
@@ -503,7 +503,7 @@ export default function WorkOrderDetail() {
                     </div>
                     {perms.isManager && (
                       <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--mt-space-md)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 'var(--mt-space-md)' }}>
                           <Field label="Inicio real (opcional)">
                             <input type="datetime-local" value={form.startedAt} onChange={(e) => setForm({ ...form, startedAt: e.target.value })} style={inputStyle} />
                           </Field>
@@ -538,7 +538,7 @@ export default function WorkOrderDetail() {
 
       {/* Datos generales */}
       <MtCard elevated>
-        <div style={{ padding: 'var(--mt-space-lg)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <div style={{ padding: 'var(--mt-space-lg)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--mt-space-lg)' }}>
           <Info
             label="Activo"
             value={wo.asset ? <Link to={`/maintenance/app/assets/${wo.asset.id}`} style={{ color: 'var(--mt-accent)' }}>{wo.asset.code} · {wo.asset.name}</Link> : null}
@@ -563,7 +563,7 @@ export default function WorkOrderDetail() {
         )}
       </MtCard>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 'var(--mt-space-xl)', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(340px, 100%), 1fr))', gap: 'var(--mt-space-xl)', alignItems: 'start' }}>
         {/* Checklist */}
         <Section icon={ClipboardList} title={`Checklist (${tasksDone}/${wo.tasks.length})`}>
           {wo.tasks.length === 0 && <Empty text="Esta orden no tiene tareas de checklist." />}

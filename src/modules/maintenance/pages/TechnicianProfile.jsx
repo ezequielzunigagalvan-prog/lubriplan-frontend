@@ -183,7 +183,7 @@ export default function TechnicianProfile() {
         <Stat icon={Award} label="Terminadas (total)" value={stats.completedTotal} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 'var(--mt-space-xl)', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(340px, 100%), 1fr))', gap: 'var(--mt-space-xl)', alignItems: 'start' }}>
         {/* Ficha */}
         <MtCard elevated>
           <div style={{ padding: 'var(--mt-space-lg)' }}>

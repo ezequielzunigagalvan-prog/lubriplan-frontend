@@ -460,7 +460,7 @@ export default function PreventivePlans() {
           </div>
         </MtCard>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(380px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
           {filteredPlans.map((plan) => (
             <MtCard
               key={plan.id}

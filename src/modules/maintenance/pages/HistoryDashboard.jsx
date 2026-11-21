@@ -146,7 +146,7 @@ export default function HistoryDashboard() {
       )}
 
       <MtCard elevated>
-        <div style={{ padding: 'var(--mt-space-lg)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--mt-space-lg)' }}>
+        <div style={{ padding: 'var(--mt-space-lg)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 'var(--mt-space-lg)' }}>
           <div style={{ position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--mt-text-tertiary)', pointerEvents: 'none' }} />
             <input

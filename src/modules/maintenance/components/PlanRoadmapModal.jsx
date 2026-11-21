@@ -193,7 +193,7 @@ export default function PlanRoadmapModal({ isOpen, onClose, plan }) {
                 )}
               </Section>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: '16px' }}>
                 <Section icon={Users} title="Técnicos" count={roadmap.assignedTechnicians.length}>
                   {roadmap.assignedTechnicians.length === 0 ? (
                     <em style={{ fontSize: '13px', color: 'var(--mt-text-tertiary)' }}>Sin técnicos asignados.</em>

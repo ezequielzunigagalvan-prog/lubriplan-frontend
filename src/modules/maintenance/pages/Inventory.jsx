@@ -323,7 +323,7 @@ export default function Inventory() {
               <div key={warehouse.id}>
                 {/* Warehouse Header */}
                 <MtCard elevated style={{ borderLeft: warehouseLowStockCount > 0 ? '4px solid var(--mt-danger)' : '4px solid var(--mt-success)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--mt-space-lg)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--mt-space-md)', flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--mt-space-lg)' }}>
                       <div style={{ width: '40px', height: '40px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: 'var(--mt-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <Building2 size={20} style={{ color: 'var(--mt-accent)' }} />

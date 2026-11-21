@@ -108,13 +108,20 @@ export default function MaintenanceLogin() {
         {/* Formulario */}
         <main style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
           <div className="ind-hazard" />
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 18px' }}>
             <div style={{ width: '100%', maxWidth: 420 }}>
+              {/* Logo en el celular (el panel visual se oculta) */}
+              <div className="ind-mobile-only" style={{ alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Wrench size={20} color="#111827" />
+                </div>
+                <div style={{ fontWeight: 900, fontSize: 17 }}>LubriPlan <span style={{ color: 'var(--ind-sky)' }}>Maintenance</span></div>
+              </div>
               <Link to="/maintenance" style={{ color: 'var(--ind-muted)', textDecoration: 'none', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 28 }}>
                 <ArrowLeft size={14} /> Volver al inicio
               </Link>
 
-              <div className="ind-card" style={{ padding: '32px' }}>
+              <div className="ind-card ind-card-pad" style={{ padding: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                   <ShieldCheck size={22} color="#f59e0b" />
                   <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900 }}>Iniciar sesión</h2>
