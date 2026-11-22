@@ -166,7 +166,10 @@ export function AuthProvider({ children }) {
       }
 
       startSSE({
-        onStatus: (s) => console.log("[SSE]", s),
+        // Solo en desarrollo: en producción ensuciaba la consola en cada página.
+        onStatus: (s) => {
+          if (import.meta.env.DEV) console.debug("[SSE]", s);
+        },
         onEvent: () => {},
         onUnauthorized: () => {
           console.warn("[SSE] unauthorized");
@@ -252,7 +255,7 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      console.log("[SSE] restarting for new plant");
+      if (import.meta.env.DEV) console.debug("[SSE] restarting for new plant");
       restartRealtime(getToken(), user);
       resetInactivityTimer();
     };

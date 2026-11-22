@@ -1379,6 +1379,8 @@ const content = {
 const contentMobile = {
   padding: 12,
   maxWidth: "100%",
+  // Sin esto, width 100% + padding hace que en celular el contenido se salga ~24px por la derecha.
+  boxSizing: "border-box",
 };
 
 const userName = {

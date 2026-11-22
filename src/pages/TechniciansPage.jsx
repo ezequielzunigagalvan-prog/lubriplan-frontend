@@ -1,114 +1,103 @@
 // src/pages/TechniciansPage.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import TechnicianCard from "../components/ui/TechnicianCard";
 import NewTechnicianModal from "../components/modals/NewTechnicianModal";
-import {
-  getTechnicians,
-  createTechnician,
-  updateTechnician,
-  deleteTechnician,
-} from "../services/techniciansService";
-
+import { getTechnicians, createTechnician, updateTechnician, deleteTechnician } from "../services/techniciansService";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
 import { useConfirm } from "../components/ui/ConfirmDialog";
 import { CardSkeleton } from "../components/ui/CardSkeleton";
+import "./TechniciansPage.css";
+
+const isActiveTech = (t) => ["ACTIVO", "ACTIVE"].includes(String(t?.status || "").toUpperCase().trim());
+
+const toDate = (v) => {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v);
+  return Number.isFinite(d.getTime()) ? d : null;
+};
+
+const activityDateOf = (t) =>
+  toDate(t?.lastActivityAt) || toDate(t?.lastExecutionAt) || toDate(t?.lastCompletedAt) || toDate(t?.lastCompletedExecutionAt);
+
+const norm = (v) =>
+  String(v ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim();
+
+const SORTS = {
+  activity: "Actividad reciente",
+  name: "Nombre",
+  overdue: "Más vencidas",
+  workload: "Más pendientes",
+};
 
 export default function TechniciansPage() {
   const [technicians, setTechnicians] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingTech, setEditingTech] = useState(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("activity");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  // ================= AUTH / PERMISSIONS =================
   const { user } = useAuth();
   const { currentPlantId, currentPlant } = usePlant();
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
-
   const confirm = useConfirm();
   const canEdit = role === "ADMIN" || role === "SUPERVISOR";
-  const canDelete = role === "ADMIN"; // supervisor NO borra
+  const canDelete = role === "ADMIN"; // el supervisor no elimina
 
-  /* ================= HELPERS ================= */
-
-  const toDate = (v) => {
-    if (!v) return null;
-    const d = v instanceof Date ? v : new Date(v);
-    return Number.isFinite(d.getTime()) ? d : null;
-  };
-
-  const activityDateOf = (tech) => {
-    return (
-      toDate(tech?.lastActivityAt) ||
-      toDate(tech?.lastExecutionAt) ||
-      toDate(tech?.lastCompletedAt) ||
-      toDate(tech?.lastCompletedExecutionAt) ||
-      null
-    );
-  };
-
-  /* ================= LOAD ================= */
-
-  const loadTechnicians = async () => {
-    try {
-      setLoading(true);
-
-      if (!currentPlantId) {
-        setTechnicians([]);
-        return;
-      }
-
-      const data = await getTechnicians();
-      const items = Array.isArray(data?.items)
-        ? data.items
-        : Array.isArray(data)
-        ? data
-        : [];
-
-      setTechnicians(items);
-    } catch (error) {
-      console.error(error);
-      setTechnicians([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
+  /* ================= CARGA ================= */
+  const loadTechnicians = useCallback(async () => {
     if (!currentPlantId) {
       setTechnicians([]);
       setLoading(false);
       return;
     }
-
-    loadTechnicians();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    try {
+      setLoading(true);
+      setLoadError("");
+      setTechnicians(await getTechnicians());
+    } catch (error) {
+      setTechnicians([]);
+      setLoadError(error?.message || "No se pudieron cargar los técnicos.");
+    } finally {
+      setLoading(false);
+    }
   }, [currentPlantId]);
 
   useEffect(() => {
-    if (!currentPlantId) return;
-
+    // Al cambiar de planta se limpia todo y se recarga.
     setSearch("");
+    setStatusFilter("all");
     setEditingTech(null);
     setShowModal(false);
-  }, [currentPlantId]);
+    loadTechnicians();
+  }, [loadTechnicians]);
 
   /* ================= CRUD ================= */
-
+  // Los errores se relanzan para que el formulario los muestre y no se cierre.
   const handleCreate = async (newTech) => {
-    try {
-      await createTechnician(newTech);
-      await loadTechnicians();
+    const created = await createTechnician(newTech);
+    await loadTechnicians();
+    setShowModal(false);
+    setEditingTech(null);
+    toast.success(`Técnico creado${created?.code ? ` · ${created.code}` : ""}`);
+  };
 
-      setShowModal(false);
-      setEditingTech(null);
-    } catch (e) {
-      toast.error(e?.message || "Error creando técnico");
-    }
+  const handleUpdate = async (updatedTech) => {
+    await updateTechnician(updatedTech.id, updatedTech);
+    await loadTechnicians();
+    setShowModal(false);
+    setEditingTech(null);
+    toast.success("Cambios guardados");
   };
 
   const handleEdit = (tech) => {
@@ -117,21 +106,19 @@ export default function TechniciansPage() {
     setShowModal(true);
   };
 
-  const handleUpdate = async (updatedTech) => {
-    try {
-      await updateTechnician(updatedTech.id, updatedTech);
-      await loadTechnicians();
+  const handleDelete = async (tech) => {
+    if (!canDelete || !tech) return;
+    const s = tech.stats || {};
+    const assigned = [
+      s.routes ? `${s.routes} ruta${s.routes === 1 ? "" : "s"}` : null,
+      s.pending ? `${s.pending} actividad${s.pending === 1 ? "" : "es"} pendiente${s.pending === 1 ? "" : "s"}` : null,
+    ].filter(Boolean);
 
-      setEditingTech(null);
-      setShowModal(false);
-    } catch (e) {
-      toast.error(e?.message || "Error actualizando técnico");
-    }
-  };
+    const message = assigned.length
+      ? `${tech.name} tiene ${assigned.join(" y ")}. Quedarán sin técnico asignado para que las reasignes. Su historial de actividades completadas se conserva.`
+      : `Se eliminará a ${tech.name}. Su historial de actividades completadas se conserva.`;
 
-  const handleDelete = async (id) => {
-    if (!canDelete) return;
-    const ok = await confirm("¿Eliminar este técnico? Esta acción no se puede deshacer.", {
+    const ok = await confirm(message, {
       title: "Eliminar técnico",
       confirmLabel: "Eliminar",
       danger: true,
@@ -139,157 +126,135 @@ export default function TechniciansPage() {
     if (!ok) return;
 
     try {
-      await deleteTechnician(id);
+      const res = await deleteTechnician(tech.id);
       await loadTechnicians();
-      toast.success("Técnico eliminado");
+      const r = res?.released || {};
+      const freed = (r.routes || 0) + (r.activities || 0) + (r.orders || 0);
+      toast.success(freed ? `Técnico eliminado · ${freed} asignación${freed === 1 ? "" : "es"} liberada${freed === 1 ? "" : "s"}` : "Técnico eliminado");
     } catch (error) {
       toast.error(error?.message || "Error eliminando técnico");
     }
   };
 
-  /* ================= FILTRO ================= */
-
-  const norm = (v) => String(v ?? "").toLowerCase().trim();
+  /* ================= FILTRO Y ORDEN ================= */
+  const counts = useMemo(() => {
+    const active = technicians.filter(isActiveTech).length;
+    return { all: technicians.length, active, inactive: technicians.length - active };
+  }, [technicians]);
 
   const filtered = useMemo(() => {
     const q = norm(search);
-
-    const base = (technicians || []).filter((t) => {
+    const list = technicians.filter((t) => {
+      if (statusFilter === "active" && !isActiveTech(t)) return false;
+      if (statusFilter === "inactive" && isActiveTech(t)) return false;
       if (!q) return true;
-
-      return (
-        norm(t?.name).includes(q) ||
-        norm(t?.code).includes(q) ||
-        norm(t?.specialty).includes(q) ||
-        norm(t?.status).includes(q) ||
-        norm(t?.email).includes(q)
-      );
+      return [t.name, t.code, t.specialty, t.email, t.phone].some((v) => norm(v).includes(q));
     });
 
-    return base.sort((a, b) => {
-      const aActive = String(a?.status || "").toUpperCase().trim() === "ACTIVO" ? 1 : 0;
-      const bActive = String(b?.status || "").toUpperCase().trim() === "ACTIVO" ? 1 : 0;
+    const byName = (a, b) => String(a?.name || "").localeCompare(String(b?.name || ""), "es");
+    const time = (t) => activityDateOf(t)?.getTime() || 0;
 
-      if (bActive !== aActive) return bActive - aActive;
-
-      const aLast = activityDateOf(a)?.getTime?.() || 0;
-      const bLast = activityDateOf(b)?.getTime?.() || 0;
-
-      if (bLast !== aLast) return bLast - aLast;
-
-      return String(a?.name || "").localeCompare(String(b?.name || ""));
+    return [...list].sort((a, b) => {
+      if (sortBy === "name") return byName(a, b);
+      if (sortBy === "overdue") return (b.stats?.overdue || 0) - (a.stats?.overdue || 0) || byName(a, b);
+      if (sortBy === "workload") return (b.stats?.pending || 0) - (a.stats?.pending || 0) || byName(a, b);
+      // Actividad reciente: activos primero.
+      return Number(isActiveTech(b)) - Number(isActiveTech(a)) || time(b) - time(a) || byName(a, b);
     });
-  }, [technicians, search]);
+  }, [technicians, search, statusFilter, sortBy]);
 
-  /* ================= KPI ================= */
-
-  const stats = useMemo(() => {
-    const list = technicians || [];
-    const total = list.length;
-
-    const active = list.filter(
-      (t) => String(t?.status || "").toUpperCase().trim() === "ACTIVO"
-    ).length;
-
-    const inactive = Math.max(0, total - active);
-
-    const last =
-      list
-        .map((t) => activityDateOf(t))
-        .filter(Boolean)
-        .sort((a, b) => b.getTime() - a.getTime())[0] || null;
-
-    return { total, active, inactive, last };
+  const team = useMemo(() => {
+    const sum = (k) => technicians.reduce((acc, t) => acc + (Number(t?.stats?.[k]) || 0), 0);
+    return { pending: sum("pending"), overdue: sum("overdue"), completed30d: sum("completed30d") };
   }, [technicians]);
 
-  const humanizeAgo = (date) => {
-    if (!date) return "Sin actividad";
-
-    const diff = Date.now() - date.getTime();
-    if (!Number.isFinite(diff) || diff < 0) return "—";
-
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "hace 0m";
-    if (mins < 60) return `hace ${mins}m`;
-
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `hace ${hrs}h`;
-
-    const days = Math.floor(hrs / 24);
-    if (days < 30) return `hace ${days}d`;
-
-    const months = Math.floor(days / 30);
-    if (months < 12) return `hace ${months} mes${months === 1 ? "" : "es"}`;
-
-    const years = Math.floor(months / 12);
-    return `hace ${years} año${years === 1 ? "" : "s"}`;
+  const openCreate = () => {
+    setEditingTech(null);
+    setShowModal(true);
   };
 
   return (
     <MainLayout>
-      <div className="lp-fade-in" style={pageShell}>
-        {/* HEADER */}
-        <div style={topBar}>
+      <div className="tch lp-fade-in">
+        {/* Encabezado */}
+        <header className="tch-head">
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
-              <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
-              TÉCNICOS · PERSONAL
-            </div>
-            <h1 style={title}>Técnicos</h1>
-            <div style={subtitle}>
-              Gestión del personal de lubricación
-              {currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
-            </div>
+            <div className="tch-kicker">Personal{currentPlant?.name ? ` · ${currentPlant.name}` : ""}</div>
+            <h1 className="tch-title">Técnicos</h1>
+            <div className="tch-sub">Personal de lubricación, su carga de trabajo y su actividad reciente.</div>
           </div>
-
-          <div style={topActions}>
-            <div style={searchBox}>
-              <span style={searchIcon}>
-                <Icon name="search" />
-              </span>
+          <div className="tch-head-actions">
+            <label className="tch-search">
+              <Icon name="search" size="sm" />
               <input
-                placeholder="Buscar técnico..."
+                placeholder="Buscar por nombre, código, especialidad…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={searchInput}
+                aria-label="Buscar técnico"
               />
-            </div>
-
+              {search ? (
+                <button type="button" className="tch-icon-btn" style={{ width: 26, height: 26, border: 0 }} onClick={() => setSearch("")} aria-label="Limpiar búsqueda">
+                  <Icon name="close" size="sm" />
+                </button>
+              ) : null}
+            </label>
             {canEdit ? (
-              <button
-                style={btnPrimary}
-                onClick={() => {
-                  setEditingTech(null);
-                  setShowModal(true);
-                }}
-                type="button"
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="plus" />
-                  Nuevo técnico
-                </span>
+              <button type="button" className="tch-btn tch-btn-primary" onClick={openCreate}>
+                <Icon name="plus" size="sm" /> Nuevo técnico
               </button>
             ) : null}
           </div>
-        </div>
+        </header>
 
-        {/* KPI */}
-        {!loading ? (
-          <div style={summaryCard}>
-            <div style={summaryMetrics4}>
-              <KpiCard icon={<Icon name="users" />}     value={stats.total}          label="Técnicos"       accentColor="#0f172a" iconTone="navy"  />
-              <KpiCard icon={<Icon name="userCheck" />} value={stats.active}         label="Activos"        accentColor="#22c55e" iconTone="green" />
-              <KpiCard icon={<Icon name="userX" />}     value={stats.inactive}       label="Inactivos"      accentColor="#ef4444" iconTone="red"   />
-              <KpiCard icon={<Icon name="clock" />}     value={humanizeAgo(stats.last)} label="Últ. actividad" accentColor="#64748b" iconTone="slate" small />
+        {/* Indicadores */}
+        {!loading && !loadError ? (
+          <section className="tch-kpis" aria-label="Resumen del equipo">
+            <Kpi icon="userCheck" tone="is-green" value={counts.active} total={counts.all} label="Técnicos activos" />
+            <Kpi icon="clock" value={team.pending} label="Pendientes asignadas" />
+            <Kpi icon="alert" tone={team.overdue ? "is-red" : ""} value={team.overdue} label="Vencidas" />
+            <Kpi icon="checkCircle" tone="is-orange" value={team.completed30d} label="Hechas en 30 días" />
+          </section>
+        ) : null}
+
+        {/* Filtros */}
+        {!loading && !loadError && technicians.length ? (
+          <div className="tch-toolbar">
+            <div className="tch-tabs" role="group" aria-label="Filtrar por estado">
+              {[
+                ["all", "Todos", counts.all],
+                ["active", "Activos", counts.active],
+                ["inactive", "Inactivos", counts.inactive],
+              ].map(([key, label, n]) => (
+                <button key={key} type="button" className="tch-tab" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}>
+                  {label} <span className="tch-tab-count">{n}</span>
+                </button>
+              ))}
             </div>
+            <label className="tch-sort">
+              Ordenar por
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                {Object.entries(SORTS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </select>
+            </label>
           </div>
         ) : null}
 
-        {/* GRID */}
+        {/* Lista */}
         {loading ? (
-          <CardSkeleton count={6} columns="repeat(auto-fill, minmax(280px, 1fr))" gap={12} />
-        ) : filtered.length > 0 ? (
-          <div style={grid}>
+          <CardSkeleton count={6} columns="repeat(auto-fill, minmax(300px, 1fr))" gap={14} />
+        ) : loadError ? (
+          <div className="tch-empty" role="alert">
+            <div className="tch-empty-icon"><Icon name="alert" /></div>
+            <h3>No se pudieron cargar los técnicos</h3>
+            <p>{loadError}</p>
+            <button type="button" className="tch-btn tch-btn-ghost" onClick={loadTechnicians}>
+              <Icon name="refresh" size="sm" /> Reintentar
+            </button>
+          </div>
+        ) : filtered.length ? (
+          <div className="tch-grid">
             {filtered.map((t) => (
               <TechnicianCard
                 key={t.id}
@@ -301,32 +266,34 @@ export default function TechniciansPage() {
             ))}
           </div>
         ) : (
-          <div style={emptyBox}>
-            <div style={emptyIconWrap}>
-              <Icon name="users" style={{ width: 24, height: 24, color: "#94a3b8" }} />
-            </div>
-            <div style={emptyTitle}>
-              {search ? "Sin resultados" : "Sin técnicos"}
-            </div>
-            <div style={emptyDesc}>
-              {search
-                ? `No encontramos técnicos con "${search}".`
-                : "Aún no hay técnicos registrados para esta planta."}
-            </div>
-            {search ? (
-              <button type="button" style={emptyAction} onClick={() => setSearch("")}>
-                Limpiar búsqueda
+          <div className="tch-empty">
+            <div className="tch-empty-icon"><Icon name="users" /></div>
+            <h3>{technicians.length ? "Sin resultados" : "Sin técnicos"}</h3>
+            <p>
+              {technicians.length
+                ? "Ningún técnico coincide con la búsqueda o el filtro."
+                : "Aún no hay técnicos registrados en esta planta."}
+            </p>
+            {technicians.length ? (
+              <button
+                type="button"
+                className="tch-btn tch-btn-ghost"
+                onClick={() => {
+                  setSearch("");
+                  setStatusFilter("all");
+                }}
+              >
+                Limpiar filtros
               </button>
             ) : canEdit ? (
-              <button type="button" style={emptyActionPrimary} onClick={() => setShowModal(true)}>
-                + Agregar técnico
+              <button type="button" className="tch-btn tch-btn-primary" onClick={openCreate}>
+                <Icon name="plus" size="sm" /> Agregar técnico
               </button>
             ) : null}
           </div>
         )}
       </div>
 
-      {/* MODAL */}
       {showModal && canEdit ? (
         <NewTechnicianModal
           technician={editingTech}
@@ -341,244 +308,17 @@ export default function TechniciansPage() {
   );
 }
 
-/* ================= KPI COMPONENT ================= */
-
-const KPI_ICON_TONES = {
-  navy:   { background: "rgba(15,23,42,0.06)",   border: "1px solid rgba(15,23,42,0.12)",    color: "#334155" },
-  orange: { background: "rgba(249,115,22,0.10)",  border: "1px solid rgba(249,115,22,0.28)",  color: "#9a3412" },
-  blue:   { background: "rgba(59,130,246,0.08)",  border: "1px solid rgba(59,130,246,0.22)",  color: "#1e40af" },
-  green:  { background: "rgba(34,197,94,0.09)",   border: "1px solid rgba(34,197,94,0.22)",   color: "#166534" },
-  red:    { background: "rgba(239,68,68,0.08)",   border: "1px solid rgba(239,68,68,0.22)",   color: "#991b1b" },
-  amber:  { background: "rgba(245,158,11,0.10)",  border: "1px solid rgba(245,158,11,0.25)",  color: "#78350f" },
-  slate:  { background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.20)", color: "#475569" },
-};
-
-function KpiCard({ icon, value, label, small, accentColor = "#0f172a", iconTone = "navy" }) {
-  const tone = KPI_ICON_TONES[iconTone] || KPI_ICON_TONES.navy;
+function Kpi({ icon, tone = "", value, total, label }) {
   return (
-    <div style={{ ...kpiCard, borderTop: `4px solid ${accentColor}` }} className="lpKpiCard">
-      <div style={kpiInner}>
-        <div style={{ ...kpiIconBox, ...tone }}>{icon}</div>
-        <div style={kpiRight}>
-          <div style={small ? kpiValueSmall : kpiValue}>{value}</div>
-          <div style={kpiLabel}>{label}</div>
+    <div className="tch-kpi">
+      <div className={`tch-kpi-icon ${tone}`}><Icon name={icon} /></div>
+      <div>
+        <div className="tch-kpi-value">
+          {value}
+          {total != null ? <small> / {total}</small> : null}
         </div>
+        <div className="tch-kpi-label">{label}</div>
       </div>
     </div>
   );
 }
-
-/* ================= ESTILOS ================= */
-
-const pageShell = {
-  paddingTop: 6,
-  display: "grid",
-  gap: 14,
-};
-
-const topBar = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-end",
-  gap: 12,
-  flexWrap: "wrap",
-  padding: "14px 16px",
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
-};
-
-const title = {
-  margin: "6px 0 0",
-  fontSize: 28,
-  fontWeight: 950,
-  color: "#0f172a",
-};
-
-const subtitle = {
-  marginTop: 6,
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 12,
-};
-
-const topActions = {
-  display: "flex",
-  gap: 10,
-  alignItems: "center",
-  flexWrap: "wrap",
-};
-
-const btnPrimary = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 8,
-  background: "#f97316",
-  color: "#0b1220",
-  padding: "10px 14px",
-  borderRadius: 12,
-  border: "1px solid #fb923c",
-  fontWeight: 950,
-  cursor: "pointer",
-  boxShadow: "0 10px 22px rgba(249,115,22,0.22)",
-};
-
-const searchBox = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  background: "rgba(255,255,255,0.70)",
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "10px 12px",
-};
-
-const searchIcon = { color: "#64748b", display: "inline-flex" };
-
-const searchInput = {
-  border: "none",
-  outline: "none",
-  background: "transparent",
-  fontWeight: 800,
-};
-
-const summaryCard = { marginTop: 14 };
-
-const summaryMetrics4 = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-  gap: 12,
-};
-
-const kpiCard = {
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 18,
-  padding: 16,
-  boxShadow: "0 10px 24px rgba(2,6,23,0.07)",
-  minHeight: 80,
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-};
-
-const kpiInner = {
-  display: "flex",
-  alignItems: "center",
-  gap: 14,
-};
-
-const kpiIconBox = {
-  width: 48,
-  height: 48,
-  borderRadius: 14,
-  display: "grid",
-  placeItems: "center",
-  flexShrink: 0,
-};
-
-const kpiRight = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-end",
-  flex: 1,
-  lineHeight: 1.05,
-};
-
-const kpiValue = {
-  fontSize: 38,
-  fontWeight: 900,
-  color: "#0f172a",
-  lineHeight: 1,
-  letterSpacing: -1,
-};
-
-const kpiValueSmall = {
-  fontSize: 22,
-  fontWeight: 900,
-  color: "#0f172a",
-  lineHeight: 1,
-};
-
-const kpiLabel = {
-  marginTop: 5,
-  fontSize: 11,
-  fontWeight: 950,
-  textTransform: "uppercase",
-  color: "#64748b",
-  letterSpacing: 0.7,
-};
-
-const grid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-  gap: 12,
-};
-
-const emptyBox = {
-  marginTop: 14,
-  padding: "40px 24px",
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "4px solid rgba(226,232,240,0.80)",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: 10,
-  textAlign: "center",
-  boxShadow: "0 12px 28px rgba(2,6,23,0.05)",
-};
-
-const emptyIconWrap = {
-  width: 52,
-  height: 52,
-  borderRadius: 16,
-  background: "rgba(15,23,42,0.05)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  display: "grid",
-  placeItems: "center",
-};
-
-const emptyTitle = {
-  fontSize: 16,
-  fontWeight: 900,
-  color: "#0f172a",
-};
-
-const emptyDesc = {
-  fontSize: 13,
-  color: "#64748b",
-  fontWeight: 800,
-  maxWidth: "34ch",
-};
-
-const emptyAction = {
-  marginTop: 6,
-  padding: "8px 16px",
-  borderRadius: 12,
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.90)",
-  fontWeight: 950,
-  fontSize: 13,
-  color: "#334155",
-  cursor: "pointer",
-};
-
-const emptyActionPrimary = {
-  marginTop: 6,
-  padding: "9px 18px",
-  borderRadius: 12,
-  border: "1px solid rgba(249,115,22,0.45)",
-  background: "#f97316",
-  fontWeight: 950,
-  fontSize: 13,
-  color: "#0b1220",
-  cursor: "pointer",
-  boxShadow: "0 8px 18px rgba(249,115,22,0.22)",
-};

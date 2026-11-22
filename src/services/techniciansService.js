@@ -36,6 +36,12 @@ export async function getTechnicians() {
   return arr.map(normalizeTechnician);
 }
 
+/* SIGUIENTE CÓDIGO LIBRE (TEC-###) */
+export async function getNextTechnicianCode() {
+  const data = await httpGet(`/technicians/next-code?_t=${Date.now()}`);
+  return data?.code || "";
+}
+
 /* CREATE */
 export async function createTechnician(payload) {
   const data = await httpPost("/technicians", payload);
