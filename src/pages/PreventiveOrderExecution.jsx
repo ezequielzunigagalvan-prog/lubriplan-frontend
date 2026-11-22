@@ -4,6 +4,7 @@ import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import SignaturePad from "../components/ui/SignaturePad";
 import { Icon } from "../components/ui/lpIcons";
 import MainLayout from "../layouts/MainLayout";
+import { toast } from "sonner";
 
 const COLORS = {
   bgBase: "#070B0F",
@@ -78,10 +79,11 @@ export default function PreventiveOrderExecution() {
   async function handleCompleteItem(itemId) {
     try {
       const observations = itemObservations[itemId] || "";
-      await preventiveOrdersService.completeItem(Number(id), itemId, "COMPLETED", observations, null);
+      const result = await preventiveOrdersService.completeItem(Number(id), itemId, "COMPLETED", observations, null);
       setItemStates((prev) => ({ ...prev, [itemId]: true }));
+      if (result?.inventoryWarning) toast.warning(result.inventoryWarning);
     } catch (err) {
-      setError("Error completando item");
+      setError(err?.message || "Error completando item");
       console.error(err);
     }
   }

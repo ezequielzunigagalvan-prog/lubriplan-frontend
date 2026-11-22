@@ -65,7 +65,7 @@ function PageLoader() {
 
 function NotFoundRedirect() {
   const { isAuthenticated } = useAuth();
-  return <Navigate to={isAuthenticated ? "/maintenance/app" : "/"} replace />;
+  return <Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />;
 }
 
 export default function App() {
