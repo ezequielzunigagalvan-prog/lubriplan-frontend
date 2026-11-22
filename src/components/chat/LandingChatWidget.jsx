@@ -251,15 +251,22 @@ export default function LandingChatWidget() {
                 <div style={demoNudge}>
                   <span style={demoNudgeDot} />
                   <span>
-                    Demo disponible en{" "}
-                    <a
-                      href="https://www.hidrolub.com/lubriplan"
-                      target="_blank"
-                      rel="noreferrer"
-                      style={demoLink}
+                    ¿Quieres una demo?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMessages([
+                          {
+                            role: "assistant",
+                            content: "¡Con gusto! Déjanos tus datos y el equipo de LubriPlan te contactará para agendar tu demo.",
+                          },
+                        ]);
+                        setShowLeadForm(true);
+                      }}
+                      style={{ ...demoLink, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}
                     >
-                      hidrolub.com/lubriplan
-                    </a>
+                      Déjanos tus datos
+                    </button>
                   </span>
                 </div>
               </div>
@@ -425,7 +432,7 @@ function InlineLeadForm({ sessionId, source, onSuccess }) {
     setSubmitting(true);
     setErr(null);
     try {
-      await submitLandingLead({ ...form, source, sessionId });
+      await submitLandingLead({ ...form, source, sessionId, origin: "chat" });
       onSuccess();
     } catch (ex) {
       setErr(ex?.message || "Error al enviar. Intenta de nuevo.");

@@ -286,7 +286,7 @@ export default function CardChatWidget() {
                     onSuccess={() => {
                       setLeadSubmitted(true);
                       setShowLeadForm(false);
-                      setMessages((prev) => [...prev, { role: "assistant", content: "¡Listo! Recibimos tus datos. El equipo de LubriPlan se pondrá en contacto contigo a la brevedad para agendar tu demo de LubriPlan Card. 🎉" }]);
+                      setMessages((prev) => [...prev, { role: "assistant", content: "¡Listo! Recibimos tus datos. El equipo de LubriPlan se pondrá en contacto contigo a la brevedad para darte información de LubriPlan Card. 🎉" }]);
                     }}
                   />
                 )}
@@ -393,14 +393,14 @@ function InlineLeadForm({ sessionId, source, onSuccess }) {
 
   const handle = async (e) => {
     e.preventDefault();
-    if (!form.nombre.trim() || !form.email.trim() || !form.telefono.trim()) {
-      setErr("Nombre, correo y teléfono son obligatorios.");
+    if (!form.nombre.trim() || !form.empresa.trim() || !form.telefono.trim()) {
+      setErr("Nombre, empresa y teléfono son obligatorios.");
       return;
     }
     setSubmitting(true);
     setErr(null);
     try {
-      await submitLandingLead({ ...form, source, sessionId });
+      await submitLandingLead({ ...form, source, sessionId, origin: "chat" });
       onSuccess();
     } catch (ex) {
       setErr(ex?.message || "Error al enviar. Intenta de nuevo.");
@@ -413,10 +413,10 @@ function InlineLeadForm({ sessionId, source, onSuccess }) {
     <form onSubmit={handle} style={{ background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 16, padding: "14px 14px 12px", margin: "4px 0", fontFamily: FONT }}>
       <div style={{ fontSize: 11, fontWeight: 900, color: "#818cf8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Tus datos de contacto</div>
       {[
-        { key: "nombre", placeholder: "Nombre completo *", type: "text" },
-        { key: "email", placeholder: "Correo electrónico *", type: "email" },
-        { key: "telefono", placeholder: "Teléfono *", type: "tel" },
-        { key: "empresa", placeholder: "Empresa (opcional)", type: "text" },
+        { key: "nombre", placeholder: "Nombre *", type: "text" },
+        { key: "empresa", placeholder: "Nombre de la empresa *", type: "text" },
+        { key: "telefono", placeholder: "Número de teléfono *", type: "tel" },
+        { key: "email", placeholder: "Correo electrónico (opcional)", type: "email" },
       ].map(({ key, placeholder, type }) => (
         <input
           key={key}
@@ -430,7 +430,7 @@ function InlineLeadForm({ sessionId, source, onSuccess }) {
       ))}
       {err && <div style={{ color: "#f87171", fontSize: 11, fontWeight: 700, marginBottom: 6 }}>{err}</div>}
       <button type="submit" disabled={submitting} style={{ width: "100%", padding: "9px", borderRadius: 10, border: "none", background: submitting ? "rgba(99,102,241,0.45)" : "linear-gradient(135deg,#6366f1,#818cf8)", color: "#fff", fontWeight: 900, fontSize: 13, cursor: submitting ? "default" : "pointer", fontFamily: FONT }}>
-        {submitting ? "Enviando…" : "Solicitar demo →"}
+        {submitting ? "Enviando…" : "Solicitar información →"}
       </button>
     </form>
   );

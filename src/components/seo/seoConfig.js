@@ -2,9 +2,9 @@
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/logo.png`;
 
 export const DEFAULT_SEO = {
-  title: "LubriPlan | Gestion de Lubricacion Industrial",
+  title: "LubriPlan | Gestión de Lubricación Industrial",
   description:
-    "Software especializado en gestion de lubricacion industrial. Control de actividades, rutas, cartas digitales, alertas, inventario y analisis tecnico.",
+    "Software especializado en gestión de lubricación industrial. Control de actividades, rutas, cartas digitales, alertas, inventario y análisis técnico.",
   keywords: [
     "lubricacion industrial",
     "software lubricacion",
@@ -19,54 +19,54 @@ export const DEFAULT_SEO = {
 
 export const PUBLIC_ROUTE_SEO = {
   "/": {
-    title: "LubriPlan | Gestion de Lubricacion Industrial",
+    title: "LubriPlan | Gestión de Lubricación Industrial",
     description:
-      "Software especializado en gestion de lubricacion industrial para control de actividades, rutas, cartas digitales, alertas, inventario y analisis tecnico.",
+      "Software especializado en gestión de lubricación industrial para control de actividades, rutas, cartas digitales, alertas, inventario y análisis técnico.",
   },
   "/login": {
-    title: "Acceso a LubriPlan | Plataforma de lubricacion industrial",
+    title: "Acceso a LubriPlan | Plataforma de lubricación industrial",
     description:
-      "Ingresa a LubriPlan para administrar actividades, rutas, alertas, inventario y analisis tecnico de lubricacion industrial.",
+      "Ingresa a LubriPlan para administrar actividades, rutas, alertas, inventario y análisis técnico de lubricación industrial.",
   },
   "/card": {
-    title: "LubriPlan Card | Cartas digitales de lubricacion con QR",
+    title: "LubriPlan Card | Cartas digitales de lubricación con QR",
     description:
-      "Cartas digitales de lubricacion con QR para equipos industriales, puntos de lubricacion, frecuencias, imagenes y acceso tecnico rapido.",
+      "Cartas digitales de lubricación con QR para equipos industriales, puntos de lubricación, frecuencias, imágenes y acceso técnico rápido.",
   },
   "/contacto": {
     title: "Contacto LubriPlan | Solicita una demo",
     description:
-      "Solicita una demo de LubriPlan y conoce como ordenar la gestion de lubricacion industrial con rutas, alertas, inventario e IA.",
+      "Solicita una demo de LubriPlan y conoce cómo ordenar la gestión de lubricación industrial con rutas, alertas, inventario e IA.",
   },
   "/que-es-lubriplan": {
-    title: "Que es LubriPlan | Plataforma para lubricacion industrial",
+    title: "Qué es LubriPlan | Plataforma para lubricación industrial",
     description:
-      "Conoce que es LubriPlan, para quien fue creado y como ayuda a controlar actividades, rutas, cartas digitales, alertas e inventario.",
+      "Conoce qué es LubriPlan, para quién fue creado y cómo ayuda a controlar actividades, rutas, cartas digitales, alertas e inventario.",
   },
   "/software-lubricacion-industrial": {
-    title: "Software de lubricacion industrial | LubriPlan",
+    title: "Software de lubricación industrial | LubriPlan",
     description:
-      "LubriPlan es un software de lubricacion industrial para planear, ejecutar, registrar evidencia, controlar inventario y supervisar cumplimiento.",
+      "LubriPlan es un software de lubricación industrial para planear, ejecutar, registrar evidencia, controlar inventario y supervisar cumplimiento.",
   },
   "/cartas-digitales-lubricacion": {
-    title: "Cartas digitales de lubricacion | LubriPlan",
+    title: "Cartas digitales de lubricación | LubriPlan",
     description:
-      "Cartas digitales de lubricacion con QR, puntos visibles, frecuencias, cantidades y trazabilidad para campo y supervision.",
+      "Cartas digitales de lubricación con QR, puntos visibles, frecuencias, cantidades y trazabilidad para campo y supervisión.",
   },
   "/rutas-de-lubricacion": {
-    title: "Rutas de lubricacion | LubriPlan",
+    title: "Rutas de lubricación | LubriPlan",
     description:
-      "Organiza rutas de lubricacion por equipo, frecuencia, tecnico y condicion para evitar atraso operativo y perdida de control.",
+      "Organiza rutas de lubricación por equipo, frecuencia, técnico y condición para evitar atraso operativo y pérdida de control.",
   },
   "/gestion-de-lubricantes": {
-    title: "Gestion de lubricantes | LubriPlan",
+    title: "Gestión de lubricantes | LubriPlan",
     description:
-      "Controla inventario de lubricantes, consumo real, movimientos, niveles minimos y riesgo de desabasto desde una sola plataforma.",
+      "Controla el inventario de lubricantes, consumo real, movimientos, niveles mínimos y riesgo de desabasto desde una sola plataforma.",
   },
   "/analisis-de-lubricacion": {
-    title: "Analisis de lubricacion | LubriPlan",
+    title: "Análisis de lubricación | LubriPlan",
     description:
-      "Analiza cumplimiento, condicion, alertas y lectura ejecutiva de lubricacion industrial con indicadores y apoyo de IA.",
+      "Analiza cumplimiento, condición, alertas y lectura ejecutiva de lubricación industrial con indicadores y apoyo de IA.",
   },
 };
 
@@ -85,17 +85,17 @@ export function buildCoreSchemas() {
       operatingSystem: "Web Browser",
       url: `${SITE_URL}/`,
       description:
-        "Software especializado en gestion de lubricacion industrial para control de actividades, rutas, cartas digitales, alertas, inventario y analisis tecnico.",
+        "Software especializado en gestión de lubricación industrial para control de actividades, rutas, cartas digitales, alertas, inventario y análisis técnico.",
       featureList: [
-        "Gestion de actividades de lubricacion",
-        "Rutas de lubricacion",
-        "Cartas digitales de lubricacion",
+        "Gestión de actividades de lubricación",
+        "Rutas de lubricación",
+        "Cartas digitales de lubricación",
         "Alertas operativas",
         "Inventario de lubricantes",
         "Indicadores de mantenimiento",
-        "Analisis asistido por IA",
+        "Análisis asistido por IA",
         "Compatibilidad de grasas",
-        "Calculo de frecuencia de lubricacion",
+        "Cálculo de frecuencia de lubricación",
       ],
     },
     {
@@ -104,7 +104,7 @@ export function buildCoreSchemas() {
       name: "LubriPlan",
       url: `${SITE_URL}/`,
       logo: `${SITE_URL}/logo.png`,
-      description: "Plataforma especializada en gestion de lubricacion industrial.",
+      description: "Plataforma especializada en gestión de lubricación industrial.",
     },
     {
       "@context": "https://schema.org",

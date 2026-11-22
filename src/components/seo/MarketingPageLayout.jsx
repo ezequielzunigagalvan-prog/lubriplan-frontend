@@ -1,8 +1,8 @@
-﻿import React from "react";
+﻿import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
+import DemoRequestModal from "../landing/DemoRequestModal";
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-const DEMO_URL = "https://www.hidrolub.com/lubriplan";
 
 export default function MarketingPageLayout({
   eyebrow,
@@ -12,16 +12,19 @@ export default function MarketingPageLayout({
   sections = [],
   gallery = [],
   ctaTitle = "Solicita una demo de LubriPlan",
-  ctaText = "Conoce como ordenar rutas, actividades, alertas, inventario y lectura ejecutiva en una sola plataforma.",
+  ctaText = "Conoce cómo ordenar rutas, actividades, alertas, inventario y lectura ejecutiva en una sola plataforma.",
 }) {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const closeDemo = useCallback(() => setDemoOpen(false), []);
+
   return (
     <div style={page}>
       <header style={topbar}>
         <Link to="/" style={brand}>LubriPlan</Link>
         <div style={navRow}>
-          <Link to="/que-es-lubriplan" style={navLink}>Que es</Link>
+          <Link to="/que-es-lubriplan" style={navLink}>Qué es</Link>
           <Link to="/contacto" style={navLink}>Contacto</Link>
-          <a href={DEMO_URL} target="_blank" rel="noreferrer" style={navButton}>Solicitar demo</a>
+          <button type="button" onClick={() => setDemoOpen(true)} style={navButton}>Solicitar demo</button>
         </div>
       </header>
       <main style={shell}>
@@ -51,7 +54,7 @@ export default function MarketingPageLayout({
           </section>
         ) : null}
         <section style={sectionWrap}>
-          <div style={sectionLabel}>Contenido tecnico</div>
+          <div style={sectionLabel}>Contenido técnico</div>
           <div style={sectionGrid}>
             {sections.map((section) => (
               <article key={section.title} style={sectionCard}>
@@ -66,11 +69,12 @@ export default function MarketingPageLayout({
           <h2 style={ctaTitleStyle}>{ctaTitle}</h2>
           <p style={ctaTextStyle}>{ctaText}</p>
           <div style={ctaRow}>
-            <a href={DEMO_URL} target="_blank" rel="noreferrer" style={ctaPrimary}>Solicitar demo</a>
+            <button type="button" onClick={() => setDemoOpen(true)} style={ctaPrimary}>Solicitar demo</button>
             <Link to="/contacto" style={ctaGhost}>Hablar con LubriPlan</Link>
           </div>
         </section>
       </main>
+      <DemoRequestModal open={demoOpen} onClose={closeDemo} source="landing" />
     </div>
   );
 }
@@ -80,7 +84,7 @@ const topbar = { maxWidth: 1280, margin: "0 auto", padding: "22px 24px 10px", di
 const brand = { color: "#0f172a", textDecoration: "none", fontSize: 30, fontWeight: 1000 };
 const navRow = { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" };
 const navLink = { color: "#334155", textDecoration: "none", fontWeight: 800, fontSize: 14 };
-const navButton = { textDecoration: "none", background: "#0f172a", color: "#fff", padding: "12px 18px", borderRadius: 14, fontWeight: 900, fontSize: 14 };
+const navButton = { border: "none", cursor: "pointer", fontFamily: FONT, textDecoration: "none", background: "#0f172a", color: "#fff", padding: "12px 18px", borderRadius: 14, fontWeight: 900, fontSize: 14 };
 const shell = { maxWidth: 1280, margin: "0 auto", padding: "16px 24px 72px", display: "grid", gap: 24 };
 const hero = { borderRadius: 28, padding: "34px 30px", background: "linear-gradient(135deg, #0f172a 0%, #172554 55%, #1d4ed8 100%)", boxShadow: "0 30px 70px rgba(15,23,42,0.18)" };
 const heroCopy = { maxWidth: 900 };
@@ -104,5 +108,5 @@ const ctaBox = { padding: 28, borderRadius: 24, background: "linear-gradient(135
 const ctaTitleStyle = { margin: "8px 0 0", fontSize: 28, lineHeight: 1.05, fontWeight: 1000, color: "#9a3412" };
 const ctaTextStyle = { marginTop: 12, maxWidth: 760, color: "#7c2d12", fontSize: 15, lineHeight: 1.65, fontWeight: 700 };
 const ctaRow = { marginTop: 18, display: "flex", gap: 12, flexWrap: "wrap" };
-const ctaPrimary = { textDecoration: "none", background: "#f97316", color: "#fff", padding: "14px 18px", borderRadius: 14, fontWeight: 900 };
+const ctaPrimary = { border: "none", cursor: "pointer", fontFamily: FONT, fontSize: 15, textDecoration: "none", background: "#f97316", color: "#fff", padding: "14px 18px", borderRadius: 14, fontWeight: 900 };
 const ctaGhost = { textDecoration: "none", background: "#fff", color: "#9a3412", padding: "14px 18px", borderRadius: 14, border: "1px solid rgba(251,146,60,0.28)", fontWeight: 900 };
