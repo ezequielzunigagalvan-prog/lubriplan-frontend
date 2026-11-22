@@ -1,90 +1,12 @@
-import { useState, useRef } from 'react'
+import { useCallback, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EquipoSVG from '../components/EquipoSVG'
 import CardChatWidget from '../components/chat/CardChatWidget'
+import DemoRequestModal from '../components/landing/DemoRequestModal'
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 
 const LUBRIPLAN_URL = 'https://app.lubriplan.com'
-
-// ─── Planes ──────────────────────────────────────────────────────────────
-const PLANES = [
-  {
-    id: 'basico',
-    nombre: 'Básico',
-    precio: '$80',
-    unidad: '/equipo',
-    subtitulo: 'Mínimo 20 equipos · Pago único',
-    mantenimiento: null,
-    badge: null,
-    color: '#818cf8',
-    destacado: false,
-    incluye: ['Ficha digital vía QR', 'QR digital por equipo', 'Hasta 3 técnicos', 'Hasta 30 equipos'],
-    noIncluye: ['PDF por equipo', 'Placa QR metálica', 'Carta rígida a color', 'Integración LubriPlan'],
-    ejemplos: ['20 eq = $1,600', '30 eq = $2,400'],
-    cta: 'Ver detalles',
-    ctaSecundario: false,
-  },
-  {
-    id: 'estandar',
-    nombre: 'Estándar',
-    precio: '$350',
-    unidad: '/equipo',
-    subtitulo: 'Equipos ilimitados · Pago único',
-    mantenimiento: 'Mantenimiento anual opcional: 20% del valor (~$70/eq/año)',
-    mantenimientoDetalle: [
-      'Actualización de fichas',
-      'Reimpresión de tarjetas físicas',
-      'Altas y bajas de equipos',
-      'Corrección de fichas',
-      'Actualizaciones de plataforma y bugs',
-      'Respaldo y recuperación de datos',
-      'Soporte WhatsApp y correo (24–48 hrs)',
-    ],
-    badge: 'Más popular',
-    color: '#6366f1',
-    destacado: true,
-    incluye: ['Ficha digital vía QR', 'Placa QR metálica por equipo', 'Carta rígida a color', 'PDF por equipo', 'Técnicos ilimitados', 'Equipos ilimitados'],
-    noIncluye: ['Integración LubriPlan'],
-    ejemplos: ['30 eq = $10,500', '50 eq = $17,500', '80 eq = $28,000'],
-    cta: 'Cotizar',
-    ctaSecundario: false,
-  },
-  {
-    id: 'pro',
-    nombre: 'Pro',
-    precio: '$350',
-    unidad: '/equipo + LubriPlan',
-    subtitulo: 'Pago único Card + suscripción LubriPlan',
-    mantenimiento: 'Mantenimiento incluido en la suscripción LubriPlan',
-    badge: 'Con LubriPlan',
-    badgeColor: '#22C55E',
-    color: '#22C55E',
-    destacado: false,
-    incluye: ['Todo lo del plan Estándar', 'Ficha sincronizada en tiempo real', 'Historial de lubricación', 'Rutas y alertas desde LubriPlan', 'Dashboard analítico', 'Técnicos y equipos ilimitados'],
-    noIncluye: [],
-    ejemplos: [],
-    cta: 'Ver detalles',
-    ctaSecundario: false,
-  },
-  {
-    id: 'personalizado',
-    nombre: 'Personalizado',
-    precio: 'A convenir',
-    unidad: '',
-    subtitulo: '100+ equipos · Múltiples plantas',
-    mantenimiento: 'Soporte y mantenimiento incluido',
-    badge: null,
-    color: '#64748b',
-    destacado: false,
-    incluye: ['Todo del plan Pro o Estándar', '100+ equipos con precio especial', 'Múltiples plantas y sitios', 'Integración ERP / CMMS', 'Capacitación presencial', 'SLA de soporte dedicado', 'Facturación corporativa'],
-    noIncluye: [],
-    ejemplos: [],
-    cta: 'Contactar',
-    ctaSecundario: true,
-    nota: 'Con o sin LubriPlan · Visita técnica incluida',
-  },
-]
 
 // ─── Demo equipo ─────────────────────────────────────────────────────────
 const DEMO_PUNTOS = [
@@ -198,36 +120,13 @@ function IconWrench({ size = 16, color = '#818cf8' }) {
     </svg>
   )
 }
-function IconInfo({ size = 14, color = '#64748b' }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
-      <circle cx="7" cy="7" r="6" stroke={color} strokeWidth="1.2" />
-      <path d="M7 5v4M7 4h.01" stroke={color} strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  )
-}
-function IconChevronDown({ size = 12, color = '#64748b' }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 12 12" fill="none">
-      <path d="M2 4l4 4 4-4" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
 
-// ─── Check / X ────────────────────────────────────────────────────────────
+// ─── Check ───────────────────────────────────────────────────────────────
 function CheckIcon({ color = '#818cf8' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
       <circle cx="8" cy="8" r="7" fill={color + '20'} />
       <path d="M4.5 8L7 10.5L11.5 6" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function XIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-      <circle cx="8" cy="8" r="7" fill="#EF444415" />
-      <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="#EF4444" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   )
 }
@@ -411,155 +310,15 @@ function DemoEquipo() {
   )
 }
 
-// ─── Plan Card ────────────────────────────────────────────────────────────
-function PlanCard({ plan, onCTA }) {
-  const [showMant, setShowMant] = useState(false)
-
-  const btnStyle = plan.destacado
-    ? { background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', border: 'none', boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }
-    : plan.ctaSecundario
-      ? { background: 'rgba(99,102,241,0.06)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.28)' }
-      : { background: 'transparent', color: plan.color, border: `1px solid ${plan.color}50` }
-
-  return (
-    <div style={{
-      position: 'relative', display: 'flex', flexDirection: 'column',
-      background: 'rgba(99,102,241,0.04)',
-      border: plan.destacado ? '1.5px solid rgba(99,102,241,0.50)' : '1px solid rgba(99,102,241,0.18)',
-      borderRadius: 20, padding: '28px 24px 24px',
-      boxShadow: plan.destacado ? '0 8px 32px rgba(99,102,241,0.18)' : 'none',
-    }}>
-      {plan.badge && (
-        <div style={{
-          position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-          background: plan.badgeColor ? `linear-gradient(135deg, ${plan.badgeColor}, ${plan.badgeColor}cc)` : 'linear-gradient(135deg, #6366f1, #818cf8)',
-          color: '#fff',
-          fontSize: 11, fontWeight: 800, letterSpacing: 1.2, textTransform: 'uppercase',
-          padding: '5px 16px', borderRadius: 20, whiteSpace: 'nowrap',
-          fontFamily: FONT,
-        }}>
-          {plan.badge}
-        </div>
-      )}
-
-      <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.02em', color: plan.color, marginBottom: 4, fontFamily: FONT }}>
-        {plan.nombre}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-        <span style={{ fontSize: plan.precio === 'A convenir' ? 26 : 40, fontWeight: 900, color: '#f1f5f9', lineHeight: 1, letterSpacing: '-0.03em' }}>
-          {plan.precio}
-        </span>
-        {plan.unidad && <span style={{ fontSize: 12, color: '#64748b' }}>{plan.unidad}</span>}
-      </div>
-      <div style={{ fontSize: 11, color: '#475569', marginBottom: 14 }}>MXN · IVA no incluido</div>
-      <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 18, paddingBottom: 18, borderBottom: '1px solid rgba(99,102,241,0.14)', fontFamily: FONT }}>
-        {plan.subtitulo}
-      </div>
-
-      {plan.incluye.length > 0 && (
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Incluye</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {plan.incluye.map((item, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <CheckIcon color={plan.color} />
-                <span style={{ fontSize: 13, color: '#a5b4fc', lineHeight: 1.4 }}>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {plan.noIncluye.length > 0 && (
-        <div style={{ marginBottom: 10, marginTop: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>No incluye</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {plan.noIncluye.map((item, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <XIcon />
-                <span style={{ fontSize: 13, color: '#475569', lineHeight: 1.4 }}>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {plan.nota && (
-        <div style={{ background: 'rgba(99,102,241,0.06)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#64748b', marginBottom: 10, marginTop: 4 }}>
-          {plan.nota}
-        </div>
-      )}
-
-      {plan.mantenimiento && (
-        <div style={{ marginTop: 8, marginBottom: 10 }}>
-          <button onClick={() => setShowMant(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#64748b' }}>
-            <IconInfo />
-            <span style={{ fontSize: 12, textAlign: 'left' }}>{plan.mantenimiento}</span>
-            {plan.mantenimientoDetalle && (
-              <div style={{ transition: 'transform 0.2s', transform: showMant ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>
-                <IconChevronDown />
-              </div>
-            )}
-          </button>
-          {showMant && plan.mantenimientoDetalle && (
-            <div style={{ marginTop: 8, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {plan.mantenimientoDetalle.map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <CheckIcon color="#64748b" />
-                  <span style={{ fontSize: 12, color: '#64748b' }}>{item}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {plan.ejemplos.length > 0 && (
-        <div style={{ background: 'rgba(99,102,241,0.06)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, marginTop: 4 }}>
-          <div style={{ fontSize: 10, color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Ejemplos</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
-            {plan.ejemplos.map((e, i) => <span key={i} style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>{e}</span>)}
-          </div>
-        </div>
-      )}
-
-      <div style={{ flex: 1 }} />
-
-      <button
-        onClick={() => onCTA(plan)}
-        style={{
-          marginTop: 18, padding: '13px',
-          borderRadius: 12,
-          fontSize: 14, fontWeight: 700, cursor: 'pointer',
-          fontFamily: FONT,
-          transition: 'opacity 0.15s',
-          ...btnStyle,
-        }}
-        onMouseEnter={e => { if (!plan.destacado) e.currentTarget.style.opacity = '0.8'; else e.currentTarget.style.opacity = '0.88' }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-      >
-        {plan.cta}
-      </button>
-    </div>
-  )
-}
-
 // ─── LandingPage ──────────────────────────────────────────────────────────
 export default function LubriPlanCardLanding() {
   const navigate = useNavigate()
-  const pricingRef = useRef(null)
+  const infoRef = useRef(null)
+  const [infoOpen, setInfoOpen] = useState(false)
+  const closeInfo = useCallback(() => setInfoOpen(false), [])
 
   const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   const openChat = () => document.getElementById('lp-card-fab')?.click()
-
-  const handleCTA = (plan) => {
-    if (plan.id === 'personalizado') {
-      window.location.href = 'mailto:contacto@lubriplan.com?subject=Consulta%20Plan%20Personalizado%20LubriPlan%20Card'
-    } else {
-      openChat()
-    }
-  }
 
   return (
     <div style={{
@@ -608,12 +367,12 @@ export default function LubriPlanCardLanding() {
             ← Volver a LubriPlan
           </button>
           <button
-            onClick={() => scrollTo(pricingRef)}
+            onClick={() => scrollTo(infoRef)}
             style={{ padding: '8px 16px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.20)', borderRadius: 8, color: '#94a3b8', fontSize: 13, cursor: 'pointer', fontFamily: FONT, fontWeight: 500, transition: 'border-color 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.50)'; e.currentTarget.style.color = '#a5b4fc' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.20)'; e.currentTarget.style.color = '#94a3b8' }}
           >
-            Precios
+            Información
           </button>
           <button
             onClick={() => navigate('/admin/login')}
@@ -652,12 +411,12 @@ export default function LubriPlanCardLanding() {
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', position: 'relative' }}>
           <button
-            onClick={() => scrollTo(pricingRef)}
+            onClick={() => scrollTo(infoRef)}
             style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', borderRadius: 13, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(99,102,241,0.40)', transition: 'transform 0.15s, opacity 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.opacity = '0.9' }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.opacity = '1' }}
           >
-            Ver planes y precios
+            Solicitar información
           </button>
           <button
             onClick={openChat}
@@ -701,7 +460,7 @@ export default function LubriPlanCardLanding() {
           </p>
           <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.7, marginBottom: 28, background: 'rgba(99,102,241,0.06)', borderRadius: 12, padding: '14px 16px', border: '1px solid rgba(99,102,241,0.16)' }}>
             LubriPlan Card es visualización pura. No incluye historial, rutas ni alertas.
-            Para esas funciones existe la integración con <span style={{ color: '#818cf8', fontWeight: 600 }}>LubriPlan</span> en el Plan Pro.
+            Para esas funciones existe la integración con <span style={{ color: '#818cf8', fontWeight: 600 }}>LubriPlan</span>.
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
@@ -726,8 +485,8 @@ export default function LubriPlanCardLanding() {
             { title: 'Sin apps', desc: 'Acceso desde el navegador', icon: <IconGlobe /> },
             { title: 'Imágenes técnicas', desc: 'Fotos con puntos marcados', icon: <IconCamera /> },
             { title: 'Código por color', desc: 'Frecuencias al instante', icon: <IconPalette /> },
-            { title: 'Multi-técnico', desc: 'Ilimitados según el plan', icon: <IconUsers /> },
-            { title: 'Placa metálica', desc: 'QR físico resistente (Estándar+)', icon: <IconTag /> },
+            { title: 'Multi-técnico', desc: 'Acceso para todo tu equipo', icon: <IconUsers /> },
+            { title: 'Placa metálica', desc: 'QR físico resistente (opcional)', icon: <IconTag /> },
           ].map((f, i) => (
             <div key={i} style={{ background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.14)', borderRadius: 14, padding: '18px 16px', transition: 'border-color 0.15s, background 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.32)'; e.currentTarget.style.background = 'rgba(99,102,241,0.08)' }}
@@ -744,27 +503,38 @@ export default function LubriPlanCardLanding() {
       {/* ── DEMO ── */}
       <DemoEquipo />
 
-      {/* ── PRICING ── */}
-      <section ref={pricingRef} style={{ padding: '80px 5%' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ fontSize: 10, fontWeight: 900, color: '#818cf8', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 12 }}>
-              Planes y precios
-            </div>
-            <h2 style={{ fontWeight: 900, fontSize: 'clamp(28px, 4vw, 46px)', letterSpacing: '-0.02em', color: '#f1f5f9', lineHeight: 1.1, marginBottom: 16 }}>
-              Elige el plan ideal<br />
-              <span style={{ color: '#818cf8' }}>para tu empresa</span>
-            </h2>
-            <p style={{ fontSize: 14, color: '#64748b', maxWidth: 500, margin: '0 auto' }}>
-              Precios en MXN · IVA no incluido · Pago único sin mensualidades (excepto Plan Pro)
-            </p>
+      {/* ── SOLICITAR INFORMACIÓN ── (sin precios: la propuesta se arma por caso) */}
+      <section ref={infoRef} style={{ padding: '80px 5%' }}>
+        <div style={{
+          maxWidth: 880, margin: '0 auto', textAlign: 'center',
+          background: 'linear-gradient(160deg, rgba(99,102,241,0.12), rgba(99,102,241,0.03))',
+          border: '1px solid rgba(99,102,241,0.28)', borderRadius: 24, padding: 'clamp(32px, 5vw, 56px)',
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 900, color: '#818cf8', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 12 }}>
+            Solicita información
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, alignItems: 'start' }}>
-            {PLANES.map(plan => <PlanCard key={plan.id} plan={plan} onCTA={handleCTA} />)}
-          </div>
-          <p style={{ textAlign: 'center', fontSize: 12, color: '#334155', marginTop: 28 }}>
-            ¿Dudas sobre qué plan elegir? Abre el asistente y te ayudamos según tu operación.
+          <h2 style={{ fontWeight: 900, fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.02em', color: '#f1f5f9', lineHeight: 1.1, marginBottom: 16 }}>
+            Una propuesta a la medida<br />
+            <span style={{ color: '#818cf8' }}>de tu planta</span>
+          </h2>
+          <p style={{ fontSize: 15, color: '#94a3b8', maxWidth: 560, margin: '0 auto 28px', lineHeight: 1.7 }}>
+            El alcance depende del número de equipos, las plantas y si lo usarás junto con LubriPlan.
+            Déjanos tu nombre, el nombre de tu empresa y tu teléfono, y te contactamos.
           </p>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button
+              onClick={() => setInfoOpen(true)}
+              style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', borderRadius: 13, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(99,102,241,0.40)', fontFamily: FONT }}
+            >
+              Solicitar información
+            </button>
+            <button
+              onClick={openChat}
+              style={{ padding: '14px 32px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.30)', borderRadius: 13, color: '#a5b4fc', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}
+            >
+              Preguntar al asistente
+            </button>
+          </div>
         </div>
       </section>
 
@@ -777,15 +547,16 @@ export default function LubriPlanCardLanding() {
           <span style={{ fontWeight: 900, fontSize: 14, color: '#f1f5f9', letterSpacing: '-0.02em' }}>LubriPlan Card</span>
         </div>
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          <button onClick={() => scrollTo(pricingRef)} style={{ background: 'none', border: 'none', color: '#475569', fontSize: 13, cursor: 'pointer', fontFamily: FONT, transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = '#a5b4fc'} onMouseLeave={e => e.currentTarget.style.color = '#475569'}>Precios</button>
+          <button onClick={() => scrollTo(infoRef)} style={{ background: 'none', border: 'none', color: '#475569', fontSize: 13, cursor: 'pointer', fontFamily: FONT, transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = '#a5b4fc'} onMouseLeave={e => e.currentTarget.style.color = '#475569'}>Información</button>
           <button onClick={openChat} style={{ background: 'none', border: 'none', color: '#475569', fontSize: 13, cursor: 'pointer', fontFamily: FONT, transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = '#a5b4fc'} onMouseLeave={e => e.currentTarget.style.color = '#475569'}>Asistente</button>
           <button onClick={() => navigate('/admin/login')} style={{ background: 'none', border: 'none', color: '#475569', fontSize: 13, cursor: 'pointer', fontFamily: FONT, transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = '#a5b4fc'} onMouseLeave={e => e.currentTarget.style.color = '#475569'}>Admin</button>
         </div>
-        <div style={{ fontSize: 12, color: '#334155' }}>© 2026 LubriPlan Card · MXN sin IVA</div>
+        <div style={{ fontSize: 12, color: '#334155' }}>© {new Date().getFullYear()} LubriPlan Card</div>
       </footer>
 
       {/* ── FAB CHAT ── */}
       <CardChatWidget />
+      <DemoRequestModal open={infoOpen} onClose={closeInfo} source="card" />
     </div>
   )
 }

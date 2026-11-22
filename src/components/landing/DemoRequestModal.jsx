@@ -8,6 +8,24 @@ import "./DemoRequestModal.css";
 
 const EMPTY = { nombre: "", empresa: "", email: "", telefono: "", website: "" };
 
+// Textos por producto. LubriPlan Card pide nombre, empresa y teléfono (correo opcional).
+const COPY = {
+  landing: {
+    label: "Solicitar demo",
+    title: "Agenda una demo de LubriPlan",
+    text: "Déjanos tus datos y te contactamos para mostrarte la plataforma con el caso de tu planta.",
+    done: "Gracias por tu interés en LubriPlan. Nos pondremos en contacto contigo a la brevedad para agendar tu demo.",
+    required: "Nombre, correo y teléfono son obligatorios.",
+  },
+  card: {
+    label: "Solicitar información",
+    title: "Recibe información de LubriPlan Card",
+    text: "La propuesta depende del número de equipos y de tu operación. Déjanos tus datos y te contactamos.",
+    done: "Gracias por tu interés en LubriPlan Card. Nos pondremos en contacto contigo a la brevedad.",
+    required: "Nombre, empresa y teléfono son obligatorios.",
+  },
+};
+
 export default function DemoRequestModal({ open, onClose, source = "landing" }) {
   const [form, setForm] = useState(EMPTY);
   const [status, setStatus] = useState("idle"); // idle | sending | done
@@ -37,12 +55,15 @@ export default function DemoRequestModal({ open, onClose, source = "landing" }) 
 
   if (!open) return null;
 
+  const isCard = source === "card";
+  const copy = isCard ? COPY.card : COPY.landing;
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.nombre.trim() || !form.email.trim() || !form.telefono.trim()) {
-      setError("Nombre, correo y teléfono son obligatorios.");
+    const missing = !form.nombre.trim() || !form.telefono.trim() || (isCard ? !form.empresa.trim() : !form.email.trim());
+    if (missing) {
+      setError(copy.required);
       return;
     }
     setStatus("sending");
@@ -69,35 +90,30 @@ export default function DemoRequestModal({ open, onClose, source = "landing" }) 
           <div className="lpdm-done">
             <div className="lpdm-done-icon"><Icon name="checkCircle" size="xl" /></div>
             <h2 id="lpdm-title" className="lpdm-title">¡Solicitud recibida!</h2>
-            <p className="lpdm-text">
-              Gracias por tu interés en LubriPlan. Nos pondremos en contacto contigo a la brevedad
-              para agendar tu demo.
-            </p>
+            <p className="lpdm-text">{copy.done}</p>
             <button type="button" className="lpdm-submit" onClick={handleClose}>Cerrar</button>
           </div>
         ) : (
           <form onSubmit={submit} noValidate>
-            <div className="lpdm-label">Solicitar demo</div>
-            <h2 id="lpdm-title" className="lpdm-title">Agenda una demo de LubriPlan</h2>
-            <p className="lpdm-text">
-              Déjanos tus datos y te contactamos para mostrarte la plataforma con el caso de tu planta.
-            </p>
+            <div className="lpdm-label">{copy.label}</div>
+            <h2 id="lpdm-title" className="lpdm-title">{copy.title}</h2>
+            <p className="lpdm-text">{copy.text}</p>
 
             <div className="lpdm-grid">
               <label className="lpdm-field">
-                <span>Nombre completo *</span>
+                <span>{isCard ? "Nombre *" : "Nombre completo *"}</span>
                 <input ref={firstFieldRef} value={form.nombre} onChange={set("nombre")} autoComplete="name" maxLength={120} required />
               </label>
               <label className="lpdm-field">
-                <span>Empresa</span>
-                <input value={form.empresa} onChange={set("empresa")} autoComplete="organization" maxLength={160} />
+                <span>{isCard ? "Nombre de la empresa *" : "Empresa"}</span>
+                <input value={form.empresa} onChange={set("empresa")} autoComplete="organization" maxLength={160} required={isCard} />
+              </label>
+              <label className="lpdm-field" style={isCard ? { order: 1 } : undefined}>
+                <span>{isCard ? "Correo electrónico (opcional)" : "Correo electrónico *"}</span>
+                <input type="email" value={form.email} onChange={set("email")} autoComplete="email" maxLength={160} required={!isCard} />
               </label>
               <label className="lpdm-field">
-                <span>Correo electrónico *</span>
-                <input type="email" value={form.email} onChange={set("email")} autoComplete="email" maxLength={160} required />
-              </label>
-              <label className="lpdm-field">
-                <span>Teléfono *</span>
+                <span>{isCard ? "Número de teléfono *" : "Teléfono *"}</span>
                 <input type="tel" value={form.telefono} onChange={set("telefono")} autoComplete="tel" maxLength={40} required />
               </label>
             </div>
