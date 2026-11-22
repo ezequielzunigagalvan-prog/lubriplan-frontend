@@ -1,643 +1,269 @@
 // src/components/inventory/InventoryDrawer.jsx
-import { useEffect, useMemo, useState } from "react";
+// Panel lateral: registrar entrada/salida/ajuste y ver el historial de 30 días.
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  createLubricantMovement,
-  getLubricantMovements,
-} from "../../services/lubricantsService";
+import { createLubricantMovement, getLubricantMovements } from "../../services/lubricantsService";
+import { Icon } from "../ui/lpIcons";
+import { formatQty, formatDateTime, reasonLabel } from "../../utils/inventory";
+import "../../pages/TechniciansPage.css";
+import "../../pages/InventoryPage.css";
 
-import { History, ArrowUpCircle, ArrowDownCircle, SlidersHorizontal, RefreshCcw } from "lucide-react";
+const KINDS = {
+  IN: { label: "Entrada", hint: "Suma al stock", cls: "k-in", sign: "+" },
+  OUT: { label: "Salida", hint: "Resta del stock", cls: "k-out", sign: "−" },
+  ADJUST: { label: "Ajuste", hint: "Fija el conteo", cls: "k-adj", sign: "=" },
+};
 
 const normalizeType = (raw) => {
   const t = String(raw || "").trim().toUpperCase();
   if (t === "ENTRADA") return "IN";
   if (t === "SALIDA") return "OUT";
   if (t === "AJUSTE") return "ADJUST";
-  return t; // IN | OUT | ADJUST
+  return KINDS[t] ? t : "ADJUST";
 };
 
-function toneForKind(kind) {
-  if (kind === "IN") {
-    return {
-      bg: "rgba(34,197,94,0.12)",
-      border: "1px solid rgba(34,197,94,0.25)",
-      color: "#166534",
-    };
-  }
-  if (kind === "OUT") {
-    return {
-      bg: "rgba(239,68,68,0.10)",
-      border: "1px solid rgba(239,68,68,0.22)",
-      color: "#991b1b",
-    };
-  }
-  return {
-    bg: "rgba(245,158,11,0.12)",
-    border: "1px solid rgba(245,158,11,0.24)",
-    color: "#92400e",
-  };
-}
+const DAYS = 30;
 
-export default function InventoryDrawer({
-  open,
-  item,
-  initialTab = "move", // "move" | "history"
-  onClose,
-  onUpdated, // (updatedLubricant) => void
-  onToast,
-}) {
+export default function InventoryDrawer({ open, item, initialTab = "move", onClose, onUpdated }) {
   const [tab, setTab] = useState(initialTab);
-
-  // movimiento
-  const [kind, setKind] = useState("IN"); // IN | OUT | ADJUST
+  const [kind, setKind] = useState("IN");
   const [qty, setQty] = useState("");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  // foco (subrayado del renglón)
-  const [activeField, setActiveField] = useState("");
-
-  // historial
   const [loadingH, setLoadingH] = useState(false);
   const [errH, setErrH] = useState("");
   const [moves, setMoves] = useState([]);
-  const [take] = useState(80);
 
+  // Reinicia el formulario al abrir otro lubricante.
   useEffect(() => {
     if (!open) return;
     setTab(initialTab);
-
-    // reset movimiento al abrir
     setKind("IN");
     setQty("");
     setNotes("");
-    setActiveField("");
-
-    // reset historial
     setErrH("");
     setMoves([]);
   }, [open, initialTab, item?.id]);
 
-  // ESC para cerrar
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose?.();
-    };
+    if (!open) return undefined;
+    const onKey = (e) => e.key === "Escape" && !saving && onClose?.();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  // Scroll lock
-  useEffect(() => {
-    if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [open]);
+  }, [open, onClose, saving]);
 
-  const canSubmit = useMemo(() => {
-    const n = Number(qty);
-    return item?.id && Number.isFinite(n) && n > 0;
-  }, [qty, item?.id]);
-
-  // ===== Historial últimos 30 días (front) =====
-  const cutoff30 = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d;
-  }, []);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     if (!item?.id) return;
     try {
       setErrH("");
       setLoadingH(true);
-
-      // ✅ tu backend actual: GET /lubricants/:id/movements?take=80
-      const resp = await getLubricantMovements(item.id, take);
-
-      // resp debe ser { ok, lubricant, movements }
+      const resp = await getLubricantMovements(item.id, 120);
       const all = Array.isArray(resp?.movements) ? resp.movements : [];
-
-      // ✅ filtrar últimos 30 días aquí (si luego lo metemos al backend, lo quitamos)
-      const last30 = all.filter((m) => {
-        const dt = new Date(m.createdAt);
-        return Number.isFinite(dt.getTime()) && dt >= cutoff30;
-      });
-
-      setMoves(last30);
+      const cutoff = Date.now() - DAYS * 24 * 60 * 60 * 1000;
+      setMoves(all.filter((m) => new Date(m.createdAt).getTime() >= cutoff));
     } catch (e) {
-      setErrH(e?.message || "Error cargando historial");
+      setErrH(e?.message || "No se pudo cargar el historial.");
       setMoves([]);
     } finally {
       setLoadingH(false);
     }
-  };
+  }, [item?.id]);
 
   useEffect(() => {
-    if (!open) return;
-    if (tab === "history") loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, open, item?.id]);
+    if (open && tab === "history") loadHistory();
+  }, [open, tab, loadHistory]);
+
+  const stock = Number(item?.stock || 0);
+  const unit = item?.unit || "";
+  const qtyNum = qty === "" ? NaN : Number(String(qty).replace(",", "."));
+
+  // Vista previa del stock resultante antes de guardar.
+  const preview = useMemo(() => {
+    if (!Number.isFinite(qtyNum) || qtyNum < 0) return null;
+    if (kind === "IN") return stock + qtyNum;
+    if (kind === "OUT") return stock - qtyNum;
+    return qtyNum;
+  }, [kind, qtyNum, stock]);
+
+  // El ajuste puede ser 0 (para dejar en cero un lubricante que ya no se usa).
+  const canSubmit = !!item?.id && Number.isFinite(qtyNum) && (kind === "ADJUST" ? qtyNum >= 0 : qtyNum > 0) && !saving;
 
   const submitMove = async () => {
     if (!canSubmit) return;
-
-    const payload = {
-      movementType: kind, // IN | OUT | ADJUST
-      quantity: Number(qty),
-      reason: notes?.trim() ? notes.trim() : null,
-      reference: null,
-    };
-
-    const res = await createLubricantMovement(item.id, payload);
-
-    if (res?.updated?.id) onUpdated?.(res.updated);
-
-    if (tab === "history") await loadHistory();
-
-      // ✅ CONFIRMACIÓN
-    onToast?.({
-      tone: "success",
-      title: "Movimiento guardado",
-      message:
-        kind === "IN"
-          ? "Entrada registrada"
-          : kind === "OUT"
-          ? "Salida registrada"
-          : "Ajuste registrado",
-    });
-
-    setQty("");
-    setNotes("");
-    setActiveField("");
+    setSaving(true);
+    try {
+      const res = await createLubricantMovement(item.id, {
+        movementType: kind,
+        quantity: qtyNum,
+        reason: notes.trim() || null,
+        reference: null,
+      });
+      if (res?.updated?.id) onUpdated?.(res.updated);
+      toast.success(
+        `${KINDS[kind].label} registrada · stock: ${formatQty(res?.movement?.stockAfter ?? preview)} ${unit}`
+      );
+      setQty("");
+      setNotes("");
+      if (tab === "history") loadHistory();
+    } catch (e) {
+      toast.error(e?.message || "No se pudo registrar el movimiento");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!open) return null;
 
-  const unit = item?.unit || "";
-  const kindTone = toneForKind(kind);
-
   return (
-    <div style={overlay} onMouseDown={onClose}>
-      <div style={drawer} onMouseDown={(e) => e.stopPropagation()}>
-        {/* TOP */}
-        <div style={topBar}>
+    <div className="inv-drawer-overlay tch-overlay" style={{ display: "flex", placeItems: "initial", padding: 0 }} onMouseDown={(e) => e.target === e.currentTarget && !saving && onClose?.()}>
+      <aside className="inv-drawer" role="dialog" aria-modal="true" aria-labelledby="inv-drawer-title">
+        <div className="inv-drawer-head">
           <div style={{ minWidth: 0 }}>
-            <div style={drawerTitle}>Inventario</div>
-            <div style={drawerSub} title={item?.name || ""}>
-              <strong style={{ color: "rgba(255,255,255,0.90)" }}>{item?.name || "—"}</strong>
+            <div className="tch-kicker">Inventario</div>
+            <h2 id="inv-drawer-title" className="tch-modal-title" style={{ wordBreak: "break-word" }}>{item?.name || "—"}</h2>
+            <div className="tch-sub">
+              Stock actual: <strong style={{ color: "var(--tch-text)" }}>{formatQty(stock)} {unit}</strong>
               {item?.code ? ` · ${item.code}` : ""}
             </div>
           </div>
-
-          <button onClick={onClose} style={btnX} title="Cerrar (ESC)">
-            ✕
+          <button type="button" className="tch-icon-btn" onClick={onClose} aria-label="Cerrar" disabled={saving}>
+            <Icon name="close" size="sm" />
           </button>
         </div>
 
-        {/* TABS */}
-        <div style={tabs}>
-          <button
-            type="button"
-            onClick={() => setTab("move")}
-            style={{ ...tabBtn, ...(tab === "move" ? tabBtnOn : {}) }}
-          >
-            <SlidersHorizontal size={16} strokeWidth={2.2} />
-            Movimiento
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTab("history")}
-            style={{ ...tabBtn, ...(tab === "history" ? tabBtnOn : {}) }}
-          >
-            <History size={16} strokeWidth={2.2} />
-            Historial (30 días)
-          </button>
-        </div>
-
-        {/* CONTENT */}
-        {tab === "move" ? (
-          <div style={content}>
-            <div style={sectionCard}>
-              <div style={sectionHeader}>
-                <div style={sectionTitle}>Registrar movimiento</div>
-                <div style={{ ...kindChip, ...kindTone }}>
-                  {kind === "IN" ? (
-                    <>
-                      <ArrowUpCircle size={16} strokeWidth={2.2} />
-                      Entrada
-                    </>
-                  ) : kind === "OUT" ? (
-                    <>
-                      <ArrowDownCircle size={16} strokeWidth={2.2} />
-                      Salida
-                    </>
-                  ) : (
-                    <>
-                      <SlidersHorizontal size={16} strokeWidth={2.2} />
-                      Ajuste
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div style={formGrid}>
-                <div style={fieldWrap(activeField === "kind")}>
-                  <label style={label}>Tipo de movimiento</label>
-                  <select
-                    value={kind}
-                    onChange={(e) => setKind(e.target.value)}
-                    style={input}
-                    onFocus={() => setActiveField("kind")}
-                    onBlur={() => setActiveField("")}
-                  >
-                    <option value="IN">Entrada</option>
-                    <option value="OUT">Salida</option>
-                    <option value="ADJUST">Ajuste</option>
-                  </select>
-                </div>
-
-                <div style={fieldWrap(activeField === "qty")}>
-                  <label style={label}>Cantidad</label>
-                  <input
-                    value={qty}
-                    onChange={(e) => setQty(e.target.value)}
-                    placeholder={`Ej: 5 ${unit ? `(${unit})` : ""}`}
-                    style={input}
-                    inputMode="decimal"
-                    onFocus={() => setActiveField("qty")}
-                    onBlur={() => setActiveField("")}
-                  />
-                </div>
-
-                <div style={fieldWrap(activeField === "notes")}>
-                  <label style={label}>Motivo / Notas (opcional)</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                    style={{ ...input, resize: "vertical" }}
-                    onFocus={() => setActiveField("notes")}
-                    onBlur={() => setActiveField("")}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                style={{
-                  ...btnPrimary,
-                  opacity: canSubmit ? 1 : 0.6,
-                  cursor: canSubmit ? "pointer" : "not-allowed",
-                }}
-                disabled={!canSubmit}
-                onClick={async () => {
-                  try {
-                    await submitMove();
-                  } catch (e) {
-                    toast.error(e?.message || "Error registrando movimiento");
-                  }
-                }}
-              >
-                Guardar movimiento
-              </button>
-
-              <div style={tip}>
-                Tip: <strong>Entrada</strong> suma, <strong>Salida</strong> resta,{" "}
-                <strong>Ajuste</strong> establece el stock final.
-              </div>
-            </div>
+        <div className="inv-drawer-body">
+          <div className="tch-tabs" role="group" aria-label="Sección" style={{ width: "100%" }}>
+            <button type="button" className="tch-tab" style={{ flex: 1, justifyContent: "center" }} aria-pressed={tab === "move"} onClick={() => setTab("move")}>
+              Registrar movimiento
+            </button>
+            <button type="button" className="tch-tab" style={{ flex: 1, justifyContent: "center" }} aria-pressed={tab === "history"} onClick={() => setTab("history")}>
+              Historial ({DAYS} días)
+            </button>
           </div>
-        ) : (
-          <div style={content}>
-            {errH && <div style={errorBox}>{errH}</div>}
 
-            <div style={historyTop}>
-              <button type="button" style={btnRefresh} disabled={loadingH} onClick={loadHistory}>
-                <RefreshCcw size={16} strokeWidth={2.2} />
-                {loadingH ? "Actualizando..." : "Actualizar"}
-              </button>
-            </div>
-
-            {loadingH && (
-              <div style={panel}>
-                <p style={{ margin: 0, fontWeight: 900, color: "#0f172a" }}>Cargando historial…</p>
+          {tab === "move" ? (
+            <>
+              <div className="inv-kinds" role="group" aria-label="Tipo de movimiento">
+                {Object.entries(KINDS).map(([key, k]) => (
+                  <button key={key} type="button" className={`inv-kind ${k.cls}`} aria-pressed={kind === key} onClick={() => setKind(key)}>
+                    {k.label}
+                    <small>{k.hint}</small>
+                  </button>
+                ))}
               </div>
-            )}
 
-            {!loadingH && moves.length === 0 && <div style={emptyBox}>Sin movimientos.</div>}
+              <div className="tch-field">
+                <label htmlFor="inv-qty">
+                  {kind === "ADJUST" ? "Stock contado" : "Cantidad"} <span>({unit || "unidad del lubricante"})</span>
+                </label>
+                <input
+                  id="inv-qty"
+                  className="tch-input"
+                  value={qty}
+                  onChange={(e) => setQty(e.target.value)}
+                  inputMode="decimal"
+                  placeholder={kind === "ADJUST" ? "Ej. 18.5" : "Ej. 20"}
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && submitMove()}
+                />
+              </div>
 
-            <div style={list}>
-              {moves.map((m) => {
-                const t = normalizeType(m.type || m.movementType);
+              <div className="tch-field">
+                <label htmlFor="inv-notes">
+                  Motivo <span>(opcional)</span>
+                </label>
+                <input
+                  id="inv-notes"
+                  className="tch-input"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  maxLength={200}
+                  placeholder={kind === "IN" ? "Ej. Compra OC-1234" : kind === "OUT" ? "Ej. Préstamo a mantenimiento" : "Ej. Conteo físico mensual"}
+                />
+              </div>
 
-                const title =
-                  t === "IN" ? "Entrada" : t === "OUT" ? "Salida" : "Ajuste";
+              {preview != null ? (
+                <div className={`inv-preview ${preview < 0 ? "is-bad" : ""}`}>
+                  <span>
+                    {formatQty(stock)} {unit} {KINDS[kind].sign === "=" ? "→" : `${KINDS[kind].sign} ${formatQty(qtyNum)} →`}
+                  </span>
+                  <strong>
+                    {formatQty(preview)} {unit}
+                  </strong>
+                </div>
+              ) : null}
 
-                const badgeTone = toneForKind(t);
+              <button type="button" className="tch-btn tch-btn-primary" disabled={!canSubmit} onClick={submitMove}>
+                {saving ? "Guardando…" : `Guardar ${KINDS[kind].label.toLowerCase()}`}
+              </button>
 
-                return (
-                  <div key={m.id} style={moveRow}>
-                    <div style={moveTop}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ ...moveBadge, ...badgeTone }}>
-                          {t === "IN" ? "⬆" : t === "OUT" ? "⬇" : "✳"} {title}
-                        </span>
+              <p className="tch-hint" style={{ margin: 0 }}>
+                El consumo de las actividades completadas se descuenta automáticamente; aquí solo registra compras, salidas
+                fuera de una actividad y conteos físicos.
+              </p>
+            </>
+          ) : (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span className="tch-sub" style={{ margin: 0 }}>
+                  {loadingH ? "Cargando…" : `${moves.length} movimiento${moves.length === 1 ? "" : "s"}`}
+                </span>
+                <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 34 }} onClick={loadHistory} disabled={loadingH}>
+                  <Icon name="refresh" size="sm" /> Actualizar
+                </button>
+              </div>
 
-                        <div style={moveDate}>
-                          {m.createdAt ? new Date(m.createdAt).toLocaleString() : "—"}
+              {errH ? <div className="tch-error">{errH}</div> : null}
+
+              {!loadingH && !errH && !moves.length ? (
+                <div className="tch-empty" style={{ padding: 28 }}>
+                  <div className="tch-empty-icon"><Icon name="history" /></div>
+                  <h3>Sin movimientos</h3>
+                  <p>No hay movimientos en los últimos {DAYS} días.</p>
+                </div>
+              ) : null}
+
+              <div className="inv-moves">
+                {moves.map((m) => {
+                  const t = normalizeType(m.type || m.movementType);
+                  const k = KINDS[t];
+                  const qtyText = t === "ADJUST" ? `= ${formatQty(m.stockAfter ?? m.quantity)}` : `${k.sign}${formatQty(m.quantity)}`;
+                  const reason = reasonLabel(m.reason);
+                  return (
+                    <div key={m.id} className="inv-move">
+                      <div className={`inv-move-icon ${k.cls}`} aria-hidden="true">{k.sign}</div>
+                      <div>
+                        <div className="inv-move-title">
+                          {reason || k.label}
+                          {m.executionId ? <span className="tch-chip" style={{ marginLeft: 8, height: 20 }}>Actividad #{m.executionId}</span> : null}
                         </div>
                       </div>
-
-                      <div style={moveQty}>
-                        {m.quantity} {unit}
+                      <div className="inv-move-qty">
+                        {qtyText} {unit}
+                      </div>
+                      <div className="inv-move-detail">
+                        {formatDateTime(m.createdAt)}
+                        {m.note ? <> · {m.note}</> : null}
+                        {m.stockBefore != null && m.stockAfter != null ? (
+                          <div className="inv-move-stock">
+                            Stock {formatQty(m.stockBefore)} → {formatQty(m.stockAfter)} {unit}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
-
-                    {m.reason ? (
-                      <div style={moveReason}>{m.reason}</div>
-                    ) : null}
-
-                    {m.note ? (
-                      <div style={moveNote}>{m.note}</div>
-                    ) : null}
-
-                    {(m.stockBefore != null || m.stockAfter != null) ? (
-                      <div style={moveStock}>
-                        Stock: {m.stockBefore ?? "—"} → {m.stockAfter ?? "—"}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }
-
-/* ===== styles (unificado) ===== */
-
-const overlay = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(2,6,23,0.45)",
-  backdropFilter: "blur(2px)",
-  zIndex: 80,
-  display: "flex",
-  justifyContent: "flex-end",
-};
-
-const drawer = {
-  width: "min(560px, 92vw)",
-  height: "100%",
-  background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  boxShadow: "0 20px 60px rgba(2,6,23,0.35)",
-  padding: 14,
-  display: "flex",
-  flexDirection: "column",
-};
-
-const topBar = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 10,
-  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-  margin: "-14px -14px 0",
-  padding: "14px 14px 12px",
-  borderBottom: "2px solid rgba(249,115,22,0.45)",
-};
-
-const drawerTitle = { fontSize: 16, fontWeight: 950, color: "#fff" };
-const drawerSub = {
-  marginTop: 4,
-  fontSize: 12,
-  color: "rgba(255,255,255,0.65)",
-  fontWeight: 850,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  maxWidth: 420,
-};
-
-const btnX = {
-  border: "1px solid rgba(255,255,255,0.20)",
-  background: "rgba(255,255,255,0.10)",
-  borderRadius: 12,
-  padding: "8px 10px",
-  cursor: "pointer",
-  fontWeight: 950,
-  color: "#fff",
-};
-
-const tabs = { display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" };
-
-const tabBtn = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.9)",
-  borderRadius: 999,
-  padding: "8px 12px",
-  cursor: "pointer",
-  fontWeight: 950,
-};
-
-const tabBtnOn = {
-  background: "rgba(249,115,22,0.14)",
-  border: "1px solid rgba(249,115,22,0.35)",
-};
-
-const content = { marginTop: 14, overflow: "auto", paddingRight: 4 };
-
-const sectionCard = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 16,
-  padding: 14,
-  background: "rgba(255,255,255,0.82)",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
-};
-
-const sectionHeader = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 10,
-  flexWrap: "wrap",
-  marginBottom: 10,
-};
-
-const sectionTitle = { fontWeight: 950, color: "#0f172a" };
-
-const kindChip = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "6px 10px",
-  borderRadius: 999,
-  fontWeight: 950,
-  fontSize: 12,
-};
-
-const formGrid = {
-  display: "grid",
-  gap: 12,
-};
-
-const fieldWrap = (active) => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: 6,
-  paddingBottom: 10,
-  borderBottom: active ? "2px solid rgba(249,115,22,0.65)" : "2px solid rgba(226,232,240,0.6)",
-  transition: "border-color 140ms ease",
-});
-
-const label = { fontSize: 12, color: "#64748b", fontWeight: 900 };
-
-const input = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  fontWeight: 900,
-  background: "rgba(255,255,255,0.92)",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.04)",
-  outline: "none",
-};
-
-const btnPrimary = {
-  marginTop: 12,
-  background: "#f97316",
-  color: "#0b1220",
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #fb923c",
-  fontWeight: 950,
-  boxShadow: "0 10px 22px rgba(249,115,22,0.18)",
-};
-
-const tip = {
-  marginTop: 10,
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 12,
-};
-
-const historyTop = {
-  display: "flex",
-  justifyContent: "flex-end",
-};
-
-const btnRefresh = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.85)",
-  borderRadius: 12,
-  padding: "8px 10px",
-  cursor: "pointer",
-  fontWeight: 950,
-  boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
-};
-
-const panel = {
-  marginTop: 12,
-  background: "#fff",
-  border: "1px solid #e5e7eb",
-  borderRadius: 16,
-  padding: 14,
-};
-
-const list = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 10,
-  marginTop: 12,
-};
-
-const moveRow = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 16,
-  padding: 12,
-  background: "rgba(255,255,255,0.85)",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.04)",
-};
-
-const moveTop = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 10,
-  alignItems: "center",
-  flexWrap: "wrap",
-};
-
-const moveBadge = {
-  padding: "6px 10px",
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 950,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-};
-
-const moveDate = {
-  color: "#64748b",
-  fontWeight: 850,
-  fontSize: 12,
-};
-
-const moveQty = {
-  fontWeight: 950,
-  color: "#0f172a",
-};
-
-const moveReason = {
-  marginTop: 8,
-  color: "#0f172a",
-  fontWeight: 850,
-};
-
-const moveNote = {
-  marginTop: 6,
-  color: "#334155",
-  fontWeight: 850,
-};
-
-const moveStock = {
-  marginTop: 8,
-  color: "#64748b",
-  fontWeight: 850,
-  fontSize: 12,
-};
-
-const emptyBox = {
-  marginTop: 12,
-  padding: 12,
-  borderRadius: 12,
-  border: "1px dashed #cbd5e1",
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 13,
-  background: "rgba(248,250,252,0.85)",
-};
-
-const errorBox = {
-  marginTop: 10,
-  background: "#fee2e2",
-  border: "1px solid #fecaca",
-  padding: 12,
-  borderRadius: 12,
-  color: "#991b1b",
-  fontWeight: 900,
-};
