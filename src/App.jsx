@@ -4,6 +4,8 @@ import { useAuth } from "./context/AuthContext";
 import AppSeo from "./components/seo/AppSeo";
 
 import LoginPage from "./pages/LoginPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import LubriPlanLanding from "./pages/LubriPlanLanding";
 import Unauthorized from "./pages/Unauthorized";
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -76,6 +78,8 @@ export default function App() {
         <Route path="/" element={<LubriPlanLanding />} />
         <Route path="/card" element={<LubriPlanCardLanding />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/contacto" element={<ContactoPage />} />
         <Route path="/que-es-lubriplan" element={<QueEsLubriPlanPage />} />
