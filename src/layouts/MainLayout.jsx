@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import useDashboardAlerts from "../hooks/useDashboardAlerts";
 import { useAuth } from "../context/AuthContext";
 import useNotifications from "../hooks/useNotifications";
+import { notifMeta as notifTypeMeta, relativeTime, cleanText } from "../utils/notifications";
 import useRealtimeAlerts from "../hooks/useRealtimeAlerts";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
 import { Icon } from "../components/ui/lpIcons";
@@ -930,21 +931,27 @@ export default function MainLayout({ children }) {
                           }}
                           onClick={async () => {
                             setOpenNotif(false);
-                            if (!n.readAt) await markRead(n.id);
+                            // Si marcar como leída falla, igual se abre el aviso.
+                            if (!n.readAt) await markRead(n.id).catch(() => {});
                             if (n.link) navigate(n.link);
                           }}
                           title={n?.message || ""}
                           type="button"
                         >
-                          <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ fontWeight: 950, color: "#0f172a" }}>{n.title || "Notificación"}</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
+                            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", minWidth: 0 }}>
+                              <span style={{ color: "#c2410c", marginTop: 1, flex: "0 0 auto" }}>
+                                <Icon name={notifTypeMeta(n.type).icon} size="sm" />
+                              </span>
+                              <div style={{ fontWeight: 950, color: "#0f172a" }}>{cleanText(n.title) || "Notificación"}</div>
+                            </div>
                             {!n.readAt ? <span style={dotLive} /> : null}
                           </div>
 
-                          {n.message ? <div style={notifMsg}>{n.message}</div> : null}
+                          {n.message ? <div style={notifMsg}>{cleanText(n.message)}</div> : null}
 
-                          <div style={notifMeta}>
-                            {n.createdAt ? new Date(n.createdAt).toLocaleString("es-MX") : ""}
+                          <div style={notifMeta} title={n.createdAt ? new Date(n.createdAt).toLocaleString("es-MX") : ""}>
+                            {notifTypeMeta(n.type).label} · {relativeTime(n.createdAt)}
                           </div>
                         </button>
                       ))}
