@@ -115,14 +115,18 @@ export function getTechnicianOverload({
   });
 }
 
-// Repeated failures
-export function getRepeatedFailures({ month } = {}) {
+// Fallas repetidas: { items: [{ equipment, badCount, criticalCount, samples, ... }] }
+// Antes llamaba a /equipment?filter=repeated-failures, que responde otro formato
+// (lista de equipos), y la vista de reincidencia siempre salía vacía.
+export function getRepeatedFailures({ month, lookbackDays, minEvents } = {}) {
   const qs = new URLSearchParams();
   if (month) qs.set("month", String(month));
+  if (lookbackDays) qs.set("lookbackDays", String(lookbackDays));
+  if (minEvents) qs.set("minEvents", String(minEvents));
 
   const q = qs.toString();
 
-  return httpGet(`/equipment?filter=repeated-failures${q ? `&${q}` : ""}`, {
+  return httpGet(`/alerts/repeated-failures${q ? `?${q}` : ""}`, {
     timeoutMs: TIMEOUT_READ,
   });
 }

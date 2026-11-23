@@ -1,1320 +1,343 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿// src/pages/EquipmentDetailPage.jsx
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
-import { getEquipmentById, assignEquipmentTechnician } from "../services/equipmentService";
-import { getTechnicians } from "../services/techniciansService";
+import { getEquipmentById } from "../services/equipmentService";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
 import { formatRouteDisplayName } from "../utils/routeNames";
+import { Icon } from "../components/ui/lpIcons";
+import NewRouteModal from "../components/routes/NewRouteModal";
 import {
-  Settings,
-  MapPin,
-  UserCog,
-  Calendar,
-  ArrowLeft,
-  Route,
-  AlertTriangle,
-  Wrench,
-  Clock3,
-  ClipboardList,
-} from "lucide-react";
+  critClass,
+  critLabel,
+  isActiveEquipment,
+  frequencyLabel,
+  execStatusLabel,
+  conditionLabel,
+  conditionClass,
+  fmtDate,
+} from "../utils/equipment";
+import "./TechniciansPage.css";
+import "./InventoryPage.css";
+import "./EquipmentsPage.css";
 
-function normalizeEquipmentResponse(data) {
-  if (!data) return null;
-  if (data?.item) return data.item;
-  if (data?.equipment) return data.equipment;
-  if (data?.result) return data.result;
-  return data;
-}
-
-function formatCrit(crit) {
-  const v = String(crit || "").toUpperCase().trim();
-  if (v === "CRITICA" || v === "CRÍTICA") return "Crítica";
-  if (v === "ALTA") return "Alta";
-  if (v === "BAJA") return "Baja";
-  return "Media";
-}
-
-function isCritical(crit) {
-  const v = String(crit || "").toUpperCase().trim();
-  return v === "CRITICA" || v === "CRÍTICA";
-}
-
-function isActiveStatus(status) {
-  const v = String(status || "").toUpperCase().trim();
-  return v === "ACTIVO" || v === "ACTIVE";
-}
-
-function safeCount(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function ymdToday() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function fmtDate(v) {
-  if (!v) return "—";
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toISOString().slice(0, 10);
-}
-
-function truncate(text, max = 110) {
-  const s = String(text || "").trim();
-  if (!s) return "—";
-  if (s.length <= max) return s;
-  return `${s.slice(0, max)}…`;
-}
+const SHOW = 5;
 
 export default function EquipmentDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const equipmentId = useMemo(() => Number(id), [id]);
-
   const { user } = useAuth();
-  const { currentPlant, currentPlantId } = usePlant();
-
+  const { currentPlantId, currentPlant } = usePlant();
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
-  const canAssignTech = role === "ADMIN" || role === "SUPERVISOR";
+  const canManage = role === "ADMIN" || role === "SUPERVISOR";
 
-  const [equipment, setEquipment] = useState(null);
+  const [eq, setEq] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
+  const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState({});
+  const [routeOpen, setRouteOpen] = useState(false);
 
-  const [techs, setTechs] = useState([]);
-  const [techId, setTechId] = useState("");
-
-  const [assigning, setAssigning] = useState(false);
-  const [assignMsg, setAssignMsg] = useState("");
-
-  const [force, setForce] = useState(false);
-  const [from, setFrom] = useState(ymdToday());
-
-  const [reloading, setReloading] = useState(false);
-
-  const [showAllRoutes, setShowAllRoutes] = useState(false);
-  const [showAllExecutions, setShowAllExecutions] = useState(false);
-  const [showAllConditions, setShowAllConditions] = useState(false);
-
-  const loadEquipment = async ({ silent = false } = {}) => {
+  const load = useCallback(async () => {
+    if (!currentPlantId) return;
     try {
-      setErr("");
-      if (silent) setReloading(true);
-      else setLoading(true);
-
-      if (!Number.isFinite(equipmentId) || equipmentId <= 0) {
-        setEquipment(null);
-        setErr("ID de equipo inválido.");
-        return;
-      }
-
+      setLoading(true);
+      setError("");
+      if (!Number.isFinite(equipmentId) || equipmentId <= 0) throw new Error("ID de equipo inválido.");
       const raw = await getEquipmentById(equipmentId);
-      const eq = normalizeEquipmentResponse(raw);
-
-      if (!eq) {
-        setEquipment(null);
-        setErr("No se encontró el equipo.");
-        return;
-      }
-
-      setEquipment(eq);
+      const data = raw?.item ?? raw?.equipment ?? raw;
+      if (!data?.id) throw new Error("No se encontró el equipo.");
+      setEq(data);
     } catch (e) {
-      console.error("loadEquipment error:", e);
-      setEquipment(null);
-      setErr(e?.message || "Error cargando equipo");
+      setEq(null);
+      setError(e?.message || "No se pudo cargar el equipo.");
     } finally {
       setLoading(false);
-      setReloading(false);
     }
-  };
-
-  useEffect(() => {
-    if (!currentPlantId) {
-      setEquipment(null);
-      setErr("");
-      setLoading(false);
-      return;
-    }
-
-    loadEquipment();
   }, [equipmentId, currentPlantId]);
 
   useEffect(() => {
-    if (!canAssignTech || !currentPlantId) {
-      setTechs([]);
-      return;
-    }
+    load();
+  }, [load]);
 
-    let alive = true;
+  const toggle = (k) => setExpanded((x) => ({ ...x, [k]: !x[k] }));
+  const take = (list, k) => (expanded[k] ? list : list.slice(0, SHOW));
 
-    (async () => {
-      try {
-        const data = await getTechnicians();
-        if (!alive) return;
-
-        const list =
-          Array.isArray(data?.items) ? data.items :
-          Array.isArray(data?.result) ? data.result :
-          Array.isArray(data) ? data :
-          [];
-
-        setTechs(list);
-      } catch (e) {
-        console.error("loadTechs error:", e);
-        if (!alive) return;
-        setTechs([]);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [canAssignTech, currentPlantId]);
-
-  const onAssign = async () => {
-    if (!canAssignTech) return;
-    if (!Number.isFinite(equipmentId) || equipmentId <= 0) return;
-    if (!techId) return;
-
-    try {
-      setErr("");
-      setAssignMsg("");
-      setAssigning(true);
-
-      const resp = await assignEquipmentTechnician(equipmentId, Number(techId), {
-        from,
-        force,
-      });
-
-      const updated =
-        resp?.updatedCount ??
-        resp?.updated ??
-        resp?.count ??
-        resp?.item?.updatedCount ??
-        null;
-
-      setAssignMsg(
-        updated != null
-          ? `Listo. Se asignó el técnico a ${updated} actividad(es).`
-          : "Listo. Se aplicó la asignación."
-      );
-
-      await loadEquipment({ silent: true });
-    } catch (e) {
-      console.error("assign technician error:", e);
-      setErr(e?.message || "Error asignando técnico");
-    } finally {
-      setAssigning(false);
-    }
-  };
-
-  const equipmentName = equipment?.name || "Equipo";
-  const equipmentCode = equipment?.code || equipment?.tag || "Sin código";
-  const equipmentLocation = equipment?.location || "Sin ubicación";
-  const equipmentArea = equipment?.area?.name || "Sin área";
-  const equipmentStatus = String(equipment?.status || "").toUpperCase();
-  const equipmentCriticality = formatCrit(equipment?.criticality);
-  const active = isActiveStatus(equipment?.status);
-
-  const routesCount =
-    safeCount(equipment?.routesCount) ||
-    safeCount(equipment?._count?.routes) ||
-    (Array.isArray(equipment?.routes) ? equipment.routes.length : 0);
-
-  const executionsCount =
-    safeCount(equipment?.executionsCount) ||
-    safeCount(equipment?._count?.executions) ||
-    (Array.isArray(equipment?.executions) ? equipment.executions.length : 0);
-
-  const conditionsCount =
-    safeCount(equipment?.conditionReportsCount) ||
-    safeCount(equipment?._count?.conditionReports) ||
-    (Array.isArray(equipment?.conditionReports) ? equipment.conditionReports.length : 0);
-
-  const routes = Array.isArray(equipment?.routes) ? equipment.routes : [];
-  const executions = Array.isArray(equipment?.executions) ? equipment.executions : [];
-  const conditionReports = Array.isArray(equipment?.conditionReports) ? equipment.conditionReports : [];
-
-  const visibleRoutes = showAllRoutes ? routes : routes.slice(0, 4);
-  const visibleExecutions = showAllExecutions ? executions : executions.slice(0, 5);
-  const visibleConditions = showAllConditions ? conditionReports : conditionReports.slice(0, 4);
-
-  const mostUsedTechnician = equipment?.mostUsedTechnician || null;
-  const selectedTechnician = techs.find((t) => String(t.id) === String(techId));
-
-  if (loading) {
+  if (loading || !eq) {
     return (
       <MainLayout>
-        <div style={pageShell}>
-          <div style={loadingCard}>
-            <div style={loadingTitle}>Cargando detalle del equipo</div>
-            <div style={loadingSub}>Estamos obteniendo la información desde backend.</div>
-          </div>
+        <div className="tch">
+          <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 32, justifySelf: "start" }} onClick={() => navigate("/equipments")}>
+            <Icon name="arrowLeft" size="sm" /> Volver a equipos
+          </button>
+          {loading ? (
+            <div className="tch-empty"><p>Cargando equipo…</p></div>
+          ) : (
+            <div className="tch-empty" role="alert">
+              <div className="tch-empty-icon"><Icon name="alert" /></div>
+              <h3>No se pudo cargar el equipo</h3>
+              <p>{error}</p>
+              <button type="button" className="tch-btn tch-btn-ghost" onClick={load}>
+                <Icon name="refresh" size="sm" /> Reintentar
+              </button>
+            </div>
+          )}
         </div>
       </MainLayout>
     );
   }
 
-  if (!equipment) {
-    return (
-      <MainLayout>
-        <div style={pageShell}>
-          <div style={topBackRow}>
-            <button type="button" onClick={() => navigate("/equipments")} style={btnGhost}>
-              <ArrowLeft size={16} />
-              Volver a equipos
-            </button>
-          </div>
-
-          <div style={errorPanel}>
-            <div style={errorTitle}>Equipo no encontrado</div>
-            <div style={errorText}>{err || "No fue posible cargar el detalle del equipo."}</div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  const active = isActiveEquipment(eq);
+  const routes = Array.isArray(eq.routes) ? eq.routes : [];
+  const history = Array.isArray(eq.history) ? eq.history : [];
+  const upcoming = Array.isArray(eq.upcoming) ? eq.upcoming : [];
+  const reports = Array.isArray(eq.conditionReports) ? eq.conditionReports : [];
+  const tech = eq.assignedTechnician || null;
+  const overdue = upcoming.filter((x) => String(x.status).toUpperCase() === "OVERDUE" || new Date(x.scheduledAt) < new Date(new Date().toDateString())).length;
+  const lastDone = history[0] || null;
 
   return (
     <MainLayout>
-      <div style={pageShell}>
-        <div style={topBackRow}>
-          <button type="button" onClick={() => navigate("/equipments")} style={btnGhost}>
-            <ArrowLeft size={16} />
-            Volver a equipos
-          </button>
-
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button
-              type="button"
-              onClick={() => navigate(`/equipments/${id}/lubrication-card`)}
-              style={{ ...btnGhost, background: "rgba(249,115,22,0.08)", borderColor: "rgba(249,115,22,0.3)", color: "#9a3412" }}
-            >
-              <Wrench size={16} />
-              Carta de Lubricación
+      <div className="tch lp-fade-in">
+        <header className="tch-head">
+          <div style={{ minWidth: 0 }}>
+            <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 32, marginBottom: 10 }} onClick={() => navigate("/equipments")}>
+              <Icon name="arrowLeft" size="sm" /> Equipos
             </button>
-
-            <button
-              type="button"
-              onClick={() => loadEquipment({ silent: true })}
-              style={btnGhost}
-              disabled={reloading}
-            >
-              {reloading ? "Actualizando..." : "Actualizar"}
-            </button>
-          </div>
-        </div>
-
-        <div style={heroCard}>
-          <div style={heroHeader}>
-            <div style={heroLeft}>
-              <div style={heroIcon}>
-                <Settings size={24} strokeWidth={1.9} />
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <h1 style={title}>{equipmentName}</h1>
-
-                <div style={subtitle}>
-                  Detalle del equipo
-                  {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
-                </div>
-
-                <div style={heroTagsRow}>
-                  <span style={codePill}>{equipmentCode}</span>
-                  <span style={statusPill(active)}>{equipmentStatus || "—"}</span>
-                  <span style={critPill(isCritical(equipment?.criticality))}>
-                    Criticidad: {equipmentCriticality}
-                  </span>
-                  {!canAssignTech ? <span style={readOnlyPill}>Solo visualización</span> : null}
-                </div>
-              </div>
+            <div className="tch-kicker">
+              {eq.area?.name || "Sin área"}
+              {currentPlant?.name ? ` · ${currentPlant.name}` : ""}
+            </div>
+            <h1 className="tch-title">{eq.name}</h1>
+            <div className="eq-chips" style={{ padding: "10px 0 0" }}>
+              {eq.code ? <span className="tch-chip is-code">{eq.code}</span> : null}
+              {eq.criticality ? <span className={`eq-crit c-${critClass(eq.criticality)}`}>Criticidad {critLabel(eq.criticality).toLowerCase()}</span> : null}
+              <span className={`tch-chip ${active ? "is-active" : "is-inactive"}`}>
+                <span className="tch-dot" /> {active ? "Activo" : "Inactivo"}
+              </span>
+              {eq.location ? (
+                <span className="tch-chip">
+                  <Icon name="pin" size="sm" /> {eq.location}
+                </span>
+              ) : null}
             </div>
           </div>
-
-          {err ? <div style={errorBox}>{err}</div> : null}
-          {assignMsg ? <div style={okBox}>{assignMsg}</div> : null}
-        </div>
-
-        <div style={kpiGrid}>
-          <InfoCard
-            icon={<MapPin size={18} strokeWidth={1.8} />}
-            title="Ubicación"
-            value={equipmentLocation}
-            sub={equipmentArea}
-          />
-          <InfoCard
-            icon={<Route size={18} strokeWidth={1.8} />}
-            title="Rutas"
-            value={String(routesCount)}
-            sub="Ligadas al equipo"
-          />
-          <InfoCard
-            icon={<ClipboardList size={18} strokeWidth={1.8} />}
-            title="Historial"
-            value={String(executionsCount)}
-            sub="Ejecuciones registradas"
-          />
-          <InfoCard
-            icon={<AlertTriangle size={18} strokeWidth={1.8} />}
-            title="Condiciones"
-            value={String(conditionsCount)}
-            sub="Reportes levantados"
-          />
-        </div>
-
-        <div style={mainGrid}>
-          <section style={panel}>
-            <div style={sectionTitle}>Datos generales</div>
-
-            <div style={detailsGrid}>
-              <DetailRow label="Nombre" value={equipmentName} />
-              <DetailRow label="Código / TAG" value={equipmentCode} />
-              <DetailRow label="Ubicación" value={equipmentLocation} />
-              <DetailRow label="Área" value={equipmentArea} />
-              <DetailRow label="Estado" value={equipmentStatus || "—"} />
-              <DetailRow label="Criticidad" value={equipmentCriticality} />
-              <DetailRow label="Marca" value={equipment?.brand || "—"} />
-              <DetailRow label="Modelo" value={equipment?.model || "—"} />
-            </div>
-
-            <div style={{ marginTop: 14 }}>
-              <div style={miniLabel}>Descripción / notas</div>
-              <div style={notesBox}>{equipment?.description || "Sin notas adicionales."}</div>
-            </div>
-          </section>
-
-          <section style={panel}>
-            <div style={sectionTitle}>Asignación de técnico</div>
-
-            <div style={summaryMiniCard}>
-              <div style={summaryMiniLabel}>Técnico más usado</div>
-              <div style={summaryMiniValue}>
-                {mostUsedTechnician?.technician?.name || "Sin histórico suficiente"}
-              </div>
-              <div style={summaryMiniSub}>
-                {mostUsedTechnician?.count
-                  ? `${mostUsedTechnician.count} ejecución(es)`
-                  : "Aún no hay técnico dominante"}
-              </div>
-            </div>
-
-            {canAssignTech ? (
+          <div className="tch-head-actions">
+            <button type="button" className="tch-btn tch-btn-ghost" onClick={() => navigate(`/equipments/${eq.id}/lubrication-card`)}>
+              <Icon name="doc" size="sm" /> Carta de lubricación
+            </button>
+            {canManage ? (
               <>
-                <div style={muted}>
-                  Asigna un técnico a las actividades pendientes o vencidas relacionadas con este equipo.
-                </div>
-
-                <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-                  <div style={field}>
-                    <label style={labelStyle}>Técnico</label>
-                    <select
-                      value={techId}
-                      onChange={(e) => setTechId(e.target.value)}
-                      style={select}
-                    >
-                      <option value="">Selecciona un técnico</option>
-                      {techs.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}{t.code ? ` (${t.code})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={twoCols}>
-                    <div style={field}>
-                      <label style={labelStyle}>Desde</label>
-                      <input
-                        type="date"
-                        value={from}
-                        onChange={(e) => setFrom(e.target.value)}
-                        style={dateInput}
-                      />
-                    </div>
-
-                    <label style={checkCard}>
-                      <input
-                        type="checkbox"
-                        checked={force}
-                        onChange={(e) => setForce(e.target.checked)}
-                      />
-                      <span>Sobrescribir si ya tiene técnico</span>
-                    </label>
-                  </div>
-
-                  {selectedTechnician ? (
-                    <div style={previewBox}>
-                      Técnico seleccionado: <b>{selectedTechnician.name}</b>
-                      {selectedTechnician.code ? ` · ${selectedTechnician.code}` : ""}
-                    </div>
-                  ) : null}
-
-                  <button
-                    type="button"
-                    onClick={onAssign}
-                    disabled={!techId || assigning}
-                    style={{
-                      ...btnPrimary,
-                      opacity: !techId || assigning ? 0.6 : 1,
-                      cursor: !techId || assigning ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    <UserCog size={16} />
-                    {assigning ? "Asignando..." : "Asignar a todo el equipo"}
-                  </button>
-                </div>
+                <button type="button" className="tch-btn tch-btn-ghost" onClick={() => navigate(`/equipments/${eq.id}/edit`)}>
+                  <Icon name="edit" size="sm" /> Editar
+                </button>
+                <button type="button" className="tch-btn tch-btn-primary" onClick={() => setRouteOpen(true)}>
+                  <Icon name="plus" size="sm" /> Nueva ruta
+                </button>
               </>
-            ) : (
-              <div style={emptyBox}>
-                Tu perfil es de solo visualización. La asignación de técnicos está disponible para Admin y Supervisor.
-              </div>
-            )}
-          </section>
+            ) : null}
+          </div>
+        </header>
+
+        <section className="tch-kpis" aria-label="Resumen del equipo">
+          <Kpi icon="route" value={routes.length} label="Rutas" tone={routes.length ? "" : "is-orange"} />
+          <Kpi icon="clock" value={upcoming.length} label="Pendientes" tone={overdue ? "is-red" : ""} sub={overdue ? `${overdue} vencida${overdue === 1 ? "" : "s"}` : null} />
+          <Kpi icon="checkCircle" value={eq.executionsCount ?? history.length} label="Actividades registradas" tone="is-green" sub={lastDone ? `Última: ${fmtDate(lastDone.executedAt)}` : null} />
+          <Kpi icon="alert" value={eq.conditionReportsCount ?? reports.length} label="Reportes de condición" tone={reports.some((r) => r.status === "OPEN") ? "is-orange" : ""} />
+        </section>
+
+        <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", alignItems: "start" }}>
+          <Panel title="Datos del equipo">
+            <dl className="eq-dl">
+              <Row k="Código / TAG" v={eq.code || "—"} />
+              <Row k="Área" v={eq.area?.name || "Sin área"} />
+              <Row k="Ubicación" v={eq.location || "—"} />
+              <Row k="Marca" v={eq.brand || "—"} />
+              <Row k="Modelo" v={eq.model || "—"} />
+              <Row k="Criticidad" v={critLabel(eq.criticality)} />
+            </dl>
+            {eq.description ? <p className="tch-sub" style={{ marginTop: 12 }}>{eq.description}</p> : null}
+          </Panel>
+
+          <Panel
+            title="Técnico"
+            action={canManage ? (
+              <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 32 }} onClick={() => navigate(`/equipments/${eq.id}/edit#assign`)}>
+                Cambiar
+              </button>
+            ) : null}
+          >
+            <dl className="eq-dl">
+              <Row k="Asignado a las rutas" v={tech?.name || "Sin asignar"} />
+              <Row
+                k="Más frecuente en el historial"
+                v={eq.mostUsedTechnician?.technician?.name ? `${eq.mostUsedTechnician.technician.name} · ${eq.mostUsedTechnician.count} actividad${eq.mostUsedTechnician.count === 1 ? "" : "es"}` : "Sin historial"}
+              />
+            </dl>
+          </Panel>
         </div>
 
-        <div style={bottomGrid}>
-          <section style={panel}>
-            <div style={sectionHeaderRow}>
-              <div style={sectionTitle}>Rutas del equipo</div>
-              {routes.length > 4 ? (
-                <button type="button" style={linkBtn} onClick={() => setShowAllRoutes((v) => !v)}>
-                  {showAllRoutes ? "Ver menos" : `Ver todas (${routes.length})`}
-                </button>
-              ) : null}
-            </div>
-
-            {visibleRoutes.length === 0 ? (
-              <div style={emptyBox}>Este equipo aún no tiene rutas registradas.</div>
-            ) : (
-              <div style={stackList}>
-                {visibleRoutes.map((r) => (
-                  <div key={r.id} style={listCard}>
-                    <div style={listTitle}>
-                      {formatRouteDisplayName(r?.name, r?.routeKind, r?.name || "Ruta")}
-                    </div>
-                    <div style={listMeta}>
-                      <span>{r.lubricantType || "—"}</span>
-                      <span>·</span>
-                      <span>{r.frequencyDays ? `Cada ${r.frequencyDays} días` : "Frecuencia —"}</span>
-                      <span>·</span>
-                      <span>Próxima: {fmtDate(r.nextDate)}</span>
-                    </div>
+        <Panel title={`Rutas de lubricación (${routes.length})`} action={routes.length > SHOW ? <MoreBtn open={expanded.routes} onClick={() => toggle("routes")} /> : null}>
+          {routes.length ? (
+            <div className="inv-moves">
+              {take(routes, "routes").map((r) => (
+                <div key={r.id} className="inv-move" style={{ cursor: "pointer" }} onClick={() => navigate(`/routes/${r.id}`)} role="link" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && navigate(`/routes/${r.id}`)}>
+                  <div className="inv-move-icon k-in" aria-hidden="true"><Icon name="drop" size="sm" /></div>
+                  <div className="inv-move-title">{formatRouteDisplayName(r.name, r.routeKind, r.name || "Ruta")}</div>
+                  <div className="inv-move-qty" style={{ fontFamily: "inherit", fontWeight: 600, fontSize: 13 }}>{fmtDate(r.nextDate)}</div>
+                  <div className="inv-move-detail">
+                    {[r.lubricant?.name || r.lubricantName || r.lubricantType, r.quantity ? `${r.quantity} ${r.unit || ""}`.trim() : null, frequencyLabel(r), r.technician?.name].filter(Boolean).join(" · ")}
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section style={panel}>
-            <div style={sectionHeaderRow}>
-              <div style={sectionTitle}>Condiciones reportadas</div>
-              {conditionReports.length > 4 ? (
-                <button type="button" style={linkBtn} onClick={() => setShowAllConditions((v) => !v)}>
-                  {showAllConditions ? "Ver menos" : `Ver todas (${conditionReports.length})`}
-                </button>
-              ) : null}
+                </div>
+              ))}
             </div>
+          ) : (
+            <EmptyLine text="Este equipo aún no tiene rutas." action={canManage ? { label: "Crear ruta", onClick: () => setRouteOpen(true) } : null} />
+          )}
+        </Panel>
 
-            {visibleConditions.length === 0 ? (
-              <div style={emptyBox}>No hay condiciones reportadas para este equipo.</div>
-            ) : (
-              <div style={stackList}>
-                {visibleConditions.map((c) => (
-                  <div key={c.id} style={listCard}>
-                    <div style={listTitleRow}>
-                      <span style={conditionPill(c.condition)}>{c.condition || "—"}</span>
-                      <span style={datePill}>{fmtDate(c.detectedAt || c.createdAt)}</span>
-                    </div>
-                    <div style={listText}>{truncate(c.description, 140)}</div>
-                  </div>
-                ))}
+        <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", alignItems: "start" }}>
+          <Panel title={`Próximas actividades (${upcoming.length})`} action={upcoming.length > SHOW ? <MoreBtn open={expanded.up} onClick={() => toggle("up")} /> : null}>
+            {upcoming.length ? (
+              <div className="inv-moves">
+                {take(upcoming, "up").map((ex) => <ExecRow key={ex.id} ex={ex} date={ex.scheduledAt} />)}
               </div>
+            ) : (
+              <EmptyLine text="Sin actividades pendientes." />
             )}
-          </section>
+          </Panel>
+
+          <Panel title="Historial de actividades" action={history.length > SHOW ? <MoreBtn open={expanded.hist} onClick={() => toggle("hist")} /> : null}>
+            {history.length ? (
+              <div className="inv-moves">
+                {take(history, "hist").map((ex) => <ExecRow key={ex.id} ex={ex} date={ex.executedAt} done />)}
+              </div>
+            ) : (
+              <EmptyLine text="Aún no hay actividades completadas." />
+            )}
+          </Panel>
         </div>
 
-        <div style={{ marginTop: 14 }}>
-          <section style={panel}>
-            <div style={sectionHeaderRow}>
-              <div style={sectionTitle}>Historial reciente de ejecución</div>
-              {executions.length > 5 ? (
-                <button type="button" style={linkBtn} onClick={() => setShowAllExecutions((v) => !v)}>
-                  {showAllExecutions ? "Ver menos" : `Ver más (${executions.length})`}
-                </button>
-              ) : null}
-            </div>
-
-            {visibleExecutions.length === 0 ? (
-              <div style={emptyBox}>No hay historial de ejecución para este equipo.</div>
-            ) : (
-              <div style={stackList}>
-                {visibleExecutions.map((ex) => (
-                  <div key={ex.id} style={historyCard}>
-                    <div style={historyTop}>
-                      <div style={historyTitle}>{ex?.route?.name || ex?.manualTitle || "Actividad"}</div>
-                      <div style={datePill}>
-                        {fmtDate(ex.executedAt || ex.scheduledAt)}
-                      </div>
-                    </div>
-
-                    <div style={historyMeta}>
-                      <span>Estado: <b>{ex.status || "—"}</b></span>
-                      <span>·</span>
-                      <span>Técnico: <b>{ex?.technician?.name || "Sin técnico"}</b></span>
-                      <span>·</span>
-                      <span>Condición: <b>{ex?.condition || "—"}</b></span>
-                    </div>
-
-                    {ex?.observations ? (
-                      <div style={historyNotes}>{truncate(ex.observations, 180)}</div>
-                    ) : null}
+        <Panel title={`Reportes de condición (${reports.length})`} action={reports.length > SHOW ? <MoreBtn open={expanded.rep} onClick={() => toggle("rep")} /> : null}>
+          {reports.length ? (
+            <div className="inv-moves">
+              {take(reports, "rep").map((c) => (
+                <div key={c.id} className="inv-move">
+                  <span className={`eq-crit ${conditionClass(c.condition)}`} style={{ gridRow: "span 2" }}>{conditionLabel(c.condition)}</span>
+                  <div className="inv-move-title">{c.category || "Reporte"} · {c.status === "OPEN" ? "Abierto" : c.status === "RESOLVED" ? "Resuelto" : c.status === "DISMISSED" ? "Descartado" : c.status}</div>
+                  <div className="inv-move-qty" style={{ fontFamily: "inherit", fontWeight: 600, fontSize: 13 }}>{fmtDate(c.detectedAt || c.createdAt)}</div>
+                  <div className="inv-move-detail">
+                    {c.description}
+                    {c.reportedBy?.name ? ` · ${c.reportedBy.name}` : ""}
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyLine text="Sin reportes de condición." />
+          )}
+        </Panel>
       </div>
+
+      {canManage && routeOpen ? (
+        <NewRouteModal
+          open
+          onClose={() => setRouteOpen(false)}
+          onSave={async () => {
+            setRouteOpen(false);
+            toast.success("Ruta creada");
+            await load();
+          }}
+          initialData={{
+            equipmentId: eq.id,
+            equipmentName: eq.name || "",
+            equipmentCode: eq.code || "",
+            equipmentLocation: eq.location || "",
+            technicianId: tech?.id ?? "",
+            lockEquipment: true,
+          }}
+        />
+      ) : null}
     </MainLayout>
   );
 }
 
-function InfoCard({ icon, title, value, sub }) {
+function Panel({ title, action, children }) {
   return (
-    <div style={kpiCard}>
-      <div style={kpiInner}>
-        <div style={kpiIcon}>{icon}</div>
-        <div style={{ minWidth: 0 }}>
-          <div style={kpiValue} title={value}>{value}</div>
-          <div style={kpiTitle}>{title}</div>
-          <div style={kpiSub}>{sub}</div>
-        </div>
+    <section className="tch-modal" style={{ maxWidth: "none", maxHeight: "none", overflow: "visible", boxShadow: "var(--shadow-sm)" }}>
+      <div className="tch-modal-head" style={{ alignItems: "center", paddingBottom: 12 }}>
+        <h2 className="tch-modal-title" style={{ margin: 0, fontSize: 16 }}>{title}</h2>
+        {action}
+      </div>
+      <div style={{ padding: "14px 18px 18px" }}>{children}</div>
+    </section>
+  );
+}
+
+function Row({ k, v }) {
+  return (
+    <>
+      <dt>{k}</dt>
+      <dd>{v}</dd>
+    </>
+  );
+}
+
+function Kpi({ icon, value, label, tone = "", sub }) {
+  return (
+    <div className="tch-kpi">
+      <div className={`tch-kpi-icon ${tone}`}><Icon name={icon} /></div>
+      <div style={{ minWidth: 0 }}>
+        <div className="tch-kpi-value">{value}</div>
+        <div className="tch-kpi-label">{label}</div>
+        {sub ? <div className="tch-hint" style={{ marginTop: 2 }}>{sub}</div> : null}
       </div>
     </div>
   );
 }
 
-function usePageMobile(breakpoint = 820) {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
+function MoreBtn({ open, onClick }) {
+  return (
+    <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 30, fontSize: 12 }} onClick={onClick}>
+      {open ? "Ver menos" : "Ver todo"}
+    </button>
   );
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [breakpoint]);
-
-  return isMobile;
 }
 
-function DetailRow({ label, value }) {
+function EmptyLine({ text, action }) {
   return (
-    <div style={detailCard}>
-      <div style={detailLabel}>{label}</div>
-      <div style={detailValue}>{value}</div>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+      <span className="tch-sub" style={{ margin: 0 }}>{text}</span>
+      {action ? (
+        <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 32 }} onClick={action.onClick}>
+          <Icon name="plus" size="sm" /> {action.label}
+        </button>
+      ) : null}
     </div>
   );
 }
 
-/* ===== STYLES ===== */
-
-const compactHeroCard = {
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  borderRadius: 18,
-  padding: 18,
-  boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
-};
-const compactHeroHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 14,
-  marginTop: 4,
-};
-const compactHeroLeft = {
-  display: "flex",
-  gap: 14,
-  minWidth: 0,
-  flex: 1,
-};
-const compactMainGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "1.15fr 0.85fr",
-  gap: 14,
-};
-const compactBottomGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: 14,
-};
-const compactPanel = {
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  borderRadius: 16,
-  padding: 16,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-};
-const compactDetailsGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: 12,
-};
-const compactTwoCols = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: 12,
-  alignItems: "end",
-};
-const pageShell = {
-  padding: 16,
-  background: "linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%)",
-  borderRadius: 16,
-  border: "1px solid #e5e7eb",
-};
-
-const topBackRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 10,
-  flexWrap: "wrap",
-  marginBottom: 14,
-};
-
-const heroCard = {
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  borderRadius: 18,
-  padding: 18,
-  boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
-};
-
-const heroHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 14,
-};
-
-const heroLeft = {
-  display: "flex",
-  gap: 14,
-  minWidth: 0,
-  flex: 1,
-};
-
-const heroIcon = {
-  width: 58,
-  height: 58,
-  borderRadius: 16,
-  display: "grid",
-  placeItems: "center",
-  background: "rgba(249,115,22,0.95)",
-  border: "1px solid rgba(251,146,60,0.90)",
-  color: "#0b1220",
-  boxShadow: "0 10px 22px rgba(249,115,22,0.18)",
-  flexShrink: 0,
-};
-
-const title = {
-  margin: 0,
-  fontSize: typeof window !== "undefined" && window.innerWidth <= 820 ? 24 : 30,
-  fontWeight: 900,
-  color: "#0f172a",
-  lineHeight: 1.05,
-};
-
-const subtitle = {
-  marginTop: 6,
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 12,
-};
-
-const heroTagsRow = {
-  marginTop: 12,
-  display: "flex",
-  gap: 10,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
-
-const codePill = {
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "7px 12px",
-  borderRadius: 999,
-  background: "rgba(15,23,42,0.06)",
-  border: "1px solid rgba(15,23,42,0.10)",
-  color: "#0f172a",
-  fontWeight: 950,
-  fontSize: 12,
-};
-
-const statusPill = (active) => ({
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "7px 12px",
-  borderRadius: 999,
-  background: active ? "rgba(34,197,94,0.12)" : "rgba(251,191,36,0.14)",
-  border: active ? "1px solid rgba(34,197,94,0.24)" : "1px solid rgba(251,191,36,0.24)",
-  color: active ? "#166534" : "#9a3412",
-  fontWeight: 950,
-  fontSize: 12,
-});
-
-const critPill = (critical) => ({
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "7px 12px",
-  borderRadius: 999,
-  background: critical ? "rgba(239,68,68,0.10)" : "rgba(15,23,42,0.05)",
-  border: critical ? "1px solid rgba(239,68,68,0.22)" : "1px solid rgba(15,23,42,0.10)",
-  color: critical ? "#991b1b" : "#334155",
-  fontWeight: 950,
-  fontSize: 12,
-});
-
-const readOnlyPill = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "7px 12px",
-  borderRadius: 999,
-  border: "1px solid #e5e7eb",
-  background: "rgba(255,255,255,0.70)",
-  color: "#334155",
-  fontWeight: 900,
-  fontSize: 12,
-};
-
-const kpiGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 14,
-};
-
-const kpiCard = {
-  borderRadius: 16,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "5px solid #0f172a",
-  borderLeft: "4px solid rgba(51,65,85,0.45)",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-  minHeight: 92,
-};
-
-const kpiInner = {
-  padding: 14,
-  display: "flex",
-  gap: 12,
-  alignItems: "center",
-};
-
-const kpiIcon = {
-  width: 42,
-  height: 42,
-  borderRadius: 14,
-  display: "grid",
-  placeItems: "center",
-  background: "rgba(249,115,22,0.92)",
-  border: "1px solid rgba(251,146,60,0.90)",
-  color: "#0b1220",
-  boxShadow: "0 10px 22px rgba(249,115,22,0.18)",
-  flexShrink: 0,
-};
-
-const kpiValue = {
-  fontSize: 22,
-  fontWeight: 900,
-  color: "#0f172a",
-  lineHeight: 1.05,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-const kpiTitle = {
-  marginTop: 4,
-  fontSize: 11,
-  fontWeight: 950,
-  color: "#64748b",
-  textTransform: "uppercase",
-  letterSpacing: 0.6,
-};
-
-const kpiSub = {
-  marginTop: 4,
-  fontSize: 12,
-  fontWeight: 800,
-  color: "#475569",
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-const mainGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "1.15fr 0.85fr",
-  gap: 14,
-};
-
-const bottomGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: 14,
-};
-
-const panel = {
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  borderRadius: 16,
-  padding: 16,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-};
-
-const sectionTitle = {
-  fontWeight: 950,
-  color: "#0f172a",
-  fontSize: 15,
-};
-
-const sectionHeaderRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  flexWrap: "wrap",
-};
-
-const detailsGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: 12,
-};
-
-const detailCard = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 14,
-  background: "rgba(248,250,252,0.82)",
-  padding: 12,
-};
-
-const detailLabel = {
-  fontSize: 11,
-  fontWeight: 950,
-  color: "#64748b",
-  letterSpacing: 0.6,
-  textTransform: "uppercase",
-};
-
-const detailValue = {
-  marginTop: 6,
-  fontSize: 14,
-  fontWeight: 900,
-  color: "#0f172a",
-  lineHeight: 1.3,
-  wordBreak: "break-word",
-};
-
-const notesBox = {
-  marginTop: 6,
-  padding: 12,
-  borderRadius: 14,
-  background: "rgba(248,250,252,0.82)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  color: "#334155",
-  fontWeight: 800,
-  lineHeight: 1.5,
-  fontSize: 13,
-};
-
-const field = {
-  display: "grid",
-  gap: 8,
-};
-
-const labelStyle = {
-  display: "block",
-  fontWeight: 950,
-  fontSize: 12,
-  color: "#0f172a",
-  letterSpacing: 0.3,
-  textTransform: "uppercase",
-};
-
-const select = {
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "11px 12px",
-  fontWeight: 900,
-  outline: "none",
-  minWidth: 260,
-  background: "#fff",
-};
-
-const dateInput = {
-  width: "100%",
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "11px 12px",
-  fontWeight: 900,
-  outline: "none",
-  background: "#fff",
-};
-
-const twoCols = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: 12,
-  alignItems: "end",
-};
-
-const checkCard = {
-  minHeight: 46,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  background: "rgba(248,250,252,0.82)",
-  fontWeight: 900,
-  color: "#334155",
-};
-
-const previewBox = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  background: "rgba(255,247,237,0.85)",
-  border: "1px solid rgba(249,115,22,0.24)",
-  color: "#9a3412",
-  fontWeight: 850,
-  fontSize: 13,
-};
-
-const btnPrimary = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 8,
-  background: "#f97316",
-  color: "#0b1220",
-  border: "1px solid rgba(249,115,22,0.55)",
-  borderRadius: 12,
-  padding: "11px 14px",
-  fontWeight: 950,
-  boxShadow: "0 10px 22px rgba(249,115,22,0.18)",
-};
-
-const btnGhost = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 8,
-  background: "rgba(255,255,255,0.75)",
-  color: "#0f172a",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 14px",
-  fontWeight: 900,
-  cursor: "pointer",
-};
-
-const linkBtn = {
-  background: "transparent",
-  border: "none",
-  color: "#2563eb",
-  fontWeight: 950,
-  cursor: "pointer",
-};
-
-const muted = {
-  marginTop: 10,
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 12,
-  lineHeight: 1.4,
-};
-
-const summaryMiniCard = {
-  marginTop: 12,
-  padding: 12,
-  borderRadius: 14,
-  background: "rgba(248,250,252,0.82)",
-  border: "1px solid rgba(226,232,240,0.95)",
-};
-
-const summaryMiniLabel = {
-  fontSize: 11,
-  fontWeight: 950,
-  color: "#64748b",
-  letterSpacing: 0.6,
-  textTransform: "uppercase",
-};
-
-const summaryMiniValue = {
-  marginTop: 6,
-  fontSize: 16,
-  fontWeight: 950,
-  color: "#0f172a",
-};
-
-const summaryMiniSub = {
-  marginTop: 4,
-  fontSize: 12,
-  fontWeight: 800,
-  color: "#475569",
-};
-
-const miniLabel = {
-  fontSize: 11,
-  fontWeight: 950,
-  color: "#64748b",
-  textTransform: "uppercase",
-  letterSpacing: 0.6,
-};
-
-const loadingCard = {
-  background: "#fff",
-  borderRadius: 16,
-  padding: 18,
-  border: "1px solid #e5e7eb",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-};
-
-const loadingTitle = {
-  fontWeight: 950,
-  color: "#0f172a",
-};
-
-const loadingSub = {
-  marginTop: 6,
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 13,
-};
-
-const errorPanel = {
-  background: "#fff",
-  borderRadius: 16,
-  padding: 18,
-  border: "1px solid #fecaca",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-};
-
-const errorTitle = {
-  fontWeight: 950,
-  color: "#991b1b",
-  fontSize: 18,
-};
-
-const errorText = {
-  marginTop: 8,
-  color: "#7f1d1d",
-  fontWeight: 800,
-  fontSize: 14,
-};
-
-const errorBox = {
-  marginTop: 12,
-  background: "#fee2e2",
-  border: "1px solid #fecaca",
-  padding: 12,
-  borderRadius: 12,
-  color: "#991b1b",
-  fontWeight: 900,
-};
-
-const okBox = {
-  marginTop: 12,
-  background: "#dcfce7",
-  border: "1px solid #86efac",
-  padding: 12,
-  borderRadius: 12,
-  color: "#166534",
-  fontWeight: 900,
-};
-
-const emptyBox = {
-  marginTop: 10,
-  padding: 12,
-  borderRadius: 12,
-  border: "1px dashed #cbd5e1",
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 13,
-  background: "rgba(248,250,252,0.85)",
-};
-
-const stackList = {
-  marginTop: 12,
-  display: "grid",
-  gap: 10,
-};
-
-const listCard = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: 12,
-  background: "rgba(248,250,252,0.82)",
-};
-
-const listTitle = {
-  fontWeight: 950,
-  color: "#0f172a",
-  fontSize: 14,
-};
-
-const listMeta = {
-  marginTop: 6,
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 12,
-};
-
-const listText = {
-  marginTop: 8,
-  color: "#334155",
-  fontWeight: 800,
-  fontSize: 13,
-  lineHeight: 1.45,
-};
-
-const listTitleRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 10,
-  flexWrap: "wrap",
-};
-
-const datePill = {
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "6px 10px",
-  borderRadius: 999,
-  background: "rgba(15,23,42,0.06)",
-  border: "1px solid rgba(15,23,42,0.10)",
-  color: "#334155",
-  fontWeight: 900,
-  fontSize: 11,
-};
-
-const conditionPill = (condition) => {
-  const v = String(condition || "").toUpperCase().trim();
-
-  if (v === "CRITICO" || v === "CRITICO") {
-    return {
-      display: "inline-flex",
-      alignItems: "center",
-      padding: "6px 10px",
-      borderRadius: 999,
-      background: "rgba(239,68,68,0.10)",
-      border: "1px solid rgba(239,68,68,0.22)",
-      color: "#991b1b",
-      fontWeight: 950,
-      fontSize: 11,
-    };
-  }
-
-  if (v === "MALO") {
-    return {
-      display: "inline-flex",
-      alignItems: "center",
-      padding: "6px 10px",
-      borderRadius: 999,
-      background: "rgba(251,191,36,0.14)",
-      border: "1px solid rgba(251,191,36,0.24)",
-      color: "#9a3412",
-      fontWeight: 950,
-      fontSize: 11,
-    };
-  }
-
-  return {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "rgba(15,23,42,0.06)",
-    border: "1px solid rgba(15,23,42,0.10)",
-    color: "#334155",
-    fontWeight: 950,
-    fontSize: 11,
-  };
-};
-
-const historyCard = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: 12,
-  background: "rgba(248,250,252,0.82)",
-};
-
-const historyTop = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  flexWrap: "wrap",
-};
-
-const historyTitle = {
-  fontWeight: 950,
-  color: "#0f172a",
-  fontSize: 14,
-};
-
-const historyMeta = {
-  marginTop: 8,
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  color: "#475569",
-  fontWeight: 800,
-  fontSize: 12,
-};
-
-const historyNotes = {
-  marginTop: 8,
-  color: "#334155",
-  fontWeight: 800,
-  fontSize: 13,
-  lineHeight: 1.45,
-};
-
-
-
-
-
-
-
-
+function ExecRow({ ex, date, done = false }) {
+  const status = String(ex.status || "").toUpperCase();
+  const late = !done && (status === "OVERDUE" || new Date(ex.scheduledAt) < new Date(new Date().toDateString()));
+  const cls = done ? "k-in" : late ? "k-out" : "k-adj";
+  const title = ex.route?.name || ex.manualTitle || "Actividad";
+  const qty = done && ex.usedConvertedQuantity ? `${Number(ex.usedConvertedQuantity).toLocaleString("es-MX", { maximumFractionDigits: 2 })} ${ex.usedConvertedUnit || ""}` : null;
+  return (
+    <div className="inv-move">
+      <div className={`inv-move-icon ${cls}`} aria-hidden="true">
+        <Icon name={done ? "check" : late ? "warn" : "clock"} size="sm" />
+      </div>
+      <div className="inv-move-title">{title}</div>
+      <div className="inv-move-qty" style={{ fontFamily: "inherit", fontWeight: 600, fontSize: 13 }}>{fmtDate(date)}</div>
+      <div className="inv-move-detail">
+        {[late ? "Vencida" : execStatusLabel(ex.status), ex.technician?.name || "Sin técnico", done && ex.condition ? `Condición ${conditionLabel(ex.condition).toLowerCase()}` : null, qty, ex.origin === "MANUAL" && !ex.route ? "Manual / emergencia" : null]
+          .filter(Boolean)
+          .join(" · ")}
+        {done && ex.observations ? <div>{ex.observations}</div> : null}
+      </div>
+    </div>
+  );
+}
