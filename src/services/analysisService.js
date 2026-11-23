@@ -12,3 +12,8 @@ export function getAnalysisOverview(params = {}) {
   }
   return httpGet(`/analysis/overview?${qs.toString()}`);
 }
+
+/** Reporte mensual (mes calendario, comparado contra el mes anterior). */
+export function getMonthlyReport(month) {
+  return httpGet(`/analysis/monthly-report?month=${encodeURIComponent(month)}`);
+}
