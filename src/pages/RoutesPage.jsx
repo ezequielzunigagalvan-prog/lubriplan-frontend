@@ -292,15 +292,15 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
   const handleDeleteRoute = async (id) => {
     if (!canDeleteRoutes) return;
 
-    if (!confirm("¿Eliminar esta ruta?")) return;
+    if (!confirm("¿Eliminar esta ruta? Sus actividades pendientes se eliminan; las completadas se conservan en el historial.")) return;
 
     try {
-      await deleteRoute(id);
+      const res = await deleteRoute(id);
       setRoutes((prev) => prev.filter((r) => r.id !== id));
-      pushToast("success", "Ruta eliminada", "La ruta fue eliminada correctamente.");
+      pushToast("success", "Ruta eliminada", res?.preserved ? `${res.preserved} actividad${res.preserved === 1 ? "" : "es"} completada${res.preserved === 1 ? "" : "s"} se conserva${res.preserved === 1 ? "" : "n"} en el historial.` : "La ruta fue eliminada correctamente.");
     } catch (err) {
       console.error("Error eliminando ruta:", err);
-      pushToast("error", "No se pudo eliminar", "Ocurrió un error eliminando la ruta.");
+      pushToast("error", "No se pudo eliminar", err?.message || "Ocurrió un error eliminando la ruta.");
     }
   };
 

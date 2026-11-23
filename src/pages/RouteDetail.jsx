@@ -202,11 +202,11 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
   /* ===== acciones ===== */
   const handleDelete = async () => {
     if (!route?.id) return;
-    if (!confirm("?Eliminar esta ruta?")) return;
+    if (!confirm("¿Eliminar esta ruta? Sus actividades pendientes se eliminan; las completadas se conservan en el historial.")) return;
 
     try {
-      await deleteRoute(route.id);
-      // pushToast("success", "Ruta eliminada", "La ruta se elimin? correctamente.");
+      const r = await deleteRoute(route.id);
+      toast.success(r?.preserved ? `Ruta eliminada · ${r.preserved} actividad${r.preserved === 1 ? "" : "es"} conservada${r.preserved === 1 ? "" : "s"} en el historial` : "Ruta eliminada");
       navigate("/routes");
     } catch (e) {
       console.error(e);

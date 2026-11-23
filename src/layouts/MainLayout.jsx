@@ -1371,9 +1371,11 @@ const plantDot = {
 
 const content = {
   padding: 16,
-  maxWidth: 1200,
+  maxWidth: 1232,
   width: "100%",
   margin: "0 auto",
+  // width 100% + padding se salía ~24px por la derecha en pantallas medianas.
+  boxSizing: "border-box",
 };
 
 const contentMobile = {

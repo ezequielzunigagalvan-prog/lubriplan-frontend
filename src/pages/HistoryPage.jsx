@@ -1,2150 +1,753 @@
 ﻿// src/pages/HistoryPage.jsx
+// Historial auditable: actividades completadas, movimientos de inventario y órdenes preventivas.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import {
   getHistoryExecutions,
   getHistoryLubricantMovements,
-  getExecutionById,
+  exportHistoryExecutions,
+  exportHistoryMovements,
 } from "../services/historyService";
 import { preventiveOrdersService } from "../services/preventiveOrdersService";
-import { useAuth } from "../context/AuthContext";
-import { Icon } from "../components/ui/lpIcons";
-import { usePlant } from "../context/PlantContext";
-
+import { getTechnicians } from "../services/techniciansService";
 import { API_ASSETS_URL } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { usePlant } from "../context/PlantContext";
+import { Icon } from "../components/ui/lpIcons";
+import {
+  presetRange,
+  monthRange,
+  conditionInfo,
+  KIND_LABEL,
+  moveInfo,
+  fmtQty,
+  fmtDateTime,
+  rangeLabel,
+  delayInfo,
+} from "../utils/history";
+import { reasonLabel } from "../utils/inventory";
+import "./TechniciansPage.css";
+import "./InventoryPage.css";
+import "./EquipmentsPage.css";
+import "./HistoryPage.css";
 
-/* =========================
-   HELPERS
-========================= */
+const PRESETS = [
+  ["today", "Hoy"],
+  ["7d", "7 días"],
+  ["month", "Este mes"],
+  ["prev", "Mes anterior"],
+  ["year", "Este año"],
+];
 
-const toYMD = (d) => {
-  const dt = d instanceof Date ? d : new Date(d);
-  if (Number.isNaN(dt.getTime())) return "";
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const day = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
-
-const startOfMonthLocal = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(), 1);
-const endOfMonthLocal = (d = new Date()) =>
-  new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-
-const safeDateLabel = (iso) => {
-  try {
-    if (!iso) return "-";
-    const dt = new Date(iso);
-    if (Number.isNaN(dt.getTime())) return "-";
-    return dt.toLocaleDateString();
-  } catch {
-    return "-";
-  }
-};
-
-const safeDateTimeLabel = (iso) => {
-  try {
-    if (!iso) return "-";
-    const dt = new Date(iso);
-    if (Number.isNaN(dt.getTime())) return "-";
-    return dt.toLocaleString();
-  } catch {
-    return "-";
-  }
-};
-
-const buildImgUrl = (raw) => {
+const imgUrl = (raw) => {
   if (!raw) return "";
   const s = String(raw);
-  if (s.startsWith("http://") || s.startsWith("https://")) return s;
-  if (s.startsWith("/")) return `${API_ASSETS_URL}${s}`;
-  return s;
+  if (/^https?:\/\//.test(s)) return s;
+  return s.startsWith("/") ? `${API_ASSETS_URL}${s}` : s;
 };
 
-const up = (v) => String(v || "").toUpperCase();
-
-const conditionChip = (conditionRaw) => {
-  const c = up(conditionRaw);
-  if (c === "BUENO") return { bg: "#dcfce7", bd: "#bbf7d0", fg: "#166534", label: "Bueno", icon: "check" };
-  if (c === "REGULAR") return { bg: "#e0e7ff", bd: "#c7d2fe", fg: "#3730a3", label: "Regular", icon: "dot" };
-  if (c === "MALO") return { bg: "#fef3c7", bd: "#fde68a", fg: "#92400e", label: "Malo", icon: "warn" };
-  if (c === "CRITICO" || c === "CRITICO")
-    return { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Crítico", icon: "alert" };
-  return { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: conditionRaw || "-", icon: "dot" };
-};
-
-const normMoveType = (raw) => {
-  const t = String(raw || "").trim().toUpperCase();
-  if (t === "ENTRADA") return "IN";
-  if (t === "SALIDA") return "OUT";
-  if (t === "AJUSTE") return "ADJUST";
-  return t;
-};
-
-const moveBadge = (t) => {
-  const type = normMoveType(t);
-  const map = {
-    IN: { bg: "#dcfce7", bd: "#bbf7d0", fg: "#166534", label: "Entrada", icon: "arrowUp" },
-    OUT: { bg: "#fee2e2", bd: "#fecaca", fg: "#991b1b", label: "Salida", icon: "arrowDown" },
-    ADJUST: { bg: "#e0e7ff", bd: "#c7d2fe", fg: "#3730a3", label: "Ajuste", icon: "settings" },
-  };
-  return map[type] || { bg: "#f1f5f9", bd: "#e2e8f0", fg: "#0f172a", label: type || "-", icon: "dot" };
-};
-
-const monthToFromTo = (monthStr) => {
-  if (!/^\d{4}-\d{2}$/.test(monthStr)) return null;
-  const [y, m] = monthStr.split("-").map(Number);
-  if (!Number.isFinite(y) || !Number.isFinite(m)) return null;
-
-  const fromD = new Date(y, m - 1, 1, 0, 0, 0, 0);
-  const toD = new Date(y, m, 0, 23, 59, 59, 999);
-  return { from: toYMD(fromD), to: toYMD(toD) };
-};
-
-function MiniIconBox({ name }) {
-  return (
-    <span style={kpiIconBox}>
-      <Icon name={name} />
-    </span>
-  );
+function useDebounced(value, ms = 350) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return v;
 }
 
-/* =========================
-   PAGE
-========================= */
-
 export default function HistoryPage() {
-  const reqIdRef = useRef(0);
-  const mvReqIdRef = useRef(0);
-  const { currentPlantId, loadingPlants } = usePlant();
-
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = usePageMobile();
-
-  // AUTH / PERMISSIONS
   const { user } = useAuth();
+  const { currentPlantId, currentPlant, loadingPlants } = usePlant();
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
   const isTech = role === "TECHNICIAN";
-  const myTechId = user?.technicianId != null ? Number(user.technicianId) : null;
 
-  // query params (deep links)
+  // Deep links: ?month=YYYY-MM, ?filter=bad-condition, ?tab=movements|olp
   const qs = useMemo(() => new URLSearchParams(location.search || ""), [location.search]);
-  const month = String(qs.get("month") || "");
-  const urlFilter = String(qs.get("filter") || "");
-  const isBadCondition = urlFilter === "bad-condition";
+  const urlMonth = qs.get("month") || "";
+  const badCondition = qs.get("filter") === "bad-condition";
+  const urlTab = qs.get("tab");
 
-  // filtros actividades
-  const now = useMemo(() => new Date(), []);
-  const [from, setFrom] = useState(toYMD(startOfMonthLocal(now)));
-  const [to, setTo] = useState(toYMD(endOfMonthLocal(now)));
-  const [condition, setCondition] = useState("ALL"); // ALL | BUENO | REGULAR | MALO | CRITICO
-  const [q, setQ] = useState("");
+  const initialRange = monthRange(urlMonth) || presetRange("month");
+  const [tab, setTab] = useState(["movements", "olp"].includes(urlTab) ? urlTab : "executions");
+  const [range, setRange] = useState(initialRange);
+  const [preset, setPreset] = useState(urlMonth ? "" : "month");
+  const [search, setSearch] = useState("");
+  const q = useDebounced(search.trim());
 
-  // paginacion actividades
+  // filtros de actividades
+  const [condition, setCondition] = useState("");
+  const [technicianId, setTechnicianId] = useState("");
+  const [evidence, setEvidence] = useState(false);
+  // filtros de movimientos
+  const [moveType, setMoveType] = useState("");
+
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(25);
 
-  // data actividades
+  const [data, setData] = useState({ items: [], meta: null });
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
-  const [items, setItems] = useState([]);
-  const [meta, setMeta] = useState(null);
-
-  // drawer detalle ejecucion
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailErr, setDetailErr] = useState("");
+  const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [technicians, setTechnicians] = useState([]);
   const [detail, setDetail] = useState(null);
+  const reqRef = useRef(0);
 
-  // movimientos
-  const [mvLoading, setMvLoading] = useState(false);
-  const [mvErr, setMvErr] = useState("");
-  const [mvItems, setMvItems] = useState([]);
-  const [mvMeta, setMvMeta] = useState(null);
-  const [mvType, setMvType] = useState("ALL");
-  const [mvPage, setMvPage] = useState(1);
-  const [mvPageSize, setMvPageSize] = useState(10);
-  const [mvLubQ, setMvLubQ] = useState(""); // filtro por nombre/codigo (client-side)
-  const [filterEvidence, setFilterEvidence] = useState(false);
-
-  // órdenes preventivas
-  const [olpLoading, setOlpLoading] = useState(false);
-  const [olpErr, setOlpErr] = useState("");
-  const [olpItems, setOlpItems] = useState([]);
-  const [olpMeta, setOlpMeta] = useState(null);
-  const [viewMode, setViewMode] = useState("executions"); // "executions" | "preventive"
-
-  /* =========================
-     LOADERS
-  ========================= */
-
-  const load = useCallback(
-    async (opts = {}) => {
-      const reqId = ++reqIdRef.current;
-      try {
-        setErr("");
-        setLoading(true);
-
-        const useClientScopedPage = isTech || isBadCondition;
-        const params = {
-          from,
-          to,
-          q: q.trim() || "",
-          page: useClientScopedPage ? 1 : opts.page ?? page,
-          pageSize: useClientScopedPage ? Math.max(pageSize, 200) : pageSize,
-          condition: condition === "ALL" ? "" : condition,
-        };
-
-        const resp = await getHistoryExecutions(params);
-        if (reqId !== reqIdRef.current) return;
-
-        const raw = Array.isArray(resp?.items) ? resp.items : [];
-
-        // Scope tecnico: solo lo suyo
-        const scopedRaw = isTech
-          ? raw.filter((x) => {
-              const techId = x?.technicianId ?? x?.technician?.id ?? null;
-              if (!Number.isFinite(myTechId)) return false;
-              return Number(techId) === Number(myTechId);
-            })
-          : raw;
-
-        // deep link bad condition
-        const filtered = isBadCondition
-          ? scopedRaw.filter((x) => ["MALO", "CRITICO", "CRITICO"].includes(up(x?.condition)))
-          : scopedRaw;
-
-        setItems(filtered);
-        if (useClientScopedPage) {
-          setMeta({ page: 1, pages: 1, total: filtered.length, pageSize: filtered.length || params.pageSize });
-          setPage(1);
-        } else {
-          setMeta(resp?.meta || null);
-          setPage(resp?.meta?.page ?? params.page);
-        }
-      } catch (e) {
-        if (reqId !== reqIdRef.current) return;
-        console.error(e);
-        setErr(e?.message || "Error cargando historial");
-      } finally {
-        if (reqId === reqIdRef.current) setLoading(false);
-      }
-    },
-    [from, to, q, page, pageSize, condition, isBadCondition, isTech, myTechId]
-  );
-
-  const loadMovements = useCallback(
-    async (opts = {}) => {
-      const rid = ++mvReqIdRef.current;
-      try {
-        setMvErr("");
-        setMvLoading(true);
-
-        const useClientScopedPage = isTech;
-        const params = {
-          from,
-          to,
-          q: q.trim() || "",
-          type: mvType === "ALL" ? "" : mvType,
-          page: useClientScopedPage ? 1 : opts.page ?? mvPage,
-          pageSize: useClientScopedPage ? Math.max(mvPageSize, 200) : mvPageSize,
-        };
-
-        const resp = await getHistoryLubricantMovements(params);
-        const all = Array.isArray(resp?.items) ? resp.items : [];
-
-        // Scope tecnico: ocultar manuales; solo movimientos ligados a sus ejecuciones
-        const scoped = isTech
-          ? all.filter((m) => {
-              const ex = m?.execution;
-              if (!ex?.id) return false;
-              const techId = ex?.technicianId ?? ex?.technician?.id ?? null;
-              if (!Number.isFinite(myTechId)) return false;
-              return Number(techId) === Number(myTechId);
-            })
-          : all;
-
-        if (rid !== mvReqIdRef.current) return;
-
-        setMvItems(scoped);
-        if (useClientScopedPage) {
-          setMvMeta({ page: 1, pages: 1, total: scoped.length, pageSize: scoped.length || params.pageSize });
-          setMvPage(1);
-        } else {
-          setMvMeta(resp?.meta || null);
-          setMvPage(resp?.meta?.page ?? params.page);
-        }
-      } catch (e) {
-        if (rid !== mvReqIdRef.current) return;
-        console.error(e);
-        setMvErr(e?.message || "Error cargando movimientos de lubricantes");
-      } finally {
-        if (rid === mvReqIdRef.current) setMvLoading(false);
-      }
-    },
-    [from, to, q, mvType, mvPage, mvPageSize, isTech, myTechId]
-  );
-
-  const loadPreventiveOrders = useCallback(
-    async (opts = {}) => {
-      try {
-        setOlpErr("");
-        setOlpLoading(true);
-
-        const params = {
-          status: "COMPLETED",
-          page: opts.page ?? 1,
-          limit: 20,
-          ...(from && { from }),
-          ...(to && { to }),
-          ...(isTech && myTechId && { assignedTo: myTechId }),
-        };
-
-        const resp = await preventiveOrdersService.listCompleted(params);
-        const olpData = Array.isArray(resp?.data) ? resp.data : [];
-
-        setOlpItems(olpData);
-        setOlpMeta(resp?.meta || null);
-      } catch (e) {
-        console.error(e);
-        setOlpErr(e?.message || "Error cargando órdenes preventivas");
-      } finally {
-        setOlpLoading(false);
-      }
-    },
-    [from, to, isTech, myTechId]
-  );
-
-  // carga inicial
+  // Sincroniza el rango cuando cambia el mes de la URL (p. ej. desde el dashboard).
   useEffect(() => {
-  if (loadingPlants) return;
-  if (!currentPlantId) return;
-
-  load({ page: 1 });
-  loadMovements({ page: 1 });
-  loadPreventiveOrders({ page: 1 });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [currentPlantId, loadingPlants]);
-
-  // filtros actividades
-  useEffect(() => {
-    load({ page: 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, to, condition, pageSize]);
-
-  // filtros movimientos
-  useEffect(() => {
-    loadMovements({ page: 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, to, mvType, mvPageSize]);
-
-  // filtros órdenes preventivas
-  useEffect(() => {
-    loadPreventiveOrders({ page: 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, to]);
-
-  // deep links
-  useEffect(() => {
-    const r = monthToFromTo(month);
+    const r = monthRange(urlMonth);
     if (r) {
-      setFrom(r.from);
-      setTo(r.to);
+      setRange(r);
+      setPreset("");
     }
-    if (isBadCondition) setCondition("ALL");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [month, isBadCondition]);
+  }, [urlMonth]);
 
-  /* =========================
-     KPI COUNTS
-  ========================= */
+  useEffect(() => {
+    if (isTech || !currentPlantId) return;
+    getTechnicians()
+      .then((list) => setTechnicians(Array.isArray(list) ? list : []))
+      .catch(() => setTechnicians([]));
+  }, [isTech, currentPlantId]);
 
-  const scopedTotals = useMemo(() => {
-    const t = { total: items.length, CRITICO: 0, MALO: 0, BUENO: 0 };
-    for (const it of items) {
-      const c = up(it?.condition);
-      if (c === "CRITICO" || c === "CRITICO") t.CRITICO += 1;
-      else if (c === "MALO") t.MALO += 1;
-      else if (c === "BUENO") t.BUENO += 1;
+  // Vuelve a la página 1 al cambiar cualquier filtro.
+  useEffect(() => {
+    setPage(1);
+  }, [tab, range, q, condition, technicianId, evidence, moveType, pageSize, badCondition, currentPlantId]);
+
+  const params = useMemo(() => {
+    const base = { from: range.from, to: range.to, q, page, pageSize };
+    if (tab === "executions") {
+      return {
+        ...base,
+        condition,
+        technicianId: isTech ? "" : technicianId,
+        evidence,
+        filter: badCondition && !condition ? "bad-condition" : "",
+      };
     }
-    return t;
-  }, [items]);
+    if (tab === "movements") return { ...base, type: moveType };
+    return base;
+  }, [tab, range, q, page, pageSize, condition, technicianId, evidence, moveType, badCondition, isTech]);
 
-  const filteredItems = useMemo(() => {
-    if (!filterEvidence) return items;
-    return items.filter((x) => x.evidenceImage);
-  }, [items, filterEvidence]);
-
-  /* =========================
-     DRAWER
-  ========================= */
-
-  const closeDetail = () => {
-    setDetailOpen(false);
-    setSelectedId(null);
-    setDetail(null);
-    setDetailErr("");
-    setDetailLoading(false);
-  };
-
-  const openDetail = async (ex) => {
-    const id = ex?.id;
-    if (!id) return;
-
-    setSelectedId(id);
-    setDetailOpen(true);
-    setDetailErr("");
-    setDetailLoading(true);
-    setDetail(ex || null);
-
+  const load = useCallback(async () => {
+    if (loadingPlants || !currentPlantId) return;
+    const id = ++reqRef.current;
+    setLoading(true);
+    setError("");
     try {
-      const needsFetch =
-        !ex?.route || !ex?.technician || ex?.evidenceImage == null || ex?.usedQuantity == null;
-
-      if (needsFetch) {
-        const full = await getExecutionById(id);
-        setDetail(full);
+      let result;
+      if (tab === "executions") {
+        const r = await getHistoryExecutions(params);
+        result = { items: r?.items || [], meta: r?.meta || null };
+      } else if (tab === "movements") {
+        const r = await getHistoryLubricantMovements(params);
+        result = { items: r?.items || [], meta: r?.meta || null };
+      } else {
+        const r = await preventiveOrdersService.listCompleted({
+          from: params.from,
+          to: params.to,
+          page: params.page,
+          limit: params.pageSize,
+        });
+        const total = r?.meta?.total ?? r?.total ?? 0;
+        const pages = r?.meta?.totalPages ?? r?.totalPages ?? 1;
+        const items = Array.isArray(r?.data) ? r.data : [];
+        const needle = q.toLowerCase();
+        result = {
+          items: needle
+            ? items.filter((o) =>
+                [o.title, o.equipment?.name, o.equipment?.code, o.assignedToUser?.name, `#${o.id}`]
+                  .filter(Boolean)
+                  .some((s) => String(s).toLowerCase().includes(needle))
+              )
+            : items,
+          meta: { page: params.page, pages: Math.max(1, pages), total },
+        };
       }
+      if (id === reqRef.current) setData(result);
     } catch (e) {
-      console.error(e);
-      setDetailErr(e?.message || "Error cargando detalle");
+      if (id === reqRef.current) {
+        setError(e?.message || "No se pudo cargar el historial");
+        setData({ items: [], meta: null });
+      }
     } finally {
-      setDetailLoading(false);
+      if (id === reqRef.current) setLoading(false);
+    }
+  }, [tab, params, q, currentPlantId, loadingPlants]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const applyPreset = (key) => {
+    const r = presetRange(key);
+    if (!r) return;
+    setPreset(key);
+    setRange(r);
+  };
+
+  const setDate = (k) => (e) => {
+    setPreset("");
+    setRange((r) => ({ ...r, [k]: e.target.value }));
+  };
+
+  const clearBadCondition = () => {
+    const p = new URLSearchParams(location.search || "");
+    p.delete("filter");
+    navigate({ search: p.toString() ? `?${p}` : "" }, { replace: true });
+  };
+
+  const openActivityByFolio = (id) => {
+    setTab("executions");
+    setCondition("");
+    setTechnicianId("");
+    setEvidence(false);
+    setRange({ from: "", to: "" });
+    setPreset("");
+    setSearch(`#${id}`);
+  };
+
+  const onExport = async () => {
+    setExporting(true);
+    try {
+      const { page: _p, pageSize: _s, ...filters } = params;
+      if (tab === "executions") await exportHistoryExecutions(filters, currentPlantId);
+      else await exportHistoryMovements(filters, currentPlantId);
+      toast.success("Archivo CSV descargado");
+    } catch (e) {
+      toast.error(e?.message || "No se pudo exportar");
+    } finally {
+      setExporting(false);
     }
   };
 
-  /* =========================
-     MOVEMENTS FILTER (client-side)
-  ========================= */
+  const meta = data.meta;
+  const totals = meta?.totals || {};
+  const filtersActive =
+    tab === "executions" ? Boolean(condition || technicianId || evidence || q) : tab === "movements" ? Boolean(moveType || q) : Boolean(q);
 
-  const mvFilteredItems = useMemo(() => {
-    const s = mvLubQ.trim().toLowerCase();
-    if (!s) return mvItems;
+  const clearFilters = () => {
+    setCondition("");
+    setTechnicianId("");
+    setEvidence(false);
+    setMoveType("");
+    setSearch("");
+  };
 
-    return mvItems.filter((m) => {
-      const lub = m?.lubricant || {};
-      const name = String(lub?.name || "").toLowerCase();
-      const code = String(lub?.code || "").toLowerCase();
-      return name.includes(s) || code.includes(s);
-    });
-  }, [mvItems, mvLubQ]);
+  const toggleCondition = (c) => setCondition((cur) => (cur === c ? "" : c));
 
   return (
     <MainLayout>
-      <style>{`
-        .lpCard {
-          transition: transform 160ms ease, box-shadow 160ms ease;
-        }
-        .lpCard:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 14px 30px rgba(2,6,23,0.08);
-        }
-        .lpPress:active {
-          transform: translateY(0px) scale(0.99);
-        }
-      `}</style>
-
-      {/* HERO */}
-      <div style={heroWrap} className="lp-enter">
-        <div style={heroLeft}>
-          <div style={heroIconBox}>
-            <Icon name="list" style={{ width: 26, height: 26, color: "#f97316" }} />
-          </div>
+      <div className="tch hst lp-fade-in">
+        <header className="tch-head">
           <div>
-            <div style={heroKicker}>HISTORIAL · EJECUCIONES Y CONSUMOS</div>
-            <h1 style={heroH1}>Historial</h1>
-            <div style={heroSub}>Consulta ejecuciones, consumos, fallas y evidencias por equipo o ruta</div>
-            <div style={heroMetaRow}>
-              <span style={heroMetaChip}><Icon name="list" style={{ width: 12, height: 12 }} /> {scopedTotals.total} registros</span>
-              {scopedTotals.CRITICO > 0 && <span style={{ ...heroMetaChip, background: "rgba(220,38,38,0.13)", color: "#b91c1c", borderColor: "rgba(220,38,38,0.30)" }}><Icon name="warn" style={{ width: 12, height: 12 }} /> {scopedTotals.CRITICO} críticos</span>}
-              {scopedTotals.MALO > 0 && <span style={{ ...heroMetaChip, background: "rgba(245,158,11,0.13)", color: "#92400e", borderColor: "rgba(245,158,11,0.30)" }}><Icon name="alert" style={{ width: 12, height: 12 }} /> {scopedTotals.MALO} malos</span>}
+            <div className="tch-kicker">Historial{currentPlant?.name ? ` · ${currentPlant.name}` : ""}</div>
+            <h1 className="tch-title">Historial</h1>
+            <div className="tch-sub">
+              Registro de actividades ejecutadas, consumos de lubricante y órdenes preventivas cerradas. Base para auditorías.
             </div>
           </div>
-        </div>
-
-        <button
-          className="lpPress"
-          onClick={() => { load({ page }); loadMovements({ page: mvPage }); }}
-          style={btnRefresh}
-          disabled={loading || mvLoading}
-        >
-          <Icon name="reset" style={{ width: 16, height: 16 }} />
-          {loading || mvLoading ? "Actualizando..." : "Actualizar"}
-        </button>
-      </div>
-
-      {err && <div style={errorBox}>{err}</div>}
-
-      {/* BANNER BAD CONDITION */}
-      {isBadCondition ? (
-        <div style={warnBanner}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 980, display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={miniOrange}>
-                <Icon name="warn" />
-              </span>
-              Condición mala/crítica (Historial)
-            </div>
-
-            <div style={warnBannerText}>
-              Son ejecuciones <b>COMPLETADAS</b> donde el técnico reporta condición <b>MALO</b> o <b>CRITICO</b>. Revisa
-              observación y evidencia y genera acción correctiva.
-            </div>
+          <div className="tch-head-actions">
+            <label className="tch-search">
+              <Icon name="search" size="sm" />
+              <input
+                placeholder={tab === "movements" ? "Lubricante, motivo, equipo…" : "Folio, equipo, ruta, técnico…"}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                aria-label="Buscar en el historial"
+              />
+              {search ? (
+                <button type="button" className="tch-icon-btn" style={{ width: 26, height: 26, border: 0 }} onClick={() => setSearch("")} aria-label="Limpiar búsqueda">
+                  <Icon name="close" size="sm" />
+                </button>
+              ) : null}
+            </label>
+            <button type="button" className="tch-btn tch-btn-ghost" onClick={load} disabled={loading} aria-label="Actualizar">
+              <Icon name="refresh" size="sm" /> Actualizar
+            </button>
+            {tab !== "olp" ? (
+              <button type="button" className="tch-btn tch-btn-primary" onClick={onExport} disabled={exporting || !meta?.total}>
+                <Icon name="download" size="sm" /> {exporting ? "Exportando…" : "Exportar CSV"}
+              </button>
+            ) : null}
           </div>
+        </header>
 
-          <button
-            type="button"
-            onClick={() => {
-              const p = new URLSearchParams(location.search || "");
-              p.delete("filter");
-              navigate(`/history?${p.toString()}`);
-            }}
-            style={btnWarnGhost}
-            className="lpPress"
-          >
-            Quitar filtro
-          </button>
-        </div>
-      ) : null}
-
-      {/* KPIs */}
-      <div style={statsGrid}>
-        <KpiCard title="Registros" value={scopedTotals.total} icon="list" accent="#0f172a"
-          active={condition === "ALL"} onClick={() => setCondition("ALL")} hint="Ver todos" />
-        <KpiCard title="Críticos" value={scopedTotals.CRITICO} icon="warn" accent="#dc2626"
-          active={condition === "CRITICO"} onClick={() => setCondition(condition === "CRITICO" ? "ALL" : "CRITICO")} hint="Filtrar críticos" />
-        <KpiCard title="Malos" value={scopedTotals.MALO} icon="alert" accent="#f59e0b"
-          active={condition === "MALO"} onClick={() => setCondition(condition === "MALO" ? "ALL" : "MALO")} hint="Filtrar malos" />
-        <KpiCard title="Buenos" value={scopedTotals.BUENO} icon="check" accent="#16a34a"
-          active={condition === "BUENO"} onClick={() => setCondition(condition === "BUENO" ? "ALL" : "BUENO")} hint="Filtrar buenos" />
-      </div>
-
-      {/* QUICK CHIPS */}
-      <div style={quickChipsRow}>
-        <button
-          className="lpPress"
-          style={filterEvidence ? { ...quickChip, ...quickChipActive } : quickChip}
-          onClick={() => setFilterEvidence((f) => !f)}
-        >
-          <Icon name="camera" style={{ width: 13, height: 13 }} /> Con evidencia
-        </button>
-        <button
-          className="lpPress"
-          style={(condition === "MALO" || condition === "CRITICO") ? { ...quickChip, ...quickChipDanger } : quickChip}
-          onClick={() => setCondition((condition === "MALO" || condition === "CRITICO") ? "ALL" : "MALO")}
-        >
-          <Icon name="warn" style={{ width: 13, height: 13 }} /> Solo fallas
-        </button>
-        <button
-          className="lpPress"
-          style={quickChip}
-          onClick={() => { setFrom(toYMD(new Date())); setTo(toYMD(new Date())); }}
-        >
-          Hoy
-        </button>
-        <button
-          className="lpPress"
-          style={quickChip}
-          onClick={() => { setFrom(toYMD(startOfMonthLocal())); setTo(toYMD(endOfMonthLocal())); }}
-        >
-          Este mes
-        </button>
-        {(condition !== "ALL" || filterEvidence) && (
-          <button
-            className="lpPress"
-            style={{ ...quickChip, color: "#dc2626", borderColor: "rgba(220,38,38,0.30)" }}
-            onClick={() => { setCondition("ALL"); setFilterEvidence(false); }}
-          >
-            ✕ Limpiar filtros
-          </button>
-        )}
-      </div>
-
-      {/* FILTROS EJECUCIONES */}
-      <div className="lpCard" style={filtersWrap}>
-        <div style={compactFiltersHeader}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={hdrIcon}>
-              <Icon name="filter" />
-            </span>
-            <div style={{ fontWeight: 980, color: "#0f172a" }}>Filtros (Actividades)</div>
-          </div>
-
-          <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-                {meta ? `Página ${meta.page} de ${meta.pages} · ${meta.total} registros` : ""}
-          </div>
-        </div>
-
-        <div style={compactFiltersGrid}>
-          <div style={field}>
-            <label style={label}>Desde</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={input} />
-          </div>
-
-          <div style={field}>
-            <label style={label}>Hasta</label>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={input} />
-          </div>
-
-          <div style={field}>
-            <label style={label}>Condición</label>
-            <select value={condition} onChange={(e) => setCondition(e.target.value)} style={input}>
-              <option value="ALL">Todas</option>
-              <option value="BUENO">Bueno</option>
-              <option value="REGULAR">Regular</option>
-              <option value="MALO">Malo</option>
-              <option value="CRITICO">Crítico</option>
-            </select>
-          </div>
-
-          <div style={isMobile ? { ...field, minWidth: 0 } : { ...field, gridColumn: "span 5", minWidth: 0 }}>
-            <label style={label}>Buscar</label>
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Equipo, ruta, lubricante o técnico"
-              style={input}
-            />
-          </div>
-
-              {/* Buscar en gris ghost */}
-        <button
-  className="lpPress"
-  onClick={() => {
-    load({ page: 1 });
-    loadMovements({ page: 1 });
-  }}
-  style={isMobile ? { ...btnKpiGray, width: "100%" } : { ...btnKpiGray, gridColumn: "span 2" }}
-  disabled={loading || mvLoading}
-  title="Buscar"
->
-  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-    <Icon name="search" />
-    Buscar
-  </span>
-</button>
-        </div>
-
-        <div style={compactFiltersGrid2}>
-          <div style={field}>
-            <label style={label}>Por página</label>
-            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={input}>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-
-          <div style={{ marginLeft: "auto", color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            {meta ? `Mostrando ${filteredItems.length}${filteredItems.length !== items.length ? ` de ${items.length}` : ""} registros` : ""}
-          </div>
-        </div>
-      </div>
-
-      {/* SELECTOR DE VISTA */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        <button
-          onClick={() => setViewMode("executions")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            border: "1px solid",
-            background: viewMode === "executions" ? "#f97316" : "transparent",
-            color: viewMode === "executions" ? "white" : "#94a3b8",
-            borderColor: viewMode === "executions" ? "#f97316" : "#334155",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Ejecuciones ({items.length})
-        </button>
-        <button
-          onClick={() => setViewMode("preventive")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            border: "1px solid",
-            background: viewMode === "preventive" ? "#10b981" : "transparent",
-            color: viewMode === "preventive" ? "white" : "#94a3b8",
-            borderColor: viewMode === "preventive" ? "#10b981" : "#334155",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Órdenes Preventivas ({olpItems.length})
-        </button>
-      </div>
-
-      {/* LISTADO EJECUCIONES */}
-      {viewMode === "executions" && (
-        <>
-          {loading && <div style={inlineLoadingBox}>Cargando historial…</div>}
-          {!loading && filteredItems.length === 0 && (
-            <div style={inlineEmptyBox}>
-              {items.length > 0 ? "Ningún registro coincide con el filtro activo." : "No hay registros en este rango de fechas."}
-            </div>
-          )}
-
-          <div style={list}>
-            {filteredItems.map((ex) => (
-              <HistoryCard key={ex.id} ex={ex} onOpen={() => openDetail(ex)} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* LISTADO ÓRDENES PREVENTIVAS */}
-      {viewMode === "preventive" && (
-        <>
-          {olpLoading && <div style={inlineLoadingBox}>Cargando órdenes preventivas…</div>}
-          {!olpLoading && olpItems.length === 0 && (
-            <div style={inlineEmptyBox}>
-              {olpErr ? olpErr : "No hay órdenes preventivas completadas en este rango de fechas."}
-            </div>
-          )}
-
-          <div style={list}>
-            {olpItems.map((olp) => (
-              <div
-                key={olp.id}
-                style={{
-                  padding: 16,
-                  borderRadius: 12,
-                  border: "1px solid #e2e8f0",
-                  background: "white",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-                onClick={() => window.location.href = `/preventive-orders/${olp.id}`}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>
-                      {olp.title || `Orden #${olp.id}`}
-                    </div>
-                    <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>
-                      {olp.equipment?.name} • {new Date(olp.completedAt).toLocaleDateString()}
-                    </div>
-                    {olp.assignedToUser && (
-                      <div style={{ fontSize: 12, color: "#475569" }}>
-                        Técnico: {olp.assignedToUser.name}
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      display: "inline-block",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: "4px 12px",
-                      borderRadius: 6,
-                      background: "#d1fae5",
-                      color: "#065f46",
-                    }}
-                  >
-                    Completada
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* PAGINACION EJECUCIONES */}
-      {viewMode === "executions" && meta && meta.pages > 1 && (
-        <div style={pager}>
-          <button
-            style={pagerBtn}
-            className="lpPress"
-            disabled={loading || meta.page <= 1}
-            onClick={() => load({ page: meta.page - 1 })}
-          >
-           Anterior
-          </button>
-
-          <div style={{ fontWeight: 950, color: "#0f172a" }}>
-            {meta.page} / {meta.pages}
-          </div>
-
-          <button
-            style={pagerBtn}
-            className="lpPress"
-            disabled={loading || meta.page >= meta.pages}
-            onClick={() => load({ page: meta.page + 1 })}
-          >
-            Siguiente 
-          </button>
-        </div>
-      )}
-
-      {/* MOVIMIENTOS */}
-      <div className="lpCard" style={{ ...panel, marginTop: 18 }}>
-        <div style={panelHeaderRow}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={hdrIcon}>
-              <Icon name="drop" />
-            </span>
-            <div style={panelTitle}>Movimientos de lubricantes</div>
-            <Tag tone="gray">Inventario</Tag>
-          </div>
-
-          <div style={{ color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-                {mvMeta ? `Página ${mvMeta.page} de ${mvMeta.pages} · ${mvMeta.total} movimientos` : ""}
-          </div>
-        </div>
-
-        <div style={{ marginTop: 10, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-          <div style={field}>
-            <label style={label}>Tipo</label>
-            <select value={mvType} onChange={(e) => setMvType(e.target.value)} style={input}>
-              <option value="ALL">Todos</option>
-              <option value="IN">Entrada</option>
-              <option value="OUT">Salida</option>
-              <option value="ADJUST">Ajuste</option>
-            </select>
-          </div>
-
-          <div style={field}>
-            <label style={label}>Por página</label>
-            <select value={mvPageSize} onChange={(e) => setMvPageSize(Number(e.target.value))} style={input}>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
-
-          <div style={isMobile ? { ...field, minWidth: 0 } : { ...field, gridColumn: "span 5", minWidth: 0 }}>
-            <label style={label}>Lubricante</label>
-            <input
-              value={mvLubQ}
-              onChange={(e) => setMvLubQ(e.target.value)}
-              placeholder="Filtra por nombre o código"
-              style={input}
-            />
-          </div>
-
-          <button
-            className="lpPress"
-            onClick={() => loadMovements({ page: mvPage })}
-            style={isMobile ? { ...btnGhost, width: "100%" } : btnGhost}
-            disabled={mvLoading}
-            title="Actualizar movimientos"
-          >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <Icon name="reset" />
-                  {mvLoading ? "Actualizando..." : "Actualizar"}
-            </span>
-          </button>
-        </div>
-
-        {mvErr && <div style={errorBox}>{mvErr}</div>}
-
-        {mvLoading && <div style={inlineLoadingBox}>Cargando movimientos…</div>}
-        {!mvLoading && mvFilteredItems.length === 0 && (
-          <div style={inlineEmptyBox}>No hay movimientos en este rango / filtro.</div>
-        )}
-
-        <div style={{ ...list, marginTop: 14 }}>
-          {mvFilteredItems.map((m) => (
-            <MovementCard key={m.id} m={m} />
+        <div className="tch-tabs hst-tabs" role="tablist" aria-label="Sección del historial">
+          {[
+            ["executions", "Actividades", "check"],
+            ["movements", "Movimientos de inventario", "drop"],
+            ["olp", "Órdenes preventivas", "doc"],
+          ].map(([key, label, icon]) => (
+            <button key={key} type="button" role="tab" className="tch-tab" aria-selected={tab === key} aria-pressed={tab === key} onClick={() => setTab(key)}>
+              <Icon name={icon} size="sm" /> {label}
+              {tab === key && meta ? <span className="tch-tab-count">{meta.total}</span> : null}
+            </button>
           ))}
         </div>
 
-        {mvMeta && mvMeta.pages > 1 && (
-          <div style={pager}>
-            <button
-              style={pagerBtn}
-              className="lpPress"
-              disabled={mvLoading || mvMeta.page <= 1}
-              onClick={() => loadMovements({ page: mvMeta.page - 1 })}
-            >
-              Anterior
-            </button>
+        {/* Rango de fechas */}
+        <section className="hst-range" aria-label="Periodo">
+          <div className="hst-presets" role="group" aria-label="Periodo rápido">
+            {PRESETS.map(([key, label]) => (
+              <button key={key} type="button" className="hst-preset" aria-pressed={preset === key} onClick={() => applyPreset(key)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="hst-dates">
+            <label>
+              <span>Desde</span>
+              <input type="date" className="tch-input" value={range.from} max={range.to || undefined} onChange={setDate("from")} />
+            </label>
+            <label>
+              <span>Hasta</span>
+              <input type="date" className="tch-input" value={range.to} min={range.from || undefined} onChange={setDate("to")} />
+            </label>
+          </div>
+          <div className="hst-range-label">
+            <Icon name="calendar" size="sm" /> {rangeLabel(range.from, range.to)}
+            {meta?.timezone ? <span className="hst-tz">Hora de planta · {meta.timezone.split("/").pop().replace(/_/g, " ")}</span> : null}
+          </div>
+        </section>
 
-            <div style={{ fontWeight: 950, color: "#0f172a" }}>
-              {mvMeta.page} / {mvMeta.pages}
-            </div>
-
-            <button
-              style={pagerBtn}
-              className="lpPress"
-              disabled={mvLoading || mvMeta.page >= mvMeta.pages}
-              onClick={() => loadMovements({ page: mvMeta.page + 1 })}
-            >
-              Siguiente 
+        {badCondition && tab === "executions" ? (
+          <div className="eq-banner" role="status">
+            <span>
+              <Icon name="warn" size="sm" /> Actividades con condición MALA o CRÍTICA reportada por el técnico. Revisa observaciones y evidencia.
+            </span>
+            <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 32 }} onClick={clearBadCondition}>
+              Quitar filtro
             </button>
           </div>
+        ) : null}
+
+        {/* KPIs */}
+        {tab === "executions" && meta ? (
+          <section className="tch-kpis" aria-label="Resumen de actividades">
+            <Kpi icon="check" tone="is-green" value={totals.all ?? 0} label="Actividades completadas" active={!condition && !evidence} onClick={() => { setCondition(""); setEvidence(false); }} />
+            <Kpi icon="alert" tone={totals.CRITICO ? "is-red" : ""} value={totals.CRITICO ?? 0} label="Condición crítica" active={condition === "CRITICO"} onClick={() => toggleCondition("CRITICO")} />
+            <Kpi icon="warn" tone={totals.MALO ? "is-orange" : ""} value={totals.MALO ?? 0} label="Condición mala" active={condition === "MALO"} onClick={() => toggleCondition("MALO")} />
+            <Kpi icon="camera" value={totals.withEvidence ?? 0} total={totals.all || null} label="Con evidencia" active={evidence} onClick={() => setEvidence((v) => !v)} />
+          </section>
+        ) : null}
+        {tab === "movements" && meta ? (
+          <section className="tch-kpis" aria-label="Resumen de movimientos">
+            <Kpi icon="list" value={totals.all ?? 0} label="Movimientos" active={!moveType} onClick={() => setMoveType("")} />
+            <Kpi icon="upload" tone="is-green" value={totals.IN ?? 0} label="Entradas" active={moveType === "IN"} onClick={() => setMoveType((t) => (t === "IN" ? "" : "IN"))} />
+            <Kpi icon="download" tone={totals.OUT ? "is-red" : ""} value={totals.OUT ?? 0} label="Salidas" active={moveType === "OUT"} onClick={() => setMoveType((t) => (t === "OUT" ? "" : "OUT"))} />
+            <Kpi icon="settings" tone={totals.ADJUST ? "is-orange" : ""} value={totals.ADJUST ?? 0} label="Ajustes" active={moveType === "ADJUST"} onClick={() => setMoveType((t) => (t === "ADJUST" ? "" : "ADJUST"))} />
+          </section>
+        ) : null}
+
+        {/* Filtros */}
+        {tab !== "olp" ? (
+          <div className="eq-filters">
+            {tab === "executions" ? (
+              <>
+                <select className="eq-select" value={condition} onChange={(e) => setCondition(e.target.value)} aria-label="Condición">
+                  <option value="">Todas las condiciones</option>
+                  <option value="BUENO">Buena</option>
+                  <option value="REGULAR">Regular</option>
+                  <option value="MALO">Mala</option>
+                  <option value="CRITICO">Crítica</option>
+                </select>
+                {!isTech ? (
+                  <select className="eq-select" value={technicianId} onChange={(e) => setTechnicianId(e.target.value)} aria-label="Técnico">
+                    <option value="">Todos los técnicos</option>
+                    {technicians.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                        {t.code ? ` · ${t.code}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+                <label className="hst-check">
+                  <input type="checkbox" checked={evidence} onChange={(e) => setEvidence(e.target.checked)} /> Solo con evidencia
+                </label>
+              </>
+            ) : (
+              <select className="eq-select" value={moveType} onChange={(e) => setMoveType(e.target.value)} aria-label="Tipo de movimiento">
+                <option value="">Todos los tipos</option>
+                <option value="IN">Entradas</option>
+                <option value="OUT">Salidas</option>
+                <option value="ADJUST">Ajustes</option>
+              </select>
+            )}
+            {filtersActive ? (
+              <button type="button" className="tch-btn tch-btn-ghost" style={{ height: 36 }} onClick={clearFilters}>
+                <Icon name="close" size="sm" /> Limpiar filtros
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* Contenido */}
+        {loading && !data.items.length ? (
+          <div className="hst-list" aria-busy="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="hst-row hst-skeleton" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="tch-empty" role="alert">
+            <div className="tch-empty-icon"><Icon name="alert" /></div>
+            <h3>No se pudo cargar el historial</h3>
+            <p>{error}</p>
+            <button type="button" className="tch-btn tch-btn-ghost" onClick={load}>
+              <Icon name="refresh" size="sm" /> Reintentar
+            </button>
+          </div>
+        ) : !data.items.length ? (
+          <div className="tch-empty">
+            <div className="tch-empty-icon"><Icon name="history" /></div>
+            <h3>Sin registros</h3>
+            <p>
+              {filtersActive || badCondition
+                ? "Ningún registro coincide con los filtros en este periodo."
+                : "No hay registros en este periodo. Prueba con otro rango de fechas."}
+            </p>
+          </div>
+        ) : (
+          <div className={`hst-list${loading ? " is-refreshing" : ""}`}>
+            {tab === "executions"
+              ? data.items.map((ex) => <ActivityRow key={ex.id} ex={ex} onOpen={() => setDetail(ex)} />)
+              : tab === "movements"
+              ? data.items.map((m) => <MovementRow key={m.id} m={m} onOpenActivity={openActivityByFolio} />)
+              : data.items.map((o) => <OrderRow key={o.id} o={o} onOpen={() => navigate(`/preventive-orders/${o.id}`)} />)}
+          </div>
         )}
+
+        {meta && meta.total > 0 ? (
+          <Pager meta={meta} page={page} pageSize={pageSize} loading={loading} onPage={setPage} onPageSize={setPageSize} />
+        ) : null}
       </div>
 
-      {/* DRAWER */}
-      <HistoryDrawer
-        open={detailOpen}
-        loading={detailLoading}
-        error={detailErr}
-        ex={detail}
-        onClose={closeDetail}
-      />
+      {detail ? <ActivityDrawer ex={detail} onClose={() => setDetail(null)} plantName={currentPlant?.name} /> : null}
     </MainLayout>
   );
 }
 
-/* =========================
-   UI COMPONENTS
-========================= */
+/* ================= Componentes ================= */
 
-function usePageMobile(breakpoint = 820) {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
+function Kpi({ icon, tone = "", value, total, label, onClick, active }) {
+  return (
+    <button type="button" className="tch-kpi hst-kpi" aria-pressed={!!active} onClick={onClick}>
+      <div className={`tch-kpi-icon ${tone}`}><Icon name={icon} /></div>
+      <div>
+        <div className="tch-kpi-value">
+          {value}
+          {total != null ? <small> / {total}</small> : null}
+        </div>
+        <div className="tch-kpi-label">{label}</div>
+      </div>
+    </button>
   );
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [breakpoint]);
-
-  return isMobile;
 }
 
-function KpiCard({ title, value, icon, accent = "#0f172a", onClick, active = false, hint }) {
+function ConditionBadge({ value }) {
+  const c = conditionInfo(value);
+  return <span className={`eq-crit ${c.cls}`}>{c.label}</span>;
+}
+
+function activityTitle(ex) {
+  return ex?.route?.name || ex?.manualTitle || "Actividad";
+}
+
+function quantityText(ex) {
+  const qty = ex?.usedInputQuantity ?? ex?.usedQuantity;
+  if (qty == null) return null;
+  return `${fmtQty(qty)} ${ex?.usedInputUnit || ex?.route?.unit || ""}`.trim();
+}
+
+function ActivityRow({ ex, onOpen }) {
+  const eq = ex.equipment || ex.route?.equipment || {};
+  const qty = quantityText(ex);
+  const delay = delayInfo(ex.delayDays);
+  const cond = conditionInfo(ex.condition);
   return (
-    <div
-      className="lpCard lpKpiCard lpPress"
-      title={hint}
-      onClick={onClick}
-      style={{
-        ...kpiCard,
-        borderTop: `4px solid ${accent}`,
-        cursor: "pointer",
-        outline: active ? `2px solid ${accent}` : "none",
-        outlineOffset: 2,
-        transform: active ? "translateY(-2px)" : undefined,
-        boxShadow: active ? `0 0 0 3px ${accent}22, 0 14px 30px rgba(2,6,23,0.10)` : kpiCard.boxShadow,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 12, paddingLeft: 4 }}>
-        <span style={{ ...kpiIconBox, background: `${accent}18`, border: `1px solid ${accent}30`, color: accent }}>
-          <Icon name={icon} />
-        </span>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 950, color: active ? accent : "#0f172a" }}>{title}</div>
-          <div style={{ fontSize: 30, fontWeight: 980, color: "#0f172a", marginTop: 6 }}>{value}</div>
-          {active && <div style={{ fontSize: 11, fontWeight: 900, color: accent, marginTop: 2 }}>Activo ✓</div>}
+    <button type="button" className={`hst-row hst-act ${cond.cls}`} onClick={onOpen}>
+      <div className="hst-when">
+        <span className="hst-folio">#{ex.id}</span>
+        <span className="hst-date">{fmtDateTime(ex.executedAt)}</span>
+      </div>
+      <div className="hst-main">
+        <div className="hst-title">{activityTitle(ex)}</div>
+        <div className="hst-meta">
+          <span><Icon name="equipment" size="sm" /> {eq.name || "Sin equipo"}{eq.code ? ` · ${eq.code}` : ""}</span>
+          <span className="hst-kind">{KIND_LABEL[ex.kind] || "Actividad"}</span>
         </div>
+      </div>
+      <div className="hst-cell">
+        <span className="hst-cell-label">Técnico</span>
+        <span className="hst-cell-value">{ex.technician?.name || "—"}</span>
+      </div>
+      <div className="hst-cell">
+        <span className="hst-cell-label">Consumo</span>
+        <span className="hst-cell-value">{qty || "—"}</span>
+      </div>
+      <div className="hst-badges">
+        <ConditionBadge value={ex.condition} />
+        {delay ? <span className={`hst-delay ${delay.cls}`}>{delay.label}</span> : null}
+        {ex.evidenceImage ? (
+          <span className="hst-ev" title="Con evidencia fotográfica"><Icon name="camera" size="sm" /></span>
+        ) : null}
+        {ex.observations ? (
+          <span className="hst-ev" title="Con observaciones"><Icon name="doc" size="sm" /></span>
+        ) : null}
+      </div>
+    </button>
+  );
+}
+
+function MovementRow({ m, onOpenActivity }) {
+  const k = moveInfo(m.type);
+  const unit = m.lubricant?.unit || "";
+  const ex = m.execution;
+  return (
+    <div className="hst-row hst-mv">
+      <div className={`inv-move-icon ${k.cls}`} aria-hidden="true">{k.sign}</div>
+      <div className="hst-main">
+        <div className="hst-title">
+          {m.lubricant?.name || "Lubricante"}
+          {m.lubricant?.code ? <span className="hst-code"> · {m.lubricant.code}</span> : null}
+        </div>
+        <div className="hst-meta">
+          <span className="hst-kind">{k.label}</span>
+          <span>{reasonLabel(m.reason) || (ex ? "Consumo por actividad" : "Movimiento manual")}</span>
+          {ex?.equipment?.name ? <span><Icon name="equipment" size="sm" /> {ex.equipment.name}</span> : null}
+          {ex?.technician?.name ? <span><Icon name="user" size="sm" /> {ex.technician.name}</span> : null}
+          {m.note ? <span className="hst-note">“{m.note}”</span> : null}
+        </div>
+      </div>
+      <div className="hst-cell">
+        <span className="hst-cell-label">Fecha</span>
+        <span className="hst-cell-value">{fmtDateTime(m.createdAt)}</span>
+      </div>
+      <div className="hst-cell">
+        <span className="hst-cell-label">Stock</span>
+        <span className="hst-cell-value">
+          {m.stockBefore != null && m.stockAfter != null ? `${fmtQty(m.stockBefore)} → ${fmtQty(m.stockAfter)}` : "—"}
+        </span>
+      </div>
+      <div className="hst-badges">
+        <span className={`hst-qty ${k.cls}`}>
+          {k.sign === "±" ? "" : k.sign}
+          {fmtQty(m.quantity)} {unit}
+        </span>
+        {ex?.id ? (
+          <button type="button" className="tch-chip hst-link" onClick={() => onOpenActivity(ex.id)} title="Ver la actividad">
+            Actividad #{ex.id}
+          </button>
+        ) : null}
       </div>
     </div>
   );
 }
 
-function Tag({ children, tone = "gray" }) {
-  const bg =
-    tone === "blue"
-      ? "rgba(219,234,254,0.95)"
-      : tone === "green"
-      ? "rgba(220,252,231,0.92)"
-      : tone === "amber"
-      ? "rgba(254,243,199,0.92)"
-      : tone === "red"
-      ? "rgba(254,226,226,0.92)"
-      : "rgba(241,245,249,0.92)";
-
-  const fg =
-    tone === "blue"
-      ? "#1d4ed8"
-      : tone === "green"
-      ? "#166534"
-      : tone === "amber"
-      ? "#92400e"
-      : tone === "red"
-      ? "#991b1b"
-      : "#334155";
-
-  return <span style={{ ...tagBase, background: bg, color: fg }}>{children}</span>;
-}
-
-function ConditionChip({ value }) {
-  const c = conditionChip(value);
+function OrderRow({ o, onOpen }) {
+  const items = o._count?.items ?? o.items?.length ?? null;
   return (
-    <span
-      style={{
-        ...chipBase,
-        background: c.bg,
-        borderColor: c.bd,
-        color: c.fg,
-      }}
-      title={c.label}
-    >
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-        <Icon name={c.icon} />
-        {c.label}
-      </span>
-    </span>
+    <button type="button" className="hst-row hst-act c-baja" onClick={onOpen}>
+      <div className="hst-when">
+        <span className="hst-folio">OLP #{o.id}</span>
+        <span className="hst-date">{fmtDateTime(o.completedAt)}</span>
+      </div>
+      <div className="hst-main">
+        <div className="hst-title">{o.title || `Orden #${o.id}`}</div>
+        <div className="hst-meta">
+          <span><Icon name="equipment" size="sm" /> {o.equipment?.name || "—"}{o.equipment?.code ? ` · ${o.equipment.code}` : ""}</span>
+          {items != null ? <span className="hst-kind">{items} punto{items === 1 ? "" : "s"}</span> : null}
+        </div>
+      </div>
+      <div className="hst-cell">
+        <span className="hst-cell-label">Técnico</span>
+        <span className="hst-cell-value">{o.assignedToUser?.name || "—"}</span>
+      </div>
+      <div className="hst-cell">
+        <span className="hst-cell-label">Programada</span>
+        <span className="hst-cell-value">{fmtDateTime(o.scheduledDate, false)}</span>
+      </div>
+      <div className="hst-badges">
+        <span className="eq-crit c-baja">Completada</span>
+        <Icon name="chevronRight" size="sm" />
+      </div>
+    </button>
   );
 }
 
-function HistoryCard({ ex, onOpen }) {
-  const route = ex?.route || {};
-  const eq = route?.equipment || ex?.equipment || {};
-  const tech = ex?.technician || {};
-  const dateLabel = safeDateLabel(ex?.executedAt);
-  const activityName = ex?.manualTitle || route?.name || "—";
-  const routeKind = String(route?.routeKind || "LUBRICATION").trim().toUpperCase();
-  const isInspection = routeKind === "INSPECTION";
-  const cInfo = conditionChip(ex?.condition);
-
-  const condAccent =
-    cInfo.fg === "#991b1b" ? "#dc2626" :
-    cInfo.fg === "#92400e" ? "#f59e0b" :
-    cInfo.fg === "#166534" ? "#16a34a" :
-    cInfo.fg === "#3730a3" ? "#4f46e5" : "#0f172a";
-
-  const tintBg =
-    cInfo.fg === "#991b1b" ? "rgba(254,242,242,0.50)" :
-    cInfo.fg === "#92400e" ? "rgba(255,251,235,0.50)" :
-    cInfo.fg === "#166534" ? "rgba(240,253,244,0.50)" :
-    "rgba(248,250,252,0.50)";
-
+function Pager({ meta, page, pageSize, loading, onPage, onPageSize }) {
+  const pages = Math.max(1, meta.pages || 1);
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(meta.total, page * pageSize);
   return (
-    <div
-      className="lpCard lpPress"
-      style={{
-        padding: 14,
-        borderRadius: 18,
-        borderTop: `4px solid ${condAccent}`,
-        borderRight: "1px solid rgba(226,232,240,0.80)",
-        borderBottom: "1px solid rgba(226,232,240,0.80)",
-        borderLeft: `5px solid ${condAccent}88`,
-        background: `linear-gradient(160deg, ${tintBg} 0%, rgba(248,250,252,0.92) 100%)`,
-        boxShadow: "0 14px 30px rgba(2,6,23,0.07)",
-        transition: "transform 160ms ease, box-shadow 160ms ease",
-        cursor: "pointer",
-      }}
-      onClick={onOpen}
-    >
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <div style={{
-          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-          background: isInspection ? "rgba(59,130,246,0.12)" : "rgba(249,115,22,0.12)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <Icon name={isInspection ? "search" : "drop"} style={{ color: isInspection ? "#1d4ed8" : "#c2410c" }} />
-        </div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {activityName}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: "#334155" }}>{eq?.name || "—"}</span>
-            {(eq?.code || eq?.tag) && (
-              <span style={hEqPill}>{eq?.code || eq?.tag}</span>
-            )}
-            {eq?.location && <span style={hEqPill}>{eq.location}</span>}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
-          <ConditionChip value={ex?.condition} />
-          {ex?.evidenceImage && (
-            <span style={evidencePill}>
-              <Icon name="camera" size="sm" /> Evidencia
-            </span>
-          )}
-        </div>
-      </div>
-
-      {ex?.observations && (
-        <div style={{ ...notes, marginTop: 10, borderLeft: `3px solid ${condAccent}40` }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Icon name="doc" style={{ flexShrink: 0 }} />
-            {ex.observations}
-          </span>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={dateChipStyle}><Icon name="calendar" size="sm" /> {dateLabel}</span>
-          {tech?.name && <span style={techChipStyle}><Icon name="user" size="sm" /> {tech.name}</span>}
-          {(ex?.usedInputQuantity != null || ex?.usedQuantity != null) && (
-            <span style={qtyChipStyle}>
-              <Icon name="drop" size="sm" />
-              {ex.usedInputQuantity ?? ex.usedQuantity}
-              {" "}{ex.usedInputUnit || ex.route?.unit || ""}
-            </span>
-          )}
-        </div>
-        <button type="button" style={detailBtn} onClick={(e) => { e.stopPropagation(); onOpen(); }}>
-          Ver detalle →
+    <div className="hst-pager">
+      <span className="hst-pager-info">
+        {start}–{end} de {meta.total}
+      </span>
+      <select className="eq-select" value={pageSize} onChange={(e) => onPageSize(Number(e.target.value))} aria-label="Registros por página">
+        {[25, 50, 100].map((n) => (
+          <option key={n} value={n}>{n} por página</option>
+        ))}
+      </select>
+      <div className="hst-pager-nav">
+        <button type="button" className="tch-icon-btn" disabled={loading || page <= 1} onClick={() => onPage(page - 1)} aria-label="Página anterior">
+          <Icon name="chevronLeft" size="sm" />
+        </button>
+        <span>
+          {page} / {pages}
+        </span>
+        <button type="button" className="tch-icon-btn" disabled={loading || page >= pages} onClick={() => onPage(page + 1)} aria-label="Página siguiente">
+          <Icon name="chevronRight" size="sm" />
         </button>
       </div>
     </div>
   );
 }
 
-function MovementCard({ m }) {
-  const b = moveBadge(m?.type);
-  const lub = m?.lubricant || {};
-  const ex = m?.execution || null;
-  const route = ex?.route || {};
-  const eq = route?.equipment || ex?.equipment || {};
-  const tech = ex?.technician || {};
-
-  const qty = m?.quantity != null ? Number(m.quantity) : null;
-  const qtyLabel = qty == null || !Number.isFinite(qty) ? "?" : qty % 1 === 0 ? String(qty) : qty.toFixed(2);
-  const unit = lub?.unit || "?";
-  const lubLabel = lub?.name ? `${lub.name}${lub.code ? ` (${lub.code})` : ""}` : "?";
-
-  const moveAccent = b.fg === "#166534" ? "#16a34a" : b.fg === "#991b1b" ? "#dc2626" : "#4f46e5";
-  const moveTint = b.fg === "#166534" ? "rgba(240,253,244,0.50)" : b.fg === "#991b1b" ? "rgba(254,242,242,0.50)" : "rgba(238,242,255,0.50)";
-
-  return (
-    <div className="lpCard" style={{
-      padding: 14,
-      borderRadius: 18,
-      borderTop: `4px solid ${moveAccent}`,
-      borderRight: "1px solid rgba(226,232,240,0.80)",
-      borderBottom: "1px solid rgba(226,232,240,0.80)",
-      borderLeft: `5px solid ${moveAccent}88`,
-      background: `linear-gradient(160deg, ${moveTint} 0%, rgba(248,250,252,0.92) 100%)`,
-      boxShadow: "0 14px 30px rgba(2,6,23,0.07)",
-      transition: "transform 160ms ease, box-shadow 160ms ease",
-    }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <div style={{
-          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-          background: b.bg, border: `1px solid ${b.bd}`,
-          display: "flex", alignItems: "center", justifyContent: "center", color: b.fg,
-        }}>
-          <Icon name={b.icon} />
-        </div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {lubLabel}
-          </div>
-          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ ...chipBase, background: b.bg, borderColor: b.bd, color: b.fg }}>
-              <Icon name={b.icon} style={{ width: 13, height: 13 }} /> {b.label}
-            </span>
-            <span style={dateChipStyle}><Icon name="calendar" size="sm" /> {safeDateTimeLabel(m?.createdAt)}</span>
-          </div>
-        </div>
-
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div style={{ fontWeight: 980, fontSize: 18, color: "#0f172a" }}>{qtyLabel} {unit}</div>
-          {m?.inputQuantity != null && (
-            <div style={{ fontSize: 11, color: "#64748b", fontWeight: 800, marginTop: 2 }}>
-              Cap: {m.inputQuantity} {m.inputUnit || ""}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Context */}
-      {(ex?.id || m?.reason || eq?.name || tech?.name) && (
-        <div style={{ ...metaRow, marginTop: 10 }}>
-          {ex?.id
-            ? <span style={metaItem}><Icon name="link" /> Ejecución #{ex.id}</span>
-            : <span style={metaItem}><Icon name="dot" /> Movimiento manual</span>}
-          {m?.reason && <span style={metaItem}><Icon name="doc" /> {m.reason}</span>}
-          {(route?.name || ex?.manualTitle) && <span style={metaItem}><Icon name="route" /> {route?.name || ex?.manualTitle}</span>}
-          {eq?.name && <span style={metaItem}><Icon name="pin" /> {eq.name}</span>}
-          {tech?.name && <span style={metaItem}><Icon name="user" /> {tech.name}</span>}
-        </div>
-      )}
-
-      {m?.note && (
-        <div style={{ ...notes, marginTop: 10 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Icon name="doc" /> {m.note}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* =========================
-   DRAWER
-========================= */
-
-function HistoryDrawer({ open, loading, error, ex, onClose }) {
+function ActivityDrawer({ ex, onClose, plantName }) {
   useEffect(() => {
-    if (!open) return;
-
-    const prevOverflow = document.body.style.overflow;
+    const onKey = (e) => e.key === "Escape" && onClose();
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [onClose]);
 
-  if (!open) return null;
-
-  const route = ex?.route || {};
-  const eq = route?.equipment || ex?.equipment || {};
-  const latestMove = Array.isArray(ex?.lubricantMovements) ? ex.lubricantMovements[0] || null : null;
-  const lub = route?.lubricant || latestMove?.lubricant || {};
-  const tech = ex?.technician || {};
-  const executedAt = safeDateLabel(ex?.executedAt);
-  const evidenceUrl = buildImgUrl(ex?.evidenceImage);
-  const routeRefUrl = buildImgUrl(route?.imageUrl);
-  const activityName = ex?.manualTitle || route?.name || "?";
-
-  const cInfo = conditionChip(ex?.condition);
-  const condAccent =
-    cInfo.fg === "#991b1b" ? "#dc2626" :
-    cInfo.fg === "#92400e" ? "#f59e0b" :
-    cInfo.fg === "#166534" ? "#16a34a" :
-    cInfo.fg === "#3730a3" ? "#4f46e5" : "#0f172a";
+  const route = ex.route || null;
+  const eq = ex.equipment || route?.equipment || {};
+  const move = Array.isArray(ex.lubricantMovements) ? ex.lubricantMovements[0] || null : null;
+  const lub = route?.lubricant || move?.lubricant || null;
+  const delay = delayInfo(ex.delayDays);
+  const evidence = imgUrl(ex.evidenceImage);
+  const reference = imgUrl(route?.imageUrl);
+  const qty = quantityText(ex);
+  // Lo realmente descontado es el movimiento de inventario (en la unidad del lubricante).
+  const deducted = move
+    ? `${fmtQty(move.quantity)} ${move.lubricant?.unit || ""}`
+    : ex.usedConvertedQuantity != null
+    ? `${fmtQty(ex.usedConvertedQuantity)} ${ex.usedConvertedUnit || ""}`
+    : null;
+  const instructions = route?.instructions || ex.manualInstructions;
 
   return (
-    <>
-      <div style={drawerOverlay} onClick={onClose} />
-      <div style={drawerPanel} role="dialog" aria-modal="true">
-
-        {/* DRAWER HEADER */}
-        <div style={{ ...drawerHeader, borderLeft: `4px solid ${condAccent}` }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 11, fontWeight: 950, color: condAccent, letterSpacing: 1.1, textTransform: "uppercase", marginBottom: 2 }}>
-              {activityName}
+    <div className="inv-drawer-overlay tch-overlay hst-print-root" style={{ display: "flex", placeItems: "initial", padding: 0 }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <aside className="inv-drawer hst-drawer" role="dialog" aria-modal="true" aria-labelledby="hst-drawer-title">
+        <div className="inv-drawer-head">
+          <div style={{ minWidth: 0 }}>
+            <div className="tch-kicker">
+              Registro de actividad · Folio #{ex.id}
+              {plantName ? ` · ${plantName}` : ""}
             </div>
-            <div style={{ fontWeight: 980, fontSize: 17, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {eq?.name || "Equipo"}
-            </div>
-            <div style={{ marginTop: 4, color: "#64748b", fontWeight: 850, fontSize: 12, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <Icon name="calendar" /> {executedAt}
-              </span>
-              {tech?.name && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  <Icon name="user" /> {tech.name}
-                </span>
-              )}
+            <h2 id="hst-drawer-title" className="tch-modal-title" style={{ wordBreak: "break-word" }}>{activityTitle(ex)}</h2>
+            <div className="hst-drawer-badges">
+              <ConditionBadge value={ex.condition} />
+              <span className="hst-kind">{KIND_LABEL[ex.kind] || "Actividad"}</span>
+              {delay ? <span className={`hst-delay ${delay.cls}`}>{delay.label}</span> : null}
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", flexShrink: 0 }}>
-            <button style={drawerCloseBtn} className="lpPress" onClick={onClose} aria-label="Cerrar">✕</button>
-            <ConditionChip value={ex?.condition} />
+          <div className="hst-drawer-actions">
+            <button type="button" className="tch-icon-btn" onClick={() => window.print()} aria-label="Imprimir registro" title="Imprimir registro">
+              <Icon name="doc" size="sm" />
+            </button>
+            <button type="button" className="tch-icon-btn" onClick={onClose} aria-label="Cerrar">
+              <Icon name="close" size="sm" />
+            </button>
           </div>
         </div>
 
-        {loading && <div style={{ padding: 14, color: "#64748b", fontWeight: 900 }}>Cargando detalle…</div>}
-        {error && <div style={{ ...errorBox, margin: 14 }}>{error}</div>}
+        <div className="inv-drawer-body">
+          <section className="hst-sec">
+            <h3>Ejecución</h3>
+            <dl className="eq-dl">
+              <dt>Ejecutada</dt>
+              <dd>{fmtDateTime(ex.executedAt)}</dd>
+              <dt>Programada</dt>
+              <dd>{fmtDateTime(ex.scheduledAt, false)}</dd>
+              <dt>Técnico</dt>
+              <dd>{ex.technician?.name ? `${ex.technician.name}${ex.technician.code ? ` · ${ex.technician.code}` : ""}` : "—"}</dd>
+            </dl>
+          </section>
 
-        {!loading && !error && (
-          <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+          <section className="hst-sec">
+            <h3>Equipo</h3>
+            <dl className="eq-dl">
+              <dt>Equipo</dt>
+              <dd>{eq.name || "—"}</dd>
+              <dt>Código</dt>
+              <dd>{eq.code || "—"}</dd>
+              <dt>Área</dt>
+              <dd>{eq.area?.name || "—"}</dd>
+              <dt>Ubicación</dt>
+              <dd>{eq.location || "—"}</dd>
+            </dl>
+          </section>
 
-            {/* ROUTE REFERENCE IMAGE */}
-            {routeRefUrl && (
-              <div style={drawerRefImgWrap}>
-                <div style={drawerRefBadge}>
-                  <Icon name="camera" style={{ width: 12, height: 12, color: "#0b1220" }} />
-                  <span>Referencia del punto</span>
-                </div>
-                <img src={routeRefUrl} alt="Referencia del punto" style={drawerRefImg} onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} />
-              </div>
+          <section className="hst-sec">
+            <h3>Consumo de lubricante</h3>
+            <dl className="eq-dl">
+              <dt>Lubricante</dt>
+              <dd>{lub ? `${lub.name}${lub.code ? ` · ${lub.code}` : ""}` : route?.lubricantName || route?.lubricantType || "—"}</dd>
+              <dt>Cantidad registrada</dt>
+              <dd>{qty ? `${qty}${route?.points > 1 ? ` por punto × ${route.points} puntos` : ""}` : "—"}</dd>
+              <dt>Descontado del inventario</dt>
+              <dd>{deducted || "—"}</dd>
+              {move?.stockBefore != null && move?.stockAfter != null ? (
+                <>
+                  <dt>Stock</dt>
+                  <dd>
+                    {fmtQty(move.stockBefore)} → {fmtQty(move.stockAfter)} {move.lubricant?.unit || ""}
+                  </dd>
+                </>
+              ) : null}
+              {route?.method ? (
+                <>
+                  <dt>Método</dt>
+                  <dd>{route.method}</dd>
+                </>
+              ) : null}
+            </dl>
+          </section>
+
+          <section className="hst-sec">
+            <h3>Observaciones del técnico</h3>
+            <p className={`hst-text${ex.observations ? "" : " is-empty"}`}>{ex.observations || "Sin observaciones."}</p>
+          </section>
+
+          {instructions ? (
+            <section className="hst-sec">
+              <h3>Instrucciones</h3>
+              <p className="hst-text">{instructions}</p>
+            </section>
+          ) : null}
+
+          <section className="hst-sec">
+            <h3>Evidencia fotográfica</h3>
+            {evidence ? (
+              <a href={evidence} target="_blank" rel="noreferrer" className="hst-photo" title="Abrir en tamaño completo">
+                <img src={evidence} alt="Evidencia de la actividad" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} />
+              </a>
+            ) : (
+              <p className="hst-text is-empty">Sin evidencia cargada.</p>
             )}
+            {ex.evidenceNote ? <p className="hst-text">{ex.evidenceNote}</p> : null}
+          </section>
 
-            {/* EQUIPMENT + ROUTE ROW */}
-            <div style={drawerEquipRow}>
-              <div style={drawerEquipCard}>
-                <div style={drawerEquipLabel}>Equipo</div>
-                <div style={drawerEquipValue}>{eq?.name || "—"}</div>
-                {(eq?.code || eq?.tag) && <div style={drawerEquipSub}>TAG: {eq?.code || eq?.tag}</div>}
-                {eq?.location && <div style={drawerEquipSub}>{eq.location}</div>}
-              </div>
-              <div style={drawerEquipCard}>
-                <div style={drawerEquipLabel}>Ruta / Actividad</div>
-                <div style={drawerEquipValue}>{activityName}</div>
-                <div style={drawerEquipSub}>{ex?.manualTitle ? "Actividad manual" : "Ruta recurrente"}</div>
-              </div>
-            </div>
-
-            {/* CONSUMO */}
-            <div style={sectionCard}>
-              <div style={{ ...sectionTitle, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ ...kpiIconBox, width: 28, height: 28, background: "rgba(249,115,22,0.12)", color: "#c2410c", border: "1px solid rgba(249,115,22,0.25)" }}>
-                  <Icon name="drop" />
-                </span>
-                Consumo de lubricante
-              </div>
-              <div style={kvGrid}>
-                <KV label="Lubricante" value={lub?.name || route?.lubricantType || "—"} />
-                <KV
-                  label="Cantidad registrada"
-                  value={
-                    ex?.usedInputQuantity != null
-                      ? `${ex.usedInputQuantity} ${ex?.usedInputUnit || ""}`
-                      : ex?.usedQuantity != null
-                      ? `${ex.usedQuantity} ${route?.unit || ""}`
-                      : "—"
-                  }
-                />
-                <KV
-                  label="Descuento inventario"
-                  value={ex?.usedConvertedQuantity != null ? `${ex.usedConvertedQuantity} ${ex?.usedConvertedUnit || ""}` : "—"}
-                />
-                <KV label="Unidad stock" value={lub?.unit || ex?.usedConvertedUnit || "—"} />
-              </div>
-            </div>
-
-            {/* OBSERVACIONES */}
-            {ex?.observations ? (
-              <div style={{ ...sectionCard, borderLeft: `3px solid ${condAccent}55` }}>
-                <div style={{ ...sectionTitle, color: condAccent }}>Observaciones del técnico</div>
-                <div style={{ ...noteBox, background: `${cInfo.bg}`, borderColor: cInfo.bd }}>
-                  <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                    {ex.observations}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {/* INSTRUCCIONES */}
-            {(route?.instructions || ex?.manualInstructions) ? (
-              <div style={sectionCard}>
-                <div style={sectionTitle}>Instrucciones de la ruta</div>
-                <div style={{ ...noteBox, background: "rgba(220,252,231,0.60)", borderColor: "rgba(34,197,94,0.25)" }}>
-                  <div style={{ fontWeight: 850, color: "#14532d", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                    {route?.instructions || ex?.manualInstructions}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {/* EVIDENCIA */}
-            <div style={sectionCard}>
-              <div style={{ ...sectionTitle, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ ...kpiIconBox, width: 28, height: 28, background: "rgba(15,23,42,0.07)", color: "#0f172a", border: "1px solid rgba(226,232,240,0.95)" }}>
-                  <Icon name="camera" />
-                </span>
-                Evidencia fotográfica
-              </div>
-              {!evidenceUrl ? (
-                <div style={{ ...noteBox, marginTop: 8, color: "#64748b", fontWeight: 900 }}>
-                  No hay evidencia cargada.
-                </div>
-              ) : (
-                <div style={{ marginTop: 10 }}>
-                  <img
-                    src={evidenceUrl}
-                    alt="Evidencia"
-                    style={evidenceImg}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  {ex?.evidenceNote ? (
-                    <div style={{ ...noteBox, marginTop: 10 }}>
-                      <div style={{ fontWeight: 950, marginBottom: 4, fontSize: 12 }}>Nota de evidencia</div>
-                      <div style={{ fontWeight: 850, color: "#0f172a", whiteSpace: "pre-wrap" }}>{ex.evidenceNote}</div>
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-function KV({ label, value }) {
-  return (
-    <div style={kvItem}>
-      <div style={kvLabel}>{label}</div>
-      <div style={kvValue}>{value}</div>
+          {reference ? (
+            <section className="hst-sec hst-noprint">
+              <h3>Referencia del punto</h3>
+              <img className="hst-ref" src={reference} alt="Referencia del punto de lubricación" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+            </section>
+          ) : null}
+        </div>
+      </aside>
     </div>
   );
 }
-
-/* =========================
-   STYLES
-========================= */
-
-const compactHeaderRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-end",
-  gap: 12,
-  flexWrap: "wrap",
-  padding: "14px 16px",
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 55%, rgba(255,247,237,0.60) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
-};
-
-const compactFiltersHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 12,
-  alignItems: "center",
-  flexWrap: "wrap",
-  marginBottom: 10,
-};
-
-const compactFiltersGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 12,
-  alignItems: "end",
-};
-
-const compactFiltersGrid2 = {
-  marginTop: 12,
-  display: "flex",
-  gap: 12,
-  flexWrap: "wrap",
-  alignItems: "end",
-};
-const headerRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-end",
-  gap: 12,
-  flexWrap: "wrap",
-  padding: "14px 16px",
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 55%, rgba(255,247,237,0.60) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
-};
-
-const statsGrid = {
-  marginTop: 16,
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 12,
-};
-
-const kpiCard = {
-  position: "relative",
-  borderRadius: 14,
-  padding: 14,
-  background: "rgba(255,255,255,0.97)",
-  border: "1px solid rgba(148,163,184,0.45)",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.06)",
-  overflow: "hidden",
-};
-
-const kpiTopBandDarkThin = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  top: 0,
-  height: 5,
-  background: "#0f172a",
-};
-
-const kpiSideStripe = {
-  position: "absolute",
-  top: 5,
-  left: 0,
-  bottom: 0,
-  width: 4,
-  background: "#334155",
-};
-
-const kpiIconBox = {
-  width: 40,
-  height: 40,
-  borderRadius: 13,
-  background: "rgba(249,115,22,0.13)",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  color: "#9a3412",
-  border: "1px solid rgba(249,115,22,0.30)",
-  flexShrink: 0,
-};
-
-const filtersWrap = {
-  marginTop: 18,
-  padding: 14,
-  borderRadius: 18,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderLeft: "3px solid rgba(249,115,22,0.45)",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.86) 100%)",
-  boxShadow: "0 16px 30px rgba(2,6,23,0.05)",
-  backdropFilter: "blur(8px)",
-};
-
-const filtersHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 12,
-  alignItems: "center",
-  flexWrap: "wrap",
-  marginBottom: 10,
-};
-
-const filtersRow = {
-  display: "flex",
-  gap: 12,
-  flexWrap: "wrap",
-  alignItems: "flex-end",
-};
-
-const field = { display: "flex", flexDirection: "column", gap: 6, minWidth: 160, width: "100%" };
-const label = { fontSize: 12, color: "#64748b", fontWeight: 900 };
-
-const input = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  fontWeight: 900,
-  background: "rgba(255,255,255,0.9)",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.04)",
-  outline: "none",
-};
-
-const btnGhost = {
-  border: "1px solid rgba(203,213,225,0.95)",
-  background: "rgba(241,245,249,0.92)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  cursor: "pointer",
-  fontWeight: 950,
-  color: "#0f172a",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.04)",
-};
-
-const warnBanner = {
-  marginTop: 12,
-  padding: "12px 14px",
-  borderRadius: 14,
-  background: "#fff7ed",
-  border: "1px solid #fed7aa",
-  color: "#9a3412",
-  fontWeight: 900,
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 12,
-  flexWrap: "wrap",
-};
-
-const warnBannerText = {
-  marginTop: 6,
-  fontSize: 12,
-  fontWeight: 850,
-  color: "#7c2d12",
-  lineHeight: 1.35,
-};
-
-const btnWarnGhost = {
-  padding: "8px 12px",
-  borderRadius: 12,
-  border: "1px solid #fed7aa",
-  background: "rgba(255,255,255,0.85)",
-  cursor: "pointer",
-  fontWeight: 950,
-  color: "#9a3412",
-  whiteSpace: "nowrap",
-};
-
-const miniOrange = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: 28,
-  height: 28,
-  borderRadius: 10,
-  background: "rgba(249,115,22,0.20)",
-  color: "#0f172a",
-  border: "1px solid rgba(249,115,22,0.35)",
-};
-
-const list = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 12,
-  marginTop: 14,
-};
-
-const card = {
-  padding: 14,
-  borderRadius: 18,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 100%)",
-  border: "1px solid rgba(148,163,184,0.45)",
-  boxShadow: "0 14px 30px rgba(2,6,23,0.07)",
-  transition: "all 160ms ease",
-};
-
-const metaRow = {
-  fontSize: 13,
-  color: "#64748b",
-  display: "flex",
-  gap: 14,
-  marginTop: 8,
-  flexWrap: "wrap",
-  fontWeight: 800,
-};
-
-const metaItem = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-};
-
-const notes = {
-  fontSize: 13,
-  fontWeight: 850,
-  color: "#0f172a",
-  background: "rgba(241,245,249,0.7)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-};
-
-const pager = {
-  marginTop: 16,
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  gap: 12,
-};
-
-const pagerBtn = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.9)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  cursor: "pointer",
-  fontWeight: 950,
-  boxShadow: "0 8px 18px rgba(2,6,23,0.04)",
-};
-
-const errorBox = {
-  marginTop: 12,
-  background: "rgba(254,226,226,0.92)",
-  border: "1px solid rgba(254,202,202,0.95)",
-  padding: 12,
-  borderRadius: 12,
-  color: "#991b1b",
-  fontWeight: 900,
-};
-
-const panel = {
-  border: "1px solid rgba(148,163,184,0.35)",
-  borderRadius: 18,
-  padding: 14,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 100%)",
-  boxShadow: "0 16px 30px rgba(2,6,23,0.05)",
-};
-
-const panelHeaderRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 10,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
-
-const panelTitle = { fontWeight: 980, color: "#0f172a" };
-
-const hdrIcon = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: 34,
-  height: 34,
-  borderRadius: 12,
-  background: "rgba(15,23,42,0.06)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  color: "#0f172a",
-};
-
-const tagBase = {
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "6px 10px",
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 950,
-  border: "1px solid rgba(226,232,240,0.9)",
-  lineHeight: 1,
-  whiteSpace: "nowrap",
-};
-
-const chipBase = {
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "6px 10px",
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 950,
-  border: "1px solid rgba(226,232,240,0.9)",
-  lineHeight: 1,
-  whiteSpace: "nowrap",
-};
-
-/* ===== Drawer styles ===== */
-
-const drawerOverlay = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(15,23,42,0.35)",
-  backdropFilter: "blur(2px)",
-  zIndex: 50,
-};
-
-const drawerPanel = {
-  position: "fixed",
-  top: 0,
-  right: 0,
-  height: "100vh",
-  width: "min(520px, 92vw)",
-  background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
-  borderLeft: "1px solid rgba(226,232,240,0.95)",
-  boxShadow: "-18px 0 44px rgba(2,6,23,0.18)",
-  zIndex: 51,
-  overflowY: "auto",
-};
-
-const drawerHeader = {
-  position: "sticky",
-  top: 0,
-  zIndex: 2,
-  padding: 14,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 12,
-  borderBottom: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.9)",
-  backdropFilter: "blur(6px)",
-};
-
-const drawerCloseBtn = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.9)",
-  borderRadius: 12,
-  padding: "8px 10px",
-  cursor: "pointer",
-  fontWeight: 950,
-  boxShadow: "0 8px 18px rgba(2,6,23,0.06)",
-};
-
-const sectionCard = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 14,
-  padding: 14,
-  background: "rgba(255,255,255,0.85)",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-};
-
-const sectionTitle = {
-  fontWeight: 980,
-  color: "#0f172a",
-  marginBottom: 10,
-};
-
-const kvGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 10,
-};
-
-const kvItem = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  background: "rgba(248,250,252,0.75)",
-};
-
-const kvLabel = {
-  fontSize: 12,
-  color: "#64748b",
-  fontWeight: 900,
-  marginBottom: 6,
-};
-
-const kvValue = {
-  fontWeight: 950,
-  color: "#0f172a",
-  fontSize: 13,
-};
-
-const noteBox = {
-  background: "rgba(241,245,249,0.7)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-};
-
-const evidenceImg = {
-  width: "100%",
-  height: "auto",
-  borderRadius: 14,
-  border: "1px solid rgba(226,232,240,0.95)",
-  boxShadow: "0 12px 30px rgba(2,6,23,0.10)",
-};
-const btnKpiGray = {
-  background: "#334155",
-  color: "#ffffff",
-  border: "1px solid #334155",
-  borderRadius: 12,
-  padding: "10px 14px",
-  cursor: "pointer",
-  fontWeight: 900,
-  boxShadow: "0 8px 18px rgba(2,6,23,0.18)",
-  transition: "all 160ms ease",
-};
-
-const inlineLoadingBox = {
-  marginTop: 14,
-  padding: "14px 16px",
-  borderRadius: 14,
-  background: "rgba(255,255,255,0.80)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 13,
-  animation: "pulse 1.8s ease infinite",
-};
-
-const inlineEmptyBox = {
-  marginTop: 14,
-  padding: "16px 18px",
-  borderRadius: 14,
-  border: "1px dashed rgba(203,213,225,0.95)",
-  background: "rgba(248,250,252,0.85)",
-  color: "#64748b",
-  fontWeight: 700,
-  fontSize: 13,
-  textAlign: "center",
-};
-
-const dateChipStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 5,
-  fontSize: 12,
-  fontWeight: 700,
-  color: "#64748b",
-};
-
-const techChipStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 5,
-  fontSize: 11,
-  fontWeight: 800,
-  color: "#0f766e",
-  background: "rgba(13,148,136,0.10)",
-  border: "1px solid rgba(13,148,136,0.20)",
-  borderRadius: 999,
-  padding: "3px 10px",
-};
-
-const detailBtn = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "6px 12px",
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 900,
-  background: "rgba(15,23,42,0.92)",
-  color: "#fff",
-  border: "1px solid rgba(15,23,42,0.80)",
-  cursor: "pointer",
-  boxShadow: "0 4px 10px rgba(2,6,23,0.18)",
-};
-
-const evidencePill = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 5,
-  padding: "3px 8px",
-  borderRadius: 999,
-  fontSize: 11,
-  fontWeight: 800,
-  background: "rgba(236,252,203,0.9)",
-  border: "1px solid rgba(217,249,157,0.9)",
-  color: "#365314",
-};
-
-const hEqPill = {
-  fontSize: 11,
-  fontWeight: 700,
-  color: "#64748b",
-  background: "rgba(15,23,42,0.06)",
-  borderRadius: 6,
-  padding: "2px 7px",
-  border: "1px solid rgba(226,232,240,0.8)",
-};
-
-/* --- Hero --- */
-const heroWrap = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 16,
-  flexWrap: "wrap",
-  padding: "20px 22px",
-  borderRadius: 20,
-  borderTop: "4px solid #0f172a",
-  borderRight: "1px solid rgba(226,232,240,0.95)",
-  borderBottom: "1px solid rgba(226,232,240,0.95)",
-  borderLeft: "4px solid rgba(249,115,22,0.75)",
-  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, rgba(30,41,59,0.96) 100%)",
-  boxShadow: "0 20px 44px rgba(2,6,23,0.18)",
-};
-
-const heroLeft = { display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" };
-
-const heroIconBox = {
-  width: 52,
-  height: 52,
-  borderRadius: 16,
-  display: "grid",
-  placeItems: "center",
-  background: "rgba(249,115,22,0.15)",
-  borderTop: "1px solid rgba(249,115,22,0.40)",
-  borderRight: "1px solid rgba(249,115,22,0.20)",
-  borderBottom: "1px solid rgba(249,115,22,0.20)",
-  borderLeft: "1px solid rgba(249,115,22,0.20)",
-  flexShrink: 0,
-};
-
-const heroKicker = {
-  fontSize: 11,
-  fontWeight: 950,
-  color: "rgba(249,115,22,0.90)",
-  letterSpacing: 1.4,
-  textTransform: "uppercase",
-};
-
-const heroH1 = {
-  margin: "6px 0 4px",
-  fontSize: 28,
-  fontWeight: 980,
-  color: "#fff",
-};
-
-const heroSub = {
-  color: "rgba(255,255,255,0.60)",
-  fontWeight: 800,
-  fontSize: 13,
-  lineHeight: 1.4,
-};
-
-const heroMetaRow = {
-  marginTop: 10,
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-};
-
-const heroMetaChip = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 5,
-  padding: "4px 10px",
-  borderRadius: 999,
-  fontSize: 11,
-  fontWeight: 950,
-  background: "rgba(255,255,255,0.10)",
-  borderTop: "1px solid rgba(255,255,255,0.18)",
-  borderRight: "1px solid rgba(255,255,255,0.18)",
-  borderBottom: "1px solid rgba(255,255,255,0.18)",
-  borderLeft: "1px solid rgba(255,255,255,0.18)",
-  color: "rgba(255,255,255,0.80)",
-};
-
-const btnRefresh = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "10px 16px",
-  borderRadius: 12,
-  borderTop: "1px solid rgba(255,255,255,0.18)",
-  borderRight: "1px solid rgba(255,255,255,0.18)",
-  borderBottom: "1px solid rgba(255,255,255,0.18)",
-  borderLeft: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(255,255,255,0.10)",
-  color: "rgba(255,255,255,0.85)",
-  cursor: "pointer",
-  fontWeight: 950,
-  fontSize: 13,
-  flexShrink: 0,
-  alignSelf: "flex-start",
-};
-
-/* --- Quick filter chips --- */
-const quickChipsRow = {
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
-
-const quickChip = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "7px 12px",
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 950,
-  cursor: "pointer",
-  borderTop: "1px solid rgba(203,213,225,0.90)",
-  borderRight: "1px solid rgba(203,213,225,0.90)",
-  borderBottom: "1px solid rgba(203,213,225,0.90)",
-  borderLeft: "1px solid rgba(203,213,225,0.90)",
-  background: "rgba(248,250,252,0.92)",
-  color: "#475569",
-  transition: "all 120ms ease",
-};
-
-const quickChipActive = {
-  background: "rgba(249,115,22,0.13)",
-  borderTop: "1px solid rgba(249,115,22,0.45)",
-  borderRight: "1px solid rgba(249,115,22,0.45)",
-  borderBottom: "1px solid rgba(249,115,22,0.45)",
-  borderLeft: "1px solid rgba(249,115,22,0.45)",
-  color: "#c2410c",
-};
-
-const quickChipDanger = {
-  background: "rgba(220,38,38,0.10)",
-  borderTop: "1px solid rgba(220,38,38,0.40)",
-  borderRight: "1px solid rgba(220,38,38,0.40)",
-  borderBottom: "1px solid rgba(220,38,38,0.40)",
-  borderLeft: "1px solid rgba(220,38,38,0.40)",
-  color: "#b91c1c",
-};
-
-/* --- Qty chip in HistoryCard --- */
-const qtyChipStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 5,
-  fontSize: 11,
-  fontWeight: 850,
-  color: "#c2410c",
-  background: "rgba(249,115,22,0.10)",
-  borderTop: "1px solid rgba(249,115,22,0.25)",
-  borderRight: "1px solid rgba(249,115,22,0.25)",
-  borderBottom: "1px solid rgba(249,115,22,0.25)",
-  borderLeft: "1px solid rgba(249,115,22,0.25)",
-  borderRadius: 999,
-  padding: "3px 9px",
-};
-
-/* --- Drawer redesign extras --- */
-const drawerRefImgWrap = {
-  position: "relative",
-  borderRadius: 14,
-  overflow: "hidden",
-  borderTop: "1px solid rgba(226,232,240,0.95)",
-  borderRight: "1px solid rgba(226,232,240,0.95)",
-  borderBottom: "1px solid rgba(226,232,240,0.95)",
-  borderLeft: "1px solid rgba(226,232,240,0.95)",
-  background: "#0f172a",
-};
-
-const drawerRefBadge = {
-  position: "absolute",
-  top: 8,
-  left: 8,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 5,
-  padding: "4px 9px",
-  borderRadius: 999,
-  background: "rgba(249,115,22,0.92)",
-  borderTop: "1px solid rgba(251,146,60,0.65)",
-  borderRight: "1px solid rgba(251,146,60,0.65)",
-  borderBottom: "1px solid rgba(251,146,60,0.65)",
-  borderLeft: "1px solid rgba(251,146,60,0.65)",
-  color: "#0b1220",
-  fontWeight: 980,
-  fontSize: 11,
-  zIndex: 1,
-};
-
-const drawerRefImg = {
-  width: "100%",
-  maxHeight: 220,
-  objectFit: "cover",
-  display: "block",
-};
-
-const drawerEquipRow = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 10,
-};
-
-const drawerEquipCard = {
-  borderRadius: 14,
-  padding: "12px 14px",
-  background: "rgba(248,250,252,0.85)",
-  borderTop: "3px solid #0f172a",
-  borderRight: "1px solid rgba(226,232,240,0.95)",
-  borderBottom: "1px solid rgba(226,232,240,0.95)",
-  borderLeft: "1px solid rgba(226,232,240,0.95)",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.05)",
-};
-
-const drawerEquipLabel = {
-  fontSize: 11,
-  fontWeight: 950,
-  color: "#64748b",
-  textTransform: "uppercase",
-  letterSpacing: 0.9,
-  marginBottom: 6,
-};
-
-const drawerEquipValue = {
-  fontWeight: 980,
-  color: "#0f172a",
-  fontSize: 14,
-  lineHeight: 1.25,
-};
-
-const drawerEquipSub = {
-  marginTop: 4,
-  fontSize: 12,
-  color: "#64748b",
-  fontWeight: 850,
-};
-
-
-
-
-
