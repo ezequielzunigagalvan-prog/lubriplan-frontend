@@ -662,7 +662,7 @@ export default function MainLayout({ children }) {
                 <span style={navIconStyle("/technical-assistant")}>
                   <Icon name="tool" />
                 </span>
-                <span style={sideText}>Asistente tecnico</span>
+                <span style={sideText}>Asistente técnico</span>
               </span>
             </NavLink>
           )}
@@ -1018,7 +1018,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/admin/leads")) return "Prospectos";
   if (pathname.startsWith("/settings")) return "Ajustes";
   if (pathname.startsWith("/notifications")) return "Notificaciones";
-  if (pathname.startsWith("/technical-assistant")) return "Asistente tecnico";
+  if (pathname.startsWith("/technical-assistant")) return "Asistente técnico";
   if (pathname.startsWith("/maintenance")) return "Mantenimiento";
   return "LubriPlan";
 }
