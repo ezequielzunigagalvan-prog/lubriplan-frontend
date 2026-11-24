@@ -1009,7 +1009,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/history")) return "Historial";
   if (pathname.startsWith("/analysis")) return "Análisis";
   if (pathname.startsWith("/corporate")) return "Dashboard Corporativo";
-  if (pathname.startsWith("/export")) return "Exportar/Importar";
+  if (pathname.startsWith("/export")) return "Exportar e importar";
   if (pathname.startsWith("/reports/monthly")) return "Reporte mensual";
   if (pathname.startsWith("/users")) return "Usuarios";
   if (pathname.startsWith("/admin/links")) return "Vínculos";

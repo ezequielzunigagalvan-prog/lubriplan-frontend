@@ -1,1052 +1,443 @@
 ﻿// src/pages/ExportPage.jsx
+// Exportar (Excel / PDF) e importar catálogos desde Excel con validación previa.
 import { useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
-import ExportPanel from "../components/export/ExportPanel";
-import {
-  commitImportPreview,
-  downloadExportXlsx,
-  downloadExportPdf,
-  downloadImportTemplate,
-  previewImportFile,
-} from "../services/exportService";
 import { Icon } from "../components/ui/lpIcons";
+import { useConfirm } from "../components/ui/ConfirmDialog";
 import { usePlant } from "../context/PlantContext";
+import { downloadExport, downloadCatalog, downloadImportTemplate, previewImport, commitImport } from "../services/exportService";
+import "./TechniciansPage.css";
+import "./AnalysisPage.css";
+import "./reports/MonthlyReport.css";
+import "./ExportPage.css";
 
-/* helpers */
-const ymd = (d) => {
-  const dt = d instanceof Date ? d : new Date(d);
-  if (Number.isNaN(dt.getTime())) return "";
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const day = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
+const RECORDS = [
+  { key: "executions", label: "Actividades", desc: "Programadas y ejecutadas: estado, técnico, consumo, condición y retraso." },
+  { key: "movements", label: "Movimientos de inventario", desc: "Entradas, salidas y ajustes con stock antes y después." },
+  { key: "failures", label: "Hallazgos", desc: "Actividades con condición mala o crítica." },
+  { key: "emergents", label: "Emergencias", desc: "Actividades de emergencia registradas." },
+  { key: "condition_reports", label: "Reportes de condición", desc: "Hallazgos levantados, su estado y la correctiva." },
+];
+const CATALOGS = [
+  { key: "equipment", label: "Equipos", desc: "Código, área, criticidad, estado, marca y modelo." },
+  { key: "routes", label: "Rutas", desc: "Lubricante, cantidad, frecuencia, técnico, última y próxima fecha." },
+  { key: "lubricants", label: "Inventario", desc: "Stock, mínimo, estado y valor en stock." },
+  { key: "technicians", label: "Técnicos", desc: "Código, especialidad, estado y rutas asignadas." },
+];
+const DATED = new Set(RECORDS.map((r) => r.key));
+const SHEET_LABEL = { equipos: "Equipos", lubricantes: "Lubricantes", tecnicos: "Técnicos", rutas: "Rutas" };
 
-/* Toast */
-function Toast({ toast, onClose }) {
-  if (!toast?.open) return null;
-
-  const tone =
-    toast.tone === "success"
-      ? { bg: "rgba(34,197,94,0.14)", bd: "rgba(34,197,94,0.28)", fg: "#14532d" }
-      : toast.tone === "danger"
-      ? { bg: "rgba(239,68,68,0.12)", bd: "rgba(239,68,68,0.26)", fg: "#7f1d1d" }
-      : { bg: "rgba(100,116,139,0.12)", bd: "rgba(100,116,139,0.24)", fg: "#0f172a" };
-
-  return (
-    <div style={toastWrap} role="status" aria-live="polite" onClick={onClose}>
-      <div style={{ ...toastCard, background: tone.bg, borderColor: tone.bd, color: tone.fg }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {toast.tone === "success" ? (
-            <span style={okPop}>
-              <Icon name="check" />
-            </span>
-          ) : null}
-          <div style={{ fontWeight: 950 }}>{toast.title || "Listo"}</div>
-        </div>
-        {toast.message ? (
-          <div style={{ marginTop: 2, fontWeight: 850, opacity: 0.92 }}>{toast.message}</div>
-        ) : null}
-      </div>
-    </div>
-  );
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function presetRange(key) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  if (key === "month") return { from: ymd(new Date(y, m, 1)), to: ymd(now) };
+  if (key === "prev") return { from: ymd(new Date(y, m - 1, 1)), to: ymd(new Date(y, m, 0)) };
+  if (key === "year") return { from: ymd(new Date(y, 0, 1)), to: ymd(now) };
+  const days = Number(key);
+  const from = new Date(now);
+  from.setDate(from.getDate() - (days - 1));
+  return { from: ymd(from), to: ymd(now) };
 }
-
-const toastWrap = { position: "fixed", right: 18, bottom: 18, zIndex: 9999, cursor: "pointer" };
-const toastCard = {
-  minWidth: 260,
-  maxWidth: 460,
-  padding: "12px 14px",
-  borderRadius: 14,
-  border: "1px solid rgba(226,232,240,0.95)",
-  boxShadow: "0 18px 34px rgba(2,6,23,0.18)",
-  animation: "lp_toast_in 220ms ease",
-};
+const PRESETS = [["30", "30 días"], ["90", "90 días"], ["month", "Este mes"], ["prev", "Mes anterior"], ["year", "Este año"]];
 
 export default function ExportPage() {
   const { currentPlantId, currentPlant } = usePlant();
-
-  const [resource, setResource] = useState("executions");
-  const [movementType, setMovementType] = useState("");
-  const [execStatus, setExecStatus] = useState("");
-  const [reportStatus, setReportStatus] = useState("");
-  const [reportCondition, setReportCondition] = useState("");
-  const [reportCategory, setReportCategory] = useState("");
-
-  const [mode, setMode] = useState("days");
-  const [days, setDays] = useState(180);
-
-  const today = new Date();
-  const [from, setFrom] = useState(ymd(new Date(today.getFullYear(), 0, 1)));
-  const [to, setTo] = useState(ymd(today));
-
-  const [severity, setSeverity] = useState("ALL");
-  const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState({ open: false });
-  const [format, setFormat] = useState("xlsx");
-
-  const [confirmPulse, setConfirmPulse] = useState(false);
-  const confirmT = useRef(null);
-  const [importFile, setImportFile] = useState(null);
-  const [importPreview, setImportPreview] = useState(null);
-  const [importBusy, setImportBusy] = useState(false);
-  const [importCommitBusy, setImportCommitBusy] = useState(false);
-
-  const showToast = (t) => {
-    setToast({ open: true, ms: 2200, ...t });
-    window.setTimeout(() => setToast((p) => ({ ...p, open: false })), t?.ms || 2200);
-  };
-
-  const commonParams = useMemo(() => {
-    if (mode === "range") return { from, to };
-    return { days };
-  }, [mode, from, to, days]);
-
-  const rangeLabel = useMemo(() => {
-    if (mode === "range") return `${from || "-"} -> ${to || "-"}`;
-    return `Últimos ${days} días`;
-  }, [mode, from, to, days]);
-
-  const validateRange = () => {
-    if (mode === "days") {
-      const n = Number(days);
-      if (!Number.isFinite(n) || n <= 0) return "Días inválidos.";
-      return null;
-    }
-
-    if (!from || !to) return "Selecciona Desde y Hasta.";
-
-    const a = new Date(from);
-    const b = new Date(to);
-
-    if (!Number.isFinite(a.getTime()) || !Number.isFinite(b.getTime())) {
-      return "Fechas inválidas.";
-    }
-
-    if (a > b) return 'El rango es inválido: "Desde" debe ser menor o igual a "Hasta".';
-    return null;
-  };
-
-  const buildExtraFilters = () => {
-    const extra = {};
-
-    if (resource === "failures" && severity) {
-      extra.severity = severity;
-    }
-
-    if (resource === "executions" && execStatus) {
-      extra.status = execStatus;
-    }
-
-    if (resource === "movements" && movementType) {
-      extra.type = movementType;
-    }
-
-    if (resource === "condition_reports") {
-      if (reportStatus) extra.status = reportStatus;
-      if (reportCondition) extra.condition = reportCondition;
-      if (reportCategory) extra.category = reportCategory;
-    }
-
-    return extra;
-  };
-
-  const doDownload = async (resourceOrResources = resource, extra = {}, label = "") => {
-  if (busy) return;
-
-  const errRange = validateRange();
-  if (errRange) {
-    showToast({ tone: "danger", title: "Revisa el rango", message: errRange });
-    return;
-  }
-
-  if (!currentPlantId) {
-    showToast({
-      tone: "danger",
-      title: "Sin planta",
-      message: "Selecciona una planta antes de exportar.",
-    });
-    return;
-  }
-
-  const finalParams = {
-    ...commonParams,
-    ...extra,
-    plantId: currentPlantId,
-  };
-
-  try {
-    setBusy(true);
-
-    if (format === "pdf") {
-      await downloadExportPdf(resourceOrResources, finalParams, {}, 90000);
-    } else {
-      await downloadExportXlsx(resourceOrResources, finalParams, {}, 90000);
-    }
-
-    setConfirmPulse(true);
-    if (confirmT.current) window.clearTimeout(confirmT.current);
-    confirmT.current = window.setTimeout(() => setConfirmPulse(false), 1200);
-
-    showToast({
-      tone: "success",
-      title: "Descarga lista",
-      message: label || `${String(format).toUpperCase()} generado`,
-    });
-  } catch (e) {
-    console.error("EXPORT FRONT ERROR:", e);
-    showToast({
-      tone: "danger",
-      title: "Error al exportar",
-      message: e?.message || "Error",
-    });
-  } finally {
-    setBusy(false);
-  }
-};
-
-  const previewHasErrors = useMemo(() => {
-    if (!importPreview?.summary) return true;
-    return Object.values(importPreview.summary).some((x) => Number(x?.errors || 0) > 0);
-  }, [importPreview]);
-
-  const previewValidCount = useMemo(() => {
-    if (!importPreview?.summary) return 0;
-    return Object.values(importPreview.summary).reduce((sum, x) => sum + Number(x?.ok || 0), 0);
-  }, [importPreview]);
-
-  const handleDownloadTemplate = async () => {
-    if (!currentPlantId) {
-      showToast({ tone: "danger", title: "Sin planta", message: "Selecciona una planta antes de descargar." });
-      return;
-    }
-
-    try {
-      setImportBusy(true);
-      await downloadImportTemplate({ plantId: currentPlantId });
-      showToast({ tone: "success", title: "Plantilla lista", message: "Descarga iniciada." });
-    } catch (e) {
-      showToast({ tone: "danger", title: "Error", message: e?.message || "No se pudo descargar." });
-    } finally {
-      setImportBusy(false);
-    }
-  };
-
-  const handlePreviewImport = async () => {
-    if (!importFile) {
-      showToast({ tone: "danger", title: "Archivo requerido", message: "Selecciona la plantilla llena." });
-      return;
-    }
-
-    try {
-      setImportBusy(true);
-      const result = await previewImportFile(importFile, { plantId: currentPlantId });
-      setImportPreview(result);
-      showToast({
-        tone: result?.summary && Object.values(result.summary).some((x) => Number(x?.errors || 0) > 0) ? "danger" : "success",
-        title: "Vista previa lista",
-        message: "Revisa el resultado antes de confirmar.",
-      });
-    } catch (e) {
-      setImportPreview(null);
-      showToast({ tone: "danger", title: "Error validando", message: e?.message || "No se pudo validar." });
-    } finally {
-      setImportBusy(false);
-    }
-  };
-
-  const handleCommitImport = async () => {
-    if (!importPreview || previewHasErrors || previewValidCount <= 0) return;
-
-    try {
-      setImportCommitBusy(true);
-      const result = await commitImportPreview(importPreview, { plantId: currentPlantId });
-      setImportPreview(null);
-      setImportFile(null);
-      showToast({
-        tone: "success",
-        title: "Importación lista",
-        message: `Registros creados: ${Object.values(result?.summary || {}).reduce((sum, n) => sum + Number(n || 0), 0)}`,
-      });
-    } catch (e) {
-      showToast({ tone: "danger", title: "Error importando", message: e?.message || "No se pudo importar." });
-    } finally {
-      setImportCommitBusy(false);
-    }
-  };
+  const [tab, setTab] = useState("export");
 
   return (
     <MainLayout>
-      <style>{`
-        @keyframes lp_toast_in {
-          from { transform: translateY(12px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes lp_ok_pop {
-          0% { transform: scale(.7); opacity: 0; }
-          70% { transform: scale(1.08); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes lp_shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .lpCard {
-          position: relative;
-          overflow: hidden;
-          transition: transform 160ms ease, box-shadow 160ms ease;
-        }
-        .lpCard:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 18px 40px rgba(2,6,23,0.12);
-        }
-        .lpConfirmBtn {
-          position: relative;
-          overflow: hidden;
-        }
-        .lpConfirmBtn.lpOk::after{
-          content:"";
-          position:absolute;
-          inset:0;
-          background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%);
-          background-size: 200% 100%;
-          animation: lp_shimmer 700ms ease;
-          pointer-events:none;
-        }
-      `}</style>
-
-      <Toast toast={toast} onClose={() => setToast((p) => ({ ...p, open: false }))} />
-
-      <div style={pageHeader}>
-        <div style={{ minWidth: 0 }}>
-          <h1 style={{ margin: 0 }}>Exportar / Importar</h1>
-          <p style={{ margin: "6px 0 0", color: "#64748b", fontWeight: 800 }}>
-            Descarga información o carga plantillas validadas para crear datos en LubriPlan
-            {currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
-          </p>
-
-          <div style={summaryRow}>
-            <span style={pillGray}>
-              <span style={pillIcon}>
-                <Icon name="doc" />
-              </span>
-              Formato: {format.toUpperCase()}
-            </span>
-
-            <span style={pillGray}>
-              <span style={pillIcon}>
-                <Icon name="route" />
-              </span>
-              Rango: {rangeLabel}
-            </span>
-
-            <span style={pillGray2}>
-              <span style={pillIcon}>
-                <Icon name="list" />
-              </span>
-              Modo: {mode === "range" ? "Desde / Hasta" : "Últimos días"}
-            </span>
-
-            {busy ? (
-              <span style={pillWarn}>
-                <span style={pillIcon}>
-                  <Icon name="bolt" />
-                </span>
-                Exportando...
-              </span>
-            ) : null}
+      <div className="tch xp lp-fade-in">
+        <header className="tch-head">
+          <div>
+            <div className="tch-kicker">Datos{currentPlant?.name ? ` · ${currentPlant.name}` : ""}</div>
+            <h1 className="tch-title">Exportar e importar</h1>
+            <div className="tch-sub">Descarga información en Excel o PDF, o carga equipos, lubricantes, técnicos y rutas desde Excel.</div>
           </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <button
-            style={btnGhost}
-            disabled={busy}
-            onClick={() => {
-              setMode("days");
-              setDays(180);
-              setFrom(ymd(new Date(today.getFullYear(), 0, 1)));
-              setTo(ymd(today));
-              setSeverity("ALL");
-              setResource("executions");
-              setMovementType("");
-              setExecStatus("");
-              setReportStatus("");
-              setReportCondition("");
-              setReportCategory("");
-              setFormat("xlsx");
-              showToast({ tone: "neutral", title: "Listo", message: "Filtros restablecidos" });
-            }}
-            title="Restablecer filtros"
-          >
-            <span style={btnRow}>
-              <Icon name="reset" />
-              Restablecer
-            </span>
+        </header>
+        <div className="tch-tabs xp-tabs" role="tablist">
+          <button type="button" role="tab" className="tch-tab" aria-pressed={tab === "export"} aria-selected={tab === "export"} onClick={() => setTab("export")}>
+            <Icon name="download" size="sm" /> Exportar
           </button>
-
-          <button
-            className={`lpConfirmBtn ${confirmPulse ? "lpOk" : ""}`}
-            style={btnPrimary}
-            disabled={busy}
-            onClick={() => doDownload(resource, buildExtraFilters(), resource)}
-            title="Exportar rápido"
-          >
-            <span style={btnRow}>
-              {confirmPulse ? <Icon name="check" /> : <Icon name="download" />}
-              {confirmPulse ? "Listo" : "Exportar rápido"}
-            </span>
+          <button type="button" role="tab" className="tch-tab" aria-pressed={tab === "import"} aria-selected={tab === "import"} onClick={() => setTab("import")}>
+            <Icon name="upload" size="sm" /> Importar
           </button>
         </div>
-      </div>
-
-      <ImportBlock
-        busy={importBusy}
-        commitBusy={importCommitBusy}
-        file={importFile}
-        preview={importPreview}
-        previewHasErrors={previewHasErrors}
-        previewValidCount={previewValidCount}
-        onFileChange={(file) => {
-          setImportFile(file);
-          setImportPreview(null);
-        }}
-        onTemplate={handleDownloadTemplate}
-        onPreview={handlePreviewImport}
-        onCommit={handleCommitImport}
-      />
-
-      <div style={sectionDivider}>
-        <div>
-          <div style={sectionKicker}>Exportar información</div>
-          <h2 style={sectionTitle}>Descargas de operación</h2>
-          <p style={sectionText}>
-            Genera archivos Excel o PDF con la información registrada en LubriPlan.
-          </p>
-        </div>
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        <ExportPanel
-          busy={busy}
-          mode={mode}
-          setMode={setMode}
-          days={days}
-          setDays={setDays}
-          from={from}
-          setFrom={setFrom}
-          to={to}
-          setTo={setTo}
-          severity={severity}
-          setSeverity={setSeverity}
-          resource={resource}
-          setResource={setResource}
-          movementType={movementType}
-          setMovementType={setMovementType}
-          execStatus={execStatus}
-          setExecStatus={setExecStatus}
-          reportStatus={reportStatus}
-          setReportStatus={setReportStatus}
-          reportCondition={reportCondition}
-          setReportCondition={setReportCondition}
-          reportCategory={reportCategory}
-          setReportCategory={setReportCategory}
-          format={format}
-          setFormat={setFormat}
-          onDownload={() => doDownload(resource, buildExtraFilters(), resource)}
-        />
-      </div>
-
-      <div style={grid}>
-        <ExportCard
-          icon="doc"
-          title="Reporte consolidado"
-          desc="Descarga un paquete completo con ejecuciones, movimientos y rutas en un solo archivo."
-          badge="Pro"
-          onDownload={() =>
-            doDownload(
-              ["executions", "movements", "routes"],
-              {},
-              "Reporte consolidado"
-            )
-          }
-          busy={busy}
-        />
-
-        <ExportCard
-          icon="list"
-          title="Actividades / Ejecuciones"
-          desc="Incluye estado, fechas, técnico, ruta, equipo, condición, observaciones y cantidad usada."
-          onDownload={() =>
-            doDownload("executions", buildExtraFilters(), "Actividades / Ejecuciones")
-          }
-          busy={busy}
-        />
-
-        <ExportCard
-          icon="drop"
-          title="Consumo (Movimientos)"
-          desc="Entradas y salidas, cantidades, stock antes y después, ejecución ligada, equipo y técnico."
-          onDownload={() =>
-            doDownload("movements", buildExtraFilters(), "Movimientos")
-          }
-          busy={busy}
-        />
-
-        <ExportCard
-          icon="route"
-          title="Rutas"
-          desc="Rutas con frecuencia, método, instrucciones, equipo y lubricante asociado."
-          onDownload={() => doDownload("routes", {}, "Rutas")}
-          busy={busy}
-        />
-
-        <div className="lpCard" style={card}>
-          <div style={cardTop}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={iconBoxSoft}>
-                <Icon name="warn" />
-              </span>
-              <div>
-                <div style={cardTitle}>Fallas</div>
-                <div style={cardDesc}>
-                  Ejecuciones completadas con condición <b>MALO</b> o <b>CRÍTICO</b>.
-                </div>
-              </div>
-            </div>
-            <span style={pillGray}>Filtro</span>
-          </div>
-
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={miniLbl}>Severidad</span>
-            <select
-              value={severity}
-              disabled={busy}
-              onChange={(e) => setSeverity(e.target.value)}
-              style={selectMini}
-            >
-              <option value="ALL">ALL (MALO + CRITICO)</option>
-              <option value="MALO">MALO</option>
-              <option value="CRITICO">CRITICO</option>
-            </select>
-          </div>
-
-          <button
-            style={{ ...btnDark, opacity: busy ? 0.7 : 1 }}
-            disabled={busy}
-            onClick={() => doDownload("failures", buildExtraFilters(), "Fallas")}
-          >
-            <span style={btnRow}>
-              <Icon name="download" />
-              Descargar
-            </span>
-          </button>
-
-          <div style={note}>Tip: usa el filtro para reducir ruido.</div>
-        </div>
-
-        <ExportCard
-  icon="bolt"
-  title="Actividades emergentes"
-  desc="Fuera de ruta o plan: equipo, técnico, fecha, motivo o notas y condición."
-  badge="Nuevo"
-  onDownload={() => doDownload("emergents", {}, "Actividades emergentes")}
-  busy={busy}
-/>
-
-        <ExportCard
-          icon="doc"
-          title="Condición reportada"
-          desc="Consolidado de condición, observaciones, equipo y quién reportó."
-          badge="Nuevo"
-          onDownload={() =>
-            doDownload("condition_reports", buildExtraFilters(), "Condición reportada")
-          }
-          busy={busy}
-        />
+        {tab === "export" ? <ExportTab plantId={currentPlantId} /> : <ImportTab plantId={currentPlantId} />}
       </div>
     </MainLayout>
   );
 }
 
-function ExportCard({ icon, title, desc, onDownload, busy, badge }) {
+/* ================= Exportar ================= */
+
+function ExportTab({ plantId }) {
+  const [selected, setSelected] = useState(["executions"]);
+  const [preset, setPreset] = useState("90");
+  const [range, setRange] = useState(presetRange("90"));
+  const [format, setFormat] = useState("xlsx");
+  const [filters, setFilters] = useState({ status: "", type: "", severity: "", reportStatus: "", reportCondition: "", reportCategory: "" });
+  const [busy, setBusy] = useState(false);
+  const [catalogBusy, setCatalogBusy] = useState(false);
+
+  const toggle = (key) => setSelected((s) => (s.includes(key) ? s.filter((k) => k !== key) : [...s, key]));
+  const hasDated = selected.some((k) => DATED.has(k));
+  const setF = (k) => (e) => setFilters((f) => ({ ...f, [k]: e.target.value }));
+  const applyPreset = (k) => {
+    setPreset(k);
+    setRange(presetRange(k));
+  };
+  const rangeError = hasDated && (!range.from || !range.to ? "Indica el periodo." : range.from > range.to ? "La fecha inicial es posterior a la final." : "");
+
+  const download = async () => {
+    if (!selected.length || rangeError) return;
+    setBusy(true);
+    try {
+      const params = { ...(hasDated ? range : {}) };
+      if (selected.includes("executions")) params.status = filters.status;
+      if (selected.includes("movements")) params.type = filters.type;
+      if (selected.includes("failures")) params.severity = filters.severity;
+      if (selected.includes("condition_reports")) Object.assign(params, { reportStatus: filters.reportStatus, reportCondition: filters.reportCondition, reportCategory: filters.reportCategory });
+      const name = await downloadExport(format, selected, params, plantId);
+      toast.success(`Descargado: ${name}`);
+    } catch (e) {
+      toast.error(e?.message || "No se pudo exportar");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const catalog = async () => {
+    setCatalogBusy(true);
+    try {
+      const name = await downloadCatalog(plantId);
+      toast.success(`Descargado: ${name}`);
+    } catch (e) {
+      toast.error(e?.message || "No se pudo descargar el catálogo");
+    } finally {
+      setCatalogBusy(false);
+    }
+  };
+
   return (
-    <div className="lpCard" style={card}>
-      <div style={cardTop}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={iconBox}>
-            <Icon name={icon} />
-          </span>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <div style={cardTitle}>{title}</div>
-              {badge ? <span style={pillWarn}>{badge}</span> : null}
-            </div>
-            <div style={cardDesc}>{desc}</div>
+    <div className="xp-layout">
+      <div className="xp-main">
+        <section className="an-panel">
+          <div className="an-panel-head">
+            <h2>1 · ¿Qué quieres exportar?</h2>
+            <p>Puedes elegir varios: se genera un solo archivo con una hoja por cada uno.</p>
           </div>
-        </div>
-        <span style={pillGray}>Export</span>
+          <div className="xp-group-title">Registros del periodo</div>
+          <div className="xp-options">
+            {RECORDS.map((r) => <Option key={r.key} item={r} checked={selected.includes(r.key)} onToggle={() => toggle(r.key)} />)}
+          </div>
+          <div className="xp-group-title">Catálogos (estado actual)</div>
+          <div className="xp-options">
+            {CATALOGS.map((r) => <Option key={r.key} item={r} checked={selected.includes(r.key)} onToggle={() => toggle(r.key)} />)}
+          </div>
+        </section>
+
+        {hasDated ? (
+          <section className="an-panel">
+            <div className="an-panel-head"><h2>2 · Periodo</h2><p>Aplica a los registros; los catálogos salen completos.</p></div>
+            <div className="an-presets">
+              {PRESETS.map(([k, l]) => (
+                <button key={k} type="button" className="an-preset" aria-pressed={preset === k} onClick={() => applyPreset(k)}>{l}</button>
+              ))}
+            </div>
+            <div className="an-dates">
+              <label><span>Desde</span><input type="date" className="tch-input" value={range.from} max={range.to} onChange={(e) => { setPreset(""); setRange((r) => ({ ...r, from: e.target.value })); }} /></label>
+              <label><span>Hasta</span><input type="date" className="tch-input" value={range.to} min={range.from} onChange={(e) => { setPreset(""); setRange((r) => ({ ...r, to: e.target.value })); }} /></label>
+            </div>
+            {rangeError ? <div className="tch-error">{rangeError}</div> : null}
+
+            <div className="xp-filters">
+              {selected.includes("executions") ? (
+                <Select label="Actividades" value={filters.status} onChange={setF("status")} options={[["", "Todas"], ["COMPLETED", "Completadas"], ["PENDING", "Pendientes en tiempo"], ["OVERDUE", "Vencidas"]]} />
+              ) : null}
+              {selected.includes("movements") ? (
+                <Select label="Movimientos" value={filters.type} onChange={setF("type")} options={[["", "Todos"], ["IN", "Entradas"], ["OUT", "Salidas"], ["ADJUST", "Ajustes"]]} />
+              ) : null}
+              {selected.includes("failures") ? (
+                <Select label="Hallazgos" value={filters.severity} onChange={setF("severity")} options={[["", "Mala y crítica"], ["CRITICO", "Solo crítica"], ["MALO", "Solo mala"]]} />
+              ) : null}
+              {selected.includes("condition_reports") ? (
+                <>
+                  <Select label="Estado del reporte" value={filters.reportStatus} onChange={setF("reportStatus")} options={[["", "Todos"], ["OPEN", "Abiertos"], ["IN_PROGRESS", "En corrección"], ["RESOLVED", "Resueltos"], ["DISMISSED", "Descartados"]]} />
+                  <Select label="Condición" value={filters.reportCondition} onChange={setF("reportCondition")} options={[["", "Todas"], ["REGULAR", "Regular"], ["MALO", "Mala"], ["CRITICO", "Crítica"]]} />
+                  <Select label="Categoría" value={filters.reportCategory} onChange={setF("reportCategory")} options={[["", "Todas"], ["FUGA", "Fuga"], ["RUIDO", "Ruido"], ["VIBRACION", "Vibración"], ["TEMPERATURA", "Temperatura"], ["CONTAMINACION", "Contaminación"], ["OTRO", "Otro"]]} />
+                </>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
       </div>
 
-      <button
-        style={{ ...btnDark, opacity: busy ? 0.7 : 1 }}
-        disabled={busy}
-        onClick={onDownload}
-      >
-        <span style={btnRow}>
-          <Icon name="download" />
-          Descargar
-        </span>
-      </button>
+      <aside className="xp-side">
+        <section className="an-panel">
+          <div className="an-panel-head"><h2>{hasDated ? "3" : "2"} · Formato</h2></div>
+          <div className="xp-formats">
+            <button type="button" className="xp-format" aria-pressed={format === "xlsx"} onClick={() => setFormat("xlsx")}>
+              <strong>Excel</strong><span>Para filtrar y analizar. Incluye todo el detalle.</span>
+            </button>
+            <button type="button" className="xp-format" aria-pressed={format === "pdf"} onClick={() => setFormat("pdf")}>
+              <strong>PDF</strong><span>Para imprimir o compartir como evidencia.</span>
+            </button>
+          </div>
+          <button type="button" className="tch-btn tch-btn-primary xp-go" disabled={busy || !selected.length || !!rangeError} onClick={download}>
+            <Icon name="download" size="sm" /> {busy ? "Generando…" : `Descargar ${selected.length > 1 ? `${selected.length} conjuntos` : ""}`.trim()}
+          </button>
+          {!selected.length ? <p className="tch-hint">Elige al menos un conjunto de datos.</p> : null}
+        </section>
+
+        <section className="an-panel">
+          <div className="an-panel-head">
+            <h2>Respaldo del catálogo</h2>
+            <p>Equipos, lubricantes, técnicos y rutas en el mismo formato de importación. Úsalo como respaldo o para copiarlos a otra planta.</p>
+          </div>
+          <button type="button" className="tch-btn tch-btn-ghost" disabled={catalogBusy} onClick={catalog}>
+            <Icon name="copy" size="sm" /> {catalogBusy ? "Generando…" : "Descargar catálogo"}
+          </button>
+        </section>
+      </aside>
     </div>
   );
 }
 
-function ImportBlock({
-  busy,
-  commitBusy,
-  file,
-  preview,
-  previewHasErrors,
-  previewValidCount,
-  onFileChange,
-  onTemplate,
-  onPreview,
-  onCommit,
-}) {
-  const summary = preview?.summary || {};
-  const sheets = ["equipos", "lubricantes", "técnicos", "rutas"];
-  const sheetKey = (sheet) => (sheet === "técnicos" ? "tecnicos" : sheet);
-
+function Option({ item, checked, onToggle }) {
   return (
-    <section style={importWrap}>
-      <div style={importHead}>
-        <div>
-          <div style={sectionKicker}>Importar datos</div>
-          <h2 style={sectionTitle}>Carga masiva con vista previa</h2>
-          <p style={sectionText}>
-            Primero descarga la plantilla, después súbela llena y valida el archivo antes de crear registros.
-          </p>
-        </div>
-      </div>
-
-      <div style={importGrid}>
-        <div style={importStep}>
-          <div style={stepBadge}>1</div>
-          <div style={stepTitle}>Descargar y subir plantilla</div>
-          <div style={stepText}>La plantilla incluye hojas para equipos, lubricantes, técnicos y rutas. Si una ruta usa BOMBAZOS, llena también la equivalencia del bombazo.</div>
-          <button type="button" style={btnGhost} disabled={busy || commitBusy} onClick={onTemplate}>
-            <span style={btnRow}>
-              <Icon name="download" />
-              Descargar plantilla
-            </span>
-          </button>
-          <label style={filePickerLabel}>
-            Seleccionar archivo lleno
-            <input
-              type="file"
-              accept=".xlsx"
-              disabled={busy || commitBusy}
-              onChange={(e) => onFileChange(e.target.files?.[0] || null)}
-              style={fileInputHidden}
-            />
-          </label>
-          {file?.name ? <div style={fileName}>Archivo: {file.name}</div> : null}
-          <button type="button" style={btnDark} disabled={busy || commitBusy || !file} onClick={onPreview}>
-            <span style={btnRow}>
-              <Icon name="search" />
-              {busy ? "Validando..." : "Validar vista previa"}
-            </span>
-          </button>
-        </div>
-
-        <div style={importStep}>
-          <div style={stepBadge}>2</div>
-          <div style={stepTitle}>Revisar resultado</div>
-          <div style={previewGrid}>
-            {sheets.map((sheet) => {
-              const item = summary[sheetKey(sheet)] || { ok: 0, errors: 0 };
-              const hasErrors = Number(item.errors || 0) > 0;
-              return (
-                <div key={sheet} style={{ ...previewCard, borderColor: hasErrors ? "rgba(239,68,68,0.35)" : "rgba(226,232,240,0.95)" }}>
-                  <div style={previewName}>{sheet}</div>
-                  <div style={previewMeta}>Válidos: {item.ok || 0}</div>
-                  <div style={{ ...previewMeta, color: hasErrors ? "#991b1b" : "#64748b" }}>Errores: {item.errors || 0}</div>
-                </div>
-              );
-            })}
-          </div>
-          {preview?.sheets ? <ImportErrors preview={preview} /> : null}
-        </div>
-
-        <div style={importStep}>
-          <div style={stepBadge}>3</div>
-          <div style={stepTitle}>Confirmar importación</div>
-          <div style={stepText}>
-            Se crearán los registros válidos. Las rutas se programan con la última fecha de lubricación y la frecuencia indicada.
-          </div>
-          <button
-            type="button"
-            style={{ ...btnPrimary, opacity: previewHasErrors || previewValidCount <= 0 ? 0.55 : 1 }}
-            disabled={commitBusy || busy || previewHasErrors || previewValidCount <= 0}
-            onClick={onCommit}
-          >
-            <span style={btnRow}>
-              <Icon name="check" />
-              {commitBusy ? "Importando..." : `Confirmar ${previewValidCount} registro(s)`}
-            </span>
-          </button>
-        </div>
-      </div>
-    </section>
+    <label className={`xp-option${checked ? " is-on" : ""}`}>
+      <input type="checkbox" checked={checked} onChange={onToggle} />
+      <span>
+        <strong>{item.label}</strong>
+        <small>{item.desc}</small>
+      </span>
+    </label>
   );
 }
 
-function ImportErrors({ preview }) {
-  const errors = Object.entries(preview?.sheets || {}).flatMap(([sheet, data]) =>
-    (data?.errors || []).map((err) => ({ sheet, ...err }))
+function Select({ label, value, onChange, options }) {
+  return (
+    <label className="xp-select">
+      <span>{label}</span>
+      <select className="eq-select tch-input" value={value} onChange={onChange}>
+        {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      </select>
+    </label>
   );
+}
 
-  if (!errors.length) {
-    return <div style={okMessage}>Sin errores detectados.</div>;
+/* ================= Importar ================= */
+
+function ImportTab({ plantId }) {
+  const confirm = useConfirm();
+  const inputRef = useRef(null);
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [state, setState] = useState("idle"); // idle | validating | ready | importing | done
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+  const [drag, setDrag] = useState(false);
+
+  const summary = useMemo(() => preview?.summary || {}, [preview]);
+  const totals = useMemo(() => {
+    const t = { ok: 0, errors: 0, skipped: 0 };
+    for (const s of Object.values(summary)) {
+      t.ok += s.ok || 0;
+      t.errors += s.errors || 0;
+      t.skipped += s.skipped || 0;
+    }
+    return t;
+  }, [summary]);
+
+  const pick = async (f) => {
+    if (!f) return;
+    if (!/\.xlsx$/i.test(f.name)) {
+      setError("El archivo debe ser Excel .xlsx (no .xls ni .csv).");
+      return;
+    }
+    setFile(f);
+    setPreview(null);
+    setResult(null);
+    setError("");
+    setState("validating");
+    try {
+      const p = await previewImport(f, plantId);
+      setPreview(p);
+      setState("ready");
+    } catch (e) {
+      setError(e?.message || "No se pudo validar el archivo");
+      setState("idle");
+    }
+  };
+
+  const reset = () => {
+    setFile(null);
+    setPreview(null);
+    setResult(null);
+    setError("");
+    setState("idle");
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const doImport = async () => {
+    const parts = Object.entries(summary).filter(([, s]) => s.ok).map(([k, s]) => `${s.ok} ${SHEET_LABEL[k].toLowerCase()}`);
+    const ok = await confirm(`Se crearán ${parts.join(", ")}. Los registros que ya existen se omiten. Esta acción no se puede deshacer desde aquí.`, {
+      title: "Confirmar importación",
+      confirmLabel: "Importar",
+    });
+    if (!ok) return;
+    setState("importing");
+    setError("");
+    try {
+      const r = await commitImport(file, plantId);
+      setResult(r);
+      setState("done");
+      toast.success("Importación completada");
+    } catch (e) {
+      // Si el archivo cambió o alguien creó lo mismo mientras tanto, el servidor devuelve la nueva validación.
+      if (e?.data?.summary) setPreview({ summary: e.data.summary, sheets: e.data.sheets, warnings: e.data.warnings || [] });
+      setError(e?.message || "No se pudo importar");
+      setState("ready");
+    }
+  };
+
+  const template = async () => {
+    try {
+      await downloadImportTemplate(plantId);
+    } catch (e) {
+      toast.error(e?.message || "No se pudo descargar la plantilla");
+    }
+  };
+
+  if (state === "done" && result) {
+    const c = result.created || {};
+    return (
+      <section className="an-panel xp-done">
+        <div className="xp-done-icon"><Icon name="checkCircle" size="xl" /></div>
+        <h2>Importación completada</h2>
+        <div className="mr-stats xp-done-stats">
+          <div className="an-mini"><span className="an-kpi-label">Equipos</span><strong>{c.equipos || 0}</strong></div>
+          <div className="an-mini"><span className="an-kpi-label">Lubricantes</span><strong>{c.lubricantes || 0}</strong></div>
+          <div className="an-mini"><span className="an-kpi-label">Técnicos</span><strong>{c.tecnicos || 0}</strong></div>
+          <div className="an-mini"><span className="an-kpi-label">Rutas</span><strong>{c.rutas || 0}</strong></div>
+        </div>
+        {c.actividades ? <p className="tch-hint">Se programaron {c.actividades} actividades (una por ruta nueva).</p> : null}
+        {result.warnings?.length ? <Warnings items={result.warnings} /> : null}
+        <div className="xp-done-links">
+          {c.equipos ? <Link className="tch-btn tch-btn-ghost" to="/equipments">Ver equipos</Link> : null}
+          {c.lubricantes ? <Link className="tch-btn tch-btn-ghost" to="/inventory">Ver inventario</Link> : null}
+          {c.tecnicos ? <Link className="tch-btn tch-btn-ghost" to="/technicians">Ver técnicos</Link> : null}
+          {c.rutas ? <Link className="tch-btn tch-btn-ghost" to="/routes">Ver rutas</Link> : null}
+          <button type="button" className="tch-btn tch-btn-primary" onClick={reset}><Icon name="upload" size="sm" /> Importar otro archivo</button>
+        </div>
+      </section>
+    );
   }
 
   return (
-    <div style={errorBox}>
-      {errors.slice(0, 8).map((err, index) => (
-        <div key={`${err.sheet}-${err.row}-${index}`} style={errorLine}>
-          {err.sheet} fila {err.row}: {err.message}
+    <div className="xp-import">
+      <section className="an-panel xp-step">
+        <div className="xp-step-n">1</div>
+        <div>
+          <h2>Prepara el archivo</h2>
+          <p className="tch-hint">Usa la plantilla: hojas equipos, lubricantes, tecnicos y rutas. Las columnas obligatorias vienen en naranja. Las rutas pueden usar equipos, lubricantes y técnicos que vengan en el mismo archivo.</p>
+          <button type="button" className="tch-btn tch-btn-ghost" onClick={template}><Icon name="download" size="sm" /> Descargar plantilla</button>
         </div>
-      ))}
-      {errors.length > 8 ? <div style={errorLine}>Hay {errors.length - 8} error(es) más.</div> : null}
+      </section>
+
+      <section className="an-panel xp-step">
+        <div className="xp-step-n">2</div>
+        <div>
+          <h2>Sube y valida</h2>
+          <p className="tch-hint">Se revisa todo el archivo antes de guardar nada. No se crea ningún registro en este paso.</p>
+          <label
+            className={`xp-drop${drag ? " is-drag" : ""}`}
+            onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files?.[0]); }}
+          >
+            <input ref={inputRef} type="file" accept=".xlsx" onChange={(e) => pick(e.target.files?.[0])} hidden />
+            <Icon name="upload" size="lg" />
+            <strong>{file ? file.name : "Arrastra aquí el archivo o haz clic para elegirlo"}</strong>
+            <span>{state === "validating" ? "Validando…" : file ? `${Math.round(file.size / 1024)} KB · clic para cambiar` : "Excel .xlsx, máximo 8 MB"}</span>
+          </label>
+          {error ? <div className="tch-error" role="alert">{error}</div> : null}
+        </div>
+      </section>
+
+      {preview ? (
+        <section className="an-panel xp-step">
+          <div className="xp-step-n">3</div>
+          <div>
+            <h2>Revisa el resultado</h2>
+            <div className="xp-sheets">
+              {Object.entries(SHEET_LABEL).map(([k, label]) => {
+                const s = summary[k] || {};
+                return (
+                  <div key={k} className={`xp-sheet${s.errors ? " has-errors" : ""}`}>
+                    <strong>{label}</strong>
+                    <span className="xp-n is-ok">{s.ok || 0} nuevos</span>
+                    {s.skipped ? <span className="xp-n is-skip">{s.skipped} ya existen</span> : null}
+                    {s.errors ? <span className="xp-n is-err">{s.errors} con error</span> : null}
+                  </div>
+                );
+              })}
+            </div>
+            {preview.warnings?.length ? <Warnings items={preview.warnings} /> : null}
+            {totals.errors ? <IssueTable title="Errores a corregir" sheets={preview.sheets} field="errors" tone="err" /> : null}
+            {totals.skipped ? <IssueTable title="Registros que ya existen (se omiten)" sheets={preview.sheets} field="skipped" tone="skip" collapsed /> : null}
+
+            <div className="xp-actions">
+              {totals.errors ? (
+                <p className="xp-block"><Icon name="alert" size="sm" /> Corrige los errores en el archivo y vuelve a subirlo. No se importa nada mientras haya errores.</p>
+              ) : totals.ok ? (
+                <button type="button" className="tch-btn tch-btn-primary" disabled={state === "importing"} onClick={doImport}>
+                  <Icon name="check" size="sm" /> {state === "importing" ? "Importando…" : `Importar ${totals.ok} registro${totals.ok === 1 ? "" : "s"} nuevo${totals.ok === 1 ? "" : "s"}`}
+                </button>
+              ) : (
+                <p className="xp-block">No hay registros nuevos en el archivo.</p>
+              )}
+              <button type="button" className="tch-btn tch-btn-ghost" onClick={reset}>Cancelar</button>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
 
-/* ===== estilos ===== */
+function Warnings({ items }) {
+  return (
+    <ul className="xp-warn">
+      {items.map((w) => <li key={w}><Icon name="warn" size="sm" /> {w}</li>)}
+    </ul>
+  );
+}
 
-const btnRow = { display: "inline-flex", alignItems: "center", gap: 8 };
-
-const okPop = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: 26,
-  height: 26,
-  borderRadius: 999,
-  background: "rgba(34,197,94,0.16)",
-  border: "1px solid rgba(34,197,94,0.30)",
-  animation: "lp_ok_pop 220ms ease",
-};
-
-const pageHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-end",
-  gap: 12,
-  flexWrap: "wrap",
-  padding: "14px 16px",
-  marginBottom: 14,
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
-  borderRadius: 16,
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  boxShadow: "0 10px 28px rgba(2,6,23,0.06)",
-};
-
-const summaryRow = {
-  marginTop: 10,
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
-
-const grid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-  gap: 12,
-};
-
-const sectionDivider = {
-  marginTop: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.45)",
-  borderRadius: 18,
-  padding: 16,
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,240,0.90) 100%)",
-  boxShadow: "0 10px 24px rgba(2,6,23,0.05)",
-};
-
-const importWrap = {
-  marginTop: 16,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "4px solid #f97316",
-  borderRadius: 18,
-  padding: 16,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  boxShadow: "0 14px 34px rgba(2,6,23,0.07)",
-};
-
-const importHead = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 14,
-  flexWrap: "wrap",
-  marginTop: 6,
-};
-
-const sectionKicker = {
-  color: "#f97316",
-  fontWeight: 950,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-  fontSize: 12,
-};
-
-const sectionTitle = {
-  margin: "4px 0 0",
-  color: "#0f172a",
-  fontSize: 24,
-  lineHeight: 1.1,
-};
-
-const sectionText = {
-  margin: "6px 0 0",
-  color: "#64748b",
-  fontWeight: 850,
-};
-
-const importGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-  gap: 12,
-};
-
-const importStep = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 16,
-  padding: 14,
-  background: "rgba(248,250,252,0.72)",
-};
-
-const stepBadge = {
-  width: 30,
-  height: 30,
-  borderRadius: 999,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "rgba(249,115,22,0.16)",
-  color: "#9a3412",
-  fontWeight: 950,
-  border: "1px solid rgba(249,115,22,0.26)",
-};
-
-const stepTitle = { marginTop: 10, fontWeight: 950, color: "#0f172a", fontSize: 18 };
-const stepText = { marginTop: 6, color: "#64748b", fontWeight: 850, lineHeight: 1.45 };
-
-const filePickerLabel = {
-  marginTop: 12,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  background: "#fff",
-  color: "#0f172a",
-  fontWeight: 950,
-  cursor: "pointer",
-  boxSizing: "border-box",
-};
-
-const fileInputHidden = {
-  display: "none",
-};
-
-const fileName = {
-  marginTop: 8,
-  color: "#334155",
-  fontWeight: 850,
-  fontSize: 12,
-  overflowWrap: "anywhere",
-};
-
-const previewGrid = {
-  marginTop: 12,
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: 8,
-};
-
-const previewCard = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: 10,
-  background: "#fff",
-};
-
-const previewName = { color: "#0f172a", fontWeight: 950, textTransform: "capitalize" };
-const previewMeta = { marginTop: 3, color: "#64748b", fontWeight: 850, fontSize: 12 };
-
-const errorBox = {
-  marginTop: 12,
-  border: "1px solid rgba(239,68,68,0.22)",
-  borderRadius: 12,
-  padding: 10,
-  background: "rgba(254,242,242,0.72)",
-};
-
-const errorLine = {
-  color: "#7f1d1d",
-  fontWeight: 850,
-  fontSize: 12,
-  lineHeight: 1.45,
-};
-
-const okMessage = {
-  marginTop: 12,
-  color: "#166534",
-  fontWeight: 900,
-  background: "rgba(34,197,94,0.10)",
-  border: "1px solid rgba(34,197,94,0.20)",
-  borderRadius: 12,
-  padding: 10,
-};
-
-const card = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "4px solid #f97316",
-  borderRadius: 14,
-  padding: 14,
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  boxShadow: "0 12px 30px rgba(2,6,23,0.06)",
-};
-
-const cardTop = {
-  display: "flex",
-  alignItems: "flex-start",
-  justifyContent: "space-between",
-  gap: 12,
-};
-
-const cardTitle = { fontWeight: 950, color: "#0f172a" };
-const cardDesc = {
-  marginTop: 6,
-  color: "#64748b",
-  fontWeight: 850,
-  fontSize: 12,
-  lineHeight: 1.4,
-};
-
-const iconBox = {
-  width: 38,
-  height: 38,
-  borderRadius: 12,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "rgba(249,115,22,0.16)",
-  border: "1px solid rgba(249,115,22,0.22)",
-  fontWeight: 950,
-  color: "#0f172a",
-  flex: "0 0 auto",
-};
-
-const iconBoxSoft = {
-  ...iconBox,
-  background: "rgba(241,245,249,0.95)",
-  border: "1px solid rgba(226,232,240,0.95)",
-};
-
-const btnDark = {
-  marginTop: 12,
-  width: "fit-content",
-  border: "1px solid rgba(15,23,42,0.12)",
-  borderRadius: 12,
-  background: "#0f172a",
-  color: "#fff",
-  padding: "10px 14px",
-  cursor: "pointer",
-  fontWeight: 950,
-  boxShadow: "0 10px 22px rgba(2,6,23,0.10)",
-};
-
-const note = { marginTop: 10, fontSize: 12, color: "#94a3b8", fontWeight: 850 };
-
-const pillGray = {
-  background: "rgba(241,245,249,0.95)",
-  color: "#0f172a",
-  borderRadius: 999,
-  padding: "6px 10px",
-  fontSize: 12,
-  fontWeight: 950,
-  border: "1px solid rgba(226,232,240,0.95)",
-};
-
-const pillGray2 = {
-  ...pillGray,
-  background: "rgba(226,232,240,0.7)",
-  color: "#0f172a",
-};
-
-const pillWarn = {
-  background: "rgba(249,115,22,0.16)",
-  color: "#7c2d12",
-  borderRadius: 999,
-  padding: "6px 10px",
-  fontSize: 12,
-  fontWeight: 950,
-  border: "1px solid rgba(249,115,22,0.28)",
-};
-
-const btnPrimary = {
-  border: "1px solid rgba(249,115,22,0.30)",
-  background: "rgba(249,115,22,0.20)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  cursor: "pointer",
-  fontWeight: 950,
-  color: "#0f172a",
-  boxShadow: "0 10px 22px rgba(249,115,22,0.12)",
-  whiteSpace: "nowrap",
-};
-
-const btnGhost = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.92)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  cursor: "pointer",
-  fontWeight: 950,
-  color: "#0f172a",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.04)",
-  whiteSpace: "nowrap",
-};
-
-const miniLbl = { fontSize: 12, fontWeight: 950, color: "#64748b" };
-
-const selectMini = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  fontWeight: 950,
-  background: "rgba(255,255,255,0.92)",
-  cursor: "pointer",
-  boxShadow: "0 8px 18px rgba(2,6,23,0.04)",
-  outline: "none",
-};
-
-const pillIcon = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  marginRight: 6,
-  transform: "translateY(1px)",
-};
+function IssueTable({ title, sheets, field, tone, collapsed = false }) {
+  const rows = Object.entries(sheets || {}).flatMap(([k, s]) => (s?.[field] || []).map((e) => ({ sheet: SHEET_LABEL[k] || k, ...e })));
+  const content = (
+    <div className="an-table-wrap xp-issues">
+      <table className="an-table">
+        <thead><tr><th>Hoja</th><th>Fila</th><th>Detalle</th></tr></thead>
+        <tbody>
+          {rows.slice(0, 500).map((e, i) => (
+            <tr key={`${e.sheet}-${e.row}-${i}`}>
+              <td>{e.sheet}</td><td>{e.row}</td><td className={`xp-msg is-${tone}`}>{e.message}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {rows.length > 500 ? <p className="tch-hint">Se muestran 500 de {rows.length}.</p> : null}
+    </div>
+  );
+  return collapsed ? (
+    <details className="xp-details"><summary>{title} · {rows.length}</summary>{content}</details>
+  ) : (
+    <div className="xp-details"><div className="xp-details-title">{title} · {rows.length}</div>{content}</div>
+  );
+}
