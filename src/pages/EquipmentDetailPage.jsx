@@ -90,7 +90,11 @@ export default function EquipmentDetailPage() {
   }
 
   const active = isActiveEquipment(eq);
-  const routes = Array.isArray(eq.routes) ? eq.routes : [];
+  // Rutas propias + rutas de varios equipos en las que participa este equipo.
+  const routes = [
+    ...(Array.isArray(eq.routes) ? eq.routes : []),
+    ...(Array.isArray(eq.linkedRoutes) ? eq.linkedRoutes : []).map((r) => ({ ...r, linked: true })),
+  ];
   const history = Array.isArray(eq.history) ? eq.history : [];
   const upcoming = Array.isArray(eq.upcoming) ? eq.upcoming : [];
   const reports = Array.isArray(eq.conditionReports) ? eq.conditionReports : [];
@@ -188,7 +192,7 @@ export default function EquipmentDetailPage() {
                   <div className="inv-move-title">{formatRouteDisplayName(r.name, r.routeKind, r.name || "Ruta")}</div>
                   <div className="inv-move-qty" style={{ fontFamily: "inherit", fontWeight: 600, fontSize: 13 }}>{fmtDate(r.nextDate)}</div>
                   <div className="inv-move-detail">
-                    {[r.lubricant?.name || r.lubricantName || r.lubricantType, r.quantity ? `${r.quantity} ${r.unit || ""}`.trim() : null, frequencyLabel(r), r.technician?.name].filter(Boolean).join(" · ")}
+                    {[r.lubricant?.name || r.lubricantName || r.lubricantType, r.quantity ? `${r.quantity} ${r.unit || ""}`.trim() : null, frequencyLabel(r), r.technician?.name, r.linked ? `Ruta de ${r.equipmentsCount || r._count?.equipments || "varios"} equipos` : null, r.evidenceRequired ? "Foto obligatoria" : null].filter(Boolean).join(" · ")}
                   </div>
                 </div>
               ))}

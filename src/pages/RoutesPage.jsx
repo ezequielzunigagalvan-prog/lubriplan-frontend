@@ -11,6 +11,28 @@ import { usePlant } from "../context/PlantContext";
 import { getTechnicians } from "../services/techniciansService";
 import { updateRoute } from "../services/routesService";
 import { RouteSkeleton } from "../components/ui/CardSkeleton";
+import { daysFromToday, routeEquipmentList } from "../utils/routeFrequency";
+
+const STATUS_FILTERS = [
+  { key: "ALL", label: "Todas" },
+  { key: "OVERDUE", label: "Atrasadas" },
+  { key: "TODAY", label: "Hoy" },
+  { key: "WEEK", label: "Próximos 7 días" },
+  { key: "NO_TECH", label: "Sin técnico" },
+  { key: "MULTI", label: "Varios equipos" },
+  { key: "EVIDENCE", label: "Foto obligatoria" },
+];
+
+function matchesStatus(r, key) {
+  const diff = daysFromToday(r?.nextDate);
+  if (key === "OVERDUE") return diff != null && diff < 0;
+  if (key === "TODAY") return diff === 0;
+  if (key === "WEEK") return diff != null && diff >= 0 && diff <= 7;
+  if (key === "NO_TECH") return !(r?.technicianId ?? r?.technician?.id);
+  if (key === "MULTI") return routeEquipmentList(r).length > 1;
+  if (key === "EVIDENCE") return Boolean(r?.evidenceRequired);
+  return true;
+}
 
 function mapRouteToModalData(route) {
   if (!route) return null;
@@ -91,6 +113,10 @@ weeklyDays:
     nextDate: route.nextDate ?? "",
 
     imageUrl: route.imageUrl ?? "",
+    imagePublicId: route.imagePublicId ?? "",
+    monthlyAnchorDay: route.monthlyAnchorDay ?? null,
+    evidenceRequired: Boolean(route.evidenceRequired),
+    equipments: Array.isArray(route.equipments) ? route.equipments : [],
   };
 }
 
@@ -116,6 +142,7 @@ export default function RoutesPage() {
 
   // ✅ búsqueda
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const norm = (v) => String(v ?? "").toLowerCase().trim();
 
   // ✅ toast confirmación (crear/editar/eliminar)
@@ -134,8 +161,7 @@ export default function RoutesPage() {
 
     const data = await getRoutes();
     setRoutes(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("Error cargando rutas:", err);
+  } catch {
     pushToast("error", "Error", "Error cargando rutas.");
     setRoutes([]);
   } finally {
@@ -176,14 +202,12 @@ export default function RoutesPage() {
       const data = await getRoutes();
       if (!alive) return;
       setRoutes(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Error cargando rutas:", err);
+    } catch {
       if (!alive) return;
       pushToast("error", "Error", "Error cargando rutas.");
       setRoutes([]);
     } finally {
-      if (!alive) return;
-      setLoading(false);
+      if (alive) setLoading(false);
     }
   })();
 
@@ -210,8 +234,7 @@ useEffect(() => {
         Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
 
       setTechnicians(items);
-    } catch (err) {
-      console.error("Error cargando técnicos:", err);
+    } catch {
       if (!alive) return;
       setTechnicians([]);
     }
@@ -232,7 +255,7 @@ useEffect(() => {
 
   /* ===== CRUD ===== */
 
-  const handleSaveRoute = async (savedRoute) => {
+  const handleSaveRoute = async () => {
   const wasEdit = Boolean(editingRoute?.id);
 
   setShowNewRoute(false);
@@ -284,8 +307,7 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
     pushToast("success", "Técnico asignado", "La ruta fue actualizada correctamente.");
     await loadRoutes();
   } catch (err) {
-    console.error("Error asignando técnico a ruta:", err);
-    pushToast("error", "No se pudo asignar", "Ocurrió un error al actualizar la ruta.");
+    pushToast("error", "No se pudo asignar", err?.message || "Ocurrió un error al actualizar la ruta.");
   }
 };
 
@@ -299,7 +321,6 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
       setRoutes((prev) => prev.filter((r) => r.id !== id));
       pushToast("success", "Ruta eliminada", res?.preserved ? `${res.preserved} actividad${res.preserved === 1 ? "" : "es"} completada${res.preserved === 1 ? "" : "s"} se conserva${res.preserved === 1 ? "" : "n"} en el historial.` : "La ruta fue eliminada correctamente.");
     } catch (err) {
-      console.error("Error eliminando ruta:", err);
       pushToast("error", "No se pudo eliminar", err?.message || "Ocurrió un error eliminando la ruta.");
     }
   };
@@ -316,9 +337,12 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
   // ✅ filtro búsqueda
   const filtered = useMemo(() => {
   const q = norm(search);
-  if (!q) return routes;
+  const base = (routes || []).filter((r) => matchesStatus(r, statusFilter));
+  if (!q) return base;
 
-  return (routes || []).filter((r) => {
+  return base.filter((r) => {
+    const extraEq = routeEquipmentList(r).some((e) => norm(e?.name).includes(q) || norm(e?.code).includes(q));
+    if (extraEq) return true;
     const routeName = norm(r?.name);
     const eqName = norm(r?.equipment?.name);
     const eqCode = norm(r?.equipment?.code || r?.equipment?.tag);
@@ -347,28 +371,23 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
       (unit === "bombazos" && "bombazos".includes(q))
     );
   });
-}, [routes, search]);
+}, [routes, search, statusFilter]);
 
   // ✅ orden estable (por id desc)
   const sorted = useMemo(() => {
     return [...(filtered || [])].sort((a, b) => (Number(b?.id) || 0) - (Number(a?.id) || 0));
   }, [filtered]);
 
-  // ✅ KPIs (solo 3)
   const kpis = useMemo(() => {
     const equipmentsSet = new Set();
-    let withInstructions = 0;
-
-    (routes || []).forEach((r) => {
-      const eqId = r?.equipment?.id ?? r?.equipmentId ?? null;
-      if (eqId != null) equipmentsSet.add(String(eqId));
-      if (String(r?.instructions || "").trim()) withInstructions += 1;
-    });
-
+    const count = (key) => (routes || []).filter((r) => matchesStatus(r, key)).length;
+    (routes || []).forEach((r) => routeEquipmentList(r).forEach((e) => e?.id != null && equipmentsSet.add(String(e.id))));
     return {
       equipments: equipmentsSet.size,
       routes: (routes || []).length,
-      withInstructions,
+      overdue: count("OVERDUE"),
+      today: count("TODAY"),
+      noTech: count("NO_TECH"),
     };
   }, [routes]);
 
@@ -380,15 +399,17 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
       const eq = r?.equipment || null;
       const eqId = eq?.id ?? r?.equipmentId ?? null;
 
-      const key = eqId != null ? String(eqId) : "NO_EQUIPMENT";
+      const multi = routeEquipmentList(r).length > 1;
+      const key = multi ? "MULTI" : eqId != null ? String(eqId) : "NO_EQUIPMENT";
       if (!map.has(key)) {
-        map.set(key, { equipment: eq, equipmentId: eqId, routes: [] });
+        map.set(key, { equipment: multi ? null : eq, equipmentId: multi ? "MULTI" : eqId, multi, routes: [] });
       }
       map.get(key).routes.push(r);
     }
 
     const arr = Array.from(map.values());
     arr.sort((a, b) => {
+      if (a.multi !== b.multi) return a.multi ? -1 : 1;
       const an = String(a?.equipment?.name || "Sin equipo").toLowerCase();
       const bn = String(b?.equipment?.name || "Sin equipo").toLowerCase();
       return an.localeCompare(bn);
@@ -460,29 +481,43 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
           </div>
         </div>
 
-        {/* KPIs (3 cards) */}
         {!loading ? (
           <div style={kpiGrid}>
-            <KpiCard title="Equipos"          value={kpis.equipments}       icon="settings" accentColor="#0f172a" iconTone="navy"   />
-            <KpiCard title="Rutas"            value={kpis.routes}           icon="route"    accentColor="#f97316" iconTone="orange" />
-            <KpiCard title="Con instrucciones" value={kpis.withInstructions} icon="doc"      accentColor="#3b82f6" iconTone="blue"  />
+            <KpiCard title="Rutas" value={kpis.routes} icon="route" accentColor="#f97316" iconTone="orange" onClick={() => setStatusFilter("ALL")} />
+            <KpiCard title="Equipos cubiertos" value={kpis.equipments} icon="equipment" accentColor="#0f172a" iconTone="navy" />
+            <KpiCard title="Atrasadas" value={kpis.overdue} icon="alert" accentColor="#ef4444" iconTone={kpis.overdue ? "red" : "slate"} onClick={() => setStatusFilter("OVERDUE")} />
+            <KpiCard title="Para hoy" value={kpis.today} icon="calendar" accentColor="#f59e0b" iconTone="amber" onClick={() => setStatusFilter("TODAY")} />
+            <KpiCard title="Sin técnico" value={kpis.noTech} icon="user" accentColor="#64748b" iconTone={kpis.noTech ? "amber" : "slate"} onClick={() => setStatusFilter("NO_TECH")} />
           </div>
         ) : null}
 
-        {/* META */}
-        {!loading && (
+        {!loading && routes.length > 0 ? (
           <div style={metaRow}>
-            <div style={metaPill}>
-              Total rutas: <b style={{ marginLeft: 6 }}>{routes.length}</b>
-            </div>
-            <div style={metaPill}>
-              Mostrando: <b style={{ marginLeft: 6 }}>{sorted.length}</b>
-            </div>
-            <div style={metaPill}>
-              Equipos: <b style={{ marginLeft: 6 }}>{kpis.equipments}</b>
-            </div>
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setStatusFilter(f.key)}
+                style={statusFilter === f.key ? filterChipOn : filterChip}
+              >
+                {f.label}
+              </button>
+            ))}
+            <span style={{ ...metaPill, marginLeft: "auto" }}>
+              Mostrando <b style={{ marginLeft: 6 }}>{sorted.length}</b>&nbsp;de {routes.length}
+            </span>
           </div>
-        )}
+        ) : null}
+
+        {!loading && routes.length > 0 && sorted.length === 0 ? (
+          <div style={emptyBox}>
+            <div style={emptyTitle}>Sin resultados</div>
+            <div style={emptyDesc}>Ninguna ruta coincide con el filtro o la búsqueda.</div>
+            <button type="button" style={emptyActionPrimary} onClick={() => { setStatusFilter("ALL"); setSearch(""); }}>
+              Ver todas
+            </button>
+          </div>
+        ) : null}
 
         {/* CONTENT */}
         {loading && <RouteSkeleton count={4} />}
@@ -513,6 +548,7 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
               <EquipmentGroupCard
   key={String(group.equipmentId ?? `no-eq-${idx}`)}
   equipment={group.equipment}
+  multi={group.multi}
   routes={group.routes}
   canEditRoutes={canEditRoutes}
   canDeleteRoutes={canDeleteRoutes}
@@ -559,10 +595,17 @@ const KPI_ICON_TONES = {
   slate:  { background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.20)", color: "#475569" },
 };
 
-function KpiCard({ title, value, icon, accentColor = "#0f172a", iconTone = "navy", small }) {
+function KpiCard({ title, value, icon, accentColor = "#0f172a", iconTone = "navy", small, onClick }) {
   const tone = KPI_ICON_TONES[iconTone] || KPI_ICON_TONES.navy;
   return (
-    <div style={{ ...kpiCard, borderTop: `4px solid ${accentColor}` }} className="lpKpiCard">
+    <div
+      style={{ ...kpiCard, borderTop: `4px solid ${accentColor}`, cursor: onClick ? "pointer" : "default" }}
+      className="lpKpiCard"
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}
+    >
       <div style={kpiInner}>
         <div style={{ ...kpiIconBox, ...tone }}>
           <Icon name={icon} style={{ width: 20, height: 20 }} />
@@ -578,6 +621,7 @@ function KpiCard({ title, value, icon, accentColor = "#0f172a", iconTone = "navy
 
 function EquipmentGroupCard({
   equipment,
+  multi = false,
   routes,
   canEditRoutes,
   canDeleteRoutes,
@@ -586,7 +630,7 @@ function EquipmentGroupCard({
   technicians,
   onAssignTechnician,
 }) {
-  const eqName = equipment?.name || "Sin equipo";
+  const eqName = multi ? "Rutas con varios equipos" : equipment?.name || "Sin equipo";
   const eqCode = equipment?.code || equipment?.tag || "";
   const eqLocation = equipment?.location || "";
   const crit = String(equipment?.criticality || "").toUpperCase();
@@ -617,7 +661,8 @@ function EquipmentGroupCard({
             </div>
 
             <div style={eqSub}>
-              {routes?.length || 0} ruta(s)
+              {routes?.length || 0} ruta{routes?.length === 1 ? "" : "s"}
+              {multi ? <span style={{ opacity: 0.9 }}>· una actividad con lista de equipos</span> : null}
               {eqCode ? (
                 <span style={eqCodePill} title="Código / TAG">
                   <Icon name="tag" style={{ width: 14, height: 14 }} /> {eqCode}
@@ -719,7 +764,7 @@ const topActions = {
   alignItems: "center",
 };
 
-const panel = {
+const _panel = {
   marginTop: 14,
   background: "#fff",
   border: "1px solid #e5e7eb",
@@ -733,6 +778,19 @@ const metaRow = {
   gap: 10,
   flexWrap: "wrap",
 };
+
+const filterChip = {
+  height: 34,
+  padding: "0 14px",
+  borderRadius: 999,
+  border: "1px solid rgba(226,232,240,0.95)",
+  background: "#fff",
+  color: "#334155",
+  fontWeight: 850,
+  fontSize: 13,
+  cursor: "pointer",
+};
+const filterChipOn = { ...filterChip, background: "#0f172a", borderColor: "#0f172a", color: "#fff" };
 
 const metaPill = {
   background: "rgba(255,255,255,0.70)",
@@ -971,7 +1029,7 @@ const critPill = (label) => {
 const routesGrid = {
   padding: 14,
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fill, minmax(min(340px, 100%), 1fr))",
   gap: 14,
   alignItems: "start",
 };

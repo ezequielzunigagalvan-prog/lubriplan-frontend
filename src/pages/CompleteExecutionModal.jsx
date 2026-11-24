@@ -135,6 +135,8 @@ const loggedTechId = user?.technicianId != null ? Number(user.technicianId) : nu
 
   // consumo opcional (MANUAL o CORRECTIVA)
   const [usedLubricant, setUsedLubricant] = useState(false);
+  // Rutas con varios equipos: lista de equipos atendidos en esta actividad.
+  const [checklist, setChecklist] = useState([]);
 
   const [signatureData, setSignatureData] = useState(null);
   const handleSignatureChange = useCallback((data) => setSignatureData(data), []);
@@ -286,6 +288,7 @@ setForm((prev) => ({
   evidenceImage: ex?.evidenceImage || "",
   evidenceNote: ex?.evidenceNote || "",
 }));
+setChecklist(buildChecklist(ex));
       } catch (e) {
         console.error(e);
         if (!aliveRef.current) return;
@@ -318,7 +321,7 @@ setForm((prev) => ({
   const usesOptionalConsumption = isManual || isInspectionRoute || isCorrectiveLike;
 
   const equipment = isManual ? execution?.equipment : execution?.route?.equipment;
-  const equipmentName = equipment?.name || "—";
+  const equipmentName = `${equipment?.name || "—"}${!isManual && checklist.length > 1 ? ` +${checklist.length - 1} equipo${checklist.length > 2 ? "s" : ""}` : ""}`;
   const equipmentTag = equipment?.code || equipment?.tag || "";
   const equipmentLocation = equipment?.location || "";
 
@@ -351,6 +354,10 @@ setForm((prev) => ({
   const pumpStrokeUnit = execution?.route?.pumpStrokeUnit ?? "";
 
   const points = Math.max(1, Number(execution?.route?.points || 1));
+  const isMultiEquipment = !isManual && checklist.length > 1;
+  const attendedCount = isMultiEquipment ? checklist.filter((c) => c.done).length : 1;
+  const evidenceRequired = !isManual && Boolean(execution?.route?.evidenceRequired);
+  const evidenceEquipmentName = execution?.evidenceEquipment?.name || "";
 
   const scheduledLabel = execution?.scheduledAt ? toLocalYMD(execution.scheduledAt) : "";
   const isFutureExecution = execution?.status !== "COMPLETED" && scheduledLabel && scheduledLabel > today;
@@ -379,6 +386,8 @@ setForm((prev) => ({
 
     if (!form.executedAt || !form.technicianId || !form.condition) return false;
     if (selectedTechInactive) return false;
+    if (evidenceRequired && !form.evidenceImage) return false;
+    if (isMultiEquipment && attendedCount === 0) return false;
 
     if (usesOptionalConsumption) {
       if (usedLubricant) {
@@ -403,6 +412,10 @@ setForm((prev) => ({
     selectedTechInactive,
     usesOptionalConsumption,
     usedLubricant,
+    evidenceRequired,
+    form.evidenceImage,
+    isMultiEquipment,
+    attendedCount,
   ]);
 
   if (!open) return null;
@@ -447,6 +460,10 @@ setForm((prev) => ({
     if (!canSave) {
       if (isFutureExecution) return setErr(`Esta actividad está programada para ${scheduledLabel}.`);
       if (selectedTechInactive) return setErr("No puedes asignar un técnico inactivo.");
+      if (evidenceRequired && !form.evidenceImage) {
+        return setErr(`Esta ruta requiere foto de evidencia${evidenceEquipmentName ? ` del equipo ${evidenceEquipmentName}` : ""}.`);
+      }
+      if (isMultiEquipment && attendedCount === 0) return setErr("Marca al menos un equipo atendido.");
 
       if (usesOptionalConsumption && usedLubricant) {
         if (!form.usedLubricantId) return setErr("Selecciona el lubricante utilizado.");
@@ -493,6 +510,9 @@ setForm((prev) => ({
         evidenceImage: form.evidenceImage || null,
         evidenceNote: form.evidenceNote?.trim() || null,
         signatureImage: signatureData || null,
+        ...(isMultiEquipment
+          ? { equipmentChecklist: checklist.map((c) => ({ equipmentId: c.equipmentId, done: c.done, note: c.note?.trim() || "" })) }
+          : {}),
       };
 
       const result = await completeExecution(Number(executionId), payload);
@@ -502,7 +522,6 @@ setForm((prev) => ({
       onSaved?.(fresh);
       onClose?.();
     } catch (e2) {
-      console.error(e2);
       setErr(e2?.message || "Error completando actividad");
     } finally {
       setSaving(false);
@@ -892,23 +911,83 @@ setForm((prev) => ({
                   {isPumpRoute ? (
                     <div style={hint}>
                       Puntos: <b>{points}</b>. 1 bombazo = <b>{pumpStrokeValue || "—"}</b>{" "}
-                      <b>{pumpStrokeUnit || ""}</b>. El sistema convierte automáticamente para
-                      inventario e historial.
+                      <b>{pumpStrokeUnit || ""}</b>
+                      {isMultiEquipment ? <> · Equipos atendidos: <b>{attendedCount}</b></> : null}. El sistema
+                      convierte automáticamente para inventario e historial.
                     </div>
                   ) : (
                     <div style={hint}>
-                      Puntos: <b>{points}</b>. El descuento final se calcula por punto al completar.
+                      Puntos: <b>{points}</b>
+                      {isMultiEquipment ? <> · Equipos atendidos: <b>{attendedCount}</b></> : null}. Total a
+                      descontar: <b>{form.usedQuantity !== "" ? Math.round(Number(form.usedQuantity) * points * attendedCount * 100) / 100 : "—"} {unit}</b>
                     </div>
                   )}
                 </Field>
               )}
 
-              <div style={evidenceCard}>
+              {isMultiEquipment ? (
+                <div style={checkCard}>
+                  <div style={checkHead}>
+                    <div>
+                      <div style={evidenceCardTitle}>Equipos de la ruta</div>
+                      <div style={evidenceCardSub}>Desmarca los equipos que no se atendieron y anota el motivo.</div>
+                    </div>
+                    <span style={checkCount}>
+                      {attendedCount}/{checklist.length}
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {checklist.map((c, i) => (
+                      <div key={c.equipmentId} style={{ ...checkRow, ...(c.done ? null : checkRowOff) }}>
+                        <label style={checkLabel}>
+                          <input
+                            type="checkbox"
+                            checked={c.done}
+                            disabled={saving || isCompleted}
+                            onChange={(e) =>
+                              setChecklist((prev) => prev.map((x, j) => (j === i ? { ...x, done: e.target.checked } : x)))
+                            }
+                            style={{ width: 22, height: 22, accentColor: "#16a34a", flexShrink: 0 }}
+                          />
+                          <span style={{ minWidth: 0 }}>
+                            <span style={checkName}>{c.name}</span>
+                            <span style={checkMeta}>{[c.code, c.location].filter(Boolean).join(" · ")}</span>
+                          </span>
+                          {execution?.evidenceEquipmentId === c.equipmentId ? (
+                            <span style={checkPhotoPill}>
+                              <Icon name="camera" style={{ width: 14, height: 14 }} /> Foto
+                            </span>
+                          ) : null}
+                        </label>
+                        {!c.done ? (
+                          <input
+                            value={c.note}
+                            placeholder="Motivo (ej. equipo parado)"
+                            disabled={saving || isCompleted}
+                            onChange={(e) =>
+                              setChecklist((prev) => prev.map((x, j) => (j === i ? { ...x, note: e.target.value } : x)))
+                            }
+                            style={{ ...input, marginTop: 8, width: "100%", boxSizing: "border-box" }}
+                          />
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div style={{ ...evidenceCard, ...(evidenceRequired && !form.evidenceImage ? evidenceCardRequired : null) }}>
                 <div style={evidenceCardHead}>
                   <div>
-                    <div style={evidenceCardTitle}>Evidencia fotográfica</div>
+                    <div style={evidenceCardTitle}>
+                      Evidencia fotográfica{evidenceRequired ? " · obligatoria" : ""}
+                    </div>
                     <div style={evidenceCardSub}>
-                      Toma una foto en campo o sube una imagen existente
+                      {evidenceRequired && evidenceEquipmentName
+                        ? `Toma la foto del equipo ${evidenceEquipmentName}`
+                        : evidenceRequired
+                        ? "Esta ruta no se puede completar sin foto"
+                        : "Toma una foto en campo o sube una imagen existente"}
                     </div>
                   </div>
                 </div>
@@ -1487,6 +1566,67 @@ const fieldLabelSmall = {
   marginBottom: 6,
   fontSize: 12,
 };
+
+const checkCard = {
+  borderRadius: 16,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  padding: 14,
+  display: "grid",
+  gap: 10,
+};
+const checkHead = { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 };
+const checkCount = {
+  padding: "4px 10px",
+  borderRadius: 999,
+  background: "#0f172a",
+  color: "#fff",
+  fontWeight: 950,
+  fontSize: 13,
+};
+const checkRow = { padding: "10px 12px", borderRadius: 12, border: "1px solid #bbf7d0", background: "#f0fdf4" };
+const checkRowOff = { border: "1px solid #e2e8f0", background: "#f8fafc" };
+const checkLabel = { display: "flex", alignItems: "center", gap: 12, cursor: "pointer" };
+const checkName = { display: "block", fontWeight: 950, color: "#0f172a", fontSize: 14 };
+const checkMeta = { display: "block", fontWeight: 750, color: "#64748b", fontSize: 12 };
+const checkPhotoPill = {
+  marginLeft: "auto",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  padding: "4px 8px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 900,
+  color: "#7c2d12",
+  background: "rgba(249,115,22,0.12)",
+  border: "1px solid rgba(249,115,22,0.35)",
+  flexShrink: 0,
+};
+const evidenceCardRequired = { borderColor: "rgba(249,115,22,0.55)", boxShadow: "0 0 0 3px rgba(249,115,22,0.12)" };
+
+function buildChecklist(ex) {
+  const links = Array.isArray(ex?.route?.equipments) ? ex.route.equipments : [];
+  if (links.length < 2) return [];
+  const saved = new Map(
+    (Array.isArray(ex?.equipmentChecklist) ? ex.equipmentChecklist : []).map((c) => [Number(c.equipmentId), c])
+  );
+  return links
+    .slice()
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .map((l) => {
+      const id = Number(l.equipmentId ?? l.equipment?.id);
+      const s = saved.get(id);
+      return {
+        equipmentId: id,
+        name: l.equipment?.name || `Equipo #${id}`,
+        code: l.equipment?.code || "",
+        location: l.equipment?.location || "",
+        done: s ? Boolean(s.done) : true,
+        note: s?.note || "",
+      };
+    });
+}
 
 const evidenceCard = {
   borderRadius: 18,

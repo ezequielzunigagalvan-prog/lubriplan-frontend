@@ -123,9 +123,70 @@ function addYearsKeepingDay(date, yearsToAdd) {
   return new Date(year, month, finalDay);
 }
 
-function getNextDateByFrequency(lastDateStr, frequency, weeklyDays = []) {
+/* Frecuencia del formulario → regla del servidor (mismo calendario que reprograma al completar). */
+const CUSTOM_FREQ = "Cada cierto número de días";
+const WEEKLY_FREQ = "Varias veces por semana";
+const FREQ_TO_BACKEND = {
+  Diario: { frequencyType: "DAILY" },
+  Semanal: { frequencyDays: 7 },
+  Quincenal: { frequencyDays: 15 },
+  Mensual: { frequencyType: "MONTHLY", months: 1 },
+  Bimestral: { frequencyType: "BIMONTHLY", months: 2 },
+  Trimestral: { frequencyType: "QUARTERLY", months: 3 },
+  Cuatrimestral: { frequencyType: "FOURMONTHLY", months: 4 },
+  Semestral: { frequencyType: "SEMIANNUAL", months: 6 },
+  Anual: { frequencyType: "ANNUAL", months: 12 },
+  [WEEKLY_FREQ]: { frequencyType: "WEEKLY" },
+};
+const TYPE_TO_FREQ = Object.fromEntries(
+  Object.entries(FREQ_TO_BACKEND)
+    .filter(([, v]) => v.frequencyType)
+    .map(([k, v]) => [v.frequencyType, k])
+);
+
+function frequencyFromRoute(data, weeklyDays) {
+  const type = String(data?.frequencyType || "").trim().toUpperCase();
+  if (type === "WEEKLY" && weeklyDays.length) return { frequency: WEEKLY_FREQ, customDays: "" };
+  if (type && TYPE_TO_FREQ[type]) return { frequency: TYPE_TO_FREQ[type], customDays: "" };
+  const n = Number(data?.frequencyDays);
+  if (n === 1) return { frequency: "Diario", customDays: "" };
+  if (n === 7) return { frequency: "Semanal", customDays: "" };
+  if (n === 15) return { frequency: "Quincenal", customDays: "" };
+  if (Number.isInteger(n) && n > 0) return { frequency: CUSTOM_FREQ, customDays: String(n) };
+  return { frequency: data?.frequency || "Mensual", customDays: "" };
+}
+
+function describeSchedule(frequency, nextDate, weeklyDays, customDays) {
+  const meta = FREQ_TO_BACKEND[frequency];
+  const d = parseLocalDate(nextDate);
+  if (frequency === WEEKLY_FREQ) {
+    const names = WEEK_DAYS.filter((w) => weeklyDays.includes(w.value)).map((w) => w.label);
+    return names.length ? `Se repite cada ${names.join(", ")}.` : "";
+  }
+  if (meta?.months && d) {
+    const every = meta.months === 1 ? "cada mes" : meta.months === 12 ? "cada año" : `cada ${meta.months} meses`;
+    return `Se repite ${every} el día ${d.getDate()} (si el mes es más corto, el último día).`;
+  }
+  if (frequency === "Diario") return "Se repite todos los días.";
+  const days = frequency === CUSTOM_FREQ ? Number(customDays) : meta?.frequencyDays;
+  return days > 0 ? `Se repite cada ${days} días.` : "";
+}
+
+function getNextDateByFrequency(lastDateStr, frequency, weeklyDays = [], customDays = "") {
   const baseDate = parseLocalDate(lastDateStr);
   if (!baseDate || !frequency) return "";
+
+  if (frequency === CUSTOM_FREQ) {
+    const n = Number(customDays);
+    if (!Number.isInteger(n) || n < 1) return "";
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + n);
+    return formatLocalYMD(d);
+  }
+
+  if (frequency === "Trimestral") {
+    return formatLocalYMD(addMonthsKeepingDay(baseDate, 3));
+  }
 
   if (frequency === "Diario") {
     const d = new Date(baseDate);
@@ -268,6 +329,38 @@ const Select = ({ label, options, hint, active, ...props }) => (
   </FieldShell>
 );
 
+const BASE_LUBE_TYPES = ["Aceite hidráulico",
+      "Aceite para engranes",
+      "Aceite para compresor",
+      "Aceite de circulación",
+      "Aceite para cadenas",
+      "Aceite para unidades neumáticas",
+      "Grasa EP",
+      "Grasa alta temperatura",
+      "Grasa grado alimenticio",
+      "Grasa multipropósito",
+      "Grasa para motores eléctricos",
+      "Grasa para altas velocidades",
+      "Otro"];
+const METHOD_OPTIONS = ["Manual", "Inyector", "Aceitera", "Sistema automático", "Unidad de filtrado móvil"];
+/* El servidor guarda el método en minúsculas: recupera la opción del catálogo o conserva el valor propio. */
+function canonicalMethod(value) {
+  const v = String(value || "").trim();
+  if (!v) return "Manual";
+  const hit = METHOD_OPTIONS.find((o) => o.toLowerCase() === v.toLowerCase());
+  return hit || v.charAt(0).toUpperCase() + v.slice(1);
+}
+
+/* Conserva el día ancla (p. ej. 31) si la próxima fecha es ese día recortado al fin de mes. */
+function keepAnchor(existing, nextDate) {
+  const d = parseLocalDate(nextDate);
+  if (!d) return null;
+  const anchor = Number(existing?.monthlyAnchorDay);
+  const last = getLastDayOfMonth(d.getFullYear(), d.getMonth());
+  if (Number.isInteger(anchor) && anchor >= 1 && anchor <= 31 && Math.min(anchor, last) === d.getDate()) return anchor;
+  return d.getDate();
+}
+
 /* ================== MODAL ================== */
 export default function NewRouteModal({ open, onClose, onSave, initialData }) {
   const fileRef = useRef(null);
@@ -285,7 +378,10 @@ export default function NewRouteModal({ open, onClose, onSave, initialData }) {
     lubricantType: "",
     quantity: "",
     frequency: "Mensual",
+    customDays: "",
     weeklyDays: [],
+    evidenceRequired: false,
+    extraEquipmentIds: [],
 
     lubricantId: "",
     lubricantName: "",
@@ -301,9 +397,13 @@ export default function NewRouteModal({ open, onClose, onSave, initialData }) {
     lastDate: "",
     nextDate: "",
     imageUrl: "",
+    imagePublicId: "",
   };
 
   const [form, setForm] = useState(initialState);
+  // La próxima fecha solo se recalcula cuando el usuario cambia la programación (no al abrir para editar).
+  const scheduleTouched = useRef(false);
+  const [extraPick, setExtraPick] = useState("");
   const [equipments, setEquipments] = useState([]);
   const [lubricants, setLubricants] = useState([]);
   const [technicians, setTechnicians] = useState([]);
@@ -316,18 +416,6 @@ export default function NewRouteModal({ open, onClose, onSave, initialData }) {
   const [imagePreview, setImagePreview] = useState("");
   const [activeField, setActiveField] = useState("");
 
-  const frequencyFromDays = (days) => {
-    const n = Number(days);
-    if (n === 1) return "Diario";
-    if (n === 7) return "Semanal";
-    if (n === 15) return "Quincenal";
-    if (n === 30) return "Mensual";
-    if (n === 60) return "Bimestral";
-    if (n === 120) return "Cuatrimestral";
-    if (n === 180) return "Semestral";
-    if (n === 365) return "Anual";
-    return "Mensual";
-  };
 
   const isBombazos = String(form.unit || "").toUpperCase() === "BOMBAZOS";
   const isInspectionRoute =
@@ -338,22 +426,18 @@ export default function NewRouteModal({ open, onClose, onSave, initialData }) {
 useEffect(() => {
   if (!open) return;
 
-  console.log(">>> initialData modal =", initialData);
-
   const data = initialData || {};
   const initialUnit = data.unit ?? "ml";
 
   const normalizedWeeklyDays = normalizeWeeklyDaysFromBackend(data.weeklyDays);
-  const backendFrequencyType = String(data.frequencyType || "").trim().toUpperCase();
-
-  const resolvedFrequency =
-    backendFrequencyType === "WEEKLY" && normalizedWeeklyDays.length > 0
-      ? "Varias veces por semana"
-      : data.frequencyDays != null
-      ? frequencyFromDays(data.frequencyDays)
-      : data.frequency
-      ? data.frequency
-      : "Mensual";
+  const resolved = frequencyFromRoute(data, normalizedWeeklyDays);
+  const primaryId = data.equipmentId != null ? String(data.equipmentId) : "";
+  const extraEquipmentIds = (Array.isArray(data.equipments) ? data.equipments : [])
+    .slice()
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .map((x) => String(x.equipmentId ?? x.equipment?.id ?? ""))
+    .filter((id) => id && id !== primaryId);
+  scheduleTouched.current = false;
 
   setForm({
     routeKind: data.routeKind ?? "LUBRICATION",
@@ -366,8 +450,11 @@ useEffect(() => {
 
     lubricantType: data.lubricantType ?? "",
     quantity: data.quantity != null ? String(data.quantity) : "",
-    frequency: resolvedFrequency,
+    frequency: resolved.frequency,
+    customDays: resolved.customDays,
     weeklyDays: normalizedWeeklyDays,
+    evidenceRequired: Boolean(data.evidenceRequired),
+    extraEquipmentIds,
 
     lubricantId: data.lubricantId != null ? String(data.lubricantId) : "",
     lubricantName:
@@ -383,14 +470,16 @@ useEffect(() => {
         : "",
     pumpStrokeUnit: data.pumpStrokeUnit ?? "g",
 
-    method: data.method ?? "Manual",
+    method: canonicalMethod(data.method),
     points: data.points != null ? String(data.points) : "",
     instructions: data.instructions ?? "",
     lastDate: toYMD(data.lastDate ?? ""),
     nextDate: toYMD(data.nextDate ?? ""),
     imageUrl: data.imageUrl ?? "",
+    imagePublicId: data.imagePublicId ?? "",
   });
 
+  setExtraPick("");
   setPointsMode("simple");
   setPointsItems([{ name: "", qty: "" }]);
   setEquipmentSearch("");
@@ -405,7 +494,7 @@ useEffect(() => {
       if (imagePreview?.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(imagePreview);
-        } catch {}
+        } catch { /* blob ya liberado */ }
       }
     };
   }, [imagePreview]);
@@ -422,7 +511,7 @@ useEffect(() => {
   if (imagePreview?.startsWith("blob:")) {
     try {
       URL.revokeObjectURL(imagePreview);
-    } catch {}
+    } catch { /* blob ya liberado */ }
   }
 
   setImageFile(null);
@@ -626,18 +715,20 @@ useEffect(() => {
 
   /* ===== calcular próxima fecha sin desfase ===== */
   useEffect(() => {
+    if (!scheduleTouched.current) return;
     if (!form.lastDate || !form.frequency) return;
 
     const next = getNextDateByFrequency(
       form.lastDate,
       form.frequency,
-      Array.isArray(form.weeklyDays) ? form.weeklyDays : []
+      Array.isArray(form.weeklyDays) ? form.weeklyDays : [],
+      form.customDays
     );
 
     if (!next) return;
 
-    setForm((prev) => ({ ...prev, nextDate: next }));
-  }, [form.lastDate, form.frequency, form.weeklyDays]);
+    setForm((prev) => (prev.nextDate === next ? prev : { ...prev, nextDate: next }));
+  }, [form.lastDate, form.frequency, form.weeklyDays, form.customDays]);
 
   /* ===== puntos avanzados ===== */
   const advancedTotal = useMemo(() => {
@@ -682,6 +773,7 @@ useEffect(() => {
 
   const lubricantTypeOptions = useMemo(
     () => [
+      ...(form.lubricantType && !BASE_LUBE_TYPES.includes(form.lubricantType) ? [form.lubricantType] : []),
       "Aceite hidráulico",
       "Aceite para engranes",
       "Aceite para compresor",
@@ -696,7 +788,7 @@ useEffect(() => {
       "Grasa para altas velocidades",
       "Otro",
     ],
-    []
+    [form.lubricantType]
   );
 
   const frequencyOptions = useMemo(
@@ -706,17 +798,19 @@ useEffect(() => {
       "Quincenal",
       "Mensual",
       "Bimestral",
+      "Trimestral",
       "Cuatrimestral",
       "Semestral",
       "Anual",
-      "Varias veces por semana",
+      WEEKLY_FREQ,
+      CUSTOM_FREQ,
     ],
     []
   );
 
   const methodOptions = useMemo(
-    () => ["Manual", "Inyector", "Aceitera", "Sistema automático", "Unidad de filtrado móvil"],
-    []
+    () => (form.method && !METHOD_OPTIONS.includes(form.method) ? [...METHOD_OPTIONS, form.method] : METHOD_OPTIONS),
+    [form.method]
   );
 
   const unitOptions = useMemo(
@@ -749,6 +843,7 @@ useEffect(() => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (["lastDate", "frequency", "customDays"].includes(name)) scheduleTouched.current = true;
 
     setForm((prev) => {
       const next = {
@@ -770,6 +865,7 @@ useEffect(() => {
         next.equipmentName = selected?.name || "";
         next.equipmentCode = selected?.code || selected?.tag || "";
         next.equipmentLocation = selected?.location || "";
+        next.extraEquipmentIds = (prev.extraEquipmentIds || []).filter((id) => id !== String(value));
 
         const defaultTechnicianId =
           selected?.assignedTechnician?.id ?? selected?.technicianId ?? selected?.technician?.id ?? "";
@@ -817,7 +913,7 @@ useEffect(() => {
     if (imagePreview?.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(imagePreview);
-      } catch {}
+      } catch { /* blob ya liberado */ }
     }
 
     setImageFile(file);
@@ -828,7 +924,7 @@ useEffect(() => {
     if (imagePreview?.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(imagePreview);
-      } catch {}
+      } catch { /* blob ya liberado */ }
     }
     setImageFile(null);
     setImagePreview("");
@@ -845,21 +941,14 @@ useEffect(() => {
 
     setSaving(true);
     try {
+      const freqMeta = FREQ_TO_BACKEND[form.frequency] || null;
+      const customDays = Number(form.customDays);
       const frequencyDays =
-        form.frequency === "Varias veces por semana"
-          ? 7
-          : Number(
-              {
-                Diario: 1,
-                Semanal: 7,
-                Quincenal: 15,
-                Mensual: 30,
-                Bimestral: 60,
-                Cuatrimestral: 120,
-                Semestral: 180,
-                Anual: 365,
-              }[form.frequency] || 0
-            );
+        form.frequency === CUSTOM_FREQ ? customDays : freqMeta?.frequencyDays ?? null;
+      if (form.frequency === CUSTOM_FREQ && (!Number.isInteger(customDays) || customDays < 1)) {
+        throw new Error("Indica cada cuántos días se repite la ruta (número entero).");
+      }
+      if (!freqMeta && form.frequency !== CUSTOM_FREQ) throw new Error("Frecuencia inválida");
 
       const pointsInt =
         pointsMode === "advanced"
@@ -891,11 +980,19 @@ useEffect(() => {
       if (!isInspectionRoute && !form.lubricantType) {
         throw new Error("Falta: Tipo de lubricante");
       }
-      if (!isInspectionRoute && !Number.isFinite(quantity)) {
-        throw new Error("Cantidad inválida");
+      if (!isInspectionRoute && (!Number.isFinite(quantity) || quantity <= 0)) {
+        throw new Error("La cantidad por punto debe ser mayor a cero");
       }
-      if (quantity != null && quantity < 0) throw new Error("Cantidad inválida");
-      if (!frequencyDays) throw new Error("Frecuencia inválida");
+      if (quantity != null && (!Number.isFinite(quantity) || quantity < 0)) throw new Error("Cantidad inválida");
+      if (pointsInt != null && (!Number.isInteger(pointsInt) || pointsInt < 1)) {
+        throw new Error("Los puntos deben ser un número entero de 1 o más");
+      }
+      if (!form.lastDate && !form.nextDate) {
+        throw new Error("Indica la última ejecución o la próxima fecha");
+      }
+      if (form.lastDate && form.nextDate && form.nextDate <= form.lastDate) {
+        throw new Error("La próxima fecha debe ser posterior a la última");
+      }
 
       if (
         form.frequency === "Varias veces por semana" &&
@@ -914,10 +1011,17 @@ useEffect(() => {
       }
 
       let finalImageUrl = form.imageUrl || null;
+      let finalImagePublicId = form.imagePublicId || null;
       if (imageFile) {
         const uploaded = await uploadRouteImage(imageFile);
         finalImageUrl = uploaded?.imageUrl || uploaded?.url || null;
+        finalImagePublicId = uploaded?.imagePublicId || null;
       }
+
+      const equipmentIds = [
+        equipmentId,
+        ...(form.extraEquipmentIds || []).map(Number).filter((id) => id > 0 && id !== equipmentId),
+      ];
 
      const backendWeeklyDays =
   form.frequency === "Varias veces por semana"
@@ -931,17 +1035,16 @@ if (form.frequency === "Varias veces por semana" && backendWeeklyDays.length ===
 const payload = {
   name,
   equipmentId,
+  equipmentIds,
+  evidenceRequired: Boolean(form.evidenceRequired),
   routeKind: String(form.routeKind || "LUBRICATION"),
   lubricantType: String(form.lubricantType || "").trim() || null,
   quantity,
   frequencyDays,
-  frequencyType:
-    form.frequency === "Varias veces por semana" ? "WEEKLY" : null,
+  frequencyType: freqMeta?.frequencyType ?? null,
   weeklyDays: backendWeeklyDays,
-  monthlyAnchorDay:
-    form.lastDate && form.frequency !== "Varias veces por semana"
-      ? Number(form.lastDate.slice(8, 10))
-      : null,
+  // Mensuales: el servidor toma el día de la próxima fecha como ancla del calendario.
+  monthlyAnchorDay: freqMeta?.months ? keepAnchor(initialData, form.nextDate) : null,
 
   lubricantId:
     form.lubricantId === "" || form.lubricantId == null
@@ -966,6 +1069,7 @@ const payload = {
   nextDate: form.nextDate || null,
 
   imageUrl: finalImageUrl,
+  imagePublicId: finalImagePublicId,
 };
 
       const saved = initialData?.id
@@ -977,8 +1081,8 @@ const payload = {
       try {
         const maybePromise = onSave?.(saved);
         if (maybePromise?.then) await maybePromise;
-      } catch (e) {
-        console.warn("onSave failed:", e);
+      } catch {
+        // la ruta ya se guardó; el refresco de la lista no debe mostrar error
       }
     } catch (err) {
       toast.error(err?.message || "Error guardando ruta");
@@ -1114,6 +1218,97 @@ const payload = {
                   onBlur={() => setActiveField("")}
                 />
               </div>
+            </div>
+
+            <div style={multiBox}>
+              <div style={pointsTop}>
+                <div>
+                  <div style={miniTitle}>Varios equipos en la misma ruta</div>
+                  <div style={miniSub}>
+                    Para tareas iguales en varios equipos: se genera una sola actividad con lista de
+                    equipos y el consumo se multiplica por los equipos atendidos.
+                  </div>
+                </div>
+                <span style={multiCount}>
+                  {1 + (form.extraEquipmentIds?.length || 0)} equipo
+                  {(form.extraEquipmentIds?.length || 0) ? "s" : ""}
+                </span>
+              </div>
+
+              {form.extraEquipmentIds?.length ? (
+                <div style={chipsWrap}>
+                  {form.extraEquipmentIds.map((id) => {
+                    const eq = equipments.find((e) => String(e.id) === id);
+                    return (
+                      <span key={id} style={chip}>
+                        {eq ? `${eq.name}${eq.code ? ` · ${eq.code}` : ""}` : `Equipo #${id}`}
+                        <button
+                          type="button"
+                          style={chipX}
+                          aria-label="Quitar equipo"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              extraEquipmentIds: prev.extraEquipmentIds.filter((x) => x !== id),
+                            }))
+                          }
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : null}
+
+              <div style={{ ...row2, marginTop: 10 }}>
+                <div style={{ flex: 1, minWidth: 260 }}>
+                  <Select
+                    label="Agregar equipo"
+                    value={extraPick}
+                    onChange={(e) => setExtraPick(e.target.value)}
+                    options={equipmentOptions.filter(
+                      (o) => o.value !== String(form.equipmentId) && !(form.extraEquipmentIds || []).includes(o.value)
+                    )}
+                    hint={form.equipmentId ? "El equipo de arriba es el principal." : "Primero elige el equipo principal."}
+                    disabled={!form.equipmentId}
+                  />
+                </div>
+                <button
+                  type="button"
+                  style={{ ...btnGhost, alignSelf: "center", marginTop: 6 }}
+                  disabled={!extraPick}
+                  onClick={() => {
+                    if (!extraPick) return;
+                    setForm((prev) => ({
+                      ...prev,
+                      extraEquipmentIds: [...(prev.extraEquipmentIds || []), extraPick].slice(0, 59),
+                    }));
+                    setExtraPick("");
+                  }}
+                >
+                  + Agregar
+                </button>
+              </div>
+            </div>
+
+            <div style={multiBox}>
+              <label style={evidenceRow}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.evidenceRequired)}
+                  onChange={(e) => setForm((prev) => ({ ...prev, evidenceRequired: e.target.checked }))}
+                  style={{ width: 20, height: 20, accentColor: "#f97316" }}
+                />
+                <div>
+                  <div style={miniTitle}>Foto de evidencia obligatoria</div>
+                  <div style={miniSub}>
+                    {form.extraEquipmentIds?.length
+                      ? "Cada actividad pide la foto de un equipo elegido al azar; rota hasta cubrir todos los equipos de la ruta."
+                      : "El técnico no podrá completar la actividad sin subir una foto."}
+                  </div>
+                </div>
+              </label>
             </div>
 
             <div style={{ marginTop: 14 }}>
@@ -1511,13 +1706,28 @@ const payload = {
               value={form.frequency}
               onChange={handleChange}
               options={frequencyOptions}
-              hint="La próxima ejecución se calcula automáticamente con base en la última fecha y la frecuencia."
+              hint="Al completar una actividad, la siguiente se programa en la próxima fecha del calendario de esta frecuencia (no se recorre si se completa tarde)."
               active={activeField === "frequency"}
               onFocus={() => setActiveField("frequency")}
               onBlur={() => setActiveField("")}
             />
 
-            {form.frequency === "Varias veces por semana" ? (
+            {form.frequency === CUSTOM_FREQ ? (
+              <div style={{ marginTop: 10 }}>
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  label="Cada cuántos días *"
+                  name="customDays"
+                  value={form.customDays}
+                  onChange={handleChange}
+                  placeholder="Ej: 10"
+                />
+              </div>
+            ) : null}
+
+            {form.frequency === WEEKLY_FREQ ? (
               <div style={weeklyBox}>
                 <div style={miniTitle}>Días programados</div>
                 <div style={miniSub}>
@@ -1534,6 +1744,7 @@ const payload = {
                         type="button"
                         style={active ? weekDayBtnActive : weekDayBtn}
                         onClick={() => {
+                          scheduleTouched.current = true;
                           setForm((prev) => {
                             const exists = prev.weeklyDays.includes(day.value);
                             const nextDays = exists
@@ -1580,6 +1791,7 @@ const payload = {
                   name="nextDate"
                   value={form.nextDate}
                   onChange={handleChange}
+                  hint={describeSchedule(form.frequency, form.nextDate, form.weeklyDays || [], form.customDays)}
                   active={activeField === "nextDate"}
                   onFocus={() => setActiveField("nextDate")}
                   onBlur={() => setActiveField("")}
@@ -1622,6 +1834,48 @@ const payload = {
 }
 
 /* ================== STYLES ================== */
+const multiBox = {
+  marginTop: 14,
+  padding: 14,
+  borderRadius: 14,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+};
+const multiCount = {
+  padding: "4px 10px",
+  borderRadius: 999,
+  background: "#0f172a",
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: 900,
+  whiteSpace: "nowrap",
+};
+const chipsWrap = { display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 };
+const chip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 6px 6px 10px",
+  borderRadius: 999,
+  background: "rgba(249,115,22,0.10)",
+  border: "1px solid rgba(249,115,22,0.35)",
+  color: "#7c2d12",
+  fontSize: 12,
+  fontWeight: 850,
+};
+const chipX = {
+  width: 22,
+  height: 22,
+  borderRadius: 999,
+  border: "none",
+  background: "rgba(124,45,18,0.12)",
+  color: "#7c2d12",
+  cursor: "pointer",
+  fontWeight: 950,
+  lineHeight: 1,
+};
+const evidenceRow = { display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" };
+
 const overlay = {
   position: "fixed",
   inset: 0,

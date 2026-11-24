@@ -16,7 +16,7 @@ const RouteDetail = lazy(() => import("./pages/RouteDetail"));
 const EditRoutePage = lazy(() => import("./pages/EditRoutePage"));
 const ActivitiesPage = lazy(() => import("./pages/ActivitiesPage"));
 const ActivitiesDetailPage = lazy(() => import("./pages/ActivitiesDetailPage"));
-const CompleteExecutionModal = lazy(() => import("./pages/CompleteExecutionModal"));
+const ActivityCompletePage = lazy(() => import("./pages/ActivityCompletePage"));
 const EquipmentsPage = lazy(() => import("./pages/EquipmentsPage"));
 const EquipmentDetailPage = lazy(() => import("./pages/EquipmentDetailPage"));
 const EditEquipmentPage = lazy(() => import("./pages/EditEquipmentPage"));
@@ -113,7 +113,7 @@ export default function App() {
         <Route path="/equipments/:id" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><EquipmentDetailPage /></ProtectedRoute>} />
         <Route path="/equipments/:id/lubrication-card" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><LubricationCardPage /></ProtectedRoute>} />
         <Route path="/activities" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivitiesPage /></ProtectedRoute>} />
-        <Route path="/activities/:id/complete" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><CompleteExecutionModal /></ProtectedRoute>} />
+        <Route path="/activities/:id/complete" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivityCompletePage /></ProtectedRoute>} />
         <Route path="/routes/:routeId/activities" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivitiesDetailPage /></ProtectedRoute>} />
         <Route path="/routes" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><RoutesPage /></ProtectedRoute>} />
         <Route path="/routes/:id" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><RouteDetail /></ProtectedRoute>} />

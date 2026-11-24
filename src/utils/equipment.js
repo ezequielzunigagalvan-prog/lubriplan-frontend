@@ -1,3 +1,4 @@
+import { routeFrequency } from "./routeFrequency";
 // src/utils/equipment.js
 
 export const CRITICALITIES = ["CRITICA", "ALTA", "MEDIA", "BAJA"];
@@ -22,18 +23,10 @@ export const normalizeCode = (v) =>
     .toUpperCase()
     .replace(/\s+/g, "-");
 
-const WEEKDAYS = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 7: "Dom" };
-const NAMED_FREQ = { 1: "Diaria", 7: "Semanal", 15: "Quincenal", 30: "Mensual", 60: "Bimestral", 90: "Trimestral", 120: "Cuatrimestral", 180: "Semestral", 365: "Anual" };
-
 /** Frecuencia legible de una ruta (misma regla que la tarjeta de rutas). */
 export function frequencyLabel(route) {
-  const type = String(route?.frequencyType || "").toUpperCase();
-  const weekly = Array.isArray(route?.weeklyDays) ? route.weeklyDays : [];
-  if (type === "WEEKLY" && weekly.length) {
-    return weekly.map((d) => WEEKDAYS[Number(d)]).filter(Boolean).join(" · ");
-  }
-  const days = Number(route?.frequencyDays || 0);
-  return NAMED_FREQ[days] || (days > 0 ? `Cada ${days} días` : "—");
+  const f = routeFrequency(route);
+  return f.detail && f.label !== "Diario" ? `${f.label} · ${f.detail}` : f.label;
 }
 
 const EXEC_STATUS = { COMPLETED: "Completada", PENDING: "Pendiente", OVERDUE: "Vencida", IN_PROGRESS: "En proceso", CANCELLED: "Cancelada" };

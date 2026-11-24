@@ -4,7 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import NewRouteModal from "../components/routes/NewRouteModal";
-import { getRoutes, deleteRoute } from "../services/routesService";
+import { getRouteById, deleteRoute } from "../services/routesService";
+import { routeFrequency, routeDueStatus, formatRouteDate, routeEquipmentList, openExecutionOf } from "../utils/routeFrequency";
 import { getExecutionsByRoute } from "../services/executionsService";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
@@ -16,14 +17,6 @@ import { formatRouteDisplayName } from "../utils/routeNames";
 /* =========================
    HELPERS (fechas locales)
 ========================= */
-const toLocalYMD = (d) => {
-  const dt = d instanceof Date ? d : new Date(d);
-  if (!dt || Number.isNaN(dt.getTime())) return "?";
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const day = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
 
 export default function RouteDetailPage() {
   const { id } = useParams();
@@ -45,7 +38,7 @@ const role = String(user?.role || "TECHNICIAN").toUpperCase();
 const canManageRoutes = Boolean(permissions?.canManageRoutes);
 const canDeleteRoute = canManageRoutes && role === "ADMIN";
 
-  // Si quieres Toast aqu? también:
+  // Si quieres Toast aquí también:
   // const [toast, setToast] = useState(null);
   // const pushToast = (type, title, message) => {
   //   setToast({ id: crypto.randomUUID?.() || String(Date.now()), type, title, message });
@@ -65,27 +58,22 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
         setErr("");
         setLoading(true);
 
-        const response = await getRoutes();
-        const routes = Array.isArray(response?.items)
-          ? response.items
-          : Array.isArray(response)
-          ? response
-          : [];
-        const found = routes.find((r) => Number(r.id) === routeId) || null;
+        const found = await getRouteById(routeId).catch((e) => {
+          if (e?.status === 404 || /no encontrada/i.test(e?.message || "")) return null;
+          throw e;
+        });
 
         if (!alive) return;
         setRoute(found);
         if (!found) {
           setErr("No se pudo encontrar la ruta en la planta actual.");
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
         if (!alive) return;
         setErr("No se pudo cargar el detalle de la ruta.");
         setRoute(null);
       } finally {
-        if (!alive) return;
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     }
 
@@ -131,13 +119,11 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
         const data = await getExecutionsByRoute(route.id);
         if (!alive) return;
         setHistory(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error(e);
+      } catch {
         if (!alive) return;
         setHistory([]);
       } finally {
-        if (!alive) return;
-        setHistoryLoading(false);
+        if (alive) setHistoryLoading(false);
       }
     }
 
@@ -173,23 +159,20 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
   );
 
   const qtyLabel = useMemo(() => {
-    if (route?.quantity == null) return isInspectionRoute ? "Consumo opcional" : "?";
+    if (route?.quantity == null) return isInspectionRoute ? "Consumo opcional" : "Sin cantidad";
     return `${route.quantity}${route.unit ? ` ${route.unit}` : ""}${isInspectionRoute ? " opcional" : ""}`;
   }, [isInspectionRoute, route]);
 
-  const frequencyLabel = useMemo(() => {
-    const d = route?.frequencyDays;
-    if (d == null) return route?.frequency || "?";
-    if (d === 1) return "Diaria (1 día)";
-    if (d === 7) return "Semanal (7 días)";
-    if (d === 15) return "Quincenal (15 días)";
-    if (d === 30) return "Mensual (30 días)";
-    if (d === 60) return "Bimestral (60 días)";
-    if (d === 120) return "Cuatrimestral (120 días)";
-    if (d === 180) return "Semestral (180 días)";
-    if (d === 365) return "Anual (365 días)";
-    return `${d} días`;
-  }, [route]);
+  const freq = useMemo(() => routeFrequency(route), [route]);
+  const due = useMemo(() => routeDueStatus(route?.nextDate), [route?.nextDate]);
+  const equipments = useMemo(() => routeEquipmentList(route), [route]);
+  const openExec = useMemo(() => openExecutionOf(route), [route]);
+  const totalPerActivity = useMemo(() => {
+    const q = Number(route?.quantity);
+    if (!Number.isFinite(q) || route?.quantity == null) return null;
+    const pts = Number(route?.points) > 0 ? Number(route.points) : 1;
+    return Math.round(q * pts * Math.max(1, equipments.length) * 100) / 100;
+  }, [route, equipments.length]);
 
   const prettyStatus = (s) => {
     if (s === "COMPLETED") return { label: "Completada", icon: "check" };
@@ -197,7 +180,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
     return { label: "Pendiente", icon: "clock" };
   };
 
-  const date10 = (d) => (d ? toLocalYMD(d) : "?");
+  const date10 = (d) => (d ? formatRouteDate(d) : "—");
 
   /* ===== acciones ===== */
   const handleDelete = async () => {
@@ -209,7 +192,6 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
       toast.success(r?.preserved ? `Ruta eliminada · ${r.preserved} actividad${r.preserved === 1 ? "" : "es"} conservada${r.preserved === 1 ? "" : "s"} en el historial` : "Ruta eliminada");
       navigate("/routes");
     } catch (e) {
-      console.error(e);
       toast.error(e?.message || "Error eliminando ruta");
     }
   };
@@ -239,6 +221,22 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
                 <span style={{ fontWeight: 950 }}>{equipmentName}</span>
               </span>
 
+              {equipments.length > 1 ? (
+                <span style={pillMuted}>+{equipments.length - 1} equipo{equipments.length - 1 === 1 ? "" : "s"}</span>
+              ) : null}
+              {route?.evidenceRequired ? (
+                <span style={pillEvidence}>
+                  <Icon name="camera" style={{ width: 14, height: 14 }} />
+                  Foto obligatoria
+                </span>
+              ) : null}
+              {route ? (
+                <span style={duePill(due.tone)}>
+                  <Icon name="calendar" style={{ width: 14, height: 14 }} />
+                  {due.label}
+                  {due.date ? ` · ${due.date}` : ""}
+                </span>
+              ) : null}
               {equipmentCode ? (
                 <span style={pillMuted} title="Código / TAG">
                   <Icon name="tag" style={{ width: 14, height: 14 }} />
@@ -253,16 +251,12 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
                Volver
             </button>
 
-            <button
-              style={btnSecondary}
-              onClick={() => setShowEdit(true)}
-              disabled={!route} 
-              title="Editar ruta"
-              type="button"
-            >
-              <Icon name="edit" style={{ width: 16, height: 16 }} />
-              Editar
-            </button>
+            {canManageRoutes ? (
+              <button style={btnSecondary} onClick={() => setShowEdit(true)} disabled={!route} title="Editar ruta" type="button">
+                <Icon name="edit" style={{ width: 16, height: 16 }} />
+                Editar
+              </button>
+            ) : null}
 
             {canDeleteRoute ? (
   <button
@@ -295,7 +289,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
 
         {!loading && !err && !route && (
           <div style={emptyBox}>
-            No encontr? la ruta con id <b>{id}</b>.
+            No se encontró la ruta <b>#{id}</b> en esta planta.
           </div>
         )}
 
@@ -306,18 +300,72 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
             <div style={grid}>
               <InfoCard
                 title="Lubricante"
-                value={route.lubricantType || (isInspectionRoute ? "Inspección" : "?")}
-                sub={
-                  route.lubricantName ||
-                  route?.lubricant?.name ||
-                  (isInspectionRoute ? "Lubricante opcional" : "")
-                }
+                value={route.lubricantType || (isInspectionRoute ? "Inspección" : "—")}
+                sub={route.lubricantName || route?.lubricant?.name || (isInspectionRoute ? "Lubricante opcional" : "Sin producto de inventario")}
                 icon="drop"
               />
-              <InfoCard title="Cantidad" value={qtyLabel} sub={route.points ? `por punto ? ${route.points} punto(s)` : ""} icon="scale" />
-              <InfoCard title="Frecuencia" value={frequencyLabel} sub={route.nextDate ? `Próxima: ${date10(route.nextDate)}` : ""} icon="calendar" />
-            <InfoCard title="Método" value={route.method || "—"} sub={route.lastDate ? `Última: ${date10(route.lastDate)}` : ""} icon="settings" />
+              <InfoCard
+                title="Dosis por punto"
+                value={qtyLabel}
+                sub={
+                  totalPerActivity != null
+                    ? `${route.points || 1} punto(s)${equipments.length > 1 ? ` × ${equipments.length} equipos` : ""} = ${totalPerActivity} ${String(route.unit || "").toUpperCase() === "BOMBAZOS" ? "bombazos" : route.unit || ""} por actividad`
+                    : ""
+                }
+                icon="quantity"
+              />
+              <InfoCard
+                title="Frecuencia"
+                value={freq.label}
+                sub={[freq.detail, route.nextDate ? `Próxima: ${date10(route.nextDate)}` : ""].filter(Boolean).join(" · ")}
+                icon="calendar"
+              />
+              <InfoCard
+                title="Técnico"
+                value={route.technician?.name || "Sin técnico"}
+                sub={[route.method, route.lastDate ? `Última: ${date10(route.lastDate)}` : ""].filter(Boolean).join(" · ")}
+                icon="user"
+              />
             </div>
+
+            {equipments.length > 1 || route.evidenceRequired ? (
+              <div style={sectionCard}>
+                <div style={sectionHeader}>
+                  <div>
+                    <div style={sectionTitle}>Equipos de la ruta ({equipments.length})</div>
+                    <div style={sectionSub}>
+                      {equipments.length > 1
+                        ? "Una sola actividad con lista: el técnico marca los equipos atendidos y el consumo se multiplica por ellos."
+                        : "Al completar, el técnico debe subir una foto de evidencia."}
+                      {route.evidenceRequired && equipments.length > 1
+                        ? " La foto obligatoria rota al azar entre los equipos hasta cubrirlos todos."
+                        : ""}
+                    </div>
+                  </div>
+                </div>
+                <div style={eqList}>
+                  {equipments.map((eq, i) => {
+                    const isEvidence = openExec?.evidenceEquipmentId != null && openExec.evidenceEquipmentId === eq.id;
+                    return (
+                      <div key={eq.id ?? i} style={eqRowItem}>
+                        <span style={eqIndex}>{i + 1}</span>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={eqRowName}>{eq.name}</div>
+                          <div style={eqRowMeta}>{[eq.code, eq.location].filter(Boolean).join(" · ") || "Sin TAG"}</div>
+                        </div>
+                        {i === 0 && equipments.length > 1 ? <span style={pillMuted}>Principal</span> : null}
+                        {isEvidence ? (
+                          <span style={pillEvidence}>
+                            <Icon name="camera" style={{ width: 14, height: 14 }} />
+                            Foto en la próxima
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
 
             {/* instrucciones */}
             <div style={sectionCard}>
@@ -329,7 +377,7 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
                 {route.instructions ? (
                   <div style={{ whiteSpace: "pre-wrap" }}>{route.instructions}</div>
                 ) : (
-                  <span style={{ color: "#64748b", fontWeight: 800 }}>?</span>
+                  <span style={{ color: "#64748b", fontWeight: 800 }}>Sin instrucciones</span>
                 )}
               </div>
             </div>
@@ -383,16 +431,26 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
 
                         <div style={historyMeta}>
                           <span>
-                            <b>Técnico:</b> {ex.technician?.name || "?"}
+                            <b>Técnico:</b> {ex.technician?.name || "—"}
                           </span>
                           <span>
                             <b>Cantidad:</b>{" "}
                             {ex.usedQuantity != null
                               ? `${ex.usedQuantity}${route?.unit ? ` ${route.unit}` : ""}`
-                              : "?"}
+                              : "—"}
                           </span>
+                          {Array.isArray(ex.equipmentChecklist) && ex.equipmentChecklist.length ? (
+                            <span>
+                              <b>Equipos:</b> {ex.equipmentChecklist.filter((c) => c.done).length}/{ex.equipmentChecklist.length}
+                            </span>
+                          ) : null}
+                          {ex.evidenceEquipment?.name ? (
+                            <span>
+                              <b>Foto de:</b> {ex.evidenceEquipment.name}
+                            </span>
+                          ) : null}
                           <span>
-                            <b>Condición:</b> {ex.condition || "?"}
+                            <b>Condición:</b> {ex.condition || "—"}
                           </span>
                         </div>
 
@@ -573,6 +631,51 @@ const mainCard = {
   display: "grid",
   gap: 14,
 };
+
+const pillEvidence = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 900,
+  color: "#7c2d12",
+  background: "rgba(249,115,22,0.10)",
+  border: "1px solid rgba(249,115,22,0.35)",
+};
+const DUE_TONES = {
+  danger: { color: "#991b1b", background: "#fef2f2", border: "1px solid #fecaca" },
+  warn: { color: "#92400e", background: "#fffbeb", border: "1px solid #fde68a" },
+  ok: { color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0" },
+  muted: { color: "#475569", background: "#f8fafc", border: "1px solid #e2e8f0" },
+};
+const duePill = (tone) => ({ ...pillEvidence, ...(DUE_TONES[tone] || DUE_TONES.muted) });
+const eqList = { display: "grid", gap: 8, marginTop: 10 };
+const eqRowItem = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  flexWrap: "wrap",
+};
+const eqIndex = {
+  width: 26,
+  height: 26,
+  borderRadius: 8,
+  display: "grid",
+  placeItems: "center",
+  background: "#0f172a",
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: 950,
+  flexShrink: 0,
+};
+const eqRowName = { fontWeight: 950, color: "#0f172a", fontSize: 14 };
+const eqRowMeta = { fontWeight: 750, color: "#64748b", fontSize: 12, marginTop: 2 };
 
 const grid = {
   display: "grid",
