@@ -196,6 +196,39 @@ export function AuthProvider({ children }) {
     resetInactivityTimer();
   }, [resetInactivityTimer]);
 
+  // Técnico multiplanta: su perfil de técnico depende de la planta activa.
+  // Al entrar y al cambiar de planta se pide al servidor el perfil correcto.
+  const userRole = String(user?.role || "").toUpperCase();
+  useEffect(() => {
+    if (!token || userRole !== "TECHNICIAN") return undefined;
+    let alive = true;
+    const sync = async () => {
+      const plantId = localStorage.getItem("lp_currentPlantId");
+      if (!plantId) return;
+      try {
+        const base = API_URL.replace(/\/+$/, "").endsWith("/api") ? API_URL.replace(/\/+$/, "") : `${API_URL.replace(/\/+$/, "")}/api`;
+        const res = await fetch(`${base}/auth/me`, { headers: { Authorization: `Bearer ${token}`, "x-plant-id": plantId }, cache: "no-store" });
+        if (!res.ok || !alive) return;
+        const data = await res.json();
+        const next = data?.user;
+        if (!next) return;
+        setUser((prev) =>
+          prev && (prev.technicianId ?? null) !== (next.technicianId ?? null)
+            ? { ...prev, technicianId: next.technicianId ?? null, technician: next.technician ?? null }
+            : prev
+        );
+      } catch {
+        // sin red: se queda con el perfil guardado
+      }
+    };
+    sync();
+    window.addEventListener("lubriplan:plant-changed", sync);
+    return () => {
+      alive = false;
+      window.removeEventListener("lubriplan:plant-changed", sync);
+    };
+  }, [token, userRole]);
+
   useEffect(() => {
     if (token && user) {
       saveAuth({ token, user });

@@ -1,1273 +1,509 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿// src/pages/UsersPage.jsx
+// Usuarios y acceso por planta. Un supervisor puede tener varias plantas; un técnico puede
+// trabajar en varias plantas con un perfil de técnico en cada una.
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import MainLayout from "../layouts/MainLayout";
+import { Icon } from "../components/ui/lpIcons";
+import { useConfirm } from "../components/ui/ConfirmDialog";
+import { useAuth } from "../context/AuthContext";
+import { usePlant } from "../context/PlantContext";
 import {
   getUsers,
+  getUserOptions,
   createUser,
-  setUserActive,
-  getAvailableTechnicians,
-  getAvailableUserPlants,
   updateUser,
-  getUserPlants,
-  updateUserPlants,
+  setUserActive,
+  setUserPassword,
+  sendPasswordLink,
 } from "../services/usersService";
-import { setPasswordByEmail } from "../services/authService";
-import { getTechLinks, linkUserTechnician } from "../services/adminLinksService";
-import { Icon } from "../components/ui/lpIcons";
+import "./TechniciansPage.css";
 import "./UsersPage.css";
 
-const ROLE_LABEL = {
-  ADMIN: "Administrador",
-  SUPERVISOR: "Supervisor",
-  TECHNICIAN: "Técnico",
+const ROLE = {
+  ADMIN: { label: "Administrador", short: "Admin", desc: "Acceso total: usuarios, configuración y todas sus plantas.", cls: "r-admin" },
+  SUPERVISOR: { label: "Supervisor", short: "Supervisor", desc: "Planea y supervisa la lubricación de sus plantas.", cls: "r-sup" },
+  TECHNICIAN: { label: "Técnico", short: "Técnico", desc: "Ejecuta actividades y reporta condición en sus plantas.", cls: "r-tech" },
 };
 
-const VALID_ROLES = ["ADMIN", "SUPERVISOR", "TECHNICIAN"];
-
-const toRole = (value) => String(value || "").toUpperCase();
-
-function fmtDateTime(value) {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString();
-}
-
-function roleChip(role) {
-  const normalized = toRole(role);
-  if (normalized === "ADMIN") {
-    return { bg: "rgba(254,243,199,0.88)", fg: "#92400e", label: "Administrador", icon: "settings" };
-  }
-  if (normalized === "SUPERVISOR") {
-    return { bg: "rgba(219,234,254,0.88)", fg: "#1d4ed8", label: "Supervisor", icon: "doc" };
-  }
-  return { bg: "rgba(220,252,231,0.88)", fg: "#166534", label: "Técnico", icon: "user" };
-}
-
-function statusChip(active) {
-  return active
-    ? { bg: "rgba(220,252,231,0.88)", fg: "#166534", label: "Activo", icon: "check" }
-    : { bg: "rgba(254,226,226,0.92)", fg: "#991b1b", label: "Inactivo", icon: "warn" };
-}
-
-function passwordChip(hasPassword) {
-  return hasPassword
-    ? { bg: "rgba(219,234,254,0.88)", fg: "#1e40af", label: "Configurada", icon: "lock" }
-    : { bg: "rgba(255,237,213,0.88)", fg: "#9a3412", label: "Pendiente", icon: "alert" };
-}
-
-function buildTechLabel(user) {
-  const tech = user?.technician || null;
-  if (toRole(user?.role) !== "TECHNICIAN") return "—";
-  if (!tech) return "Sin vínculo";
-  return `${tech.name}${tech.code ? ` · ${tech.code}` : ""}`;
-}
-
-function buildPlantsText(user) {
-  if (!Array.isArray(user?.userPlants) || user.userPlants.length === 0) return "Sin planta asignada";
-  return user.userPlants
-    .map((entry) => `${entry?.plant?.name || `Planta ${entry?.plantId}`}${entry?.isDefault ? " (por defecto)" : ""}`)
-    .join(", ");
-}
+const initials = (name) =>
+  String(name || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 
 export default function UsersPage() {
-  const [activeTab, setActiveTab] = useState("USERS");
-  const [users, setUsers] = useState([]);
+  const { user: me } = useAuth();
+  const { currentPlant } = usePlant();
+  const confirm = useConfirm();
+  const [scope, setScope] = useState("plant");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
+  const [search, setSearch] = useState("");
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [togglingId, setTogglingId] = useState(null);
   const [error, setError] = useState("");
-  const [q, setQ] = useState("");
-  const [roleFilter, setRoleFilter] = useState("ALL");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [showModal, setShowModal] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [form, setForm] = useState({ name: "", email: "", role: "TECHNICIAN", technicianId: "" });
-  const [techLoading, setTechLoading] = useState(false);
-  const [techError, setTechError] = useState("");
-  const [availableTechs, setAvailableTechs] = useState([]);
-  const [plantOptions, setPlantOptions] = useState([]);
-  const [plantsLoading, setPlantsLoading] = useState(false);
-  const [plantsError, setPlantsError] = useState("");
-  const [newPwd, setNewPwd] = useState("");
-  const [newPwd2, setNewPwd2] = useState("");
-  const [showNewPwd, setShowNewPwd] = useState(false);
-  const [showNewPwd2, setShowNewPwd2] = useState(false);
-  const [showPwdModal, setShowPwdModal] = useState(false);
-  const [pwdUser, setPwdUser] = useState(null);
-  const [pwd, setPwd] = useState("");
-  const [pwd2, setPwd2] = useState("");
-  const [showPwd, setShowPwd] = useState(false);
-  const [showPwd2, setShowPwd2] = useState(false);
-  const [pwdSaving, setPwdSaving] = useState(false);
-  const [pwdError, setPwdError] = useState("");
-  const [pwdAssigned, setPwdAssigned] = useState("");
-  const [linksLoading, setLinksLoading] = useState(false);
-  const [linksErr, setLinksErr] = useState("");
-  const [techUsers, setTechUsers] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
-  const [busyUserId, setBusyUserId] = useState(null);
-  const [syncName, setSyncName] = useState(true);
-  const roleOptions = useMemo(() => VALID_ROLES, []);
-  const isTechRole = toRole(form.role) === "TECHNICIAN";
+  const [form, setForm] = useState(null); // null | { mode: "create" } | { mode: "edit", user }
+  const [pwUser, setPwUser] = useState(null);
 
-  const fetchUsers = async () => {
-    setError("");
+  const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
-      const json = await getUsers();
-      setUsers(Array.isArray(json?.items) ? json.items : []);
-    } catch (err) {
-      console.error("GET /users", err);
-      setError(err?.message || "Error cargando usuarios");
-      setUsers([]);
+      setItems(await getUsers(scope));
+    } catch (e) {
+      setError(e?.message || "No se pudieron cargar los usuarios");
     } finally {
       setLoading(false);
     }
-  };
+  }, [scope]);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    load();
+  }, [load]);
 
-  const fetchAvailableTechs = async () => {
-    setTechError("");
-    setTechLoading(true);
-    try {
-      const json = await getAvailableTechnicians();
-      setAvailableTechs(Array.isArray(json?.items) ? json.items : []);
-    } catch (err) {
-      console.error("GET /users/technicians/available", err);
-      setAvailableTechs([]);
-      setTechError(err?.message || "Error cargando técnicos disponibles");
-    } finally {
-      setTechLoading(false);
-    }
-  };
+  const stats = useMemo(() => {
+    const active = items.filter((u) => u.active);
+    return {
+      total: active.length,
+      ADMIN: active.filter((u) => u.role === "ADMIN").length,
+      SUPERVISOR: active.filter((u) => u.role === "SUPERVISOR").length,
+      TECHNICIAN: active.filter((u) => u.role === "TECHNICIAN").length,
+      noPassword: active.filter((u) => !u.hasPassword).length,
+      multi: active.filter((u) => u.plants.length > 1).length,
+      inactive: items.length - active.length,
+    };
+  }, [items]);
 
-  const fetchUserPlants = async (userId) => {
-    setPlantsError("");
-    setPlantsLoading(true);
-    try {
-      const json = await getUserPlants(userId);
-      setPlantOptions(Array.isArray(json?.items) ? json.items : []);
-    } catch (err) {
-      console.error("GET /users/:id/plants", err);
-      setPlantOptions([]);
-      setPlantsError(err?.message || "Error cargando plantas del usuario");
-    } finally {
-      setPlantsLoading(false);
-    }
-  };
-
-  const fetchPlantsForCreate = async () => {
-    setPlantsError("");
-    setPlantsLoading(true);
-    try {
-      const json = await getAvailableUserPlants();
-      setPlantOptions(Array.isArray(json?.items) ? json.items : []);
-    } catch (err) {
-      console.error("GET /users/plants/available", err);
-      setPlantOptions([]);
-      setPlantsError(err?.message || "Error cargando plantas disponibles");
-    } finally {
-      setPlantsLoading(false);
-    }
-  };
-
-  const resetCreatePassword = () => {
-    setNewPwd("");
-    setNewPwd2("");
-    setShowNewPwd(false);
-    setShowNewPwd2(false);
-  };
-
-  const openCreateModal = async () => {
-    setEditingUser(null);
-    setForm({ name: "", email: "", role: "TECHNICIAN", technicianId: "" });
-    setPlantOptions([]);
-    setShowModal(true);
-    setError("");
-    setTechError("");
-    setPlantsError("");
-    resetCreatePassword();
-    await Promise.all([fetchAvailableTechs(), fetchPlantsForCreate()]);
-  };
-
-  const openEditModal = async (user) => {
-    setEditingUser(user);
-    setForm({
-      name: user?.name || "",
-      email: user?.email || "",
-      role: toRole(user?.role) || "TECHNICIAN",
-      technicianId: user?.technicianId ? String(user.technicianId) : "",
-    });
-    setShowModal(true);
-    setError("");
-    setTechError("");
-    setPlantsError("");
-    resetCreatePassword();
-    await Promise.all([fetchAvailableTechs(), fetchUserPlants(user.id)]);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingUser(null);
-    setError("");
-    setTechError("");
-    setPlantsError("");
-    setPlantOptions([]);
-    resetCreatePassword();
-  };
-
-  const onChangeForm = (key) => (event) => {
-    const value = event.target.value;
-    setForm((prev) => {
-      const next = { ...prev, [key]: value };
-      if (key === "role" && toRole(value) !== "TECHNICIAN") next.technicianId = "";
-      return next;
-    });
-  };
-
-  const validateAssignedPlants = () => {
-    if (plantOptions.length === 0) return null;
-    const assignedPlants = plantOptions.filter((plant) => plant.assigned && plant.active);
-    if (assignedPlants.length === 0) return "Debes asignar al menos una planta.";
-    if (!assignedPlants.some((plant) => plant.isDefault)) return "Debes seleccionar una planta por defecto.";
-    return null;
-  };
-
-  const handleSaveUser = async (event) => {
-    event.preventDefault();
-    setError("");
-
-    const name = String(form.name || "").trim();
-    const email = String(form.email || "").trim().toLowerCase();
-    const role = toRole(form.role || "TECHNICIAN");
-    if (!name || !email) {
-      setError("Nombre y correo requeridos.");
-      return;
-    }
-
-    const finalRole = VALID_ROLES.includes(role) ? role : "TECHNICIAN";
-    const technicianIdRaw = form.technicianId;
-    const technicianId = technicianIdRaw ? Number(technicianIdRaw) : null;
-    if (finalRole === "TECHNICIAN" && !Number.isFinite(technicianId)) {
-      setError("Para el rol Técnico debes seleccionar un técnico.");
-      return;
-    }
-
-    if (!editingUser) {
-      if (newPwd.length < 6) {
-        setError("Define una contraseña inicial de al menos 6 caracteres.");
-        return;
-      }
-      if (newPwd !== newPwd2) {
-        setError("Las contraseñas del alta no coinciden.");
-        return;
-      }
-    }
-
-    const plantsValidation = validateAssignedPlants();
-    if (plantsValidation) {
-      setError(plantsValidation);
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const payload = {
-        name,
-        email,
-        role: finalRole,
-        technicianId: finalRole === "TECHNICIAN" ? technicianId : null,
-      };
-
-      let savedUserId = editingUser?.id ?? null;
-      if (editingUser?.id) {
-        await updateUser(editingUser.id, payload);
-      } else {
-        const created = await createUser({ ...payload, password: newPwd });
-        savedUserId = created?.user?.id ?? null;
-      }
-
-      if (savedUserId && plantOptions.length > 0) {
-        const assignedPlants = plantOptions
-          .filter((plant) => plant.assigned && plant.active)
-          .map((plant) => ({
-            plantId: plant.plantId,
-            active: true,
-            isDefault: !!plant.isDefault,
-          }));
-
-        await updateUserPlants(savedUserId, { plants: assignedPlants });
-      }
-
-      closeModal();
-      await fetchUsers();
-    } catch (err) {
-      console.error("SAVE /users", err);
-      setError(err?.message || "Error guardando usuario");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const togglePlantAssigned = (plantId) => {
-    setPlantOptions((prev) => {
-      const next = prev.map((plant) => {
-        if (Number(plant.plantId) !== Number(plantId)) return plant;
-        const willAssign = !plant.assigned;
-        return {
-          ...plant,
-          assigned: willAssign,
-          active: willAssign,
-          isDefault: willAssign ? plant.isDefault : false,
-        };
-      });
-
-      const assigned = next.filter((plant) => plant.assigned && plant.active);
-      if (assigned.length === 1) {
-        return next.map((plant) => ({ ...plant, isDefault: Number(plant.plantId) === Number(assigned[0].plantId) }));
-      }
-      if (assigned.length > 1 && !assigned.some((plant) => plant.isDefault)) {
-        return next.map((plant) => ({
-          ...plant,
-          isDefault: Number(plant.plantId) === Number(assigned[0].plantId),
-        }));
-      }
-      return next;
-    });
-  };
-
-  const setDefaultPlant = (plantId) => {
-    setPlantOptions((prev) =>
-      prev.map((plant) => ({
-        ...plant,
-        isDefault: plant.assigned && plant.active && Number(plant.plantId) === Number(plantId),
-      }))
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return items.filter(
+      (u) =>
+        (showInactive || u.active) &&
+        (!roleFilter || u.role === roleFilter) &&
+        (!q || [u.name, u.email, ...u.plants.map((p) => p.name), ...u.plants.map((p) => p.technician?.code || "")].some((s) => String(s).toLowerCase().includes(q)))
     );
-  };
+  }, [items, search, roleFilter, showInactive]);
 
-  const toggleUserStatus = async (user) => {
-    setError("");
-    setTogglingId(user.id);
-    setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, active: !item.active } : item)));
+  const toggleActive = async (u) => {
+    const ok = await confirm(
+      u.active ? `${u.name} ya no podrá entrar a LubriPlan. Su historial se conserva.` : `${u.name} podrá volver a entrar a LubriPlan.`,
+      { title: u.active ? "Desactivar usuario" : "Activar usuario", confirmLabel: u.active ? "Desactivar" : "Activar", danger: u.active }
+    );
+    if (!ok) return;
     try {
-      await setUserActive(user.id, !user.active);
-    } catch (err) {
-      console.error("PATCH /users/:id/status", err);
-      setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, active: user.active } : item)));
-      setError(err?.message || "Error actualizando estado");
-    } finally {
-      setTogglingId(null);
-    }
-  };
-
-  const openPwdModal = (user) => {
-    setPwdUser(user);
-    setPwd("");
-    setPwd2("");
-    setPwdError("");
-    setPwdAssigned("");
-    setShowPwd(false);
-    setShowPwd2(false);
-    setShowPwdModal(true);
-  };
-
-  const closePwdModal = () => {
-    setShowPwdModal(false);
-    setPwdUser(null);
-    setPwd("");
-    setPwd2("");
-    setShowPwd(false);
-    setShowPwd2(false);
-    setPwdError("");
-    setPwdAssigned("");
-  };
-
-  const handleSetPassword = async (event) => {
-    event.preventDefault();
-    setPwdError("");
-    const email = String(pwdUser?.email || "").trim().toLowerCase();
-    if (!email) {
-      setPwdError("Usuario inválido.");
-      return;
-    }
-    if (pwd.length < 6) {
-      setPwdError("La contraseña debe tener al menos 6 caracteres.");
-      return;
-    }
-    if (pwd !== pwd2) {
-      setPwdError("Las contraseñas no coinciden.");
-      return;
-    }
-
-    setPwdSaving(true);
-    try {
-      await setPasswordByEmail(email, pwd);
-      setPwdAssigned(pwd);
-      setPwd("");
-      setPwd2("");
-      await fetchUsers();
-    } catch (err) {
-      console.error("POST /auth/set-password", err);
-      setPwdError(err?.message || "Error asignando contraseña");
-    } finally {
-      setPwdSaving(false);
-    }
-  };
-
-  const copyAssignedPassword = async () => {
-    if (!pwdAssigned) return;
-    try {
-      await navigator.clipboard.writeText(pwdAssigned);
-    } catch {}
-  };
-
-  const kpis = useMemo(() => {
-    let admins = 0;
-    let supervisors = 0;
-    let techs = 0;
-    for (const user of users) {
-      if (toRole(user?.role) === "ADMIN") admins += 1;
-      else if (toRole(user?.role) === "SUPERVISOR") supervisors += 1;
-      else if (toRole(user?.role) === "TECHNICIAN") techs += 1;
-    }
-    return { total: users.length, admins, supervisors, techs };
-  }, [users]);
-
-  const filteredUsers = useMemo(() => {
-    const search = q.trim().toLowerCase();
-    return users
-      .filter((user) => {
-        if (roleFilter !== "ALL" && toRole(user?.role) !== roleFilter) return false;
-        if (statusFilter === "ACTIVE" && !user?.active) return false;
-        if (statusFilter === "INACTIVE" && user?.active) return false;
-        if (!search) return true;
-        return [user?.name, user?.email, user?.technician?.name, user?.technician?.code, buildPlantsText(user)]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(search));
-      })
-      .sort((a, b) => {
-        const activeA = a?.active ? 0 : 1;
-        const activeB = b?.active ? 0 : 1;
-        if (activeA !== activeB) return activeA - activeB;
-        const order = { ADMIN: 0, SUPERVISOR: 1, TECHNICIAN: 2 };
-        const roleA = order[toRole(a?.role)] ?? 9;
-        const roleB = order[toRole(b?.role)] ?? 9;
-        if (roleA !== roleB) return roleA - roleB;
-        return String(a?.name || "").localeCompare(String(b?.name || ""));
-      });
-  }, [users, q, roleFilter, statusFilter]);
-
-  const loadLinks = async () => {
-    try {
-      setLinksErr("");
-      setLinksLoading(true);
-      const res = await getTechLinks();
-      setTechUsers(Array.isArray(res?.techUsers) ? res.techUsers : []);
-      setTechnicians(Array.isArray(res?.technicians) ? res.technicians : []);
-    } catch (err) {
-      console.error(err);
-      setLinksErr(err?.message || "Error cargando vínculos");
-      setTechUsers([]);
-      setTechnicians([]);
-    } finally {
-      setLinksLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === "LINKS") loadLinks();
-  }, [activeTab]);
-
-  const onChangeLink = async (user, value) => {
-    const userId = Number(user.id);
-    const technicianId = value === "" ? null : Number(value);
-    setBusyUserId(userId);
-    setLinksErr("");
-    try {
-      const res = await linkUserTechnician(userId, technicianId, syncName);
-      const updated = res?.item;
-      setTechUsers((prev) => prev.map((item) => (item.id === userId ? updated : item)));
-      await loadLinks();
-      await fetchUsers();
-    } catch (err) {
-      console.error(err);
-      setLinksErr(err?.message || "Error vinculando técnico");
-    } finally {
-      setBusyUserId(null);
+      await setUserActive(u.id, !u.active);
+      toast.success(u.active ? "Usuario desactivado" : "Usuario activado");
+      load();
+    } catch (e) {
+      toast.error(e?.message || "No se pudo actualizar");
     }
   };
 
   return (
     <MainLayout>
-      <style>{`
-        .lpCard {
-          position: relative;
-          overflow: hidden;
-          transition: transform 160ms ease, box-shadow 160ms ease;
-        }
-        .lpCard:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 18px 40px rgba(2,6,23,0.10);
-        }
-        .lpPress:active {
-          transform: translateY(0) scale(0.99);
-        }
-      `}</style>
-
-      <div className="lpUsersHeader">
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 950, color: "#64748b", letterSpacing: 1.2 }}>
-            <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
-            USUARIOS · ACCESOS
+      <div className="tch us lp-fade-in">
+        <header className="tch-head">
+          <div>
+            <div className="tch-kicker">Usuarios{currentPlant?.name && scope === "plant" ? ` · ${currentPlant.name}` : " · Todas mis plantas"}</div>
+            <h1 className="tch-title">Usuarios y acceso</h1>
+            <div className="tch-sub">Quién entra a LubriPlan, con qué rol y a qué plantas. Un supervisor o técnico puede tener varias plantas.</div>
           </div>
-          <h1 style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 950, color: "#0f172a" }}>Usuarios</h1>
-          <div className="lpUsersSub">Administración de accesos, roles y vínculos con técnicos.</div>
+          <div className="tch-head-actions">
+            <label className="tch-search">
+              <Icon name="search" size="sm" />
+              <input placeholder="Buscar por nombre, correo, planta o código…" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar usuario" />
+            </label>
+            <button type="button" className="tch-btn tch-btn-primary" onClick={() => setForm({ mode: "create" })}>
+              <Icon name="plus" size="sm" /> Nuevo usuario
+            </button>
+          </div>
+        </header>
+
+        <section className="tch-kpis" aria-label="Resumen">
+          <Kpi icon="users" value={stats.total} label="Usuarios activos" />
+          <Kpi icon="shield" value={stats.SUPERVISOR} label="Supervisores" />
+          <Kpi icon="tool" value={stats.TECHNICIAN} label="Técnicos" />
+          <Kpi icon="building" value={stats.multi} label="Con varias plantas" />
+          <Kpi icon="lock" tone={stats.noPassword ? "is-orange" : ""} value={stats.noPassword} label="Sin contraseña" />
+        </section>
+
+        <div className="tch-toolbar">
+          <div className="tch-tabs" role="group" aria-label="Alcance">
+            <button type="button" className="tch-tab" aria-pressed={scope === "plant"} onClick={() => setScope("plant")}>Esta planta</button>
+            <button type="button" className="tch-tab" aria-pressed={scope === "all"} onClick={() => setScope("all")}>Todas mis plantas</button>
+          </div>
+          <div className="us-filters">
+            {[["", "Todos"], ["ADMIN", "Administradores"], ["SUPERVISOR", "Supervisores"], ["TECHNICIAN", "Técnicos"]].map(([k, l]) => (
+              <button key={k} type="button" className="an-preset" aria-pressed={roleFilter === k} onClick={() => setRoleFilter(k)}>{l}</button>
+            ))}
+            {stats.inactive ? (
+              <label className="hst-check"><input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> Ver inactivos ({stats.inactive})</label>
+            ) : null}
+          </div>
         </div>
 
-        <div className="lpUsersHeaderActions">
-          <button
-            className="lpBtnGhost lpPress"
-            onClick={() => (activeTab === "USERS" ? fetchUsers() : loadLinks())}
-            disabled={loading || linksLoading}
-            type="button"
-            title="Actualizar"
-          >
-            <span className="lpBtnRow">
-              <Icon name="reset" />
-              {loading || linksLoading ? "Actualizando…" : "Actualizar"}
-            </span>
-          </button>
-
-          <button className="lpBtnPrimary lpPress" onClick={openCreateModal} disabled={loading} type="button">
-            <span className="lpBtnRow">
-              <Icon name="plus" />
-              Nuevo usuario
-            </span>
-          </button>
-        </div>
+        {loading && !items.length ? (
+          <div className="us-list">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="us-row us-skeleton" />)}</div>
+        ) : error ? (
+          <div className="tch-empty" role="alert">
+            <div className="tch-empty-icon"><Icon name="alert" /></div>
+            <h3>No se pudieron cargar los usuarios</h3>
+            <p>{error}</p>
+            <button type="button" className="tch-btn tch-btn-ghost" onClick={load}><Icon name="refresh" size="sm" /> Reintentar</button>
+          </div>
+        ) : !visible.length ? (
+          <div className="tch-empty">
+            <div className="tch-empty-icon"><Icon name="users" /></div>
+            <h3>Sin usuarios</h3>
+            <p>{search || roleFilter ? "Ningún usuario coincide con el filtro." : "Crea el primer usuario de esta planta."}</p>
+          </div>
+        ) : (
+          <div className="us-list">
+            {visible.map((u) => (
+              <UserRow
+                key={u.id}
+                u={u}
+                isMe={u.id === me?.id}
+                onEdit={() => setForm({ mode: "edit", user: u })}
+                onPassword={() => setPwUser(u)}
+                onToggle={() => toggleActive(u)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {error ? <div className="lpErrorBox">{error}</div> : null}
+      {form ? (
+        <UserForm
+          mode={form.mode}
+          user={form.user}
+          meId={me?.id}
+          onClose={() => setForm(null)}
+          onSaved={(msg) => {
+            setForm(null);
+            toast.success(msg);
+            load();
+          }}
+        />
+      ) : null}
+      {pwUser ? <PasswordModal u={pwUser} onClose={() => setPwUser(null)} onDone={() => { setPwUser(null); load(); }} /> : null}
+    </MainLayout>
+  );
+}
 
-      <div className="lpTabsBar">
-        <div className="lpTabs">
-          <button type="button" className={activeTab === "USERS" ? "lpTab lpTabActive" : "lpTab"} onClick={() => setActiveTab("USERS")}>
-            <span className="lpTabRow">
-              <span className="lpTabDot" />
-              Usuarios
-            </span>
-          </button>
-
-          <button type="button" className={activeTab === "LINKS" ? "lpTab lpTabActive" : "lpTab"} onClick={() => setActiveTab("LINKS")}>
-            <span className="lpTabRow">
-              <span className="lpTabDot" />
-              Vínculos (técnicos)
-              <span className="lpTabBadge">{techUsers?.length || 0}</span>
-            </span>
-          </button>
-
-          <span className="lpTabIndicator" style={{ transform: activeTab === "USERS" ? "translateX(0%)" : "translateX(100%)" }} />
-        </div>
+function Kpi({ icon, value, label, tone = "" }) {
+  return (
+    <div className="tch-kpi">
+      <div className={`tch-kpi-icon ${tone}`}><Icon name={icon} /></div>
+      <div>
+        <div className="tch-kpi-value">{value}</div>
+        <div className="tch-kpi-label">{label}</div>
       </div>
+    </div>
+  );
+}
 
-      {activeTab === "USERS" ? (
-        <div className="lpTabPane">
-          <div className="lpKpiGrid">
-            <KpiCard title="Total usuarios" value={kpis.total} icon="users" />
-            <KpiCard title="Administradores" value={kpis.admins} icon="settings" />
-            <KpiCard title="Supervisores" value={kpis.supervisors} icon="doc" />
-            <KpiCard title="Técnicos" value={kpis.techs} icon="user" />
+function UserRow({ u, isMe, onEdit, onPassword, onToggle }) {
+  const r = ROLE[u.role] || ROLE.TECHNICIAN;
+  return (
+    <article className={`us-row${u.active ? "" : " is-inactive"}`}>
+      <div className={`us-avatar ${r.cls}`} aria-hidden="true">{initials(u.name)}</div>
+      <div className="us-main">
+        <div className="us-name">
+          {u.name}
+          {isMe ? <span className="us-tag">Tú</span> : null}
+          {!u.active ? <span className="us-tag is-off">Inactivo</span> : null}
+          {u.active && !u.hasPassword ? <span className="us-tag is-warn">Sin contraseña</span> : null}
+        </div>
+        <div className="us-email">{u.email}</div>
+      </div>
+      <span className={`us-role ${r.cls}`}>{r.label}</span>
+      <div className="us-plants">
+        {u.plants.map((p) => (
+          <span key={p.plantId} className={`us-plant${p.isDefault ? " is-default" : ""}`} title={p.isDefault ? "Planta predeterminada" : undefined}>
+            {p.isDefault ? <Icon name="pin" size="sm" /> : null}
+            {p.name}
+            {u.role === "TECHNICIAN" ? (
+              p.technician ? <small>{p.technician.code}</small> : <small className="is-missing">sin perfil</small>
+            ) : null}
+          </span>
+        ))}
+      </div>
+      <div className="us-actions">
+        <button type="button" className="tch-icon-btn" onClick={onEdit} title="Editar" aria-label={`Editar ${u.name}`}><Icon name="edit" size="sm" /></button>
+        <button type="button" className="tch-icon-btn" onClick={onPassword} title="Contraseña" aria-label={`Contraseña de ${u.name}`} disabled={!u.active}><Icon name="lock" size="sm" /></button>
+        {!isMe ? (
+          <button type="button" className="tch-icon-btn" onClick={onToggle} title={u.active ? "Desactivar" : "Activar"} aria-label={u.active ? "Desactivar" : "Activar"}>
+            <Icon name={u.active ? "userX" : "userCheck"} size="sm" />
+          </button>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+/* ================= Formulario ================= */
+
+function UserForm({ mode, user, meId, onClose, onSaved }) {
+  const isEdit = mode === "edit";
+  const [opts, setOpts] = useState(null);
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [role, setRole] = useState(user?.role || "TECHNICIAN");
+  const [plants, setPlants] = useState(() => (user?.plants || []).map((p) => ({ plantId: p.plantId, isDefault: p.isDefault })));
+  const [techs, setTechs] = useState(() =>
+    Object.fromEntries((user?.plants || []).filter((p) => p.technician).map((p) => [p.plantId, { technicianId: String(p.technician.id), code: "" }]))
+  );
+  const [pwMode, setPwMode] = useState("invite");
+  const [password, setPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getUserOptions(user?.id)
+      .then((o) => {
+        setOpts(o);
+        // Usuario nuevo: arranca con la planta actual seleccionada.
+        if (!isEdit) {
+          const current = Number(localStorage.getItem("lp_currentPlantId"));
+          const first = o.plants.find((p) => p.id === current) || o.plants[0];
+          if (first) setPlants([{ plantId: first.id, isDefault: true }]);
+        }
+      })
+      .catch((e) => setError(e?.message || "No se pudieron cargar las plantas"));
+  }, [user?.id, isEdit]);
+
+  const checked = (id) => plants.some((p) => p.plantId === id);
+  const togglePlant = (id) =>
+    setPlants((prev) => {
+      if (prev.some((p) => p.plantId === id)) {
+        const next = prev.filter((p) => p.plantId !== id);
+        if (next.length && !next.some((p) => p.isDefault)) next[0] = { ...next[0], isDefault: true };
+        return next;
+      }
+      return [...prev, { plantId: id, isDefault: prev.length === 0 }];
+    });
+  const setDefault = (id) => setPlants((prev) => prev.map((p) => ({ ...p, isDefault: p.plantId === id })));
+  const setTech = (plantId, patch) => setTechs((t) => ({ ...t, [plantId]: { technicianId: "", code: "", ...t[plantId], ...patch } }));
+
+  const editingSelf = isEdit && user?.id === meId;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!name.trim()) return setError("Escribe el nombre.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("Escribe un correo válido.");
+    if (!plants.length) return setError("Asigna al menos una planta.");
+    if (!isEdit && pwMode === "set" && password.length < 8) return setError("La contraseña debe tener al menos 8 caracteres.");
+    const technicians = {};
+    if (role === "TECHNICIAN") {
+      for (const p of plants) {
+        const t = techs[p.plantId] || {};
+        if (t.technicianId) technicians[p.plantId] = { technicianId: Number(t.technicianId) };
+        else if (t.code?.trim()) technicians[p.plantId] = { code: t.code.trim().toUpperCase() };
+      }
+    }
+    setSaving(true);
+    try {
+      const payload = { name: name.trim(), email: email.trim().toLowerCase(), role, plants, technicians };
+      if (isEdit) {
+        await updateUser(user.id, payload);
+        onSaved("Usuario actualizado");
+      } else {
+        const r = await createUser({ ...payload, ...(pwMode === "set" ? { password } : { sendInvite: pwMode === "invite" }) });
+        onSaved(r?.invite === "sent" ? "Usuario creado · se envió el correo para crear su contraseña" : r?.invite ? `Usuario creado · ${r.invite}` : "Usuario creado");
+      }
+    } catch (ex) {
+      setError(ex?.message || "No se pudo guardar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const plantName = (id) => opts?.plants.find((p) => p.id === id)?.name || `Planta ${id}`;
+
+  return (
+    <div className="tch-overlay" onMouseDown={(e) => e.target === e.currentTarget && !saving && onClose()}>
+      <form className="tch-modal us-modal" onSubmit={submit} noValidate>
+        <div className="tch-modal-head">
+          <div>
+            <div className="tch-kicker">{isEdit ? "Editar usuario" : "Nuevo usuario"}</div>
+            <h2 className="tch-modal-title">{isEdit ? user.name : "Alta de usuario"}</h2>
+          </div>
+          <button type="button" className="tch-icon-btn" onClick={onClose} aria-label="Cerrar"><Icon name="close" size="sm" /></button>
+        </div>
+
+        <div className="tch-form">
+          <div className="tch-row">
+            <div className="tch-field">
+              <label htmlFor="us-name">Nombre</label>
+              <input id="us-name" className="tch-input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+            </div>
+            <div className="tch-field">
+              <label htmlFor="us-email">Correo</label>
+              <input id="us-email" type="email" className="tch-input" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
           </div>
 
-          <div className="lpCard lpFiltersCard">
-            <div className="lpFiltersHeader">
-              <div className="lpFiltersTitle">
-                <span className="lpHdrIcon"><Icon name="search" /></span>
-                <span>Filtros</span>
-              </div>
-              <div className="lpFiltersMeta">{loading ? "Cargando…" : `${filteredUsers.length} usuarios`}</div>
-            </div>
-
-            <div className="lpFiltersRow">
-              <div className="lpField">
-                <label className="lpLabel">Buscar</label>
-                <input className="lpInput" value={q} onChange={(event) => setQ(event.target.value)} placeholder="Nombre, correo, técnico o código…" />
-              </div>
-
-              <div className="lpField">
-                <label className="lpLabel">Rol</label>
-                <select className="lpInput" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
-                  <option value="ALL">Todos</option>
-                  <option value="ADMIN">Administrador</option>
-                  <option value="SUPERVISOR">Supervisor</option>
-                  <option value="TECHNICIAN">Técnico</option>
-                </select>
-              </div>
-
-              <div className="lpField">
-                <label className="lpLabel">Estado</label>
-                <select className="lpInput" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                  <option value="ALL">Todos</option>
-                  <option value="ACTIVE">Activos</option>
-                  <option value="INACTIVE">Inactivos</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="lpMuted" style={{ marginTop: 12 }}>Cargando usuarios…</div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="lpMuted" style={{ marginTop: 12 }}>No hay usuarios con este filtro.</div>
-          ) : (
-            <div className="lpUsersGrid">
-              {filteredUsers.map((user) => (
-                <UserCard
-                  key={user.id}
-                  u={user}
-                  toggling={togglingId === user.id}
-                  onToggle={() => toggleUserStatus(user)}
-                  onEdit={() => openEditModal(user)}
-                  onPwd={() => openPwdModal(user)}
-                />
+          <div className="tch-field">
+            <label>Rol</label>
+            <div className="us-roles">
+              {Object.entries(ROLE).map(([k, r]) => (
+                <button key={k} type="button" className={`us-role-card ${r.cls}`} aria-pressed={role === k} disabled={editingSelf && k !== role} onClick={() => setRole(k)}>
+                  <strong>{r.label}</strong>
+                  <span>{r.desc}</span>
+                </button>
               ))}
             </div>
-          )}
-        </div>
-      ) : null}
+            {editingSelf ? <span className="tch-hint">No puedes cambiar tu propio rol.</span> : null}
+          </div>
 
-      {activeTab === "LINKS" ? (
-        <div className="lpTabPane">
-          {linksErr ? <div className="lpErrorBox">{linksErr}</div> : null}
-          <div className="lpCard lpLinksCard">
-            <div className="lpLinksHeader">
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span className="lpHdrIcon"><Icon name="route" /></span>
-                <div style={{ fontWeight: 980, color: "#0f172a" }}>Vincular técnicos ↔ usuarios</div>
-              </div>
-
-              <label className="lpCheck">
-                <input type="checkbox" checked={syncName} onChange={(event) => setSyncName(event.target.checked)} />
-                <span>Sincronizar nombre</span>
-              </label>
-            </div>
-
-            <div className="lpMuted" style={{ marginTop: 6 }}>
-              Define qué usuario técnico corresponde a qué registro operativo para actividades, filtros y trazabilidad.
-            </div>
-
-            {linksLoading ? (
-              <div className="lpMuted" style={{ marginTop: 12 }}>Cargando vínculos...</div>
-            ) : techUsers.length === 0 ? (
-              <div className="lpMuted" style={{ marginTop: 12 }}>No hay usuarios técnicos activos.</div>
+          <div className="tch-field">
+            <label>Plantas</label>
+            <span className="tch-hint">
+              {role === "TECHNICIAN"
+                ? "En cada planta el técnico necesita un perfil: liga uno existente o se crea uno nuevo con su código."
+                : "Marca todas las plantas a su cargo. La predeterminada es la que se abre al entrar."}
+            </span>
+            {!opts ? (
+              <p className="tch-hint">Cargando plantas…</p>
             ) : (
-              <div className="lpLinksList">
-                {techUsers.map((user) => {
-                  const currentTechId = user.technicianId != null ? Number(user.technicianId) : null;
+              <div className="us-plant-list">
+                {opts.plants.map((p) => {
+                  const on = checked(p.id);
+                  const def = plants.find((x) => x.plantId === p.id)?.isDefault;
+                  const available = opts.technicians.filter((t) => t.plantId === p.id);
+                  const t = techs[p.id] || {};
                   return (
-                    <div key={user.id} className="lpLinkRow">
-                      <div style={{ minWidth: 0 }}>
-                        <div className="lpLinkTitle">
-                          <span style={{ fontWeight: 980 }}>{user.name}</span>
-                          <span className="lpLinkTag">{user.email}</span>
-                        </div>
-                        <div className="lpLinkSub">
-                          T?cnico ligado: <b>{user.technician ? `${user.technician.name}${user.technician.code ? ` (${user.technician.code})` : ""}` : "?"}</b>
-                        </div>
-                      </div>
-
-                      <div className="lpLinkActions">
-                        <select
-                          className="lpInput"
-                          value={currentTechId ?? ""}
-                          onChange={(event) => onChangeLink(user, event.target.value)}
-                          disabled={busyUserId === user.id}
-                          style={{ minWidth: 0, width: "100%", maxWidth: 360 }}
-                          title="Selecciona el técnico correspondiente"
-                        >
-                          <option value="">? Sin técnico ?</option>
-                          {technicians.map((tech) => {
-                            const takenByOther = tech.user?.id && Number(tech.user.id) !== Number(user.id);
-                            const label = `${tech.name}${tech.code ? ` (${tech.code})` : ""}${takenByOther ? ` ? Ocupado por ${tech.user?.name}` : ""}`;
-                            return (
-                              <option key={tech.id} value={tech.id} disabled={takenByOther}>
-                                {label}
-                              </option>
-                            );
-                          })}
-                        </select>
-
-                        <button
-                          type="button"
-                          className="lpBtnGhost lpPress"
-                          onClick={() => onChangeLink(user, "")}
-                          disabled={busyUserId === user.id || currentTechId == null}
-                        >
-                          Quitar
+                    <div key={p.id} className={`us-plant-item${on ? " is-on" : ""}`}>
+                      <label className="us-plant-check">
+                        <input type="checkbox" checked={on} onChange={() => togglePlant(p.id)} />
+                        <strong>{p.name}</strong>
+                      </label>
+                      {on ? (
+                        <button type="button" className={`us-default${def ? " is-on" : ""}`} onClick={() => setDefault(p.id)} disabled={def}>
+                          <Icon name="pin" size="sm" /> {def ? "Predeterminada" : "Hacer predeterminada"}
                         </button>
-                      </div>
+                      ) : null}
+                      {on && role === "TECHNICIAN" ? (
+                        <div className="us-profile">
+                          <select className="tch-input" value={t.technicianId || ""} onChange={(e) => setTech(p.id, { technicianId: e.target.value })} aria-label={`Perfil de técnico en ${p.name}`}>
+                            <option value="">Crear perfil nuevo en {p.name}</option>
+                            {available.map((x) => (
+                              <option key={x.id} value={x.id}>Ligar a {x.name} · {x.code}</option>
+                            ))}
+                          </select>
+                          {!t.technicianId ? (
+                            <input className="tch-input" placeholder="Código (p. ej. TEC-07)" value={t.code || ""} onChange={(e) => setTech(p.id, { code: e.target.value })} aria-label={`Código del técnico en ${p.name}`} />
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                   );
                 })}
               </div>
             )}
-
-            <div className="lpHint">
-              Tip: si un técnico se da de baja, mantén el usuario para historial y solo desvincúlalo aquí.
-            </div>
+            {role === "TECHNICIAN" && plants.length > 1 ? (
+              <span className="tch-hint">
+                El técnico verá y ejecutará las actividades de cada planta con el perfil de esa planta. Su perfil principal es el de {plantName(plants.find((p) => p.isDefault)?.plantId)}.
+              </span>
+            ) : null}
           </div>
-        </div>
-      ) : null}
 
-      {showModal ? (
-        <div className="lpModalOverlay" onClick={(event) => event.target.classList.contains("lpModalOverlay") && closeModal()}>
-          <div className="lpModal lpModalWide">
-            <div className="lpModalHeader">
-              <div>
-                <div style={{ fontWeight: 980, fontSize: 16 }}>{editingUser ? "Editar usuario" : "Nuevo usuario"}</div>
-                <div className="lpMuted" style={{ marginTop: 4 }}>
-                  {editingUser
-                    ? "Actualiza rol, vínculo técnico y acceso por planta."
-                    : "Crea la cuenta, define contraseña inicial y deja el acceso listo desde aquí."}
-                </div>
-              </div>
-              <button className="lpBtnGhost lpPress" onClick={closeModal} type="button" title="Cerrar">
-                <Icon name="close" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveUser}>
-              <div className="lpModalGrid2">
-                <label className="lpModalLabel">
-                  Nombre
-                  <input className="lpInput" value={form.name} onChange={onChangeForm("name")} required />
-                </label>
-
-                <label className="lpModalLabel">
-                  Correo
-                  <input className="lpInput" type="email" value={form.email} onChange={onChangeForm("email")} required />
-                </label>
-              </div>
-
-              <div className="lpModalGrid2">
-                <label className="lpModalLabel">
-                  Rol
-                  <select className="lpInput" value={form.role} onChange={onChangeForm("role")}>
-                    {roleOptions.map((role) => (
-                      <option key={role} value={role}>{ROLE_LABEL[role]}</option>
-                    ))}
-                  </select>
-                </label>
-
-                {isTechRole ? (
-                  <label className="lpModalLabel">
-                    Técnico vinculado
-                    <select className="lpInput" value={form.technicianId} onChange={onChangeForm("technicianId")} required disabled={techLoading}>
-                      {editingUser?.technicianId && !availableTechs.some((tech) => String(tech.id) === String(editingUser.technicianId)) ? (
-                        <option value={String(editingUser.technicianId)}>Técnico actual (ID {editingUser.technicianId})</option>
-                      ) : null}
-                      <option value="">{techLoading ? "Cargando técnicos…" : "Selecciona un técnico"}</option>
-                      {availableTechs.map((tech) => (
-                        <option key={tech.id} value={tech.id}>
-                          {tech.name}{tech.code ? ` · ${tech.code}` : ""}{tech.status ? ` · ${tech.status}` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {techError ? <div className="lpModalError">{techError}</div> : null}
-                  </label>
-                ) : (
-                  <div className="lpModalInfoCard">
-                    <div className="lpModalInfoTitle">Acceso operativo</div>
-                    <div className="lpMuted">Este rol no requiere vínculo con un técnico operativo.</div>
-                  </div>
-                )}
-              </div>
-
-              {!editingUser ? (
-                <div className="lpModalSection">
-                  <div className="lpModalSectionTitle">Contraseña inicial</div>
-                  <div className="lpMuted">El administrador la define aquí y deja la cuenta lista desde el primer ingreso.</div>
-                  <div className="lpModalGrid2" style={{ marginTop: 10 }}>
-                    <label className="lpModalLabel">
-                      Contraseña inicial
-                      <div className="lpInputCombo">
-                        <input className="lpInput" type={showNewPwd ? "text" : "password"} value={newPwd} onChange={(event) => setNewPwd(event.target.value)} placeholder="Mínimo 6 caracteres" />
-                        <button type="button" className="lpBtnGhost lpPress" onClick={() => setShowNewPwd((value) => !value)}>
-                          {showNewPwd ? "Ocultar" : "Mostrar"}
-                        </button>
-                      </div>
-                    </label>
-
-                    <label className="lpModalLabel">
-                      Confirmar contraseña
-                      <div className="lpInputCombo">
-                        <input className="lpInput" type={showNewPwd2 ? "text" : "password"} value={newPwd2} onChange={(event) => setNewPwd2(event.target.value)} />
-                        <button type="button" className="lpBtnGhost lpPress" onClick={() => setShowNewPwd2((value) => !value)}>
-                          {showNewPwd2 ? "Ocultar" : "Mostrar"}
-                        </button>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="lpModalSection">
-                <div className="lpModalSectionTitle">Plantas asignadas</div>
-                <div className="lpMuted">Define en qué plantas puede operar el usuario y cuál será su planta por defecto.</div>
-                {plantsError ? <div className="lpModalError">{plantsError}</div> : null}
-                {plantsLoading ? (
-                  <div className="lpMuted" style={{ marginTop: 10 }}>Cargando plantas…</div>
-                ) : plantOptions.length === 0 ? (
-                  <div className="lpMuted" style={{ marginTop: 10 }}>No hay plantas disponibles.</div>
-                ) : (
-                  <div className="lpPlantsList">
-                    {plantOptions.map((plant) => (
-                      <div key={plant.plantId} className="lpPlantRow">
-                        <label className="lpPlantLeft">
-                          <input type="checkbox" checked={!!plant.assigned} onChange={() => togglePlantAssigned(plant.plantId)} />
-                          <span><b>{plant?.plant?.name || `Planta ${plant.plantId}`}</b></span>
-                        </label>
-                        <label className="lpPlantRight">
-                          <input type="radio" name="defaultPlant" checked={!!plant.isDefault} disabled={!plant.assigned || !plant.active} onChange={() => setDefaultPlant(plant.plantId)} />
-                          <span>Por defecto</span>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {error ? <div className="lpModalError">{error}</div> : null}
-
-              <div className="lpModalActions">
-                <button type="button" className="lpBtnGhost lpPress" onClick={closeModal} disabled={saving}>Cancelar</button>
-                <button type="submit" className="lpBtnPrimary lpPress" disabled={saving}>{saving ? "Guardando…" : "Guardar"}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
-
-      {showPwdModal ? (
-        <div className="lpModalOverlay" onClick={(event) => event.target.classList.contains("lpModalOverlay") && closePwdModal()}>
-          <div className="lpModal">
-            <div className="lpModalHeader">
-              <div>
-                <div style={{ fontWeight: 980, fontSize: 16 }}>Asignar contraseña</div>
-                <div className="lpMuted" style={{ marginTop: 4 }}>Usuario: <b style={{ color: "#0f172a" }}>{pwdUser?.email}</b></div>
-              </div>
-              <button className="lpBtnGhost lpPress" onClick={closePwdModal} type="button" title="Cerrar">
-                <Icon name="close" />
-              </button>
-            </div>
-
-            <div className="lpModalInfoCard">
-              <div className="lpModalInfoTitle">Seguridad</div>
-              <div className="lpMuted">La contraseña actual no puede visualizarse porque el sistema solo guarda su hash. Aquí puedes definir una nueva, verla y copiarla antes de cerrar.</div>
-            </div>
-
-            {pwdAssigned ? (
-              <div className="lpPasswordResult">
-                <div className="lpPasswordResultTitle">Nueva contraseña asignada</div>
-                <div className="lpPasswordValue">{pwdAssigned}</div>
-                <button type="button" className="lpBtnGhost lpPress" onClick={copyAssignedPassword}>
-                  <span className="lpBtnRow"><Icon name="download" />Copiar contraseña</span>
+          {!isEdit ? (
+            <div className="tch-field">
+              <label>Acceso</label>
+              <div className="us-roles us-pw">
+                <button type="button" className="us-role-card" aria-pressed={pwMode === "invite"} onClick={() => setPwMode("invite")}>
+                  <strong>Enviar correo</strong><span>Recibe un enlace (72 h) para crear su contraseña.</span>
+                </button>
+                <button type="button" className="us-role-card" aria-pressed={pwMode === "set"} onClick={() => setPwMode("set")}>
+                  <strong>Definir contraseña</strong><span>Se la compartes tú. Mínimo 8 caracteres.</span>
+                </button>
+                <button type="button" className="us-role-card" aria-pressed={pwMode === "later"} onClick={() => setPwMode("later")}>
+                  <strong>Después</strong><span>Sin acceso hasta que le envíes el enlace.</span>
                 </button>
               </div>
-            ) : null}
+              {pwMode === "set" ? (
+                <input type="password" className="tch-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" autoComplete="new-password" />
+              ) : null}
+            </div>
+          ) : null}
 
-            <form onSubmit={handleSetPassword}>
-              <label className="lpModalLabel">
-                Nueva contraseña
-                <div className="lpInputCombo">
-                  <input className="lpInput" type={showPwd ? "text" : "password"} value={pwd} onChange={(event) => setPwd(event.target.value)} required placeholder="Mínimo 6 caracteres" />
-                  <button type="button" className="lpBtnGhost lpPress" onClick={() => setShowPwd((value) => !value)}>{showPwd ? "Ocultar" : "Mostrar"}</button>
-                </div>
-              </label>
+          {error ? <div className="tch-error" role="alert">{error}</div> : null}
+        </div>
 
-              <label className="lpModalLabel">
-                Confirmar contraseña
-                <div className="lpInputCombo">
-                  <input className="lpInput" type={showPwd2 ? "text" : "password"} value={pwd2} onChange={(event) => setPwd2(event.target.value)} required />
-                  <button type="button" className="lpBtnGhost lpPress" onClick={() => setShowPwd2((value) => !value)}>{showPwd2 ? "Ocultar" : "Mostrar"}</button>
-                </div>
-              </label>
+        <div className="tch-modal-foot">
+          <button type="button" className="tch-btn tch-btn-ghost" onClick={onClose} disabled={saving}>Cancelar</button>
+          <button type="submit" className="tch-btn tch-btn-primary" disabled={saving || !opts}>{saving ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear usuario"}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
-              {pwdError ? <div className="lpModalError">{pwdError}</div> : null}
+function PasswordModal({ u, onClose, onDone }) {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-              <div className="lpModalActions">
-                <button type="button" className="lpBtnGhost lpPress" onClick={closePwdModal} disabled={pwdSaving}>Cancelar</button>
-                <button type="submit" className="lpBtnPrimary lpPress" disabled={pwdSaving}>{pwdSaving ? "Guardando…" : "Asignar"}</button>
-              </div>
-            </form>
+  const sendLink = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await sendPasswordLink(u.id);
+      toast.success(`Se envió el enlace a ${u.email}`);
+      onDone();
+    } catch (e) {
+      setError(e?.message || "No se pudo enviar");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const save = async (e) => {
+    e.preventDefault();
+    if (password.length < 8) return setError("Mínimo 8 caracteres.");
+    setBusy(true);
+    setError("");
+    try {
+      await setUserPassword(u.id, password);
+      toast.success("Contraseña actualizada");
+      onDone();
+    } catch (ex) {
+      setError(ex?.message || "No se pudo guardar");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="tch-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
+      <form className="tch-modal" style={{ maxWidth: 480 }} onSubmit={save} noValidate>
+        <div className="tch-modal-head">
+          <div>
+            <div className="tch-kicker">Contraseña</div>
+            <h2 className="tch-modal-title">{u.name}</h2>
+            <div className="tch-sub">{u.hasPassword ? "Tiene contraseña." : "Aún no tiene contraseña: no puede entrar."}</div>
           </div>
+          <button type="button" className="tch-icon-btn" onClick={onClose} aria-label="Cerrar"><Icon name="close" size="sm" /></button>
         </div>
-      ) : null}
-    </MainLayout>
-  );
-}
-
-function KpiCard({ title, value, icon }) {
-  return (
-    <div className="lpCard lpKpiCard">
-      <div className="lpKpiBand" />
-      <div className="lpKpiSide" />
-      <div className="lpKpiBody">
-        <div className="lpKpiIcon"><Icon name={icon} /></div>
-        <div style={{ minWidth: 0 }}>
-          <div className="lpKpiTitle">{title}</div>
-          <div className="lpKpiValue">{value}</div>
+        <div className="tch-form">
+          <button type="button" className="tch-btn tch-btn-ghost" onClick={sendLink} disabled={busy}>
+            <Icon name="bell" size="sm" /> Enviar enlace a {u.email}
+          </button>
+          <span className="tch-hint">O fija una contraseña y compártela por un medio seguro:</span>
+          <input type="password" className="tch-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nueva contraseña (mínimo 8)" autoComplete="new-password" />
+          {error ? <div className="tch-error" role="alert">{error}</div> : null}
         </div>
-      </div>
+        <div className="tch-modal-foot">
+          <button type="button" className="tch-btn tch-btn-ghost" onClick={onClose} disabled={busy}>Cancelar</button>
+          <button type="submit" className="tch-btn tch-btn-primary" disabled={busy || !password}>Guardar contraseña</button>
+        </div>
+      </form>
     </div>
   );
 }
-
-function ucInitials(name) {
-  if (!name) return "—";
-  const parts = String(name).trim().split(/\s+/);
-  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
-}
-
-function ucFormatActivity(value) {
-  if (!value) return null;
-  const dt = new Date(value);
-  if (Number.isNaN(dt.getTime())) return null;
-  return dt.toLocaleString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-const ROLE_BORDER = { ADMIN: "#d97706", SUPERVISOR: "#2563eb", TECHNICIAN: "#16a34a" };
-const ROLE_AVATAR = {
-  ADMIN:      { bg: "rgba(245,158,11,0.14)", border: "rgba(245,158,11,0.35)", color: "#92400e" },
-  SUPERVISOR: { bg: "rgba(59,130,246,0.14)", border: "rgba(59,130,246,0.35)", color: "#1d4ed8" },
-  TECHNICIAN: { bg: "rgba(34,197,94,0.14)",  border: "rgba(34,197,94,0.35)",  color: "#166534" },
-};
-
-function UserCard({ u, toggling, onToggle, onEdit, onPwd }) {
-  const [hover, setHover] = useState(false);
-
-  const roleKey    = toRole(u?.role);
-  const role       = roleChip(u?.role);
-  const password   = passwordChip(!!u?.hasPassword);
-  const isActive   = !!u?.active;
-  const isTech     = roleKey === "TECHNICIAN";
-
-  const initials       = ucInitials(u?.name);
-  const avatarTone     = ROLE_AVATAR[roleKey] || ROLE_AVATAR.TECHNICIAN;
-  const borderColor    = ROLE_BORDER[roleKey] || "#94a3b8";
-  const plantsText     = buildPlantsText(u);
-  const techLabel      = buildTechLabel(u);
-  const lastActivity   = ucFormatActivity(u?.lastActivityAt);
-
-  return (
-    <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        ...ucCard,
-        borderLeft: `4px solid ${borderColor}`,
-        transform: hover ? "translateY(-3px)" : "translateY(0)",
-        boxShadow: hover
-          ? "0 20px 44px rgba(2,6,23,0.13), 0 4px 12px rgba(2,6,23,0.07)"
-          : "0 10px 24px rgba(2,6,23,0.07)",
-      }}
-    >
-      {/* ── Header: avatar + nombre + rol ── */}
-      <div style={ucHeader}>
-        <div style={{ ...ucAvatar, background: avatarTone.bg, border: `1px solid ${avatarTone.border}`, color: avatarTone.color }}>
-          {initials}
-        </div>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={ucName}>{u?.name || "—"}</div>
-          <div style={ucEmail}>{u?.email || "—"}</div>
-        </div>
-        <span style={{ ...ucRoleBadge, background: role.bg, color: role.fg }}>
-          <Icon name={role.icon} size="sm" />
-          {ROLE_LABEL[roleKey] || role.label}
-        </span>
-      </div>
-
-      {/* ── Pills de estado y contraseña ── */}
-      <div style={ucPillRow}>
-        <span style={ucStatusPill(isActive)}>
-          <span style={ucDot(isActive)} />
-          {isActive ? "Activo" : "Inactivo"}
-        </span>
-
-        <span style={{ ...ucPill, background: password.bg, color: password.fg }}>
-          <Icon name="lock" size="sm" />
-          {password.label}
-        </span>
-
-        {isTech && techLabel !== "—" && techLabel !== "Sin vínculo" ? (
-          <span style={ucPill}>
-            <Icon name="user" size="sm" />
-            {techLabel}
-          </span>
-        ) : null}
-      </div>
-
-      {/* ── Plantas ── */}
-      {plantsText !== "Sin planta asignada" ? (
-        <div style={ucPlantsRow}>
-          <Icon name="building" size="sm" />
-          <span style={ucPlantsText}>{plantsText}</span>
-        </div>
-      ) : null}
-
-      {/* ── Última actividad ── */}
-      <div style={ucActivityBar(!!lastActivity)}>
-        <span style={ucActivityIcon}>
-          <Icon name="clock" size="sm" />
-        </span>
-        <div style={ucActivityContent}>
-          <span style={ucActivityLabel}>
-            {lastActivity ? "Última actividad" : "Sin actividad registrada"}
-          </span>
-          {lastActivity ? <span style={ucActivityValue}>{lastActivity}</span> : null}
-        </div>
-      </div>
-
-      {/* ── Acciones ── */}
-      <div style={ucActions}>
-        <button style={ucBtnGhost} onClick={onEdit} type="button" title="Editar usuario">
-          <Icon name="edit" size="sm" /> Editar
-        </button>
-        <button style={ucBtnGhost} onClick={onPwd} type="button" title="Cambiar contraseña">
-          <Icon name="lock" size="sm" /> Contraseña
-        </button>
-        <button
-          style={u?.active ? ucBtnDanger : ucBtnDark}
-          onClick={onToggle}
-          disabled={toggling}
-          type="button"
-        >
-          <Icon name={u?.active ? "warn" : "check"} size="sm" />
-          {toggling ? "…" : u?.active ? "Desactivar" : "Activar"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ── UserCard inline styles ── */
-
-const ucCard = {
-  background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderRadius: 18,
-  overflow: "hidden",
-  display: "flex",
-  flexDirection: "column",
-  gap: 0,
-  transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms ease",
-};
-
-const ucHeader = {
-  display: "flex",
-  gap: 12,
-  alignItems: "flex-start",
-  padding: "14px 14px 0",
-};
-
-const ucAvatar = {
-  width: 44,
-  height: 44,
-  borderRadius: 14,
-  display: "grid",
-  placeItems: "center",
-  fontWeight: 900,
-  fontSize: 15,
-  letterSpacing: 0.8,
-  flexShrink: 0,
-};
-
-const ucName = {
-  fontSize: 15,
-  fontWeight: 900,
-  color: "#0f172a",
-  lineHeight: 1.2,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-};
-
-const ucEmail = {
-  marginTop: 3,
-  fontSize: 12,
-  fontWeight: 800,
-  color: "#64748b",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-};
-
-const ucRoleBadge = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "5px 10px",
-  borderRadius: 999,
-  fontSize: 11,
-  fontWeight: 950,
-  whiteSpace: "nowrap",
-  flexShrink: 0,
-};
-
-const ucPillRow = {
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  alignItems: "center",
-  padding: "10px 14px 0",
-};
-
-const ucStatusPill = (active) => ({
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "5px 10px",
-  borderRadius: 999,
-  fontSize: 11,
-  fontWeight: 950,
-  background: active ? "rgba(34,197,94,0.10)" : "rgba(148,163,184,0.12)",
-  color:      active ? "#14532d"              : "#475569",
-  border:     active ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(148,163,184,0.25)",
-  whiteSpace: "nowrap",
-});
-
-const ucDot = (active) => ({
-  width: 7,
-  height: 7,
-  borderRadius: 999,
-  background: active ? "#22c55e" : "#94a3b8",
-  flexShrink: 0,
-});
-
-const ucPill = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "5px 10px",
-  borderRadius: 999,
-  fontSize: 11,
-  fontWeight: 950,
-  background: "rgba(15,23,42,0.04)",
-  border: "1px solid rgba(226,232,240,0.95)",
-  color: "#334155",
-  whiteSpace: "nowrap",
-  maxWidth: 180,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-const ucPlantsRow = {
-  display: "flex",
-  alignItems: "flex-start",
-  gap: 8,
-  padding: "8px 14px 0",
-  color: "#64748b",
-  fontSize: 12,
-  fontWeight: 800,
-};
-
-const ucPlantsText = {
-  lineHeight: 1.4,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  flex: 1,
-};
-
-const ucActivityBar = (hasActivity) => ({
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  padding: "10px 14px",
-  marginTop: 10,
-  background: hasActivity ? "rgba(59,130,246,0.07)" : "rgba(148,163,184,0.08)",
-  borderTop: hasActivity ? "1px solid rgba(59,130,246,0.14)" : "1px solid rgba(148,163,184,0.14)",
-  color: hasActivity ? "#1e40af" : "#64748b",
-});
-
-const ucActivityIcon = {
-  width: 28,
-  height: 28,
-  borderRadius: 9,
-  display: "grid",
-  placeItems: "center",
-  background: "rgba(255,255,255,0.55)",
-  border: "1px solid rgba(255,255,255,0.70)",
-  flexShrink: 0,
-};
-
-const ucActivityContent = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 1,
-  minWidth: 0,
-};
-
-const ucActivityLabel = {
-  fontSize: 10,
-  fontWeight: 900,
-  letterSpacing: 0.4,
-  textTransform: "uppercase",
-  opacity: 0.70,
-};
-
-const ucActivityValue = {
-  fontSize: 13,
-  fontWeight: 900,
-};
-
-const ucActions = {
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  padding: "10px 14px 14px",
-  borderTop: "1px solid rgba(226,232,240,0.80)",
-  marginTop: 10,
-};
-
-const ucBtnBase = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "7px 12px",
-  borderRadius: 10,
-  fontSize: 12,
-  fontWeight: 950,
-  cursor: "pointer",
-  border: "1px solid rgba(226,232,240,0.95)",
-};
-
-const ucBtnGhost = {
-  ...ucBtnBase,
-  background: "rgba(255,255,255,0.90)",
-  color: "#0f172a",
-};
-
-const ucBtnDark = {
-  ...ucBtnBase,
-  background: "rgba(51,65,85,0.92)",
-  border: "1px solid rgba(51,65,85,0.55)",
-  color: "#fff",
-};
-
-const ucBtnDanger = {
-  ...ucBtnBase,
-  background: "rgba(239,68,68,0.08)",
-  border: "1px solid rgba(239,68,68,0.28)",
-  color: "#991b1b",
-};
