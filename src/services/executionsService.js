@@ -824,3 +824,12 @@ export async function createManualExecution(payload) {
 }
 
 
+
+// Reprogramar una actividad abierta (supervisor / admin). scheduledAt: "YYYY-MM-DD".
+export async function rescheduleExecution(executionId, { scheduledAt, reason }) {
+  return httpPatch(`/executions/${executionId}/reschedule`, { scheduledAt, reason });
+}
+
+export async function getExecutionReschedules(executionId) {
+  return httpGet(`/executions/${executionId}/reschedules`);
+}

@@ -236,8 +236,7 @@ const loggedTechId = user?.technicianId != null ? Number(user.technicianId) : nu
               : Array.isArray(lubData)
               ? lubData
               : [];
-          } catch (e) {
-            console.error("Error cargando lubricantes:", e);
+          } catch {
             lubItems =
               Array.isArray(offlineCatalog?.lubricants) && offlineCatalog.lubricants.length
                 ? offlineCatalog.lubricants
@@ -290,7 +289,6 @@ setForm((prev) => ({
 }));
 setChecklist(buildChecklist(ex));
       } catch (e) {
-        console.error(e);
         if (!aliveRef.current) return;
         setErr(e?.message || "Error cargando actividad");
       } finally {
@@ -418,6 +416,29 @@ setChecklist(buildChecklist(ex));
     attendedCount,
   ]);
 
+  const missing = [];
+  if (!isCompleted) {
+    if (isFutureExecution) missing.push(`Disponible el ${scheduledLabel}`);
+    if (!form.technicianId) missing.push("Técnico");
+    if (selectedTechInactive) missing.push("Técnico activo");
+    if (isMultiEquipment && attendedCount === 0) missing.push("Marcar equipos atendidos");
+    if (usesOptionalConsumption) {
+      if (usedLubricant && !form.usedLubricantId) missing.push("Lubricante usado");
+      if (usedLubricant && form.usedQuantity === "") missing.push("Cantidad");
+    } else if (form.usedQuantity === "") {
+      missing.push(isPumpRoute ? "Bombazos" : "Cantidad");
+    }
+    if (evidenceRequired && !form.evidenceImage) missing.push("Foto de evidencia");
+  }
+  const plannedQty = execution?.route?.quantity != null ? Number(execution.route.quantity) : null;
+  const stepQty = (delta) =>
+    setForm((p) => {
+      const cur = Number(p.usedQuantity);
+      const base = Number.isFinite(cur) ? cur : plannedQty || 0;
+      const next = Math.max(0, Math.round((base + delta) * 100) / 100);
+      return { ...p, usedQuantity: String(next) };
+    });
+
   if (!open) return null;
 
   const handleChange = (e) => {
@@ -448,8 +469,7 @@ setChecklist(buildChecklist(ex));
       setErr("");
       const dataUrl = await compressImageToDataUrl(file);
       setForm((p) => ({ ...p, evidenceImage: dataUrl }));
-    } catch (e) {
-      console.error(e);
+    } catch {
       setErr("No se pudo cargar la imagen.");
     }
   };
@@ -908,6 +928,27 @@ setChecklist(buildChecklist(ex));
                     inputMode="decimal"
                   />
 
+                  {!isCompleted ? (
+                    <div style={qtyQuickRow}>
+                      <button type="button" style={qtyStepBtn} onClick={() => stepQty(-1)} disabled={saving} aria-label="Restar 1">
+                        −
+                      </button>
+                      {plannedQty != null && Number.isFinite(plannedQty) ? (
+                        <button
+                          type="button"
+                          style={Number(form.usedQuantity) === plannedQty ? qtyPlannedOn : qtyPlanned}
+                          onClick={() => setForm((p) => ({ ...p, usedQuantity: String(plannedQty) }))}
+                          disabled={saving}
+                        >
+                          {Number(form.usedQuantity) === plannedQty ? "✓ " : ""}Lo planeado: {plannedQty} {isPumpRoute ? "bombazos" : unit}
+                        </button>
+                      ) : null}
+                      <button type="button" style={qtyStepBtn} onClick={() => stepQty(1)} disabled={saving} aria-label="Sumar 1">
+                        +
+                      </button>
+                    </div>
+                  ) : null}
+
                   {isPumpRoute ? (
                     <div style={hint}>
                       Puntos: <b>{points}</b>. 1 bombazo = <b>{pumpStrokeValue || "—"}</b>{" "}
@@ -1094,7 +1135,6 @@ setChecklist(buildChecklist(ex));
         alt="Vista previa"
         style={evidenceImg}
         onError={(e) => {
-          console.error("No se pudo mostrar la evidencia:", form.evidenceImage);
           e.currentTarget.style.display = "none";
         }}
       />
@@ -1125,10 +1165,24 @@ setChecklist(buildChecklist(ex));
                 </Field>
               </div>
 
-              <div style={footer}>
-                {/* Firma digital del técnico */}
-                <SignaturePad onChange={handleSignatureChange} label="Firma del técnico (opcional)" />
+              {/* Firma digital del técnico */}
+              <SignaturePad onChange={handleSignatureChange} label="Firma del técnico (opcional)" />
 
+              <div style={footer}>
+                {missing.length ? (
+                  <div style={missingRow}>
+                    <span style={{ fontWeight: 950 }}>Falta:</span>
+                    {missing.map((m) => (
+                      <span key={m} style={missingChip}>
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                ) : !isCompleted ? (
+                  <div style={{ ...missingRow, color: "#166534" }}>
+                    <span style={{ fontWeight: 950 }}>✓ Todo listo para completar</span>
+                  </div>
+                ) : null}
                 <button type="button" onClick={onClose} style={btnGhost} disabled={saving}>
                   Cancelar
                 </button>
@@ -1603,7 +1657,7 @@ const checkPhotoPill = {
   border: "1px solid rgba(249,115,22,0.35)",
   flexShrink: 0,
 };
-const evidenceCardRequired = { borderColor: "rgba(249,115,22,0.55)", boxShadow: "0 0 0 3px rgba(249,115,22,0.12)" };
+const evidenceCardRequired = { border: "1px solid rgba(249,115,22,0.55)", boxShadow: "0 0 0 3px rgba(249,115,22,0.12)" };
 
 function buildChecklist(ex) {
   const links = Array.isArray(ex?.route?.equipments) ? ex.route.equipments : [];
@@ -1799,7 +1853,52 @@ const footer = {
   gap: 10,
   marginTop: 4,
   flexWrap: "wrap",
+  position: "sticky",
+  bottom: 0,
+  zIndex: 5,
+  padding: "12px 0 4px",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.85) 0%, #ffffff 30%)",
 };
+const missingRow = {
+  flex: "1 1 100%",
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  gap: 6,
+  fontSize: 13,
+  color: "#92400e",
+};
+const missingChip = {
+  padding: "4px 10px",
+  borderRadius: 999,
+  background: "#fffbeb",
+  border: "1px solid #fde68a",
+  fontWeight: 850,
+};
+const qtyQuickRow = { display: "flex", gap: 8, marginTop: 8, alignItems: "stretch" };
+const qtyStepBtn = {
+  width: 52,
+  minHeight: 46,
+  borderRadius: 12,
+  border: "1px solid #cbd5e1",
+  background: "#fff",
+  fontSize: 22,
+  fontWeight: 950,
+  color: "#0f172a",
+  cursor: "pointer",
+};
+const qtyPlanned = {
+  flex: 1,
+  minHeight: 46,
+  borderRadius: 12,
+  border: "1px dashed #f97316",
+  background: "rgba(249,115,22,0.06)",
+  color: "#9a3412",
+  fontWeight: 900,
+  fontSize: 14,
+  cursor: "pointer",
+};
+const qtyPlannedOn = { ...qtyPlanned, border: "1px solid #16a34a", background: "#f0fdf4", color: "#166534" };
 
 const btnGhost = {
   background: "rgba(255,255,255,0.70)",

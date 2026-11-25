@@ -19,6 +19,7 @@ import { getEquipment } from "../services/equipmentService";
 import CompleteExecutionModal from "./CompleteExecutionModal";
 import EmergencyActivityModal from "../components/activities/EmergencyActivityModal";
 import ReportConditionModal from "../components/activities/ReportConditionModal";
+import RescheduleModal from "../components/activities/RescheduleModal";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
@@ -100,7 +101,7 @@ const escapeHtml = (value) =>
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
+    .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
 const cleanUiText = (value) => {
@@ -373,6 +374,7 @@ export default function ActivitiesPage() {
 
   // animación al completar
   const [completePulse, setCompletePulse] = useState(false);
+  const [completePulseText, setCompletePulseText] = useState({ title: "", subtitle: "" });
 
   // programar actividad manual
   const [openSchedule, setOpenSchedule] = useState(false);
@@ -412,6 +414,7 @@ const highlightedCardRef = useRef(null);
   // ===== Técnicos (Supervisor / Admin) =====
   const [techs, setTechs] = useState([]);
   const [assigningId, setAssigningId] = useState(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
 
   const deep = useMemo(() => readQuery(location.search), [location.search]);
   const isUnassignedDeepLink = deep.filter === "unassigned";
@@ -495,7 +498,6 @@ const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase(
         }
       }
     } catch (e) {
-      console.error(e);
       if (reqId !== reqIdRef.current) return;
       setErr(e?.message || "Error cargando actividades");
       if (isTech) {
@@ -670,8 +672,7 @@ useEffect(() => {
           ? data
           : [];
         setTechs(items);
-      } catch (e) {
-        console.error("Error cargando Técnicos:", e);
+      } catch {
         setTechs([]);
       }
     })();
@@ -693,8 +694,7 @@ useEffect(() => {
           ? data
           : [];
         setEquipments(items);
-      } catch (e) {
-        console.error("Error cargando equipos:", e);
+      } catch {
         setEquipments([]);
       }
     })();
@@ -743,7 +743,6 @@ useEffect(() => {
       await assignExecutionTechnician(executionId, techId);
       await load();
     } catch (e) {
-      console.error(e);
       setErr(e?.message || "Error asignando Técnico");
     } finally {
       setAssigningId(null);
@@ -810,7 +809,6 @@ useEffect(() => {
       closeScheduleModal();
       await load();
     } catch (e) {
-      console.error(e);
       setScheduleErr(e?.message || "Error programando actividad");
     } finally {
       setSavingSchedule(false);
@@ -824,16 +822,17 @@ useEffect(() => {
 
   const completedFromTo = useMemo(() => {
     if (completedRange === "MONTH") {
-      return { from: startOfMonthLocal(now), to: endOfMonthLocal(now) };
+      return monthToFromTo(month);
     }
     if (completedRange === "90D") {
       return { from: addDaysLocal(now, -90), to: now };
     }
     return { from: addDaysLocal(now, -30), to: now };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completedRange]);
+  }, [completedRange, month]);
 
   const futureFromTo = useMemo(() => monthToFromTo(month), [month]);
+  const isCurrentMonthView = String(month || "").slice(0, 7) === String(todayYMD).slice(0, 7);
 
   useEffect(() => {
     setPrintFrom(toLocalYMD(futureFromTo.from));
@@ -958,13 +957,13 @@ useEffect(() => {
           ratio,
 
           activityName: cleanUiText(activityName),
-          routeName: cleanUiText(isManual ? "MANUAL" : routeDisplayName || "?"),
+          routeName: cleanUiText(isManual ? "MANUAL" : routeDisplayName || "—"),
           routeKind: !isManual ? route?.routeKind || null : null,
           route: !isManual ? route || null : null,
           routeUnit: !isManual ? route?.unit || "" : "",
 
           equipment: equipment || null,
-          equipmentName: cleanUiText(equipment?.name || "?"),
+          equipmentName: cleanUiText(equipment?.name || "—"),
           equipmentCode: equipment?.code || equipment?.tag || "",
           equipmentLocation: cleanUiText(equipment?.location || ""),
           equipmentCriticality: equipment?.criticality || null,
@@ -980,9 +979,12 @@ useEffect(() => {
               ? `${route.quantity}${route.unit ? ` ${route.unit}` : ""}${isInspectionRoute ? " opcional" : " por punto"}`
               : isInspectionRoute
               ? "Consumo opcional"
-              : "?",
+              : "—",
           pointsCount: !isManual && route?.points != null ? Number(route.points) : null,
-          method: cleanUiText(!isManual ? route?.method || "?" : "?"),
+          evidenceRequired: !isManual && Boolean(route?.evidenceRequired),
+          equipmentsCount: !isManual && Array.isArray(route?.equipments) && route.equipments.length > 1 ? route.equipments.length : 1,
+          evidenceEquipmentName: ex?.evidenceEquipment?.name || "",
+          method: cleanUiText(!isManual ? route?.method || "—" : "—"),
           instructions: cleanUiText(String(instructionsTxt || "")),
           technicianId: ex?.technicianId ?? ex?.technician?.id ?? null,
           technician: ex?.technician ?? null,
@@ -1017,6 +1019,7 @@ useEffect(() => {
   // =========================
   const scoped = useMemo(() => {
     return sorted.filter((a) => {
+      if (a.computedStatus === "Atrasada" && isCurrentMonthView) return true;
       if (a.computedStatus === "Pendiente" || a.computedStatus === "Atrasada") {
         return inRange(a.dateISO, futureFromTo.from, futureFromTo.to);
       }
@@ -1025,7 +1028,7 @@ useEffect(() => {
       }
       return true;
     });
-  }, [sorted, completedFromTo, futureFromTo]);
+  }, [sorted, completedFromTo, futureFromTo, isCurrentMonthView]);
 
   // técnico ve: sin asignar + asignadas a su technicianId
   const techScoped = useMemo(() => {
@@ -1201,11 +1204,22 @@ useEffect(() => {
       try {
         popup.focus();
         popup.print();
-      } catch {}
+      } catch { /* la ventana ya se cerró */ }
     }, 350);
   }, [canPrintActivities, printRows, printFrom, printTo, currentPlant]);
 
   const baseCountList = techScoped;
+
+  // Técnico: la siguiente actividad que conviene hacer (atrasadas y de hoy, por prioridad).
+  const actionable = useMemo(
+    () =>
+      getSuggestedActivityOrder(
+        (techScoped || []).filter((a) => a.computedStatus !== "Completada" && a.dateLabel && a.dateLabel <= todayYMD)
+      ),
+    [techScoped, todayYMD]
+  );
+  const nextUp = actionable[0] || null;
+  const actionableCount = actionable.length;
 
 const pendingCount = baseCountList.filter((a) => a.computedStatus === "Pendiente").length;
 const lateCount = baseCountList.filter((a) => a.computedStatus === "Atrasada").length;
@@ -1254,6 +1268,14 @@ useEffect(() => {
           100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
+
+      <RescheduleModal
+        open={Boolean(rescheduleTarget)}
+        activity={rescheduleTarget}
+        todayYMD={todayYMD}
+        onClose={() => setRescheduleTarget(null)}
+        onDone={() => load()}
+      />
 
       <CompleteExecutionModal
         open={completeOpen}
@@ -1779,6 +1801,14 @@ useEffect(() => {
           </div>
         </div>
 
+        {isTech && !loading && nextUp ? (
+          <NextUpCard
+            activity={nextUp}
+            remaining={actionableCount}
+            onStart={() => openComplete(nextUp.id)}
+          />
+        ) : null}
+
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "18px 16px", borderRadius: 16, border: "1px solid rgba(226,232,240,0.95)", background: "rgba(255,255,255,0.88)", fontWeight: 900, color: "#475569", boxShadow: "0 10px 22px rgba(2,6,23,0.04)" }}>
             <Icon name="refresh" style={{ width: 18, height: 18, color: "#f97316", flexShrink: 0 }} />
@@ -1816,6 +1846,7 @@ useEffect(() => {
                     canCompleteActivities={canCompleteActivities}
                     highlighted={isHighlighted}
                     isMobile={isMobile}
+                    onReschedule={canAssignTech ? (act) => setRescheduleTarget(act) : undefined}
                   />
                 </div>
               );
@@ -1830,6 +1861,101 @@ useEffect(() => {
 /* =========================
    COMPONENTES UI
 ========================= */
+
+function NextUpCard({ activity, remaining, onStart }) {
+  const late = activity.computedStatus === "Atrasada";
+  return (
+    <div style={{ ...nextUpCard, borderLeft: `8px solid ${late ? "#dc2626" : "#f97316"}` }}>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={nextUpKicker}>
+          SIGUIENTE ACTIVIDAD · {remaining} por hacer {remaining === 1 ? "" : "hoy o atrasadas"}
+        </div>
+        <div style={nextUpTitle}>{activity.activityName}</div>
+        <div style={nextUpMeta}>
+          <span>
+            <Icon name="equipment" size="sm" /> {activity.equipmentName}
+            {activity.equipmentsCount > 1 ? ` +${activity.equipmentsCount - 1}` : ""}
+          </span>
+          {activity.quantityLabel && activity.quantityLabel !== "—" ? (
+            <span>
+              <Icon name="drop" size="sm" /> {activity.quantityLabel}
+            </span>
+          ) : null}
+          <span style={{ color: late ? "#fca5a5" : "#fcd34d" }}>
+            <Icon name="calendar" size="sm" /> {late ? `Atrasada ${activity.overdueDays || ""} d` : "Hoy"}
+          </span>
+          {activity.evidenceRequired ? (
+            <span style={{ color: "#fdba74" }}>
+              <Icon name="camera" size="sm" /> Foto obligatoria
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <button type="button" style={nextUpBtn} onClick={onStart}>
+        <Icon name="check" />
+        <span>Ejecutar ahora</span>
+      </button>
+    </div>
+  );
+}
+
+const nextUpCard = {
+  marginTop: 14,
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+  flexWrap: "wrap",
+  padding: "14px 16px",
+  borderRadius: 18,
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  borderLeft: "8px solid #f97316",
+  color: "#fff",
+  boxShadow: "0 16px 34px rgba(2,6,23,0.18)",
+};
+const nextUpKicker = { fontSize: 11, fontWeight: 950, letterSpacing: 1, color: "#fdba74" };
+const nextUpTitle = { marginTop: 4, fontSize: 20, fontWeight: 950, lineHeight: 1.2 };
+const nextUpMeta = {
+  marginTop: 8,
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 12,
+  fontSize: 13,
+  fontWeight: 800,
+  color: "rgba(255,255,255,0.85)",
+};
+const nextUpBtn = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  minHeight: 54,
+  padding: "0 22px",
+  borderRadius: 14,
+  border: "none",
+  background: "#f97316",
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: 950,
+  cursor: "pointer",
+  flex: "1 1 200px",
+  maxWidth: 320,
+  boxShadow: "0 10px 22px rgba(249,115,22,0.35)",
+};
+const rescheduleBtn = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  height: 38,
+  padding: "0 12px",
+  borderRadius: 10,
+  border: "1px solid rgba(249,115,22,0.45)",
+  background: "rgba(249,115,22,0.08)",
+  color: "#9a3412",
+  fontWeight: 900,
+  fontSize: 13,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
 
 function KpiCard({ title, value, icon, tone }) {
   const toneMap = {
@@ -1875,6 +2001,7 @@ export function ActivityCard({
   previewActionLabel = "Abrir",
   compactPreviewMode = false,
   suggestedLabel = "",
+  onReschedule,
 }) {
   const displayActivityTitle = activity?.isManual
     ? cleanUiText(activity?.activityName || "Actividad programada")
@@ -1907,7 +2034,7 @@ export function ActivityCard({
 
     if (!raw) return "";
 
-    if (typeof raw === "string" && /^d{4}-d{2}-d{2}/.test(raw)) {
+    if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
       return raw.slice(0, 10);
     }
 
@@ -1921,11 +2048,11 @@ export function ActivityCard({
   })();
 
   const normalizedInstructions = String(activity?.instructions || "")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
   const normalizedNotes = String(activity?.notes || "")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
   const showInstructions = Boolean(normalizedInstructions);
@@ -1954,19 +2081,19 @@ export function ActivityCard({
   const isCriticalEq = isCriticality(activity?.equipmentCriticality);
   const cardBorder = isCriticalEq ? "rgba(239,68,68,0.35)" : "rgba(226,232,240,0.95)";
 
-  const plannedLubricant = activity?.plannedLubricantLabel || "?";
-  const quantityText = activity?.quantityLabel || "?";
+  const plannedLubricant = activity?.plannedLubricantLabel || "—";
+  const quantityText = activity?.quantityLabel || "—";
   const pointsText =
     activity?.quantityLabel && String(activity.quantityLabel).includes("por punto")
       ? "Por punto"
-      : "?";
+      : "—";
   const pointsCount = Number(activity?.pointsCount);
   const hasPointsCount = Number.isFinite(pointsCount) && pointsCount > 0;
 
   const methodText =
-    String(activity?.method || "?").trim().toLowerCase() === "grasera"
+    String(activity?.method || "—").trim().toLowerCase() === "grasera"
       ? "Inyector"
-      : activity?.method || "?";
+      : activity?.method || "—";
 
   const technicianName =
     activity?.technician?.name ||
@@ -2005,7 +2132,7 @@ export function ActivityCard({
       ? "Hoy"
       : activity.computedStatus || "Pendiente");
 
-  const quantityCompact = String(quantityText || "?").replace(/\s+por punto/gi, "/punto");
+  const quantityCompact = String(quantityText || "—").replace(/\s+por punto/gi, "/punto");
   const showDesktopPreview = !mobileView;
   const compactDesktopCard = compactPreviewMode && !mobileView;
   const activitySourceBadge = getActivitySourceBadge(activity);
@@ -2025,7 +2152,7 @@ export function ActivityCard({
         }}
         title={
           !canComplete && activity.computedStatus !== "Completada"
-            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
+            ? `Programada para ${safeDateLabel || "—"} (aún no disponible)`
             : ""
         }
       >
@@ -2269,7 +2396,7 @@ export function ActivityCard({
         }}
         title={
           !canOpenPreview && activity.computedStatus !== "Completada"
-            ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
+            ? `Programada para ${safeDateLabel || "—"} (aún no disponible)`
             : ""
         }
       >
@@ -2492,6 +2619,34 @@ export function ActivityCard({
                 {assigningId === activity.id ? (
                   <span style={assigningTxt}>Asignando...</span>
                 ) : null}
+
+                {typeof onReschedule === "function" ? (
+
+                  <button
+
+                    type="button"
+
+                    style={rescheduleBtn}
+
+                    onClick={(e) => {
+
+                      e.stopPropagation();
+
+                      onReschedule(activity);
+
+                    }}
+
+                    title="Cambiar la fecha de esta actividad"
+
+                  >
+
+                    <Icon name="calendar" size="sm" />
+
+                    <span>Reprogramar</span>
+
+                  </button>
+
+                ) : null}
               </div>
             ) : null}
 
@@ -2663,7 +2818,7 @@ export function ActivityCard({
       }}
       title={
         !canComplete && activity.computedStatus !== "Completada"
-          ? `Programada para ${safeDateLabel || "?"} (aún no disponible)`
+          ? `Programada para ${safeDateLabel || "—"} (aún no disponible)`
           : ""
       }
     >
@@ -2900,6 +3055,34 @@ export function ActivityCard({
 
             {assigningId === activity.id ? (
               <span style={assigningTxt}>Asignando...</span>
+            ) : null}
+
+            {typeof onReschedule === "function" ? (
+
+              <button
+
+                type="button"
+
+                style={rescheduleBtn}
+
+                onClick={(e) => {
+
+                  e.stopPropagation();
+
+                  onReschedule(activity);
+
+                }}
+
+                title="Cambiar la fecha de esta actividad"
+
+              >
+
+                <Icon name="calendar" size="sm" />
+
+                <span>Reprogramar</span>
+
+              </button>
+
             ) : null}
           </div>
         ) : null}
