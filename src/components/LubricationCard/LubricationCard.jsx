@@ -7,13 +7,18 @@ import PointDetailPanel from "./PointDetailPanel";
 import SyncFromRoutesModal from "./SyncFromRoutesModal";
 import { getLubricants } from "../../services/lubricantsService";
 import { useConfirm } from "../ui/ConfirmDialog";
+import { qrDataUrl } from "../../utils/equipmentQr";
+import "./LubricationCardUi.css";
 
 const FREQUENCIES = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL"];
 const FREQ_LABEL  = { DAILY: "Diaria", WEEKLY: "Semanal", MONTHLY: "Mensual", QUARTERLY: "Trimestral", ANNUAL: "Anual" };
 const FREQ_COLOR  = { DAILY: "#dc2626", WEEKLY: "#f97316", MONTHLY: "#d97706", QUARTERLY: "#16a34a", ANNUAL: "#2563eb" };
 const METHODS     = ["MANUAL", "AUTO", "GREASE_GUN", "OIL_CAN"];
 const METHOD_LABEL= { MANUAL: "Manual", AUTO: "Automático", GREASE_GUN: "Pistola de grasa", OIL_CAN: "Aceitera" };
-const UNITS       = ["ml", "g", "oz", "L"];
+const UNITS       = ["ml", "L", "g", "kg", "oz", "bombazos"];
+// Grupos de color de la leyenda (la frecuencia exacta de cada punto va en la lista).
+const LEGEND_LABEL = { DAILY: "Diaria", WEEKLY: "Semanal", MONTHLY: "Mensual", QUARTERLY: "2 a 4 meses", ANNUAL: "6 meses o más" };
+const freqText    = (p) => p?.frequencyLabel || FREQ_LABEL[p?.frequency] || p?.frequency || "—";
 const EMPTY_FORM  = { label: "", lubricant: "", quantity: "", unit: "ml", frequency: "MONTHLY", method: "MANUAL", notes: "" };
 
 export default function LubricationCard({
@@ -22,6 +27,8 @@ export default function LubricationCard({
   canEdit = false,
   equipmentId,
   equipmentName = "Equipo",
+  equipment = null,
+  qrToken = "",
   onToggleEdit,
   onAddPoint,
   onUpdatePoint,
@@ -95,7 +102,7 @@ export default function LubricationCard({
   useEffect(() => {
     if (!isEditing) return;
     getLubricants()
-      .then((data) => setLubricants(Array.isArray(data) ? data : []))
+      .then((data) => setLubricants(Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : []))
       .catch(() => setLubricantMode("manual"));
   }, [isEditing]);
 
@@ -132,7 +139,7 @@ export default function LubricationCard({
         imageId: point.imageId,
       });
       setSelectedPoint(null);
-    } catch {}
+    } catch (err) { toast.error(err?.message || "No se pudo duplicar el punto"); }
   }, [onAddPoint]);
 
   // ── Click en imagen → agregar punto ─────────────────────────────────────
@@ -178,7 +185,7 @@ export default function LubricationCard({
     } else {
       const moved = (localPoints ?? []).find((p) => p.id === draggingId);
       if (moved) {
-        try { await onUpdatePoint?.(draggingId, { x: moved.x, y: moved.y }); } catch {}
+        try { await onUpdatePoint?.(draggingId, { x: moved.x, y: moved.y }); } catch (err) { toast.error(err?.message || "No se pudo mover el punto"); }
       }
     }
     pointerDownRef.current = null;
@@ -234,7 +241,7 @@ export default function LubricationCard({
   const handleDeletePoint = useCallback(async (pointId) => {
     const ok = await confirm("¿Eliminar este punto de lubricación?", { title: "Eliminar punto", confirmLabel: "Eliminar", danger: true });
     if (!ok) return;
-    try { await onDeletePoint?.(pointId); setSelectedPoint(null); } catch {}
+    try { await onDeletePoint?.(pointId); setSelectedPoint(null); } catch (err) { toast.error(err?.message || "No se pudo eliminar el punto"); }
   }, [onDeletePoint, confirm]);
 
   // ── Upload imagen ─────────────────────────────────────────────────────────
@@ -242,7 +249,7 @@ export default function LubricationCard({
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingImage(true);
-    try { await onUploadImage?.(file); } catch {}
+    try { await onUploadImage?.(file); } catch (err) { toast.error(err?.message || "No se pudo subir la imagen"); }
     finally { setUploadingImage(false); e.target.value = ""; }
   }, [onUploadImage]);
 
@@ -274,15 +281,14 @@ export default function LubricationCard({
   }, [onRemoveSectionImage, confirm]);
 
   // ── Sync desde rutas ─────────────────────────────────────────────────────
-  const handleSync = useCallback(async (routeIds) => {
-    const result = await onSyncRoutes?.(routeIds);
-    if (result?.created > 0) {
+  const handleSync = useCallback(async (routeIds, options) => {
+    const result = await onSyncRoutes?.(routeIds, options);
+    if (result?.created > 0 || result?.updated > 0) {
       toast.success(result.message);
-      // Entrar a modo edición automáticamente para que el usuario pueda
-      // arrastrar los puntos a su posición real en el diagrama de inmediato
-      if (!isEditing) onToggleEdit?.();
+      // Con puntos nuevos entra a edición para arrastrarlos a su lugar en la foto
+      if (result.created > 0 && !isEditing) onToggleEdit?.();
     } else {
-      toast.info("Sin puntos nuevos para crear");
+      toast.info(result?.message || "Sin cambios");
     }
     return result;
   }, [onSyncRoutes, isEditing, onToggleEdit]);
@@ -292,22 +298,48 @@ export default function LubricationCard({
     setExportingPdf(true);
     try {
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
-      const canvas = await html2canvas(exportRef.current, { useCORS: true, scale: 2, backgroundColor: "#fff" });
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("landscape", "pt", "a4");
       const pw = pdf.internal.pageSize.getWidth();
       const ph = pdf.internal.pageSize.getHeight();
       const margin = 30;
-      const imgW = pw - margin * 2;
-      const imgH = (canvas.height * imgW) / canvas.width;
-      const clampedH = Math.min(imgH, ph * 0.55);
-      pdf.addImage(imgData, "PNG", margin, margin, imgW, clampedH);
-      const tableY = margin + clampedH + 16;
-      pdf.setFontSize(10); pdf.setFont("helvetica", "bold");
-      pdf.text(`Carta de Lubricación — ${equipmentName}`, margin, tableY);
-      pdf.text(new Date().toLocaleDateString("es-MX"), pw - margin, tableY, { align: "right" });
+      // Encabezado: equipo + QR
+      pdf.setFillColor(15, 23, 42);
+      pdf.rect(0, 0, pw, 64, "F");
+      pdf.setFillColor(249, 115, 22);
+      pdf.rect(0, 64, pw, 4, "F");
+      pdf.setTextColor(253, 186, 116); pdf.setFont("helvetica", "bold"); pdf.setFontSize(9);
+      pdf.text("CARTA DE LUBRICACIÓN · LUBRIPLAN", margin, 22);
+      pdf.setTextColor(255, 255, 255); pdf.setFontSize(18);
+      pdf.text(String(equipmentName).slice(0, 60), margin, 44);
+      pdf.setFont("helvetica", "normal"); pdf.setFontSize(9);
+      pdf.text([equipment?.code, equipment?.location, equipment?.plant?.name, new Date().toLocaleDateString("es-MX")].filter(Boolean).join("  ·  "), margin, 58);
+      let topY = 80;
+      if (qrToken) {
+        try {
+          const q = await qrDataUrl(qrToken, 240);
+          pdf.setFillColor(255, 255, 255);
+          pdf.addImage(q, "PNG", pw - margin - 92, 74, 92, 92);
+          pdf.setTextColor(100, 116, 139); pdf.setFontSize(7);
+          pdf.text("Escanea para abrir la carta", pw - margin - 46, 174, { align: "center" });
+        } catch { /* sin QR en el PDF */ }
+      }
+      const imgAreaW = pw - margin * 2 - (qrToken ? 110 : 0);
+      let clampedH = 0;
+      if (currentImageUrl) {
+        const canvas = await html2canvas(exportRef.current, { useCORS: true, scale: 2, backgroundColor: "#fff" });
+        const imgData = canvas.toDataURL("image/png");
+        let imgW = imgAreaW;
+        let imgH = (canvas.height * imgW) / canvas.width;
+        const maxH = ph * 0.5;
+        if (imgH > maxH) { imgW = (imgW * maxH) / imgH; imgH = maxH; }
+        pdf.addImage(imgData, "PNG", margin, topY, imgW, imgH);
+        clampedH = imgH;
+      }
+      const tableY = Math.max(topY + clampedH + 18, qrToken ? 196 : topY + 10);
+      pdf.setTextColor(15, 23, 42); pdf.setFontSize(10); pdf.setFont("helvetica", "bold");
+      pdf.text(`Puntos de lubricación (${(card?.points ?? []).length})`, margin, tableY);
       const headers = ["#", "Punto", "Lubricante", "Cantidad", "Frecuencia", "Método", "Notas"];
-      const colWidths = [20, 110, 100, 70, 80, 90, 130];
+      const colWidths = [22, 150, 120, 80, 110, 90, 210];
       let curX = margin, curY = tableY + 14;
       pdf.setFillColor(15, 23, 42);
       pdf.rect(margin, curY - 10, pw - margin * 2, 14, "F");
@@ -320,18 +352,17 @@ export default function LubricationCard({
         if (curY > ph - margin) { pdf.addPage(); curY = margin + 14; }
         if (idx % 2 === 0) { pdf.setFillColor(248, 250, 252); pdf.rect(margin, curY - 10, pw - margin * 2, 14, "F"); }
         curX = margin;
-        const row = [String(idx + 1), p.label, p.lubricant || "—", p.quantity != null ? `${p.quantity} ${p.unit}` : "—", FREQ_LABEL[p.frequency] || p.frequency, METHOD_LABEL[p.method] || p.method, p.notes || "—"];
+        const row = [String(idx + 1), p.label, p.lubricant || "—", p.quantity != null ? `${p.quantity} ${p.unit}` : "—", freqText(p), METHOD_LABEL[p.method] || p.method, p.notes || "—"];
         row.forEach((cell, i) => { const ml = Math.floor(colWidths[i] / 5.2); const t = String(cell).length > ml ? String(cell).slice(0, ml - 1) + "…" : String(cell); pdf.text(t, curX + 3, curY); curX += colWidths[i]; });
       });
       pdf.save(`carta-lubricacion-${equipmentName.replace(/[^a-zA-Z0-9\-_]/g, "_").slice(0, 30)}-${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
       toast.error("Error generando PDF: " + (err?.message || "intenta de nuevo"));
     } finally { setExportingPdf(false); }
-  }, [card?.points, equipmentName]);
+  }, [card?.points, equipmentName, equipment, qrToken, currentImageUrl]);
 
   // ── Estilos ───────────────────────────────────────────────────────────────
   const inp = { width: "100%", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: "9px 12px", fontSize: 13, color: "#0f172a", background: "#fff", fontWeight: 700, boxSizing: "border-box", outline: "none", transition: "border-color 0.15s" };
-  const inp_focus = { borderColor: "#f97316" };
 
   return (
     <>
@@ -349,10 +380,10 @@ export default function LubricationCard({
             <button
               type="button"
               onClick={() => setShowSync(true)}
-              title="Crear puntos automáticamente desde las rutas del equipo"
+              title="Crear los puntos a partir de las rutas del equipo"
               style={{ ...btnGhost, display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", fontSize: 12 }}
             >
-              ⚡ {!isMobile && "Sync rutas"}
+              <Icon name="route" size="sm" /> {!isMobile && "Cargar rutas"}
             </button>
           )}
 
@@ -360,8 +391,8 @@ export default function LubricationCard({
             type="button"
             style={{ ...btnGhost, display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", fontSize: 12 }}
             onClick={handleExportPdf}
-            disabled={exportingPdf || !card?.imageUrl}
-            title={!card?.imageUrl ? "Sube una imagen primero" : "Exportar PDF"}
+            disabled={exportingPdf || !(card?.points ?? []).length}
+            title={!(card?.points ?? []).length ? "Agrega puntos primero" : "Descargar la carta en PDF (con QR)"}
           >
             <Icon name="download" size="sm" />
             {!isMobile && (exportingPdf ? "Generando…" : "PDF")}
@@ -446,6 +477,34 @@ export default function LubricationCard({
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* ── Guía rápida: carta nueva ─────────────────────────────────────── */}
+        {canEdit && !currentImageUrl && activeImageId == null && !(card?.points ?? []).length && (
+          <div className="lc-steps">
+            <div className="lc-step">
+              <span className="lc-step-n">1</span>
+              <b>Sube una foto del equipo</b>
+              <span>Una foto clara de frente donde se vean los puntos a lubricar.</span>
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileChange} />
+              <button type="button" className="lc-btn is-primary" onClick={() => fileInputRef.current?.click()} disabled={uploadingImage}>
+                <Icon name="camera" size="sm" /> {uploadingImage ? "Subiendo…" : "Subir foto"}
+              </button>
+            </div>
+            <div className="lc-step">
+              <span className="lc-step-n">2</span>
+              <b>Carga las rutas</b>
+              <span>Cada ruta se convierte en un punto con lubricante, cantidad y frecuencia.</span>
+              <button type="button" className="lc-btn is-dark" onClick={() => setShowSync(true)}>
+                <Icon name="route" size="sm" /> Cargar rutas
+              </button>
+            </div>
+            <div className="lc-step">
+              <span className="lc-step-n">3</span>
+              <b>Acomoda e imprime</b>
+              <span>Arrastra cada punto a su lugar en la foto y descarga el PDF con el QR del equipo.</span>
+            </div>
           </div>
         )}
 
@@ -680,13 +739,48 @@ export default function LubricationCard({
               return (
                 <span key={f} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 850 }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: FREQ_COLOR[f], display: "inline-block" }} />
-                  {FREQ_LABEL[f]} ({count})
+                  {LEGEND_LABEL[f]} ({count})
                 </span>
               );
             })}
             <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: "auto" }}>
               {(card?.points ?? []).length} punto{(card?.points ?? []).length !== 1 ? "s" : ""} · {(card?.images ?? []).length + (card?.imageUrl ? 1 : 0)} imagen{(card?.images ?? []).length + (card?.imageUrl ? 1 : 0) !== 1 ? "es" : ""}
             </span>
+          </div>
+        )}
+
+        {/* ── Lista de puntos de la imagen activa ──────────────────────────── */}
+        {points.length > 0 && (
+          <div className="lc-points">
+            <div className="lc-points-head">
+              <span>Puntos {activeImageId == null ? "de la imagen principal" : `de ${activeImage?.label || "la sección"}`} ({points.length})</span>
+              {isEditing ? <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 800, color: "#94a3b8" }}>Toca un punto para editarlo</span> : null}
+            </div>
+            {points.map((p, i) => (
+              <button
+                key={p.id}
+                type="button"
+                className={`lc-point-row ${selectedPoint?.id === p.id ? "is-active" : ""}`}
+                onClick={() => setSelectedPoint(p)}
+              >
+                <span className="lc-pn" style={{ background: FREQ_COLOR[p.frequency] || "#64748b" }}>{i + 1}</span>
+                <span className="lc-pc">
+                  <b>{p.label}</b>
+                  <span>{p.lubricant || "Sin lubricante"}</span>
+                </span>
+                <span className="lc-pc">
+                  <b>{freqText(p)}</b>
+                  <span>{METHOD_LABEL[p.method] || p.method}</span>
+                </span>
+                <span className="lc-pc">
+                  <b>{p.quantity != null ? `${p.quantity} ${p.unit || ""}` : "—"}</b>
+                  <span>cantidad</span>
+                </span>
+                <span className="lc-pc lc-hide-sm">
+                  {p.routeId ? <span className="lc-tag"><Icon name="route" size="sm" /> De ruta</span> : <span className="lc-tag">Manual</span>}
+                </span>
+              </button>
+            ))}
           </div>
         )}
 

@@ -102,7 +102,7 @@ export default function PointMarker({ point, index, isEditing, onPointerDown, on
             <div style={{ fontWeight: 800, marginBottom: 3 }}>{point.label}</div>
             {point.lubricant && <div>Lubricante: {point.lubricant}</div>}
             {point.quantity != null && <div>Cantidad: {point.quantity} {point.unit}</div>}
-            <div>Frecuencia: <span style={{ color }}>{FREQ_LABEL[point.frequency]}</span></div>
+            <div>Frecuencia: <span style={{ color }}>{point.frequencyLabel || FREQ_LABEL[point.frequency]}</span></div>
             <div>Método: {METHOD_LABEL[point.method]}</div>
           </div>
         )}

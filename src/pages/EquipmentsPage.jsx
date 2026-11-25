@@ -257,6 +257,11 @@ export default function EquipmentsPage() {
                 ) : null}
               </label>
             ) : null}
+            {!isRepeated ? (
+              <button type="button" className="tch-btn tch-btn-ghost" onClick={() => navigate("/equipments/qr-labels")} title="Imprimir el QR único de cada equipo">
+                <Icon name="grid" size="sm" /> Etiquetas QR
+              </button>
+            ) : null}
             {canManage && !isRepeated ? (
               <>
                 <button type="button" className="tch-btn tch-btn-ghost" onClick={() => setAreaModal({ name: "", description: "" })}>

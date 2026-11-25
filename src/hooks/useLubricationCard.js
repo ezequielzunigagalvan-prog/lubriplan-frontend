@@ -13,6 +13,8 @@ import {
 
 export function useLubricationCard(equipmentId) {
   const [card, setCard]         = useState(null);
+  const [equipment, setEquipment] = useState(null);
+  const [qr, setQr]             = useState(null);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -24,6 +26,8 @@ export function useLubricationCard(equipmentId) {
     try {
       const data = await getLubricationCard(equipmentId);
       setCard(data?.card ?? null);
+      setEquipment(data?.equipment ?? null);
+      setQr(data?.qr ?? null);
     } catch (e) {
       setError(e?.message || "Error cargando carta");
     } finally {
@@ -97,14 +101,14 @@ export function useLubricationCard(equipmentId) {
   }, []);
 
   // Sincronización Ruta → Carta
-  const syncRoutes = useCallback(async (routeIds = null) => {
-    const data = await syncFromRoutes(equipmentId, routeIds);
+  const syncRoutes = useCallback(async (routeIds = null, options = {}) => {
+    const data = await syncFromRoutes(equipmentId, routeIds, options);
     if (data?.card) setCard(data.card);
     return data;
   }, [equipmentId]);
 
   return {
-    card, loading, error,
+    card, equipment, qr, loading, error,
     isEditing, setIsEditing,
     addPoint, updatePoint, deletePoint,
     uploadImage,

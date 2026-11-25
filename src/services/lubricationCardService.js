@@ -37,5 +37,9 @@ export const deleteCardSectionImage = (imageId) =>
 export const getSyncPreview = (equipmentId) =>
   httpGet(`/lubrication-cards/${equipmentId}/sync-preview`);
 
-export const syncFromRoutes = (equipmentId, routeIds = null) =>
-  httpPost(`/lubrication-cards/${equipmentId}/sync-from-routes`, routeIds ? { routeIds } : {});
+export const syncFromRoutes = (equipmentId, routeIds = null, options = {}) =>
+  httpPost(`/lubrication-cards/${equipmentId}/sync-from-routes`, { ...(routeIds ? { routeIds } : {}), ...options });
+
+// QR único del equipo y lectura de un QR escaneado
+export const getEquipmentQr = (equipmentId) => httpGet(`/equipment/${equipmentId}/qr`);
+export const resolveEquipmentQr = (token) => httpGet(`/qr/${encodeURIComponent(token)}`);

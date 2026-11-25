@@ -40,6 +40,8 @@ const LubriPlanCardLanding = lazy(() => import("./pages/LubriPlanCardLanding"));
 const TechnicalAssistantPage = lazy(() => import("./pages/TechnicalAssistantPage"));
 const CorporateDashboard = lazy(() => import("./pages/CorporateDashboard"));
 const LubricationCardPage = lazy(() => import("./pages/LubricationCardPage"));
+const QrResolvePage = lazy(() => import("./pages/QrResolvePage"));
+const EquipmentQrLabelsPage = lazy(() => import("./pages/EquipmentQrLabelsPage"));
 const PreventiveOrdersList = lazy(() => import("./pages/PreventiveOrdersList"));
 const PreventiveOrdersTechnician = lazy(() => import("./pages/PreventiveOrdersTechnician"));
 const PreventiveOrderForm = lazy(() => import("./pages/PreventiveOrderForm"));
@@ -110,8 +112,10 @@ export default function App() {
         <Route path="/corporate" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><CorporateDashboard /></ProtectedRoute>} />
 
         <Route path="/equipments" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><EquipmentsPage /></ProtectedRoute>} />
+        <Route path="/equipments/qr-labels" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><EquipmentQrLabelsPage /></ProtectedRoute>} />
         <Route path="/equipments/:id" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><EquipmentDetailPage /></ProtectedRoute>} />
         <Route path="/equipments/:id/lubrication-card" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><LubricationCardPage /></ProtectedRoute>} />
+        <Route path="/qr/:token" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><QrResolvePage /></ProtectedRoute>} />
         <Route path="/activities" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivitiesPage /></ProtectedRoute>} />
         <Route path="/activities/:id/complete" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivityCompletePage /></ProtectedRoute>} />
         <Route path="/routes/:routeId/activities" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><ActivitiesDetailPage /></ProtectedRoute>} />

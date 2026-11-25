@@ -95,7 +95,7 @@ export default function PointDetailPanel({ point, index, isEditing, onEdit, onDe
               background: `${color}18`, color, border: `1px solid ${color}44`,
               borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 900,
             }}>
-              {FREQ_LABEL[point.frequency]}
+              {point.frequencyLabel || FREQ_LABEL[point.frequency]}
             </span>
           </div>
           <button type="button" onClick={onClose}
