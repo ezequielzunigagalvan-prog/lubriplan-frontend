@@ -5,6 +5,7 @@ import { getEquipment } from "../../services/equipmentService";
 import { getLubricants } from "../../services/lubricantsService";
 import { createEmergencyActivity } from "../../services/emergencyActivitiesService";
 import { getTechnicians } from "../../services/techniciansService";
+import TechnicianSelect from "./TechnicianSelect";
 
 const toYMD = (d) => {
   const dt = d instanceof Date ? d : new Date(d);
@@ -134,11 +135,6 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
     [lubricants]
   );
 
-  const technicianOptions = useMemo(
-    () => (technicians || []).map((t) => ({ value: String(t.id), label: `${t.name || t.fullName || `Técnico #${t.id}`}${t.code ? ` · ${t.code}` : ""}` })),
-    [technicians]
-  );
-
   const selectedLubricant = useMemo(
     () => (lubricants || []).find((l) => String(l.id) === String(form.lubricantId)) || null,
     [lubricants, form.lubricantId]
@@ -250,10 +246,18 @@ export default function EmergencyActivityModal({ open, onClose, onSaved }) {
               </div>
               <div style={{ ...field, flex: 1, minWidth: 220 }}>
                 <label style={label}>Técnico responsable *</label>
-                <select name="technicianId" value={form.technicianId} onChange={handleChange} style={input} disabled={saving || isTech} title={isTech ? "Asignado automáticamente a tu usuario" : "Selecciona técnico"}>
-                  <option value="">{isTech ? "Mi usuario" : "Seleccionar técnico"}</option>
-                  {technicianOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+                <TechnicianSelect
+                  name="technicianId"
+                  value={form.technicianId}
+                  onChange={(v) => setForm((p) => ({ ...p, technicianId: v }))}
+                  techs={technicians}
+                  allowOtherPlants={!isTech}
+                  onBorrowed={(tech) => setTechnicians((prev) => (prev.some((x) => x.id === tech.id) ? prev : [...prev, tech]))}
+                  emptyLabel={isTech ? "Mi usuario" : "Seleccionar técnico"}
+                  style={input}
+                  disabled={saving || isTech}
+                  title={isTech ? "Asignado automáticamente a tu usuario" : "Selecciona técnico"}
+                />
                 {isTech && !myTechId ? <div style={warnMini}>Tu usuario no tiene técnico asociado.</div> : null}
               </div>
             </div>

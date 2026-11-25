@@ -66,3 +66,13 @@ export async function deleteTechnician(id) {
 
 
 
+
+// Técnicos de otras plantas (supervisor / admin) y su perfil en la planta actual.
+export async function getOtherPlantTechnicians() {
+  const r = await httpGet("/technicians/other-plants");
+  return Array.isArray(r?.items) ? r.items : [];
+}
+
+export async function borrowTechnician(technicianId) {
+  return httpPost("/technicians/borrow", { technicianId });
+}

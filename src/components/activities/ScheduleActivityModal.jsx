@@ -3,6 +3,7 @@ import { Icon } from "../ui/lpIcons";
 import { createManualExecution } from "../../services/executionsService";
 import { getEquipment } from "../../services/equipmentService";
 import { getTechnicians } from "../../services/techniciansService";
+import TechnicianSelect from "./TechnicianSelect";
 
 const toYMD = (d) => {
   const x = d instanceof Date ? d : new Date(d);
@@ -230,15 +231,14 @@ export default function ScheduleActivityModal({ open, onClose, onSaved, canAssig
               {canAssignTech ? (
                 <label className="lpModalLabel">
                   Técnico
-                  <select className="lpInput" value={form.technicianId} onChange={onChange("technicianId")}>
-                    <option value="">Sin asignar</option>
-                    {techs.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                        {t.code ? ` · ${t.code}` : ""}
-                      </option>
-                    ))}
-                  </select>
+                  <TechnicianSelect
+                    className="lpInput"
+                    value={form.technicianId}
+                    onChange={(v) => setForm((p) => ({ ...p, technicianId: v }))}
+                    techs={techs}
+                    allowOtherPlants={canAssignTech}
+                    onBorrowed={(tech) => setTechs((prev) => (prev.some((x) => x.id === tech.id) ? prev : [...prev, tech]))}
+                  />
                 </label>
               ) : null}
             </div>

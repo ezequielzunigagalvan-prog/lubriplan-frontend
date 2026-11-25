@@ -20,6 +20,7 @@ import CompleteExecutionModal from "./CompleteExecutionModal";
 import EmergencyActivityModal from "../components/activities/EmergencyActivityModal";
 import ReportConditionModal from "../components/activities/ReportConditionModal";
 import RescheduleModal from "../components/activities/RescheduleModal";
+import TechnicianSelect from "../components/activities/TechnicianSelect";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
@@ -334,7 +335,7 @@ export default function ActivitiesPage() {
   const canCompleteActivities = isTech;
   const canAssignTech = role === "SUPERVISOR" || role === "ADMIN";
   const canSchedule = role === "SUPERVISOR" || role === "ADMIN";
-  const canCreateEmergency = isTech || role === "SUPERVISOR";
+  const canCreateEmergency = isTech || role === "SUPERVISOR" || role === "ADMIN";
   const canReportCondition = isTech;
   const canPrintActivities = role === "SUPERVISOR" || role === "ADMIN";
 
@@ -415,6 +416,11 @@ const highlightedCardRef = useRef(null);
   const [techs, setTechs] = useState([]);
   const [assigningId, setAssigningId] = useState(null);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  // Técnico traído de otra planta: se agrega a la lista para todos los selectores.
+  const addBorrowedTech = useCallback(
+    (tech) => setTechs((prev) => (prev.some((x) => x.id === tech.id) ? prev : [...prev, tech])),
+    []
+  );
 
   const deep = useMemo(() => readQuery(location.search), [location.search]);
   const isUnassignedDeepLink = deep.filter === "unassigned";
@@ -1515,20 +1521,14 @@ useEffect(() => {
 
                 <label style={lbl}>
                   Técnico (opcional)
-                  <select
+                  <TechnicianSelect
                     value={scheduleForm.technicianId}
-                    onChange={(e) =>
-                      setScheduleForm((p) => ({ ...p, technicianId: e.target.value }))
-                    }
+                    onChange={(v) => setScheduleForm((p) => ({ ...p, technicianId: v }))}
+                    techs={techs}
+                    allowOtherPlants={canAssignTech}
+                    onBorrowed={addBorrowedTech}
                     style={modalInput}
-                  >
-                    <option value="">Sin asignar</option>
-                    {techs.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} {t.code ? `(${t.code})` : ""}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </label>
 
                 <label style={lbl}>
@@ -1847,6 +1847,7 @@ useEffect(() => {
                     highlighted={isHighlighted}
                     isMobile={isMobile}
                     onReschedule={canAssignTech ? (act) => setRescheduleTarget(act) : undefined}
+                    onTechBorrowed={addBorrowedTech}
                   />
                 </div>
               );
@@ -2002,6 +2003,7 @@ export function ActivityCard({
   compactPreviewMode = false,
   suggestedLabel = "",
   onReschedule,
+  onTechBorrowed,
 }) {
   const displayActivityTitle = activity?.isManual
     ? cleanUiText(activity?.activityName || "Actividad programada")
@@ -2600,21 +2602,16 @@ export function ActivityCard({
                     : null),
                 }}
               >
-                <select
+                <TechnicianSelect
                   value={activity.technicianId ?? ""}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => onAssignTech(activity.id, e.target.value)}
+                  onChange={(v) => onAssignTech(activity.id, v)}
+                  techs={techs}
+                  allowOtherPlants
+                  onBorrowed={onTechBorrowed}
                   disabled={assigningId === activity.id}
                   style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
                   title="Asignar técnico"
-                >
-                  <option value="">Sin asignar</option>
-                  {techs.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} {t.code ? `${t.code}` : ""}
-                    </option>
-                  ))}
-                </select>
+                  />
 
                 {assigningId === activity.id ? (
                   <span style={assigningTxt}>Asignando...</span>
@@ -3037,21 +3034,16 @@ export function ActivityCard({
 
         {activity.computedStatus !== "Completada" && canAssignTech ? (
           <div style={{ ...techRow, ...(mobileView ? techRowMobile : null) }}>
-            <select
+            <TechnicianSelect
               value={activity.technicianId ?? ""}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => onAssignTech(activity.id, e.target.value)}
+              onChange={(v) => onAssignTech(activity.id, v)}
+              techs={techs}
+              allowOtherPlants
+              onBorrowed={onTechBorrowed}
               disabled={assigningId === activity.id}
               style={{ ...techSelect, ...(mobileView ? techSelectMobile : null) }}
               title="Asignar Técnico"
-            >
-              <option value="">Sin asignar</option>
-              {techs.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} {t.code ? `${t.code}` : ""}
-                </option>
-              ))}
-            </select>
+              />
 
             {assigningId === activity.id ? (
               <span style={assigningTxt}>Asignando...</span>
