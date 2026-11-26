@@ -13,6 +13,7 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const DashboardHome = lazy(() => import("./pages/DashboardHome"));
 const ActionPlanPage = lazy(() => import("./pages/ActionPlanPage"));
+const LubeDiagramEditorPage = lazy(() => import("./pages/LubeDiagramEditorPage"));
 const RoutesPage = lazy(() => import("./pages/RoutesPage"));
 const RouteDetail = lazy(() => import("./pages/RouteDetail"));
 const EditRoutePage = lazy(() => import("./pages/EditRoutePage"));
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><DashboardHome /></ProtectedRoute>} />
         <Route path="/dashboard/planta" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><Dashboard /></ProtectedRoute>} />
         <Route path="/action-plan" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><ActionPlanPage /></ProtectedRoute>} />
+        <Route path="/equipments/:id/diagrams/:diagramId" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><LubeDiagramEditorPage /></ProtectedRoute>} />
 
         <Route path="/admin/links/technicians" element={<ProtectedRoute roles={["ADMIN"]}><AdminTechLinksPage /></ProtectedRoute>} />
         <Route path="/admin/onboarding" element={<ProtectedRoute roles={["ADMIN"]}><AdminOnboardingPage /></ProtectedRoute>} />

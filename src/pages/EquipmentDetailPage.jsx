@@ -9,6 +9,7 @@ import { usePlant } from "../context/PlantContext";
 import { formatRouteDisplayName } from "../utils/routeNames";
 import { Icon } from "../components/ui/lpIcons";
 import NewRouteModal from "../components/routes/NewRouteModal";
+import EquipmentTechPanel from "../components/equipmentTech/EquipmentTechPanel";
 import {
   critClass,
   critLabel,
@@ -182,6 +183,8 @@ export default function EquipmentDetailPage() {
             </dl>
           </Panel>
         </div>
+
+        <EquipmentTechPanel equipmentId={eq.id} canManage={canManage} />
 
         <Panel title={`Rutas de lubricación (${routes.length})`} action={routes.length > SHOW ? <MoreBtn open={expanded.routes} onClick={() => toggle("routes")} /> : null}>
           {routes.length ? (
