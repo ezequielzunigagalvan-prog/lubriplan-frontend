@@ -1,497 +1,379 @@
-import { useEffect, useState } from "react";
+// src/pages/PreventiveOrderExecution.jsx
+// Ejecución de una Orden de Lubricación Preventiva: por cada ruta se registra condición,
+// cantidad real, observaciones y foto; o se ejecutan todas de una vez. Al final se firma.
+// Cada ruta ejecutada cierra su actividad, descuenta inventario y programa su siguiente fecha.
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { preventiveOrdersService } from "../services/preventiveOrdersService";
+import { toast } from "sonner";
+import MainLayout from "../layouts/MainLayout";
 import SignaturePad from "../components/ui/SignaturePad";
 import { Icon } from "../components/ui/lpIcons";
-import MainLayout from "../layouts/MainLayout";
-import { toast } from "sonner";
-
-const COLORS = {
-  bgBase: "#070B0F",
-  bgCard: "#0D1117",
-  bgCardHover: "#131920",
-  bgElevated: "#1A2232",
-  border: "#1E2D42",
-  borderAccent: "#818cf8",
-  textPrimary: "#F0F4F8",
-  textSecondary: "#8899AA",
-  textMuted: "#4A5568",
-  accent: "#818cf8",
-  accentHover: "#6366f1",
-  green: "#10B981",
-  red: "#EF4444",
-  blue: "#3B82F6",
-  purple: "#8B5CF6",
-};
-
-const FREQUENCY_COLORS = {
-  DAILY: { bg: "#EF444420", border: "#EF4444", label: "Diaria" },
-  WEEKLY: { bg: "#F59E0B20", border: "#F59E0B", label: "Semanal" },
-  MONTHLY: { bg: "#818cf820", border: "#818cf8", label: "Mensual" },
-  QUARTERLY: { bg: "#10B98120", border: "#10B981", label: "Trimestral" },
-  ANNUAL: { bg: "#3B82F620", border: "#3B82F6", label: "Anual" },
-  BIMONTHLY: { bg: "#8B5CF620", border: "#8B5CF6", label: "Bimestral" },
-  SEMIANNUAL: { bg: "#06B6D420", border: "#06B6D4", label: "Semestral" },
-};
+import { preventiveOrdersService } from "../services/preventiveOrdersService";
+import { CONDITIONS, ITEM_STATUS, compressImage, fmtDay, qtyText } from "../components/olp/olpUi";
+import "./TechniciansPage.css";
+import "../components/olp/Olp.css";
 
 export default function PreventiveOrderExecution() {
-  const navigate = useNavigate();
   const { id } = useParams();
-
+  const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [completing, setCompleting] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [signature, setSignature] = useState(null);
-  const [showWarning, setShowWarning] = useState(true);
-  const [warningAcknowledged, setWarningAcknowledged] = useState(false);
-  const [itemStates, setItemStates] = useState({});
-  const [itemObservations, setItemObservations] = useState({});
+  const [closing, setClosing] = useState(false);
 
-  useEffect(() => {
-    loadOrder();
-  }, [id]);
-
-  async function loadOrder() {
-    setLoading(true);
+  const load = useCallback(async () => {
+    setError("");
     try {
-      const data = await preventiveOrdersService.get(Number(id));
-      setOrder(data);
-
-      const states = {};
-      const observations = {};
-      if (data.items && Array.isArray(data.items)) {
-        data.items.forEach((item) => {
-          states[item.id] = item.status === "COMPLETED" ? true : false;
-          observations[item.id] = item.observations || "";
-        });
-      }
-      setItemStates(states);
-      setItemObservations(observations);
-    } catch (err) {
-      setError("No se pudo cargar la orden");
-      console.error("Error:", err);
+      setOrder(await preventiveOrdersService.get(Number(id)));
+    } catch (e) {
+      setError(e?.message || "No se pudo cargar la orden");
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
 
-  async function handleCompleteItem(itemId) {
-    try {
-      const observations = itemObservations[itemId] || "";
-      const result = await preventiveOrdersService.completeItem(Number(id), itemId, "COMPLETED", observations, null);
-      setItemStates((prev) => ({ ...prev, [itemId]: true }));
-      if (result?.inventoryWarning) toast.warning(result.inventoryWarning);
-    } catch (err) {
-      setError(err?.message || "Error completando item");
-      console.error(err);
-    }
-  }
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  async function handleCompleteOrder() {
-    if (!signature) {
-      setError("Se requiere firma para completar la orden");
-      return;
-    }
-
-    setCompleting(true);
-    try {
-      await preventiveOrdersService.complete(Number(id), signature);
-      setTimeout(() => {
-        navigate("/preventive-orders");
-      }, 1000);
-    } catch (err) {
-      setError(err?.message || "Error completando orden");
-      setCompleting(false);
-    }
-  }
-
-  if (loading) {
+  if (loading && !order) {
     return (
       <MainLayout>
-        <div style={{ padding: 40, textAlign: "center", color: COLORS.textMuted, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div>
-            <Icon name="loader" size="lg" style={{ marginBottom: 16, display: "block", color: COLORS.accent }} />
-            <p>Cargando orden…</p>
-          </div>
+        <div className="tch lp-fade-in">
+          <div className="olp-empty">Cargando orden…</div>
         </div>
       </MainLayout>
     );
   }
-
-  if (!order) {
+  if (error || !order) {
     return (
       <MainLayout>
-        <div style={{ padding: 40, textAlign: "center", color: COLORS.red, minHeight: "100vh", background: COLORS.bgBase }}>
-          <p style={{ fontSize: 80, margin: "0 0 16px 0" }}>404</p>
-          <h1 style={{ margin: "0 0 8px 0", fontSize: 24, fontWeight: 900, color: COLORS.textPrimary }}>
-            Orden No Encontrada
-          </h1>
-          <p style={{ color: COLORS.textSecondary, marginBottom: 24 }}>La orden que buscas no existe o fue eliminada.</p>
-          <button
-            onClick={() => navigate("/preventive-orders")}
-            style={{
-              padding: "12px 24px",
-              borderRadius: 10,
-              border: `2px solid ${COLORS.red}`,
-              background: "transparent",
-              color: COLORS.red,
-              cursor: "pointer",
-              fontWeight: 700,
-            }}
-          >
-            Volver a Órdenes
+        <div className="tch lp-fade-in">
+          <div className="olp-error">{error || "Orden no encontrada"}</div>
+          <button type="button" className="tch-btn tch-btn-ghost" onClick={() => navigate("/preventive-orders")}>
+            <Icon name="arrowLeft" size="sm" /> Volver a órdenes
           </button>
         </div>
       </MainLayout>
     );
   }
 
-  const completedCount = order.items ? order.items.filter((item) => itemStates[item.id] === true).length : 0;
-  const totalItems = order.items ? order.items.length : 0;
-  const allItemsCompleted = totalItems > 0 && completedCount === totalItems;
+  const items = order.items || [];
+  const done = items.filter((i) => i.status === "COMPLETED").length;
+  const skipped = items.filter((i) => i.status === "SKIPPED").length;
+  const pendingItems = items.filter((i) => i.status === "PENDING");
+  const closed = order.status === "CANCELLED" || (order.status === "COMPLETED" && order.signatureImage);
+  const needPhoto = pendingItems.filter((i) => order.requiresPhoto || i.route?.evidenceRequired);
+
+  async function completeAll() {
+    const n = pendingItems.length - needPhoto.length;
+    if (!n) return;
+    if (!window.confirm(`Se ejecutarán ${n} ruta(s) con condición "Bueno" y la cantidad programada de cada una. ¿Continuar?`)) return;
+    setBulkBusy(true);
+    try {
+      const r = await preventiveOrdersService.completeAll(order.id, { condition: "BUENO" });
+      if (r.completed) toast.success(`${r.completed} ruta(s) ejecutada(s)`);
+      for (const f of (r.results || []).filter((x) => !x.ok)) toast.warning(`${f.routeName}: ${f.error}`);
+      for (const w of (r.results || []).filter((x) => x.ok && x.inventoryWarning)) toast.warning(`${w.routeName}: ${w.inventoryWarning}`);
+      await load();
+    } catch (e) {
+      toast.error(e?.message || "No se pudieron ejecutar las rutas");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function closeOrder() {
+    if (!signature) return toast.error("Firma para cerrar la orden");
+    setClosing(true);
+    try {
+      await preventiveOrdersService.complete(order.id, signature);
+      toast.success("Orden cerrada");
+      navigate(`/preventive-orders/${order.id}`);
+    } catch (e) {
+      toast.error(e?.message || "No se pudo cerrar la orden");
+    } finally {
+      setClosing(false);
+    }
+  }
 
   return (
     <MainLayout>
-      <div style={{ background: COLORS.bgBase, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        {/* Warning Modal */}
-        {showWarning && (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-            <div style={{ background: COLORS.bgCard, borderRadius: 16, padding: 48, maxWidth: 480, border: `2px solid ${COLORS.borderAccent}`, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-              <div style={{ textAlign: "center", marginBottom: 32 }}>
-                <div style={{ fontSize: 64, marginBottom: 16, background: `${COLORS.accent}20`, borderRadius: "50%", width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                  ⚠️
-                </div>
-                <h2 style={{ margin: "0 0 12px 0", fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 900, color: COLORS.textPrimary }}>
-                  Aviso Técnico Importante
-                </h2>
-              </div>
-
-              <p style={{ color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 24, textAlign: "center" }}>
-                Las órdenes preventivas deben ejecutarse respetando la frecuencia establecida. No ejecutar conforme a calendario puede afectar el ciclo de mantenimiento.
-              </p>
-
-              <label style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 24, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={warningAcknowledged}
-                  onChange={(e) => setWarningAcknowledged(e.target.checked)}
-                  style={{ marginTop: 4, width: 18, height: 18, cursor: "pointer", accentColor: COLORS.accent }}
-                />
-                <span style={{ color: COLORS.textSecondary, fontSize: 14 }}>
-                  Entiendo las implicaciones y deseo continuar con la ejecución de esta orden preventiva
-                </span>
-              </label>
-
-              <button
-                onClick={() => setShowWarning(false)}
-                disabled={!warningAcknowledged}
-                style={{
-                  width: "100%",
-                  padding: "12px 20px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: warningAcknowledged ? COLORS.accent : COLORS.textMuted,
-                  color: warningAcknowledged ? COLORS.bgBase : COLORS.textSecondary,
-                  fontWeight: 700,
-                  cursor: warningAcknowledged ? "pointer" : "default",
-                  transition: "all 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  if (warningAcknowledged) e.currentTarget.style.background = COLORS.accentHover;
-                }}
-                onMouseLeave={(e) => {
-                  if (warningAcknowledged) e.currentTarget.style.background = COLORS.accent;
-                }}
-              >
-                Continuar
-              </button>
-            </div>
+      <div className="tch lp-fade-in">
+        <div className="olp-exec-hero">
+          <div style={{ minWidth: 0 }}>
+            <small>Ejecución · OLP #{order.id}</small>
+            <h2>{order.equipment?.name || "Equipo"}</h2>
+            <p>
+              {order.title} · Preventivo {fmtDay(order.scheduledDate)}
+              {order.assignedToUser?.name ? ` · ${order.assignedToUser.name}` : ""}
+            </p>
           </div>
-        )}
-
-        {/* Sticky Header */}
-        <div style={{ position: "sticky", top: 0, zIndex: 100, background: COLORS.bgCard, borderBottom: `1px solid ${COLORS.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Icon name="settings" size="lg" style={{ color: COLORS.accent }} />
+          <div className="olp-exec-count">
             <div>
-              <div style={{ fontSize: 16, fontWeight: 900, color: COLORS.textPrimary }}>
-                {order.equipment?.name || "Equipo"}
-              </div>
-              <div style={{ fontSize: 12, color: COLORS.textSecondary }}>
-                Orden #{order.id}
-              </div>
+              <b>{pendingItems.length}</b>
+              <span>Pendientes</span>
+            </div>
+            <div>
+              <b style={{ color: "#86efac" }}>{done}</b>
+              <span>Ejecutadas</span>
+            </div>
+            <div>
+              <b style={{ color: "#cbd5e1" }}>{skipped}</b>
+              <span>Omitidas</span>
             </div>
           </div>
+        </div>
 
-          <div style={{ flex: 1, marginX: 24, display: "flex", alignItems: "center", gap: 12, maxWidth: 300 }}>
-            <div style={{ height: 6, flex: 1, background: COLORS.border, borderRadius: 3, overflow: "hidden" }}>
-              <div
-                style={{
-                  height: "100%",
-                  background: `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.accentHover})`,
-                  width: `${totalItems > 0 ? (completedCount / totalItems) * 100 : 0}%`,
-                  transition: "width 0.3s",
-                }}
-              />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary, whiteSpace: "nowrap" }}>
-              {completedCount}/{totalItems}
-            </span>
-          </div>
-
-          <button
-            onClick={() => navigate(`/preventive-orders/${order.id}`)}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: COLORS.textSecondary,
-              cursor: "pointer",
-              fontSize: 12,
-              fontWeight: 600,
-              padding: "6px 12px",
-              borderRadius: 8,
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = COLORS.accent;
-              e.currentTarget.style.background = `${COLORS.accent}10`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = COLORS.textSecondary;
-              e.currentTarget.style.background = "transparent";
-            }}
-          >
-            Ver Detalle
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button type="button" className="tch-btn tch-btn-ghost" onClick={() => navigate(`/preventive-orders/${order.id}`)}>
+            <Icon name="arrowLeft" size="sm" /> Ver orden
           </button>
         </div>
 
-        {/* Content */}
-        <div style={{ flex: 1, padding: "clamp(16px, 4vw, 24px)", overflow: "auto" }}>
-          {error && (
-            <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, background: "#EF444420", color: COLORS.red, fontSize: 13, border: `1px solid ${COLORS.red}40` }}>
-              {error}
-            </div>
-          )}
-
-          {/* Items List */}
-          <div style={{ display: "grid", gap: 16, marginBottom: 32 }}>
-            {order.items && Array.isArray(order.items)
-              ? order.items.map((item) => {
-                  const isCompleted = itemStates[item.id];
-                  const freqColor = FREQUENCY_COLORS[item.route?.frequencyType] || FREQUENCY_COLORS.MONTHLY;
-
-                  return (
-                    <div
-                      key={item.id}
-                      style={{
-                        padding: 20,
-                        borderRadius: 12,
-                        background: isCompleted ? `${COLORS.green}08` : COLORS.bgCard,
-                        border: `1px solid ${isCompleted ? COLORS.green : COLORS.border}`,
-                        borderLeft: `3px solid ${isCompleted ? COLORS.green : freqColor.border}`,
-                        transition: "all 0.3s",
-                      }}
-                    >
-                      {/* Header con checkbox y nombre */}
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
-                        <input
-                          type="checkbox"
-                          checked={isCompleted}
-                          onChange={() => {
-                            if (!isCompleted) {
-                              handleCompleteItem(item.id);
-                            }
-                          }}
-                          style={{
-                            width: 52,
-                            height: 52,
-                            cursor: "pointer",
-                            accentColor: COLORS.green,
-                            flexShrink: 0,
-                          }}
-                        />
-
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: COLORS.textPrimary }}>
-                              {item.route?.name || "Ruta sin nombre"}
-                            </h3>
-                            <span
-                              style={{
-                                padding: "4px 8px",
-                                borderRadius: 6,
-                                fontSize: 11,
-                                fontWeight: 700,
-                                background: isCompleted ? `${COLORS.green}20` : freqColor.bg,
-                                color: isCompleted ? COLORS.green : freqColor.border,
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {isCompleted ? "✓ Completado" : freqColor.label}
-                            </span>
-                          </div>
-
-                          {/* Datos técnicos grid */}
-                          {item.route && (
-                            <div style={{ background: COLORS.bgCardHover, padding: 14, borderRadius: 8, marginBottom: 12 }}>
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-                                {item.route.lubricantName && (
-                                  <div>
-                                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
-                                      🛢 Lubricante
-                                    </div>
-                                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
-                                      {item.route.lubricantName}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {item.route.quantity && (
-                                  <div>
-                                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
-                                      📊 Cantidad
-                                    </div>
-                                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
-                                      {item.route.quantity} {item.route.unit || "ml"}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {item.route.method && (
-                                  <div>
-                                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
-                                      🔧 Método
-                                    </div>
-                                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
-                                      {item.route.method}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Imagen */}
-                          {item.route?.imageUrl && (
-                            <div style={{ marginBottom: 12, borderRadius: 8, overflow: "hidden", maxHeight: 120 }}>
-                              <img
-                                src={item.route.imageUrl}
-                                alt={item.route.name}
-                                style={{ width: "100%", height: "auto", maxHeight: 120, objectFit: "cover", borderRadius: 8 }}
-                                onError={(e) => (e.target.style.display = "none")}
-                              />
-                            </div>
-                          )}
-
-                          {/* Instrucciones */}
-                          {item.route?.instructions && (
-                            <div style={{ marginBottom: 12, padding: 12, borderRadius: 8, background: `${COLORS.blue}10`, borderLeft: `3px solid ${COLORS.blue}` }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", marginBottom: 4 }}>
-                                📋 Instrucciones
-                              </div>
-                              <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>
-                                {item.route.instructions}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Observaciones - se expande al completar */}
-                          {isCompleted && (
-                            <textarea
-                              placeholder="Añade observaciones técnicas o problemas encontrados (opcional)"
-                              value={itemObservations[item.id] || ""}
-                              onChange={(e) => setItemObservations((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                              style={{
-                                width: "100%",
-                                padding: 12,
-                                borderRadius: 8,
-                                border: `1px solid ${COLORS.border}`,
-                                background: COLORS.bgElevated,
-                                color: COLORS.textPrimary,
-                                fontSize: 12,
-                                fontFamily: "inherit",
-                                minHeight: 80,
-                                resize: "vertical",
-                              }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              : null}
+        {order.notes ? (
+          <div className="olp-warn">
+            <Icon name="info" size="sm" /> <span>{order.notes}</span>
           </div>
+        ) : null}
 
-          {/* Firma Digital */}
-          {allItemsCompleted && (
-            <div style={{ padding: 20, borderRadius: 12, border: `2px solid ${COLORS.borderAccent}`, background: `${COLORS.accent}10`, marginBottom: 100 }}>
-              <h3 style={{ margin: "0 0 12px 0", fontSize: 15, fontWeight: 900, color: COLORS.textPrimary }}>
-                Firma Digital
-              </h3>
-              <SignaturePad onSignatureCapture={setSignature} />
+        {order.status === "CANCELLED" ? <div className="olp-error">Esta orden fue cancelada.</div> : null}
+
+        {!closed && pendingItems.length > 1 ? (
+          <div className="olp-bulk">
+            <p>
+              <b>¿Todo en orden?</b> Ejecuta todas las rutas pendientes con condición “Bueno” y la cantidad programada.
+              {needPhoto.length ? ` ${needPhoto.length} ruta(s) piden foto y se quedan para capturarlas una por una.` : ""}
+            </p>
+            <button type="button" className="tch-btn tch-btn-primary" onClick={completeAll} disabled={bulkBusy || pendingItems.length === needPhoto.length}>
+              <Icon name="checkCircle" size="sm" /> {bulkBusy ? "Ejecutando…" : `Completar todas (${pendingItems.length - needPhoto.length})`}
+            </button>
+          </div>
+        ) : null}
+
+        <div className="olp-xcards">
+          {items.map((it, ix) => (
+            <ExecItemCard key={it.id} order={order} it={it} ix={ix} disabled={closed || bulkBusy} onDone={load} />
+          ))}
+        </div>
+
+        {order.status !== "CANCELLED" ? (
+          <section className="olp-panel olp-page-end">
+            <div className="olp-panel-head">
+              <h3>Cierre de la orden</h3>
             </div>
-          )}
-        </div>
-
-        {/* Sticky Footer */}
-        <div style={{ position: "sticky", bottom: 0, background: COLORS.bgCard, borderTop: `1px solid ${COLORS.border}`, padding: "16px 24px", display: "flex", gap: 8, justifyContent: "flex-end", alignItems: "center" }}>
-          <button
-            onClick={() => navigate(`/preventive-orders/${order.id}`)}
-            style={{
-              padding: "12px 24px",
-              borderRadius: 10,
-              border: `1px solid ${COLORS.border}`,
-              background: "transparent",
-              color: COLORS.textSecondary,
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = COLORS.accent;
-              e.currentTarget.style.color = COLORS.accent;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = COLORS.border;
-              e.currentTarget.style.color = COLORS.textSecondary;
-            }}
-          >
-            Atrás
-          </button>
-
-          <button
-            onClick={handleCompleteOrder}
-            disabled={!allItemsCompleted || completing}
-            style={{
-              padding: "12px 28px",
-              borderRadius: 10,
-              border: "none",
-              background: allItemsCompleted && !completing ? COLORS.green : COLORS.textMuted,
-              color: "white",
-              fontWeight: 700,
-              cursor: allItemsCompleted && !completing ? "pointer" : "not-allowed",
-              opacity: allItemsCompleted && !completing ? 1 : 0.4,
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              if (allItemsCompleted && !completing) {
-                e.currentTarget.style.background = "#059669";
-                e.currentTarget.style.boxShadow = `0 8px 16px ${COLORS.green}40`;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (allItemsCompleted && !completing) {
-                e.currentTarget.style.background = COLORS.green;
-                e.currentTarget.style.boxShadow = "none";
-              }
-            }}
-          >
-            {completing ? "Finalizando…" : "Completar Orden"}
-          </button>
-        </div>
+            <div className="olp-panel-body olp-close">
+              {order.signatureImage ? (
+                <div className="olp-close-done">
+                  <Icon name="checkCircle" /> Orden cerrada y firmada.
+                </div>
+              ) : pendingItems.length ? (
+                <p style={{ margin: 0, fontSize: 13, color: "var(--tch-muted)" }}>
+                  Ejecuta u omite las {pendingItems.length} ruta(s) pendientes para poder firmar el cierre.
+                </p>
+              ) : (
+                <>
+                  <SignaturePad onChange={setSignature} label="Firma del técnico" />
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button type="button" className="tch-btn tch-btn-primary" onClick={closeOrder} disabled={closing || !signature}>
+                      <Icon name="check" size="sm" /> {closing ? "Cerrando…" : "Firmar y cerrar orden"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        ) : null}
       </div>
     </MainLayout>
+  );
+}
+
+function ExecItemCard({ order, it, ix, disabled, onDone }) {
+  const r = it.route || {};
+  const ist = ITEM_STATUS[it.status] || ITEM_STATUS.PENDING;
+  const pending = it.status === "PENDING";
+  const photoRequired = Boolean(order.requiresPhoto || r.evidenceRequired);
+  const hasLubricant = Boolean(r.lubricant);
+  const plannedQty = Number(r.quantity) > 0 ? Number(r.quantity) : null;
+
+  const [open, setOpen] = useState(false);
+  const [condition, setCondition] = useState("BUENO");
+  const [qty, setQty] = useState(plannedQty != null ? String(plannedQty) : "");
+  const [obs, setObs] = useState("");
+  const [photo, setPhoto] = useState(null);
+  const [busy, setBusy] = useState("");
+  const [result, setResult] = useState(null);
+
+  const step = plannedQty != null && plannedQty < 5 ? 0.5 : 1;
+  const bump = (d) => setQty((v) => String(Math.max(0, Math.round(((Number(v) || 0) + d) * 100) / 100)));
+
+  async function onPhoto(e) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    try {
+      setPhoto(await compressImage(f));
+    } catch (err) {
+      toast.error(err?.message || "No se pudo leer la foto");
+    }
+  }
+
+  async function submit(status) {
+    if (status === "SKIPPED" && !obs.trim()) return toast.error("Escribe el motivo para omitir la ruta");
+    if (status === "COMPLETED" && photoRequired && !photo) return toast.error("Esta ruta requiere foto de evidencia");
+    const q = qty === "" ? null : Number(qty);
+    if (status === "COMPLETED" && hasLubricant && q != null && !(q > 0)) return toast.error("Captura una cantidad mayor a cero");
+    setBusy(status);
+    try {
+      const res = await preventiveOrdersService.completeItem(order.id, it.id, {
+        status,
+        condition,
+        observations: obs.trim(),
+        photoUrl: photo,
+        ...(status === "COMPLETED" && q != null && q !== plannedQty ? { usedQuantity: q } : {}),
+      });
+      setResult(res);
+      if (status === "COMPLETED") {
+        toast.success(`${r.name}: ejecutada${res.nextDate && !res.shared ? ` · siguiente ${fmtDay(res.nextDate)}` : ""}`);
+        if (res.inventoryWarning) toast.warning(res.inventoryWarning);
+      } else toast.success(`${r.name}: omitida`);
+      await onDone?.();
+    } catch (e) {
+      toast.error(e?.message || "No se pudo registrar la ruta");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  const ex = it.execution;
+  const mv = ex?.movements?.[0];
+  const cond = CONDITIONS.find((c) => c.v === ex?.condition);
+
+  return (
+    <article className={`olp-x-card ${ist.cls}`}>
+      <div className="olp-x-head">
+        <span className="olp-route-ix">{it.status === "COMPLETED" ? <Icon name="check" size="sm" /> : ix + 1}</span>
+        <div className="olp-x-title">
+          <div className="olp-route-name">{r.name || "Ruta eliminada"}</div>
+          <div className="olp-route-sub">
+            <span>{r.lubricant?.name || r.lubricantName || (r.routeKind === "INSPECTION" ? "Inspección" : "Sin lubricante")}</span>
+            {r.method ? <span>{r.method}</span> : null}
+            {r.frequencyText ? <span>{r.frequencyText}</span> : null}
+            {r.sharedCount > 1 ? <span className="olp-tag is-blue">Compartida · {r.sharedCount} equipos</span> : null}
+            {photoRequired && pending ? <span className="olp-tag is-amber">Foto obligatoria</span> : null}
+          </div>
+        </div>
+        <span className={`olp-badge ${ist.cls}`}>{ist.label}</span>
+        {pending && !disabled ? (
+          <button type="button" className="tch-btn tch-btn-ghost" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+            {open ? "Cerrar" : "Registrar"}
+          </button>
+        ) : null}
+      </div>
+
+      {pending && open && !disabled ? (
+        <div className="olp-x-body">
+          <div className="olp-x-spec">
+            <Spec label="Cantidad por punto" value={qtyText(r.quantity, r.unit)} />
+            <Spec label="Puntos" value={r.points || 1} />
+            <Spec label="Consumo estimado" value={it.estimatedConsumption ? qtyText(it.estimatedConsumption.quantity, it.estimatedConsumption.unit) : "—"} />
+            <Spec label="Stock disponible" value={r.lubricant ? qtyText(r.lubricant.stock, r.lubricant.unit) : "—"} />
+            <Spec label="Próxima fecha actual" value={fmtDay(r.nextDate)} />
+          </div>
+          {r.instructions ? <div className="olp-x-instr">{r.instructions}</div> : null}
+
+          <div className="olp-field">
+            <span>Condición del equipo</span>
+            <div className="olp-cond" role="group" aria-label="Condición">
+              {CONDITIONS.map((c) => (
+                <button key={c.v} type="button" className={c.cls} aria-pressed={condition === c.v} onClick={() => setCondition(c.v)}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="olp-x-row">
+            {hasLubricant && plannedQty != null ? (
+              <div className="olp-field">
+                <span>Cantidad real por punto</span>
+                <div className="olp-step">
+                  <button type="button" onClick={() => bump(-step)} aria-label="Menos">
+                    −
+                  </button>
+                  <input inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value.replace(",", "."))} aria-label="Cantidad" />
+                  <em>{r.unit}</em>
+                  <button type="button" onClick={() => bump(step)} aria-label="Más">
+                    +
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div />
+            )}
+            <label className="olp-field">
+              <span>Observaciones {"(obligatorio para omitir)"}</span>
+              <textarea value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Ej. Se cambió grasera dañada, punto 3 sin acceso…" />
+            </label>
+          </div>
+
+          <div className="olp-photo">
+            <label className={photoRequired && !photo ? "is-required" : ""}>
+              <Icon name="camera" size="sm" /> {photo ? "Cambiar foto" : photoRequired ? "Tomar foto (obligatoria)" : "Agregar foto"}
+              <input type="file" accept="image/*" capture="environment" onChange={onPhoto} />
+            </label>
+            {photo ? (
+              <>
+                <img className="olp-thumb" src={photo} alt="Evidencia" />
+                <button type="button" className="tch-btn tch-btn-ghost" onClick={() => setPhoto(null)}>
+                  Quitar
+                </button>
+              </>
+            ) : null}
+          </div>
+
+          {r.sharedCount > 1 ? (
+            <div className="olp-warn">
+              <Icon name="info" size="sm" /> Ruta compartida con otros equipos: se registra solo para este equipo y la ruta conserva su fecha para los demás.
+            </div>
+          ) : null}
+
+          <div className="olp-x-foot">
+            <button type="button" className="tch-btn tch-btn-ghost" onClick={() => submit("SKIPPED")} disabled={!!busy}>
+              <Icon name="xCircle" size="sm" /> {busy === "SKIPPED" ? "Guardando…" : "Omitir"}
+            </button>
+            <button type="button" className="tch-btn tch-btn-primary" onClick={() => submit("COMPLETED")} disabled={!!busy}>
+              <Icon name="check" size="sm" /> {busy === "COMPLETED" ? "Guardando…" : "Ejecutar ruta"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {it.status === "COMPLETED" ? (
+        <div className="olp-result">
+          <Spec label="Condición" value={cond?.label || "—"} />
+          <Spec label="Inventario descontado" value={mv ? qtyText(mv.quantity, mv.unit) : result?.stock ? qtyText(result.stock.quantity, result.stock.unit) : "Sin descuento"} />
+          <Spec label={r.sharedCount > 1 ? "Fecha de la ruta (sin cambio)" : "Siguiente fecha"} value={fmtDay(r.nextDate)} green />
+          <Spec label="Ejecutada" value={`${fmtDay(it.completedAt)}${it.completedByUser?.name ? ` · ${it.completedByUser.name}` : ""}`} />
+        </div>
+      ) : null}
+      {it.status === "SKIPPED" && it.observations ? (
+        <div className="olp-result">
+          <Spec label="Motivo" value={it.observations} />
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function Spec({ label, value, green }) {
+  return (
+    <div className="olp-route-col">
+      <small>{label}</small>
+      <b className={green ? "is-green" : ""}>{value ?? "—"}</b>
+    </div>
   );
 }
