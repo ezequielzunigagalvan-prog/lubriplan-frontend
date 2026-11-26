@@ -1001,6 +1001,8 @@ function roleLabel(role) {
 
 function pageTitleFromPath(pathname) {
   if (pathname === "/") return "Panel";
+  if (pathname === "/dashboard/planta") return "Panel de planta";
+  if (pathname.startsWith("/dashboard")) return "Panel";
   if (pathname.startsWith("/routes")) return "Rutas";
   if (pathname.startsWith("/equipments")) return "Equipos";
   if (pathname.startsWith("/inventory")) return "Inventario";

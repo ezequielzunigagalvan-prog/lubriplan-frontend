@@ -11,6 +11,7 @@ import Unauthorized from "./pages/Unauthorized";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DashboardHome = lazy(() => import("./pages/DashboardHome"));
 const RoutesPage = lazy(() => import("./pages/RoutesPage"));
 const RouteDetail = lazy(() => import("./pages/RouteDetail"));
 const EditRoutePage = lazy(() => import("./pages/EditRoutePage"));
@@ -91,7 +92,8 @@ export default function App() {
         <Route path="/gestion-de-lubricantes" element={<GestionDeLubricantesPage />} />
         <Route path="/analisis-de-lubricacion" element={<AnalisisDeLubricacionPage />} />
 
-        <Route path="/dashboard" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><Dashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><DashboardHome /></ProtectedRoute>} />
+        <Route path="/dashboard/planta" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><Dashboard /></ProtectedRoute>} />
 
         <Route path="/admin/links/technicians" element={<ProtectedRoute roles={["ADMIN"]}><AdminTechLinksPage /></ProtectedRoute>} />
         <Route path="/admin/onboarding" element={<ProtectedRoute roles={["ADMIN"]}><AdminOnboardingPage /></ProtectedRoute>} />

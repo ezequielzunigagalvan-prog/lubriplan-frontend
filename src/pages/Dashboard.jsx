@@ -1,5 +1,6 @@
 ﻿// src/pages/Dashboard.jsx
 import { Link, useNavigate } from "react-router-dom";
+import PlantStatusBanner from "../components/dashboard/PlantStatusBanner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import WelcomeChecklist from "../components/onboarding/WelcomeChecklist";
@@ -2633,9 +2634,9 @@ function AdminPanel({
 
   const kpis = [
     {
-      title: "Cumplimiento global",
+      title: "Avance del mes",
       value: `${cumplimientoGlobal}%`,
-      sub: cumplimientoDelta == null ? "Mes seleccionado" : `${cumplimientoDelta >= 0 ? "+" : ""}${cumplimientoDelta}% vs mes anterior`,
+      sub: `${currentMonthTotals.completed || 0} de ${totalMonth} del mes completadas${cumplimientoDelta == null ? "" : ` · ${cumplimientoDelta >= 0 ? "+" : ""}${cumplimientoDelta}% vs mes anterior`}`,
       tone: cumplimientoGlobal >= 85 ? "green" : cumplimientoGlobal >= 70 ? "amber" : "red",
       iconName: "check",
     },
@@ -5447,6 +5448,7 @@ function AdminDashboard(props) {
         equipmentsWithoutRoutes={props.equipmentsWithoutRoutes}
       />
       <DashTop {...props} title="Panel de Control" executive />
+      <PlantStatusBanner month={props.month} />
 
       <AdminPanel
         isMobile={props.isMobile}
@@ -5580,9 +5582,9 @@ function SupervisorExecutivePanel({
 
   const kpis = [
     {
-      title: "Cumplimiento global",
+      title: "Avance del mes",
       value: `${cumplimientoGlobal}%`,
-      sub: "Mes seleccionado",
+      sub: `${currentMonthTotals.completed || 0} de ${totalMonth} del mes completadas`,
       tone: cumplimientoGlobal >= 85 ? "green" : cumplimientoGlobal >= 70 ? "amber" : "red",
       iconName: "check",
     },
@@ -5845,6 +5847,7 @@ function SupervisorDashboard(props) {
         equipmentsWithoutRoutes={props.equipmentsWithoutRoutes}
       />
       <DashTop {...props} title="Dashboard · Supervisor" executive />
+      <PlantStatusBanner month={props.month} />
 
       <SupervisorExecutivePanel
         {...props}

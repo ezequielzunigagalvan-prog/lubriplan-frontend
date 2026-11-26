@@ -96,7 +96,7 @@ export default function CorporateDashboard() {
   async function goToPlant(plantId) {
     if (!plantId) return;
     await setPlant(plantId);
-    navigate("/dashboard");
+    navigate("/dashboard/planta");
   }
 
   if (!canAccess) {
