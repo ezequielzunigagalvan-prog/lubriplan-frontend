@@ -11,6 +11,7 @@ import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
 import { usePlant } from "../context/PlantContext";
 import { formatRouteDisplayName } from "../utils/routeNames";
+import RouteCardSpot from "../components/LubricationCard/RouteCardSpot";
 // Si quieres toast global como en RoutesPage, descomenta:
 // import Toast from "../components/ui/Toast";
 
@@ -327,6 +328,13 @@ const canDeleteRoute = canManageRoutes && role === "ADMIN";
                 icon="user"
               />
             </div>
+
+            <RouteCardSpot
+              equipmentId={route.equipmentId ?? route.equipment?.id}
+              routeId={route.id}
+              fallbackImage={route.imageUrl || ""}
+              canEdit={canManageRoutes}
+            />
 
             {equipments.length > 1 || route.evidenceRequired ? (
               <div style={sectionCard}>

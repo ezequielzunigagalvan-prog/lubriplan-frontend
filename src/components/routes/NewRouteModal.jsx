@@ -13,6 +13,7 @@ import { Icon } from "../ui/lpIcons";
 import { usePlant } from "../../context/PlantContext";
 import { API_ASSETS_URL } from "../../services/api";
 import { getRouteKindPrefix, stripRouteKindPrefix } from "../../utils/routeNames";
+import RouteCardSpot from "../LubricationCard/RouteCardSpot";
 
 /* ================== HELPERS ================== */
 const WEEK_DAYS = [
@@ -1601,100 +1602,16 @@ const payload = {
           </div>
 
           <div style={section}>
-            <div style={sectionTitle}>
-              {isInspectionRoute
-                ? "Fotografía del punto o condición (opcional)"
-                : "Fotografía del punto de lubricación (opcional)"}
+            <div style={sectionTitle}>Ubicación del punto en la carta de lubricación</div>
+            <div style={hintStyle}>
+              En lugar de una foto por ruta, el técnico ve la carta del equipo con este punto resaltado.
+              {initialData?.id ? "" : " Después de guardar, ubícalo en la carta del equipo con «Cargar rutas»."}
             </div>
-
-            <div style={imgGrid}>
-              <div style={{ minWidth: 280 }}>
-                <div
-                  style={{
-                    ...uploadBox,
-                    ...(activeField === "routeImage" ? uploadBoxActive : null),
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => fileRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") fileRef.current?.click();
-                  }}
-                  onFocus={() => setActiveField("routeImage")}
-                  onBlur={() => setActiveField("")}
-                  title="Subir imagen"
-                >
-                  <div style={uploadIcon}>
-                    <Icon name="camera" />
-                  </div>
-
-                  <div style={{ display: "grid", gap: 6 }}>
-                    <div style={uploadTitle}>Subir imagen</div>
-                    <div style={uploadSub}>
-                      JPG, PNG o WEBP · Recomendado para identificar el punto
-                    </div>
-                    <div style={uploadHint}>Click para seleccionar archivo</div>
-                  </div>
-
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={handlePickImage}
-                    style={{ display: "none" }}
-                  />
-                </div>
-
-                {imagePreview || form.imageUrl ? (
-                  <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      style={btnGhostSmall}
-                      onClick={() => fileRef.current?.click()}
-                      disabled={saving}
-                    >
-                      Cambiar
-                    </button>
-
-                    <button
-                      type="button"
-                      style={btnDangerGhost}
-                      onClick={clearImage}
-                      disabled={saving}
-                    >
-                      Quitar
-                    </button>
-                  </div>
-                ) : null}
+            {initialData?.id && form.equipmentId ? (
+              <div style={{ marginTop: 10 }}>
+                <RouteCardSpot equipmentId={Number(form.equipmentId)} routeId={initialData.id} fallbackImage={form.imageUrl ? buildImgUrl(form.imageUrl) : ""} compact canEdit />
               </div>
-
-              <div style={imgPreviewCard}>
-                <div style={imgPreviewHeader}>
-                  <span style={imgPreviewTitle}>Vista previa</span>
-
-                  {imagePreview || form.imageUrl ? (
-                    <span style={imgPreviewOk}>
-                      <Icon name="check" /> Lista
-                    </span>
-                  ) : (
-                    <span style={imgPreviewEmptyPill}>Sin imagen</span>
-                  )}
-                </div>
-
-                <div style={imgBoxPro}>
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" style={img} />
-                  ) : form.imageUrl ? (
-                    <img src={buildImgUrl(form.imageUrl)} alt="Imagen guardada" style={img} />
-                  ) : (
-                    <div style={imgEmptyPro}>
-                      <Icon name="camera" style={{ opacity: 0.55 }} />
-                      <div style={{ marginTop: 10 }}>Aún no hay imagen</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            ) : null}
           </div>
 
           <div style={section}>

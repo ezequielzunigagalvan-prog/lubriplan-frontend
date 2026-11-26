@@ -6,6 +6,7 @@ import { getExecutionLubricants } from "../services/lubricantsService";
 import { API_ASSETS_URL } from "../services/api";
 import { Icon } from "../components/ui/lpIcons";
 import { useAuth } from "../context/AuthContext";
+import RouteCardSpot from "../components/LubricationCard/RouteCardSpot";
 import { formatRouteDisplayName } from "../utils/routeNames";
 
 /* =========================
@@ -648,19 +649,13 @@ setChecklist(buildChecklist(ex));
           {!loading && execution && (
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-              {!isManual && routePreviewUrl ? (
-                <div style={routeHeroWrap}>
-                  <div style={routeHeroBadge}>
-                    <Icon name="camera" style={{ width: 13, height: 13, color: "#0b1220" }} />
-                    <span>Referencia del punto</span>
-                  </div>
-                  <img
-                    src={routePreviewUrl}
-                    alt="Referencia de la ruta"
-                    style={routeHeroImg}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                </div>
+              {!isManual && execution?.route ? (
+                <RouteCardSpot
+                  equipmentId={execution?.evidenceEquipmentId || execution?.route?.equipmentId || execution?.route?.equipment?.id}
+                  routeId={execution?.route?.id || execution?.routeId}
+                  fallbackImage={routePreviewUrl}
+                  compact
+                />
               ) : null}
 
               {String(instructions || "").trim() && instructions !== "—" ? (

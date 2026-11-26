@@ -10,6 +10,7 @@ import { formatRouteDisplayName } from "../utils/routeNames";
 import { Icon } from "../components/ui/lpIcons";
 import NewRouteModal from "../components/routes/NewRouteModal";
 import EquipmentTechPanel from "../components/equipmentTech/EquipmentTechPanel";
+import MoveEquipmentModal from "../components/equipment/MoveEquipmentModal";
 import {
   critClass,
   critLabel,
@@ -31,7 +32,7 @@ export default function EquipmentDetailPage() {
   const { id } = useParams();
   const equipmentId = useMemo(() => Number(id), [id]);
   const { user } = useAuth();
-  const { currentPlantId, currentPlant } = usePlant();
+  const { currentPlantId, currentPlant, setPlant } = usePlant();
   const role = String(user?.role || "TECHNICIAN").toUpperCase();
   const canManage = role === "ADMIN" || role === "SUPERVISOR";
 
@@ -40,6 +41,8 @@ export default function EquipmentDetailPage() {
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState({});
   const [routeOpen, setRouteOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
+  const isAdmin = role === "ADMIN";
 
   const load = useCallback(async () => {
     if (!currentPlantId) return;
@@ -138,6 +141,11 @@ export default function EquipmentDetailPage() {
                 <button type="button" className="tch-btn tch-btn-ghost" onClick={() => navigate(`/equipments/${eq.id}/edit`)}>
                   <Icon name="edit" size="sm" /> Editar
                 </button>
+                {isAdmin ? (
+                  <button type="button" className="tch-btn tch-btn-ghost" onClick={() => setMoveOpen(true)} title="Trasladar el equipo con sus rutas y actividades a otra planta">
+                    <Icon name="building" size="sm" /> Trasladar a otra planta
+                  </button>
+                ) : null}
                 <button type="button" className="tch-btn tch-btn-primary" onClick={() => setRouteOpen(true)}>
                   <Icon name="plus" size="sm" /> Nueva ruta
                 </button>
@@ -264,6 +272,18 @@ export default function EquipmentDetailPage() {
             equipmentLocation: eq.location || "",
             technicianId: tech?.id ?? "",
             lockEquipment: true,
+          }}
+        />
+      ) : null}
+      {moveOpen && eq ? (
+        <MoveEquipmentModal
+          equipment={eq}
+          onClose={() => setMoveOpen(false)}
+          onMoved={async (r) => {
+            setMoveOpen(false);
+            // El equipo ya pertenece a la otra planta: cambia a esa planta para seguir viéndolo.
+            if (r?.target?.id) await setPlant?.(r.target.id);
+            navigate(`/equipments/${eq.id}`, { replace: true });
           }}
         />
       ) : null}
