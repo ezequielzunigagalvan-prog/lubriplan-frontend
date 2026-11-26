@@ -2,6 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import PlantStatusBanner from "../components/dashboard/PlantStatusBanner";
 import { ActivityLane, QuickTiles, LaneItem } from "../components/dashboard/DashboardBlocks";
+import TechnicianHome from "../components/dashboard/TechnicianHome";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import WelcomeChecklist from "../components/onboarding/WelcomeChecklist";
@@ -5715,12 +5716,22 @@ function TechnicianDashboard(props) {
   return (
     <div className="lp-fade-in" style={{ display: "grid", gap: 14 }}>
       <DashTop {...props} title="Dashboard · Técnico" />
-      <TechnicianPerfectPanel
-        {...props}
-        userId={myTechId}
+      <TechnicianHome
         userName={props.user?.name}
+        userId={myTechId}
+        month={props.month}
         activities={props.techDashboardActivities}
         loading={props.techDashboardLoading}
+        donutTotals={props.donutTotals}
+        openExecutionModal={props.openExecutionModal}
+        navigate={props.navigate}
+        onOpenEmergencyActivity={props.onOpenEmergencyActivity}
+        onOpenReportCondition={props.onOpenReportCondition}
+        offlineInfo={props.techOfflineInfo}
+        onSyncNow={props.handleTechOfflineSyncNow}
+        onPrepareOffline={props.handleTechPrepareOfflineNow}
+        syncing={props.syncingTechOffline}
+        preparing={props.preparingTechOffline}
       />
     </div>
   );

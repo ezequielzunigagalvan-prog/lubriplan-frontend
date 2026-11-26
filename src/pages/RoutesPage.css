@@ -1,0 +1,34 @@
+/* Rutas — complementa el sistema .tch- (TechniciansPage.css) */
+.rp-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.rp-kpi { border: 0; border-right: 1px solid var(--tch-border); background: transparent; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.rp-kpi:disabled { cursor: default; }
+.rp-kpi:not(:disabled):hover { background: var(--tch-surface-2); }
+.rp-kpi.is-on { background: var(--tch-accent-soft); box-shadow: inset 0 -3px 0 var(--tch-accent); }
+.rp-tabs { flex-wrap: wrap; }
+.rp-meta { font-size: 13px; color: var(--tch-muted); }
+.rp-meta b { color: var(--tch-text); }
+.rp-clear { display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: var(--tch-muted); cursor: pointer; }
+.rp-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 16px; border: 1px dashed var(--tch-border-hover); border-radius: 12px; background: var(--tch-surface); color: var(--tch-muted); text-align: center; }
+.rp-empty b { color: var(--tch-text); }
+
+.rp-groups { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr)); align-items: start; }
+.rp-group.is-wide { grid-column: 1 / -1; }
+.rp-group:not(.is-wide) .rp-group-body { grid-template-columns: 1fr; }
+.rp-group { border: 1px solid var(--tch-border); border-radius: 12px; background: var(--tch-surface); box-shadow: var(--shadow-sm); overflow: hidden; }
+.rp-group.is-multi { border-color: rgba(37, 99, 235, 0.35); }
+.rp-group-head { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--tch-border); background: var(--tch-surface-2); }
+.rp-group-head::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tch-accent); }
+.rp-group.is-multi .rp-group-head::before { background: #2563eb; }
+.rp-group-icon { display: grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0; border-radius: 8px; background: #0f172a; color: #fff; }
+.rp-group-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 16px; font-weight: 800; color: var(--tch-text); }
+.rp-group-sub { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 3px; font-size: 12px; color: var(--tch-muted); }
+.rp-code { font-family: var(--tch-mono); font-weight: 700; color: var(--tch-text); padding: 1px 6px; border: 1px solid var(--tch-border); border-radius: 4px; background: var(--tch-surface); }
+.rp-crit { font-family: var(--tch-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--tch-border); color: var(--tch-muted); }
+.rp-crit.is-red { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+.rp-crit.is-amber { color: #b45309; border-color: #fde68a; background: #fffbeb; }
+.rp-group-count { flex-shrink: 0; font-size: 12px; color: var(--tch-muted); }
+.rp-group-count b { font-size: 20px; font-weight: 800; color: var(--tch-text); margin-right: 3px; }
+.rp-group-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 12px; padding: 14px; align-items: start; }
+
+@media (max-width: 1000px) { .rp-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .rp-kpi:nth-child(3) { border-right: 0; } }
+@media (max-width: 560px) { .rp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

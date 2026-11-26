@@ -11,6 +11,8 @@ import { usePlant } from "../context/PlantContext";
 import { getTechnicians } from "../services/techniciansService";
 import { updateRoute } from "../services/routesService";
 import { RouteSkeleton } from "../components/ui/CardSkeleton";
+import "./TechniciansPage.css";
+import "./RoutesPage.css";
 import { daysFromToday, routeEquipmentList } from "../utils/routeFrequency";
 
 const STATUS_FILTERS = [
@@ -420,100 +422,87 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
 
   return (
     <MainLayout>
-      <div className="lp-fade-in" style={pageShell}>
-        {/* TOP BAR */}
-        <div style={topBar}>
+      <div className="tch lp-fade-in">
+        <header className="tch-head">
           <div>
-            <div style={kicker}>
-              <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
-              RUTAS · LUBRICACIÓN
+            <div className="tch-kicker">Rutas de lubricación{currentPlant?.name ? ` · ${currentPlant.name}` : ""}</div>
+            <h1 className="tch-title">Rutas</h1>
+            <div className="tch-sub">
+              Qué se lubrica, con qué, cuánto, cada cuándo y quién lo hace.
+              {!canEditRoutes ? " · Solo visualización" : role === "SUPERVISOR" ? " · Supervisor (sin eliminar)" : ""}
             </div>
-            <h1 style={title}>Rutas</h1>
-            <div style={subtitle}>
-  Planifica y gestiona las rutas de lubricación
-  {currentPlant?.name ? ` · Planta: ${currentPlant.name}` : ""}
-</div>
-
-            {!canEditRoutes ? (
-              <div style={readOnlyPill} title={`Perfil ${role}: solo visualización`}>
-                <Icon name="user" style={{ width: 16, height: 16 }} />
-                <span>Solo visualización</span>
-              </div>
-            ) : role === "SUPERVISOR" ? (
-              <div style={readOnlyPill} title="Supervisor: puede crear y editar, no puede eliminar">
-                <Icon name="warn" style={{ width: 16, height: 16 }} />
-                <span>Supervisor (sin eliminar)</span>
-              </div>
-            ) : null}
           </div>
-
-          <div style={topActions}>
-            {/* SEARCH */}
-            <div style={searchBox}>
-              <Icon name="search" style={{ width: 18, height: 18, color: "#64748b" }} />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar: ruta, equipo, TAG, lubricante, método…"
-                style={searchInput}
-              />
+          <div className="tch-head-actions">
+            <label className="tch-search">
+              <Icon name="search" size="sm" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar ruta, equipo, TAG, lubricante…" />
               {search ? (
-                <button type="button" onClick={() => setSearch("")} style={iconBtn} title="Limpiar">
-                  <Icon name="close" style={{ width: 18, height: 18, color: "#64748b" }} />
+                <button type="button" className="rp-clear" onClick={() => setSearch("")} aria-label="Limpiar búsqueda">
+                  <Icon name="close" size="sm" />
                 </button>
               ) : null}
-            </div>
-
-            {/* ✅ solo admin/supervisor */}
+            </label>
             {canEditRoutes ? (
               <button
                 type="button"
+                className="tch-btn tch-btn-primary"
                 onClick={() => {
                   setEditingRoute(null);
                   setShowNewRoute(true);
                 }}
-                style={btnPrimarySlim}
               >
-                <Icon name="plus" style={{ width: 16, height: 16 }} />
-                <span>Nueva ruta</span>
+                <Icon name="plus" size="sm" /> Nueva ruta
               </button>
             ) : null}
           </div>
-        </div>
+        </header>
 
         {!loading ? (
-          <div style={kpiGrid}>
-            <KpiCard title="Rutas" value={kpis.routes} icon="route" accentColor="#f97316" iconTone="orange" onClick={() => setStatusFilter("ALL")} />
-            <KpiCard title="Equipos cubiertos" value={kpis.equipments} icon="equipment" accentColor="#0f172a" iconTone="navy" />
-            <KpiCard title="Atrasadas" value={kpis.overdue} icon="alert" accentColor="#ef4444" iconTone={kpis.overdue ? "red" : "slate"} onClick={() => setStatusFilter("OVERDUE")} />
-            <KpiCard title="Para hoy" value={kpis.today} icon="calendar" accentColor="#f59e0b" iconTone="amber" onClick={() => setStatusFilter("TODAY")} />
-            <KpiCard title="Sin técnico" value={kpis.noTech} icon="user" accentColor="#64748b" iconTone={kpis.noTech ? "amber" : "slate"} onClick={() => setStatusFilter("NO_TECH")} />
-          </div>
+          <section className="tch-kpis rp-kpis" aria-label="Resumen de rutas">
+            {[
+              { k: "ALL", icon: "route", v: kpis.routes, l: "Rutas", tone: "is-orange" },
+              { k: null, icon: "equipment", v: kpis.equipments, l: "Equipos cubiertos", tone: "" },
+              { k: "OVERDUE", icon: "alert", v: kpis.overdue, l: "Atrasadas", tone: kpis.overdue ? "is-red" : "" },
+              { k: "TODAY", icon: "calendar", v: kpis.today, l: "Para hoy", tone: kpis.today ? "is-orange" : "" },
+              { k: "NO_TECH", icon: "user", v: kpis.noTech, l: "Sin técnico", tone: kpis.noTech ? "is-orange" : "" },
+            ].map((x) => (
+              <button
+                key={x.l}
+                type="button"
+                className={`tch-kpi rp-kpi ${x.k && statusFilter === x.k ? "is-on" : ""}`}
+                onClick={() => x.k && setStatusFilter(x.k)}
+                disabled={!x.k}
+              >
+                <div className={`tch-kpi-icon ${x.tone}`}><Icon name={x.icon} /></div>
+                <div style={{ minWidth: 0, textAlign: "left" }}>
+                  <div className="tch-kpi-value">{x.v}</div>
+                  <div className="tch-kpi-label">{x.l}</div>
+                </div>
+              </button>
+            ))}
+          </section>
         ) : null}
 
         {!loading && routes.length > 0 ? (
-          <div style={metaRow}>
-            {STATUS_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                type="button"
-                onClick={() => setStatusFilter(f.key)}
-                style={statusFilter === f.key ? filterChipOn : filterChip}
-              >
-                {f.label}
-              </button>
-            ))}
-            <span style={{ ...metaPill, marginLeft: "auto" }}>
-              Mostrando <b style={{ marginLeft: 6 }}>{sorted.length}</b>&nbsp;de {routes.length}
+          <div className="tch-toolbar">
+            <div className="tch-tabs rp-tabs" role="group" aria-label="Filtrar rutas">
+              {STATUS_FILTERS.map((f) => (
+                <button key={f.key} type="button" className="tch-tab" aria-pressed={statusFilter === f.key} onClick={() => setStatusFilter(f.key)}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <span className="rp-meta">
+              Mostrando <b>{sorted.length}</b> de {routes.length}
             </span>
           </div>
         ) : null}
 
         {!loading && routes.length > 0 && sorted.length === 0 ? (
-          <div style={emptyBox}>
-            <div style={emptyTitle}>Sin resultados</div>
-            <div style={emptyDesc}>Ninguna ruta coincide con el filtro o la búsqueda.</div>
-            <button type="button" style={emptyActionPrimary} onClick={() => { setStatusFilter("ALL"); setSearch(""); }}>
+          <div className="rp-empty">
+            <b>Sin resultados</b>
+            <span>Ninguna ruta coincide con el filtro o la búsqueda.</span>
+            <button type="button" className="tch-btn tch-btn-ghost" onClick={() => { setStatusFilter("ALL"); setSearch(""); }}>
               Ver todas
             </button>
           </div>
@@ -543,7 +532,7 @@ const handleAssignTechnicianToRoute = async (route, technicianId) => {
 
         {/* ✅ Agrupado por equipo */}
         {!loading && grouped.length > 0 ? (
-          <div style={{ marginTop: 14, display: "grid", gap: 14 }}>
+          <div className="rp-groups">
             {grouped.map((group, idx) => (
               <EquipmentGroupCard
   key={String(group.equipmentId ?? `no-eq-${idx}`)}
@@ -647,49 +636,39 @@ function EquipmentGroupCard({
       : "";
 
   return (
-    <div style={equipmentCard}>
-      <div style={equipmentStripe}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <div style={eqIconWrap}>
-            <Icon name="list" style={{ width: 18, height: 18, color: "#0b1220" }} />
+    <section className={`rp-group ${multi ? "is-multi" : ""} ${(routes?.length || 0) >= 3 ? "is-wide" : ""}`}>
+      <header className="rp-group-head">
+        <span className="rp-group-icon"><Icon name={multi ? "grid" : "equipment"} /></span>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="rp-group-title">
+            {eqName}
+            {critLabel ? <span className={`rp-crit ${critLabel.includes("CR") ? "is-red" : critLabel === "MEDIO" ? "is-amber" : ""}`}>{critLabel}</span> : null}
           </div>
-
-          <div style={{ minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <div style={eqTitle}>{eqName}</div>
-              {critLabel ? <span style={critPill(critLabel)}>{critLabel}</span> : null}
-            </div>
-
-            <div style={eqSub}>
-              {routes?.length || 0} ruta{routes?.length === 1 ? "" : "s"}
-              {multi ? <span style={{ opacity: 0.9 }}>· una actividad con lista de equipos</span> : null}
-              {eqCode ? (
-                <span style={eqCodePill} title="Código / TAG">
-                  <Icon name="tag" style={{ width: 14, height: 14 }} /> {eqCode}
-                </span>
-              ) : null}
-              {eqLocation ? <span style={{ opacity: 0.9 }}>· {eqLocation}</span> : null}
-            </div>
+          <div className="rp-group-sub">
+            {eqCode ? <span className="rp-code">{eqCode}</span> : null}
+            {eqLocation ? <span>{eqLocation}</span> : null}
+            {multi ? <span>Una actividad con lista de equipos</span> : null}
           </div>
         </div>
-      </div>
-
-      {/* Rutas dentro */}
-      <div style={routesGrid}>
+        <span className="rp-group-count">
+          <b>{routes?.length || 0}</b> ruta{routes?.length === 1 ? "" : "s"}
+        </span>
+      </header>
+      <div className="rp-group-body">
         {(routes || []).map((route) => (
           <RouteCard
-  key={route.id}
-  route={route}
-  onEdit={canEditRoutes ? () => onEditRoute(route) : undefined}
-  onDelete={canDeleteRoutes ? onDeleteRoute : undefined}
-  readOnly={!canEditRoutes}
-  disableDetails={!canEditRoutes}
-  technicians={technicians}
-  onAssignTechnician={canEditRoutes ? onAssignTechnician : undefined}
-/>
+            key={route.id}
+            route={route}
+            onEdit={canEditRoutes ? () => onEditRoute(route) : undefined}
+            onDelete={canDeleteRoutes ? onDeleteRoute : undefined}
+            readOnly={!canEditRoutes}
+            disableDetails={!canEditRoutes}
+            technicians={technicians}
+            onAssignTechnician={canEditRoutes ? onAssignTechnician : undefined}
+          />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -697,72 +676,12 @@ function EquipmentGroupCard({
    STYLES (alineado a tu look)
 ========================= */
 
-const pageShell = {
-  paddingTop: 6,
-  display: "grid",
-  gap: 14,
-};
 
-const topBar = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-end",
-  gap: 12,
-  flexWrap: "wrap",
-  padding: "14px 16px",
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
-};
 
-const kicker = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  fontSize: 11,
-  fontWeight: 950,
-  color: "#64748b",
-  letterSpacing: 1.2,
-};
 
-const title = {
-  margin: "6px 0 0",
-  fontSize: 28,
-  fontWeight: 950,
-  color: "#0f172a",
-  letterSpacing: 0.2,
-};
 
-const subtitle = {
-  marginTop: 6,
-  color: "#64748b",
-  fontWeight: 800,
-  fontSize: 12,
-};
 
-const readOnlyPill = {
-  marginTop: 10,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "6px 10px",
-  borderRadius: 999,
-  border: "1px solid #e5e7eb",
-  background: "rgba(255,255,255,0.70)",
-  color: "#334155",
-  fontWeight: 900,
-  fontSize: 12,
-};
 
-const topActions = {
-  display: "flex",
-  gap: 10,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
 
 const _panel = {
   marginTop: 14,
@@ -772,35 +691,8 @@ const _panel = {
   padding: 14,
 };
 
-const metaRow = {
-  marginTop: 14,
-  display: "flex",
-  gap: 10,
-  flexWrap: "wrap",
-};
 
-const filterChip = {
-  height: 34,
-  padding: "0 14px",
-  borderRadius: 999,
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "#fff",
-  color: "#334155",
-  fontWeight: 850,
-  fontSize: 13,
-  cursor: "pointer",
-};
-const filterChipOn = { ...filterChip, background: "#0f172a", borderColor: "#0f172a", color: "#fff" };
 
-const metaPill = {
-  background: "rgba(255,255,255,0.70)",
-  border: "1px solid #e5e7eb",
-  borderRadius: 999,
-  padding: "8px 12px",
-  fontWeight: 900,
-  fontSize: 12,
-  color: "#0f172a",
-};
 
 const emptyBox = {
   marginTop: 14,
@@ -854,42 +746,10 @@ const emptyActionPrimary = {
 };
 
 /* SEARCH */
-const searchBox = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  background: "rgba(255,255,255,0.70)",
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "10px 12px",
-  minWidth: 340,
-};
 
-const searchInput = {
-  border: "none",
-  outline: "none",
-  background: "transparent",
-  width: 280,
-  fontWeight: 800,
-  color: "#0f172a",
-};
 
-const iconBtn = {
-  border: "none",
-  background: "transparent",
-  cursor: "pointer",
-  padding: 2,
-  display: "grid",
-  placeItems: "center",
-};
 
 /* KPI */
-const kpiGrid = {
-  marginTop: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-  gap: 12,
-};
 
 const kpiCard = {
   background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.92) 100%)",
@@ -951,101 +811,11 @@ const kpiLabel = {
 };
 
 /* EQUIPMENT GROUP CARD */
-const equipmentCard = {
-  borderRadius: 18,
-  border: "1px solid rgba(226,232,240,0.95)",
-  overflow: "hidden",
-  background: "rgba(255,255,255,0.78)",
-  boxShadow: "0 12px 28px rgba(2,6,23,0.06)",
-};
 
-const equipmentStripe = {
-  background: "linear-gradient(90deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86))",
-  padding: 14,
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-};
 
-const eqIconWrap = {
-  width: 44,
-  height: 44,
-  borderRadius: 14,
-  display: "grid",
-  placeItems: "center",
-  background: "rgba(249,115,22,0.92)",
-  border: "1px solid rgba(251,146,60,0.90)",
-  color: "#0b1220",
-};
 
-const eqTitle = {
-  color: "#fff",
-  fontWeight: 950,
-  fontSize: 18,
-  letterSpacing: 0.2,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  maxWidth: 520,
-};
 
-const eqSub = {
-  marginTop: 4,
-  color: "rgba(226,232,240,0.92)",
-  fontWeight: 800,
-  fontSize: 12,
-  display: "flex",
-  gap: 10,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
 
-const eqCodePill = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "4px 10px",
-  borderRadius: 999,
-  background: "rgba(255,255,255,0.12)",
-  border: "1px solid rgba(226,232,240,0.22)",
-  color: "rgba(255,255,255,0.95)",
-  fontWeight: 950,
-};
 
-const critPill = (label) => {
-  const isVery = label === "MUY CRÍTICO";
-  return {
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: `1px solid ${isVery ? "rgba(251,113,133,0.35)" : "rgba(226,232,240,0.22)"}`,
-    background: isVery ? "rgba(251,113,133,0.14)" : "rgba(255,255,255,0.12)",
-    color: isVery ? "rgba(255,241,242,0.95)" : "rgba(255,255,255,0.92)",
-    fontWeight: 950,
-    fontSize: 12,
-    letterSpacing: 0.4,
-  };
-};
 
-const routesGrid = {
-  padding: 14,
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(min(340px, 100%), 1fr))",
-  gap: 14,
-  alignItems: "start",
-};
 
-const btnPrimarySlim = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "8px 14px",
-  borderRadius: 12,
-  border: "1px solid rgba(249,115,22,0.55)",
-  background: "rgba(249,115,22,0.95)",
-  color: "#0b1220",
-  fontWeight: 900,
-  fontSize: 14,
-  cursor: "pointer",
-  boxShadow: "0 6px 14px rgba(249,115,22,0.18)",
-  transition: "all 140ms ease",
-};

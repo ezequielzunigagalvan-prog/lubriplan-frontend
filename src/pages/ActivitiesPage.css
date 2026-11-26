@@ -1,0 +1,48 @@
+/* Actividades — complementa el sistema .tch- */
+.ac-kpi { border: 0; border-right: 1px solid var(--tch-border); background: transparent; font: inherit; color: inherit; cursor: pointer; }
+.ac-kpi:hover { background: var(--tch-surface-2); }
+.ac-kpi.is-on { background: var(--tch-accent-soft); box-shadow: inset 0 -3px 0 var(--tch-accent); }
+.ac-btn-emergency { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+.ac-btn-emergency:hover { background: #991b1b; }
+
+.ac-offline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid #bbf7d0; background: #f0fdf4; font-size: 13px; color: #166534; }
+.ac-offline.is-off { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
+.ac-offline-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
+.ac-offline.is-off .ac-offline-dot { background: #f97316; }
+.ac-offline span { color: var(--tch-muted); font-weight: 600; }
+.ac-offline-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.ac-offline-actions button { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--tch-border); background: var(--tch-surface); color: var(--tch-text); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.ac-offline-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ac-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.ac-tabs { flex-wrap: wrap; }
+.ac-search { flex: 1 1 280px; max-width: 460px; }
+.ac-clear { display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: var(--tch-muted); cursor: pointer; }
+
+.ac-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border: 1px solid var(--tch-border); border-radius: 12px; background: var(--tch-surface); }
+.ac-field { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 4px 0 10px; border: 1px solid var(--tch-border); border-radius: 8px; background: var(--tch-surface-2); }
+.ac-field span { font-family: var(--tch-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tch-muted); }
+.ac-field input, .ac-field select { height: 30px; border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: var(--tch-text); outline: none; }
+.ac-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--tch-border); background: var(--tch-surface); color: var(--tch-text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ac-chip.is-on { background: #0f172a; border-color: #0f172a; color: #fff; }
+.ac-print { position: relative; }
+.ac-print summary { list-style: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--tch-border); background: var(--tch-surface); font-size: 13px; font-weight: 600; cursor: pointer; }
+.ac-print summary::-webkit-details-marker { display: none; }
+.ac-print > div { position: absolute; z-index: 20; top: 42px; left: 0; display: flex; gap: 6px; align-items: center; padding: 10px; border-radius: 10px; border: 1px solid var(--tch-border); background: var(--tch-surface); box-shadow: 0 14px 30px rgba(2, 6, 23, 0.15); white-space: nowrap; }
+.ac-print input { height: 34px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--tch-border); font: inherit; }
+.ac-count { margin-left: auto; font-size: 13px; color: var(--tch-muted); }
+.ac-count b { color: var(--tch-text); font-size: 15px; }
+
+@media (max-width: 760px) {
+  .ac-kpis { grid-template-columns: repeat(2, 1fr); }
+  .ac-kpi:nth-child(2) { border-right: 0; }
+  .ac-search { max-width: none; }
+  .ac-count { margin-left: 0; }
+}
+@media (max-width: 560px) {
+  .tch .tch-head { padding: 16px; }
+  .tch .tch-head-actions { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+  .tch .tch-head-actions .tch-btn { width: 100%; justify-content: center; padding: 0 6px; font-size: 12px; }
+  .ac-offline-actions { margin-left: 0; width: 100%; }
+  .ac-offline-actions button { flex: 1; justify-content: center; }
+}

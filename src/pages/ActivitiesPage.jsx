@@ -21,6 +21,9 @@ import EmergencyActivityModal from "../components/activities/EmergencyActivityMo
 import ReportConditionModal from "../components/activities/ReportConditionModal";
 import RescheduleModal from "../components/activities/RescheduleModal";
 import TechnicianSelect from "../components/activities/TechnicianSelect";
+import ActivityRow from "../components/activities/ActivityRow";
+import "./TechniciansPage.css";
+import "./ActivitiesPage.css";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/lpIcons";
 import { usePlant } from "../context/PlantContext";
@@ -272,9 +275,6 @@ export const diffDaysLocal = (fromISO, toISO) => {
 };
 
 
-const startOfMonthLocal = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(), 1);
-const endOfMonthLocal = (d = new Date()) =>
-  new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
 
 const addDaysLocal = (d, days) => {
   const out = new Date(d);
@@ -449,7 +449,6 @@ const highlightReportId = useMemo(() => {
   return Number.isFinite(val) && val > 0 ? val : null;
 }, [deep.reportId, location.state]);
 
-const focusMode = String(deep.focus || location.state?.focus || "").toLowerCase();
 
   const inRange = (iso, fromDate, toDate) => {
   if (!iso || !fromDate || !toDate) return false;
@@ -1229,6 +1228,7 @@ useEffect(() => {
 
 const pendingCount = baseCountList.filter((a) => a.computedStatus === "Pendiente").length;
 const lateCount = baseCountList.filter((a) => a.computedStatus === "Atrasada").length;
+const todayCount = baseCountList.filter((a) => a.computedStatus !== "Completada" && a.dateLabel === todayYMD).length;
 const completedCount = baseCountList.filter((a) => a.computedStatus === "Completada").length;
 
 
@@ -1307,106 +1307,55 @@ useEffect(() => {
         </div>
       ) : null}
 
-      <div className="lp-fade-in" style={pageShell}>
-        <div style={topBar}>
+      <div className="tch lp-fade-in">
+        <header className="tch-head">
           <div>
-            <div style={kicker}>
-              <span style={{ width: 18, height: 2, background: "#f97316", borderRadius: 999, flexShrink: 0 }} />
-              ACTIVIDADES · EJECUCIÓN
-            </div>
-            <h1 style={title}>Actividades</h1>
-            <div style={subtitle}>
-              {cleanUiText("Gestión diaria de ejecución, asignación y control")}
-              {currentPlant?.name ? ` - Planta: ${currentPlant.name}` : ""}
+            <div className="tch-kicker">Actividades{currentPlant?.name ? ` · ${currentPlant.name}` : ""}</div>
+            <h1 className="tch-title">{isTech ? "Mis actividades" : "Actividades"}</h1>
+            <div className="tch-sub">
+              {isTech ? "Lo que te toca ejecutar, en orden de prioridad." : "Ejecución, asignación y control de las actividades de la planta."}
             </div>
           </div>
-
-          <div style={topActions}>
-            {canSchedule ? (
-              <button
-                type="button"
-                style={btnPrimarySlim}
-                onClick={openScheduleModal}
-                title="Programar actividad"
-              >
-                <Icon name="plus" style={{ width: 16, height: 16 }} />
-                <span>{cleanUiText("Programar actividad")}</span>
-              </button>
-            ) : null}
-
-            <button onClick={load} style={btnGhost} disabled={loading} type="button">
-              <Icon name="refresh" style={{ width: 16, height: 16 }} />
-              <span>{cleanUiText(loading ? "Actualizando..." : "Actualizar")}</span>
+          <div className="tch-head-actions">
+            <button onClick={load} className="tch-btn tch-btn-ghost" disabled={loading} type="button">
+              <Icon name="refresh" size="sm" /> {loading ? "Actualizando…" : "Actualizar"}
             </button>
-
-            {isTech && offlineInfo.enabled ? (
-              <>
-                <button
-                  type="button"
-                  style={btnGhost}
-                  onClick={handlePrepareOfflineNow}
-                  disabled={preparingOffline || !offlineInfo.isOnline}
-                  title="Guardar actividades para trabajar sin conexión"
-                >
-                  <Icon name="download" style={{ width: 16, height: 16 }} />
-                  <span>{preparingOffline ? "Preparando..." : "Preparar modo offline"}</span>
-                </button>
-                <button
-                  type="button"
-                  style={btnGhost}
-                  onClick={handleSyncOfflineNow}
-                  disabled={syncingOffline || !offlineInfo.isOnline}
-                  title="Sincronizar pendientes"
-                >
-                  <Icon name="refresh" style={{ width: 16, height: 16 }} />
-                  <span>{syncingOffline ? "Sincronizando..." : "Sincronizar ahora"}</span>
-                </button>
-              </>
-            ) : null}
-
-            {canCreateEmergency ? (
-              <button
-                type="button"
-                style={btnEmergency}
-                onClick={() => setShowEmergency(true)}
-                title="Crear actividad emergente"
-              >
-                <Icon name="bolt" style={{ width: 16, height: 16 }} />
-                <span>{cleanUiText("Actividad emergente")}</span>
+            {canReportCondition ? (
+              <button type="button" className="tch-btn tch-btn-ghost" onClick={() => setOpenReportCondition(true)}>
+                <Icon name="warn" size="sm" /> Reportar condición
               </button>
             ) : null}
-
-            {canReportCondition ? (
-              <button
-                type="button"
-                onClick={() => setOpenReportCondition(true)}
-                style={btnGhost}
-                title="Reportar condición anormal"
-              >
-                <Icon name="warn" style={{ width: 16, height: 16 }} />
-                <span>{cleanUiText("Reportar condición")}</span>
+            {canCreateEmergency ? (
+              <button type="button" className="tch-btn ac-btn-emergency" onClick={() => setShowEmergency(true)}>
+                <Icon name="bolt" size="sm" /> Emergente
+              </button>
+            ) : null}
+            {canSchedule ? (
+              <button type="button" className="tch-btn tch-btn-primary" onClick={openScheduleModal}>
+                <Icon name="plus" size="sm" /> Programar actividad
               </button>
             ) : null}
           </div>
-        </div>
+        </header>
 
         {isTech && offlineInfo.enabled ? (
-          <div style={offlineBanner}>
-            <div style={{ display: "grid", gap: 4 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 950, color: offlineInfo.isOnline ? "#166534" : "#9a3412" }}>
-                <span style={{ width: 10, height: 10, borderRadius: 999, background: offlineInfo.isOnline ? "#22c55e" : "#f97316", display: "inline-block" }} />
-                {offlineInfo.isOnline ? "En línea" : "Sin conexión"}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#475569" }}>
-                Pendientes por sincronizar: <b style={{ color: "#0f172a" }}>{Number(offlineInfo.pendingCount || 0)}</b>
-                {offlineInfo.failedCount ? ` · Con error: ${Number(offlineInfo.failedCount || 0)}` : ""}
-                {offlineInfo.lastSyncAt ? ` · Última sincronización: ${toLocalDateTimeTextSafe(offlineInfo.lastSyncAt)}` : ""}
-              </div>
-            </div>
-
-            {!offlineInfo.isOnline ? (
-              <div style={offlineBannerPill}>Se guardará local y se sincronizará al volver la conexión.</div>
-            ) : null}
+          <div className={`ac-offline ${offlineInfo.isOnline ? "" : "is-off"}`}>
+            <span className="ac-offline-dot" />
+            <b>{offlineInfo.isOnline ? "En línea" : "Sin conexión"}</b>
+            <span>
+              Por sincronizar: {Number(offlineInfo.pendingCount || 0)}
+              {offlineInfo.failedCount ? ` · con error: ${Number(offlineInfo.failedCount || 0)}` : ""}
+              {offlineInfo.lastSyncAt ? ` · última: ${toLocalDateTimeTextSafe(offlineInfo.lastSyncAt)}` : ""}
+              {!offlineInfo.isOnline ? " · se guarda en el teléfono y se envía al volver la señal" : ""}
+            </span>
+            <span className="ac-offline-actions">
+              <button type="button" onClick={handlePrepareOfflineNow} disabled={preparingOffline || !offlineInfo.isOnline} title="Guardar actividades para trabajar sin conexión">
+                <Icon name="download" size="sm" /> {preparingOffline ? "Preparando…" : "Preparar sin conexión"}
+              </button>
+              <button type="button" onClick={handleSyncOfflineNow} disabled={syncingOffline || !offlineInfo.isOnline}>
+                <Icon name="refresh" size="sm" /> {syncingOffline ? "Sincronizando…" : "Sincronizar"}
+              </button>
+            </span>
           </div>
         ) : null}
 
@@ -1693,29 +1642,45 @@ useEffect(() => {
           </div>
         ) : null}
 
-        <div style={kpiGrid}>
-          <KpiCard title="Pendientes" value={pendingCount} icon="clock" tone="warn" />
-          <KpiCard title="Atrasadas" value={lateCount} icon="warn" tone="danger" />
-          <KpiCard title="Completadas" value={completedCount} icon="check" tone="success" />
+        <section className="tch-kpis ac-kpis" aria-label="Resumen">
+          {[
+            { f: "Atrasada", icon: "alert", v: lateCount, l: "Atrasadas", tone: lateCount ? "is-red" : "" },
+            { f: "Hoy", icon: "calendar", v: todayCount, l: "Para hoy", tone: todayCount ? "is-orange" : "" },
+            { f: "Pendiente", icon: "clock", v: pendingCount, l: "Pendientes", tone: "" },
+            { f: "Completada", icon: "checkCircle", v: completedCount, l: "Completadas", tone: "is-green" },
+          ].map((x) => (
+            <button key={x.l} type="button" className={`tch-kpi ac-kpi ${filter === x.f ? "is-on" : ""}`} onClick={() => setFilter(filter === x.f ? "Todas" : x.f)}>
+              <div className={`tch-kpi-icon ${x.tone}`}><Icon name={x.icon} /></div>
+              <div style={{ minWidth: 0, textAlign: "left" }}>
+                <div className="tch-kpi-value">{x.v}</div>
+                <div className="tch-kpi-label">{x.l}</div>
+              </div>
+            </button>
+          ))}
+        </section>
+
+        <div className="ac-toolbar">
+          <div className="tch-tabs ac-tabs" role="group" aria-label="Estado">
+            {["Hoy", "Todas", "Pendiente", "Atrasada", "Completada"].map((f) => (
+              <button key={f} type="button" className="tch-tab" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+                {f === "Pendiente" ? "Pendientes" : f === "Atrasada" ? "Atrasadas" : f === "Completada" ? "Completadas" : f}
+              </button>
+            ))}
+          </div>
+          <label className="tch-search ac-search">
+            <Icon name="search" size="sm" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar actividad, equipo, TAG o lubricante…" />
+            {q ? (
+              <button type="button" className="ac-clear" onClick={() => setQ("")} aria-label="Limpiar">
+                <Icon name="close" size="sm" />
+              </button>
+            ) : null}
+          </label>
         </div>
 
-        <div style={controlsRow}>
-          {canPrintActivities ? (
-            <div style={{ ...controlBlock, display: "grid", gap: 8, alignItems: "start" }}>
-              <span style={controlLabel}>{cleanUiText("Imprimir actividades:")}</span>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                <input type="date" value={printFrom} onChange={(e) => setPrintFrom(e.target.value)} style={controlInput} />
-                <span style={{ color: "#64748b", fontWeight: 900 }}>a</span>
-                <input type="date" value={printTo} onChange={(e) => setPrintTo(e.target.value)} style={controlInput} />
-                <button type="button" onClick={handlePrintActivities} style={btnGhost}>
-                  <Icon name="doc" style={{ width: 16, height: 16 }} />
-                  <span>Imprimir</span>
-                </button>
-              </div>
-            </div>
-          ) : null}
-          <div style={controlBlock}>
-            <span style={controlLabel}>{cleanUiText("Mes base:")}</span>
+        <div className="ac-filters">
+          <label className="ac-field">
+            <span>Mes</span>
             <input
               type="month"
               value={month}
@@ -1724,81 +1689,50 @@ useEffect(() => {
                 setMonth(v);
                 setQueryParam("month", v);
               }}
-              style={controlInput}
             />
-          </div>
-
-          <div style={controlBlock}>
-            <span style={controlLabel}>{cleanUiText("Completadas:")}</span>
-            <select
-              value={completedRange}
-              onChange={(e) => setCompletedRange(e.target.value)}
-              style={controlSelect}
-            >
-              <option value="MONTH">Este mes</option>
+          </label>
+          <label className="ac-field">
+            <span>Completadas</span>
+            <select value={completedRange} onChange={(e) => setCompletedRange(e.target.value)}>
+              <option value="MONTH">Del mes</option>
               <option value="30D">Últimos 30 días</option>
               <option value="90D">Últimos 90 días</option>
             </select>
-          </div>
-        </div>
-
-        <div style={searchRow}>
-          <div style={searchBox}>
-            <Icon name="search" style={{ width: 18, height: 18, color: "#0b1b33" }} />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={cleanUiText("Buscar actividad, equipo, TAG o lubricante...")}
-              style={searchInput}
-            />
-            {q ? (
-              <button type="button" onClick={() => setQ("")} style={iconBtn} title="Limpiar">
-                <Icon name="close" style={{ width: 18, height: 18, color: "#0b1b33" }} />
-              </button>
-            ) : null}
-          </div>
-
+          </label>
           {!isTech ? (
-            <select
-              value={techFilterId}
-              onChange={(e) => setTechFilterId(e.target.value)}
-              style={controlSelect}
-              title="Filtrar por Técnico"
-            >
-              <option value="">{cleanUiText("Todos los Técnicos")}</option>
-              {techs.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} {t.code ? `(${t.code})` : ""}
-                </option>
-              ))}
-            </select>
+            <label className="ac-field">
+              <span>Técnico</span>
+              <select value={techFilterId} onChange={(e) => setTechFilterId(e.target.value)}>
+                <option value="">Todos</option>
+                {techs.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} {t.code ? `(${t.code})` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
           ) : null}
-
-          <button
-            type="button"
-            onClick={() => setUnassignedOnly((v) => !v)}
-            style={{ ...filterBtn, ...(unassignedOnly ? filterBtnOn : {}) }}
-          >
-            {cleanUiText(unassignedOnly ? "Sin Técnico (activo)" : "Sin Técnico")}
+          <button type="button" className={`ac-chip ${unassignedOnly ? "is-on" : ""}`} onClick={() => setUnassignedOnly((v) => !v)}>
+            <Icon name="user" size="sm" /> Sin técnico
           </button>
-        </div>
-
-        <div style={filtersWrap}>
-          <div style={filters}>
-            {["Hoy", "Todas", "Pendiente", "Atrasada", "Completada"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                type="button"
-                style={{
-                  ...filterBtn,
-                  ...(filter === f ? filterBtnOn : {}),
-                }}
-              >
-                {cleanUiText(f)}
-              </button>
-            ))}
-          </div>
+          {canPrintActivities ? (
+            <details className="ac-print">
+              <summary>
+                <Icon name="doc" size="sm" /> Imprimir
+              </summary>
+              <div>
+                <input type="date" value={printFrom} onChange={(e) => setPrintFrom(e.target.value)} aria-label="Desde" />
+                <span>a</span>
+                <input type="date" value={printTo} onChange={(e) => setPrintTo(e.target.value)} aria-label="Hasta" />
+                <button type="button" className="tch-btn tch-btn-primary" onClick={handlePrintActivities}>
+                  Imprimir
+                </button>
+              </div>
+            </details>
+          ) : null}
+          <span className="ac-count">
+            <b>{filtered.length}</b> actividad{filtered.length === 1 ? "" : "es"}
+          </span>
         </div>
 
         {isTech && !loading && nextUp ? (
@@ -1835,19 +1769,19 @@ useEffect(() => {
               const isHighlighted = Number(a.id) === Number(highlightExecutionId);
               return (
                 <div style={{ paddingBottom: 10 }} ref={isHighlighted ? highlightedCardRef : null}>
-                  <ActivityCard
+                  <ActivityRow
                     activity={a}
                     todayYMD={todayYMD}
-                    onOpen={() => openComplete(a.id)}
+                    isTech={isTech}
+                    canAssignTech={canAssignTech}
                     techs={techs}
                     onAssignTech={onAssignTech}
                     assigningId={assigningId}
-                    canAssignTech={canAssignTech}
-                    canCompleteActivities={canCompleteActivities}
-                    highlighted={isHighlighted}
-                    isMobile={isMobile}
+                    onOpen={() => openComplete(a.id)}
                     onReschedule={canAssignTech ? (act) => setRescheduleTarget(act) : undefined}
                     onTechBorrowed={addBorrowedTech}
+                    highlighted={isHighlighted}
+                    evidenceUrl={a.computedStatus === "Completada" && a.evidenceImage ? buildImgUrl(a.evidenceImage) : ""}
                   />
                 </div>
               );
@@ -3142,75 +3076,13 @@ export function ActivityCard({
    ESTILOS
 ========================= */
 
-const pageShell = {
-  paddingTop: 6,
-  display: "grid",
-  gap: 14,
-};
 
-const kicker = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  fontSize: 11,
-  fontWeight: 950,
-  letterSpacing: 1.2,
-  color: "#64748b",
-};
 
-const title = {
-  margin: "6px 0 0",
-  fontSize: 22,
-  fontWeight: 980,
-  letterSpacing: 0.2,
-  color: "#0f172a",
-};
 
-const subtitle = {
-  marginTop: 6,
-  fontSize: 13,
-  fontWeight: 850,
-  color: "#475569",
-};
 
-const topBar = {
-  display: "flex",
-  alignItems: "flex-end",
-  justifyContent: "space-between",
-  gap: 10,
-  flexWrap: "wrap",
-  marginBottom: 14,
-  padding: "14px 16px",
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderTop: "3px solid #0f172a",
-  borderLeft: "3px solid rgba(249,115,22,0.55)",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 52%, rgba(255,247,237,0.60) 100%)",
-  boxShadow: "0 18px 36px rgba(2,6,23,0.07)",
-};
 
-const topActions = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  flexWrap: "wrap",
-};
 
 /* ===== Buttons ===== */
-const btnGhost = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.88)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  cursor: "pointer",
-  fontWeight: 950,
-  color: "#0f172a",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.06)",
-  transition: "transform 160ms ease, box-shadow 160ms ease",
-};
 
 const btnGhostSmall = {
   display: "inline-flex",
@@ -3226,20 +3098,6 @@ const btnGhostSmall = {
   color: "#0f172a",
 };
 
-const btnPrimarySlim = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  border: "1px solid rgba(249,115,22,0.55)",
-  background: "rgba(249,115,22,0.92)",
-  color: "#0b1220",
-  borderRadius: 12,
-  padding: "10px 12px",
-  cursor: "pointer",
-  fontWeight: 980,
-  boxShadow: "0 14px 28px rgba(249,115,22,0.18)",
-  transition: "transform 160ms ease, box-shadow 160ms ease",
-};
 
 const btnPrimary = {
   border: "1px solid rgba(249,115,22,0.55)",
@@ -3252,22 +3110,6 @@ const btnPrimary = {
   boxShadow: "0 14px 28px rgba(249,115,22,0.18)",
 };
 
-const btnEmergency = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "10px 12px",
-  borderRadius: 12,
-  background: "rgba(15,23,42,0.90)",
-  border: "1px solid rgba(15,23,42,0.80)",
-  color: "#fff",
-  fontSize: 13,
-  fontWeight: 980,
-  letterSpacing: 0.2,
-  cursor: "pointer",
-  boxShadow: "0 12px 26px rgba(2,6,23,0.18)",
-  transition: "transform 160ms ease, box-shadow 160ms ease",
-};
 
 /* ===== Banner ===== */
 const infoBanner = {
@@ -3299,12 +3141,6 @@ const infoText = {
 };
 
 /* ===== KPIs ===== */
-const kpiGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 14,
-  marginTop: 14,
-};
 
 const kpiCard = {
   position: "relative",
@@ -3376,108 +3212,19 @@ const kpiDot = {
 };
 
 /* ===== Controls / Search ===== */
-const controlsRow = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  flexWrap: "wrap",
-  marginTop: 12,
-};
 
-const controlBlock = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  flexWrap: "wrap",
-  minWidth: 0,
-};
 
-const controlLabel = {
-  fontSize: 12,
-  color: "#64748b",
-  fontWeight: 950,
-};
 
-const filterBtn = {
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderRadius: 999,
-  padding: "8px 14px",
-  cursor: "pointer",
-  boxShadow: "0 10px 22px rgba(2,6,23,0.05)",
-  fontWeight: 950,
-  background: "rgba(255,255,255,0.88)",
-  color: "#0f172a",
-};
 
-const filterBtnOn = {
-  background: "rgba(249,115,22,0.16)",
-  border: "1px solid rgba(249,115,22,0.40)",
-  color: "#0f172a",
-};
 
-const controlInput = { ...filterBtn, borderRadius: 12, padding: "8px 12px", minWidth: 0 };
 
-const controlSelect = { ...filterBtn, borderRadius: 12, minWidth: 0 };
 
-const searchRow = {
-  display: "flex",
-  gap: 10,
-  flexWrap: "wrap",
-  marginTop: 12,
-  alignItems: "center",
-};
 
-const searchBox = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  background: "rgba(255,255,255,0.90)",
-  border: "2px solid rgba(226,232,240,0.95)",
-  borderRadius: 14,
-  padding: "10px 12px",
-  minWidth: 0,
-  width: "100%",
-  flex: 1,
-  boxShadow: "0 12px 24px rgba(2,6,23,0.06)",
-};
 
-const searchInput = {
-  border: "none",
-  outline: "none",
-  background: "transparent",
-  fontWeight: 950,
-  color: "#0f172a",
-  minWidth: 0,
-  flex: 1,
-  width: "100%",
-};
 
-const iconBtn = {
-  border: "none",
-  background: "transparent",
-  cursor: "pointer",
-  padding: 2,
-  display: "grid",
-  placeItems: "center",
-};
 
 /* ===== Filters wrap ===== */
-const filtersWrap = {
-  marginTop: 16,
-  padding: 12,
-  borderRadius: 20,
-  border: "1px solid rgba(226,232,240,0.95)",
-  borderLeft: "3px solid rgba(249,115,22,0.45)",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.86) 100%)",
-  boxShadow: "0 16px 30px rgba(2,6,23,0.05)",
-  backdropFilter: "blur(8px)",
-};
 
-const filters = {
-  display: "flex",
-  gap: 10,
-  flexWrap: "wrap",
-};
 
 
 const cardTaskTitleMobile = {
@@ -3537,13 +3284,6 @@ const badgeMobile = {
 
 /* ===== List / Cards ===== */
 
-const supervisorActivitiesListDesktop = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: 14,
-  marginTop: 14,
-  alignItems: "stretch",
-};
 
 const card = {
   background:
@@ -3912,10 +3652,6 @@ const technicianEvidenceFrameCompact = {
   height: 92,
 };
 
-const technicianEvidenceFrameMobile = {
-  ...technicianEvidenceFrame,
-  height: 132,
-};
 
 const technicianEvidenceImg = {
   width: "100%",
@@ -4016,21 +3752,7 @@ const technicianCompleteBtnMobile = {
   fontSize: 16,
 };
 
-const meta = {
-  fontSize: 13,
-  color: "#64748b",
-  display: "flex",
-  gap: 14,
-  marginTop: 6,
-  flexWrap: "wrap",
-  fontWeight: 850,
-};
 
-const metaLine = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-};
 
 const tagPill = {
   marginLeft: 8,
@@ -4045,10 +3767,6 @@ const tagPill = {
   color: "#0f172a",
 };
 
-const miniTxt = {
-  fontSize: 12,
-  fontWeight: 950,
-};
 
 const badge = (status) => ({
   padding: "6px 10px",
@@ -4467,29 +4185,7 @@ const centerOverlay = {
   padding: 16,
 };
 
-const offlineBanner = {
-  marginTop: 12,
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 16,
-  alignItems: "center",
-  flexWrap: "wrap",
-  padding: "16px 18px",
-  borderRadius: 18,
-  border: "1px solid rgba(226,232,240,0.95)",
-  background: "rgba(255,255,255,0.92)",
-  boxShadow: "0 12px 30px rgba(2,6,23,0.06)",
-};
 
-const offlineBannerPill = {
-  padding: "10px 12px",
-  borderRadius: 999,
-  background: "rgba(249,115,22,0.12)",
-  color: "#9a3412",
-  fontWeight: 900,
-  fontSize: 12,
-  border: "1px solid rgba(249,115,22,0.24)",
-};
 
 const centerCard = {
   width: "min(340px, 90vw)",
