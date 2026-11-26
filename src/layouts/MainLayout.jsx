@@ -229,6 +229,7 @@ export default function MainLayout({ children }) {
     analysis: role === "ADMIN" || role === "SUPERVISOR",
     export: role === "ADMIN" || role === "SUPERVISOR",
     reports: role === "ADMIN" || role === "SUPERVISOR",
+    actionPlan: role === "ADMIN" || role === "SUPERVISOR",
     technicalAssistant: true,
     preventiveOrders: true,
 
@@ -688,6 +689,17 @@ export default function MainLayout({ children }) {
             </NavLink>
           )}
 
+          {can.actionPlan && (
+            <NavLink className="lpSideLink" to="/action-plan" style={navLinkStyle("/action-plan")}>
+              <span style={sideRow}>
+                <span style={navIconStyle("/action-plan")}>
+                  <Icon name="list" />
+                </span>
+                <span style={sideText}>Plan de acción</span>
+              </span>
+            </NavLink>
+          )}
+
           {can.reports && (
             <NavLink className="lpSideLink" to="/reports/monthly" style={navLinkStyle("/reports/monthly")}>
               <span style={sideRow}>
@@ -1013,6 +1025,7 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/corporate")) return "Dashboard Corporativo";
   if (pathname.startsWith("/export")) return "Exportar e importar";
   if (pathname.startsWith("/reports/monthly")) return "Reporte mensual";
+  if (pathname.startsWith("/action-plan")) return "Plan de acción";
   if (pathname.startsWith("/users")) return "Usuarios";
   if (pathname.startsWith("/admin/links")) return "Vínculos";
   if (pathname.startsWith("/admin/onboarding")) return "Alta cliente";

@@ -10,6 +10,8 @@ const META = {
   EXEC_OVERDUE: { icon: "clock", tone: "is-orange", label: "Vencidas" },
   LOW_STOCK: { icon: "drop", tone: "is-orange", label: "Inventario" },
   MONTHLY_TECH_SUMMARY: { icon: "trendUp", tone: "is-green", label: "Resumen" },
+  ACTION_ASSIGNED: { icon: "list", tone: "is-blue", label: "Plan de acción" },
+  ACTION_UPDATED: { icon: "trendUp", tone: "is-green", label: "Plan de acción" },
 };
 
 export const notifMeta = (type) => META[String(type || "").toUpperCase()] || { icon: "bell", tone: "", label: "Aviso" };
@@ -31,6 +33,7 @@ export function notifCategories(role) {
     { key: "overdue", label: "Vencidas", types: ["EXEC_OVERDUE"] },
     { key: "inventory", label: "Inventario", types: ["LOW_STOCK"] },
     { key: "assigned", label: "Asignaciones", types: ["EXEC_ASSIGNED"] },
+    { key: "actions", label: "Plan de acción", types: ["ACTION_ASSIGNED", "ACTION_UPDATED"] },
   ];
 }
 
