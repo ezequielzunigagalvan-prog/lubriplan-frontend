@@ -1,6 +1,7 @@
 ﻿// src/pages/Dashboard.jsx
 import { Link, useNavigate } from "react-router-dom";
 import PlantStatusBanner from "../components/dashboard/PlantStatusBanner";
+import { ActivityLane, QuickTiles, LaneItem } from "../components/dashboard/DashboardBlocks";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import WelcomeChecklist from "../components/onboarding/WelcomeChecklist";
@@ -2845,158 +2846,101 @@ function AdminPanel({
         ))}
       </div>
 
-      <PanelCard
-        title="Actividades críticas"
-        subtitle="Lo urgente del mes antes de entrar al análisis"
-        right={
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-            <Icon name="alert" size="sm" />
-            Prioridad 1
-          </span>
-        }
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.22fr) minmax(280px, 0.78fr)",
-            gap: 10,
-            alignItems: "start",
-          }}
-        >
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "grid", gap: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontWeight: 900, color: "#991b1b", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <Icon name="clock" size="sm" />
-                    Atrasadas ({operationalBuckets.overdue.length})
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Lo que ya se salió de fecha y requiere acción inmediata.</div>
-                </div>
-                {operationalBuckets.overdue.length > 3 ? (
-                  <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)}>
-                    Ver más
-                  </button>
-                ) : null}
-              </div>
-              {operationalLoading ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando actividades críticas…</div>
-              ) : operationalBuckets.overdue.length === 0 ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Sin atrasadas en este momento.</div>
-              ) : (
-                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.overdue.slice(0, 3).map((a) => renderAdminActivityCard(a, "overdue", "red"))}</div>
-              )}
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontWeight: 900, color: "#b45309", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <Icon name="alert" size="sm" />
-                    Pendientes hoy ({operationalBuckets.today.length})
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Solo rutas de equipos críticos y actividades nacidas de reportes de condición que deben resolverse hoy.</div>
-                </div>
-                {operationalBuckets.today.length > 3 ? (
-                  <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}&filter=admin-priority`)}>
-                    Ver más
-                  </button>
-                ) : null}
-              </div>
-              {operationalLoading ? null : operationalBuckets.today.length === 0 ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>No hay pendientes programadas para hoy.</div>
-              ) : (
-                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.today.slice(0, 3).map((a) => renderAdminActivityCard(a, "today", "amber"))}</div>
-              )}
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontWeight: 900, color: "#166534", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <Icon name="calendar" size="sm" />
-                    Próximas ({operationalBuckets.upcoming.length})
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Lo crítico y correctivo que viene en los próximos días para anticiparte sin perder foco operativo.</div>
-                </div>
-                {operationalBuckets.upcoming.length > 3 ? (
-                  <button type="button" style={btnAdminGhost} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}&status=PENDING&futureWindow=MONTH&filter=admin-priority`)}>
-                    Ver más
-                  </button>
-                ) : null}
-              </div>
-              {operationalLoading ? null : operationalBuckets.upcoming.length === 0 ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Sin próximas actividades relevantes por ahora.</div>
-              ) : (
-                <div style={{ display: "grid", gap: 8 }}>{operationalBuckets.upcoming.slice(0, 3).map((a) => renderAdminActivityCard(a, "upcoming", "green"))}</div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gap: 12 }}>
-            <PanelCard
-              title="Distribución del mes"
-              subtitle="Pendientes · Vencidas · Completadas"
-              right={
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-                  <Icon name="calendar" size="sm" />
-                  {month}
-                </span>
-              }
-            >
-              {donutLoading ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando…</div>
-              ) : (
-                <ActivitiesDonut
-                  completed={Number(currentMonthTotals.completed || 0)}
-                  pending={Number(currentMonthTotals.pending || 0)}
-                  overdue={Number(currentMonthTotals.overdue || 0)}
-                  onClickSlice={onClickDonut}
-                  size={224}
-                  stroke={20}
-                />
-              )}
-              <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "#475569", lineHeight: 1.45 }}>
-                Ataca primero las atrasadas, luego saca las de hoy y usa las próximas como colchón operativo.
-              </div>
-            </PanelCard>
-
-            <div style={{ border: "1px solid rgba(226,232,240,0.95)", borderRadius: 16, padding: 12, background: "rgba(255,255,255,0.94)", display: "grid", gap: 10 }}>
-              <div>
-                <div style={{ fontWeight: 900, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="tool" size="sm" />
-                  Acciones rápidas
-                </div>
-                <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, color: "#64748b" }}>Atajos cortos para resolver sin salir del bloque operativo.</div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8 }}>
-                <button style={btnAdminPrimary} onClick={() => navigate("/analysis")}>
-                  <span style={btnRow}><Icon name="search" size="sm" />Análisis</span>
-                </button>
-                <button style={btnAdminGhost} onClick={() => onOpenScheduleActivity?.()}>
-                  <span style={btnRow}><Icon name="plus" size="sm" />Programar</span>
-                </button>
-                <button style={btnAdminGhost} onClick={() => navigate("/condition-reports?status=OPEN")}>
-                  <span style={btnRow}><Icon name="warn" size="sm" />Condición</span>
-                </button>
-                <button style={btnAdminGhost} onClick={() => navigate("/inventory")}>
-                  <span style={btnRow}><Icon name="drop" size="sm" />Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null}</span>
-                </button>
-              </div>
-            </div>
-
-                        <AdminInventoryInsightCard
-              lowStockCount={Number(lowStockCount || 0)}
-              dteCount={dteCount}
-              navigate={navigate}
-              aiEnabled={aiEnabled}
-              lowStockItems={inventoryLow}
-              dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
-              supplySuggestion={supplySuggestion}
+      <div className="pd-lanes">
+        <ActivityLane
+          tone="red"
+          icon="clock"
+          title="Atrasadas"
+          subtitle="Fuera de fecha: actuar ya"
+          count={operationalBuckets.overdue.length}
+          loading={operationalLoading}
+          items={operationalBuckets.overdue}
+          renderItem={(a) => (
+            <LaneItem
+              key={`overdue-${a.id}`}
+              activity={a}
+              tone="red"
+              onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}&executionId=${a.id}`)}
             />
-          </div>
+          )}
+          emptyText="Sin actividades atrasadas"
+          onMore={() => navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`)}
+        />
+        <ActivityLane
+          tone="amber"
+          icon="alert"
+          title="Para hoy"
+          subtitle="Equipos críticos y correctivos"
+          count={operationalBuckets.today.length}
+          loading={operationalLoading}
+          items={operationalBuckets.today}
+          renderItem={(a) => (
+            <LaneItem
+              key={`today-${a.id}`}
+              activity={a}
+              tone="amber"
+              onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}&executionId=${a.id}`)}
+            />
+          )}
+          emptyText="Nada crítico pendiente para hoy"
+          onMore={() => navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}&filter=admin-priority`)}
+        />
+        <ActivityLane
+          tone="green"
+          icon="calendar"
+          title="Próximas"
+          subtitle="Lo crítico de los próximos días"
+          count={operationalBuckets.upcoming.length}
+          loading={operationalLoading}
+          items={operationalBuckets.upcoming}
+          renderItem={(a) => (
+            <LaneItem
+              key={`upcoming-${a.id}`}
+              activity={a}
+              tone="green"
+              onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}&executionId=${a.id}`)}
+            />
+          )}
+          emptyText="Sin próximas actividades relevantes"
+          onMore={() => navigate(`/activities?month=${encodeURIComponent(month)}&status=PENDING&futureWindow=MONTH&filter=admin-priority`)}
+        />
+      </div>
+
+      <div className="pd-row2">
+        <div className="pd-stack">
+          {donutLoading ? (
+            <div className="pd-hint">Cargando distribución…</div>
+          ) : (
+            <ActivitiesDonut
+                completed={Number(currentMonthTotals.completed || 0)}
+                pending={Number(currentMonthTotals.pending || 0)}
+                overdue={Number(currentMonthTotals.overdue || 0)}
+                onClickSlice={onClickDonut}
+                size={200}
+                stroke={18}
+              />
+          )}
+          <PanelCard title="Acciones rápidas" subtitle="Atajos del día">
+            <QuickTiles row
+            tiles={[
+              { label: "Programar", sub: "Nueva actividad", icon: "plus", primary: true, onClick: () => onOpenScheduleActivity?.() },
+              { label: "Análisis", sub: "Indicadores", icon: "search", onClick: () => navigate("/analysis") },
+              { label: "Condición", sub: "Reportes abiertos", icon: "warn", onClick: () => navigate("/condition-reports?status=OPEN") },
+              { label: "Inventario", sub: lowStockCount > 0 ? "Hay lubricantes en mínimo" : "Existencias", icon: "drop", badge: lowStockCount > 0 ? lowStockCount : null, onClick: () => navigate("/inventory") },
+            ]}
+          />
+          </PanelCard>
         </div>
-      </PanelCard>
+        <AdminInventoryInsightCard
+          lowStockCount={Number(lowStockCount || 0)}
+          dteCount={dteCount}
+          navigate={navigate}
+          aiEnabled={aiEnabled}
+          lowStockItems={inventoryLow}
+          dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
+          supplySuggestion={supplySuggestion}
+        />
+      </div>
 
       <WeeklyPlanInsightCard
         weeklyPlan={weeklyPlan}
@@ -3077,19 +3021,17 @@ function AdminPanel({
 
       {trendError ? <div style={miniError}>{trendError}</div> : null}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
-          gap: 12,
-        }}
-      >
+      <div className="pd-row3">
         <MiniBars
           title="Actividades por mes"
           subtitle="Últimos 6 meses"
           data={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), value: 0 })) : activityByMonth}
         />
-
+        <MiniLines
+          title="Eficiencia operacional"
+          subtitle="% completadas vs programadas · últimos 6 meses"
+          series={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), valuePct: 0 })) : efficiencyByMonth}
+        />
         <TechniciansEfficiencyCard
           month={month}
           items={effItems}
@@ -3102,12 +3044,6 @@ function AdminPanel({
           }}
         />
       </div>
-
-      <MiniLines
-        title="Eficiencia operacional"
-        subtitle="% completadas vs programadas · últimos 6 meses"
-        series={trendsLoading ? months6.map((ym) => ({ label: monthLabel(ym), valuePct: 0 })) : efficiencyByMonth}
-      />
 
 
     </div>
@@ -3323,26 +3259,26 @@ function SupervisorActivitiesFocusCard({ month, navigate, upcomingActivities, lo
           </div>
         ) : (
           <>
-            <div style={supervisorActivityList}>
-              {items.map((a) => (
-                <div key={a.id} style={supervisorActivityListItem}>
-                  <ActivityCard
-                    activity={a}
-                    todayYMD={todayYMD}
-                    onOpen={() =>
-                      navigate(`/activities?month=${encodeURIComponent(month)}`)
-                    }
-                    techs={[]}
-                    onAssignTech={() => {}}
-                    assigningId={null}
-                    canAssignTech={false}
-                    canCompleteActivities={false}
-                    showPreviewAction
-                    compactPreviewMode
-                    previewActionLabel="Abrir"
+            <div className="pd-li-grid">
+              {items.map((a) => {
+                const late = a.computedStatus === "Atrasada";
+                const tone = late ? "red" : a.isToday ? "amber" : a.computedStatus === "Completada" ? "blue" : "green";
+                const dateText = late
+                  ? `Atrasada ${a.overdueDays || ""} d · ${a.dateLabel || ""}`
+                  : a.isToday
+                  ? "Hoy"
+                  : a.computedStatus === "Completada"
+                  ? `Completada · ${a.dateLabel || ""}`
+                  : a.dateLabel;
+                return (
+                  <LaneItem
+                    key={a.id}
+                    activity={{ ...a, dateText }}
+                    tone={tone}
+                    onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}&executionId=${a.id}`)}
                   />
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={supervisorCompactFooter}>
@@ -5437,16 +5373,6 @@ function AdminDashboard(props) {
   return (
     <div className="lp-fade-in" style={{ display: "grid", gap: 14 }}>
       <WelcomeChecklist />
-      <FocusZoneBar
-        navigate={navigate}
-        month={month}
-        overdueCount={props.overdueCount}
-        lowStockCount={props.lowStockCount}
-        unassignedPending={props.unassignedPending}
-        conditionReportsOpen={props.conditionReportsOpen}
-        criticalExecutions={props.criticalExecutions}
-        equipmentsWithoutRoutes={props.equipmentsWithoutRoutes}
-      />
       <DashTop {...props} title="Panel de Control" executive />
       <PlantStatusBanner month={props.month} />
 
@@ -5622,117 +5548,48 @@ function SupervisorExecutivePanel({
         ))}
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "minmax(320px, 0.86fr) minmax(0, 1.14fr)",
-          gap: 12,
-          alignItems: "stretch",
-        }}
-      >
-        <div style={{ display: "grid", gap: 12, height: "100%", alignContent: "start" }}>
-          <PanelCard
-            title="Distribución del mes"
-            subtitle="Pendientes · Vencidas · Completadas"
-            right={
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-                <Icon name="calendar" size="sm" />
-                {month}
-              </span>
-            }
-          >
-            <div style={{ display: "grid", justifyItems: "center", paddingBottom: 4 }}>
-              {donutLoading ? (
-                <div style={{ fontWeight: 850, color: "#64748b" }}>Cargando…</div>
-              ) : (
-                <ActivitiesDonut
-                  completed={Number(currentMonthTotals.completed || 0)}
-                  pending={Number(currentMonthTotals.pending || 0)}
-                  overdue={Number(currentMonthTotals.overdue || 0)}
-                  onClickSlice={(key) => {
-                    if (key === "OVERDUE") navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`);
-                    if (key === "PENDING") navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}`);
-                    if (key === "COMPLETED") navigate(`/activities?status=COMPLETED&month=${encodeURIComponent(month)}`);
-                  }}
-                  size={210}
-                  stroke={18}
-                />
-              )}
-            </div>
-            <div style={{ marginTop: 10, fontSize: 13, fontWeight: 850, color: "#475569", lineHeight: 1.45 }}>
-              Ataca primero las atrasadas, luego organiza las de hoy y deja las próximas como colchón operativo.
-            </div>
-          </PanelCard>
+      {activitiesNode}
 
-                    <AdminInventoryInsightCard
-            lowStockCount={Number(lowStockCount || 0)}
-            dteCount={dteCount}
-            navigate={navigate}
-            aiEnabled={aiEnabled}
-            lowStockItems={inventoryLow}
-            dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
-            supplySuggestion={supplySuggestion}
+      <div className="pd-row2">
+        <div className="pd-stack">
+          {donutLoading ? (
+            <div className="pd-hint">Cargando distribución…</div>
+          ) : (
+            <ActivitiesDonut
+                completed={Number(currentMonthTotals.completed || 0)}
+                pending={Number(currentMonthTotals.pending || 0)}
+                overdue={Number(currentMonthTotals.overdue || 0)}
+                onClickSlice={(key) => {
+                  if (key === "OVERDUE") navigate(`/activities?status=OVERDUE&month=${encodeURIComponent(month)}`);
+                  if (key === "PENDING") navigate(`/activities?status=PENDING&month=${encodeURIComponent(month)}`);
+                  if (key === "COMPLETED") navigate(`/activities?status=COMPLETED&month=${encodeURIComponent(month)}`);
+                }}
+                size={200}
+                stroke={18}
+              />
+          )}
+          <PanelCard title="Acciones rápidas" subtitle="Operación diaria del supervisor">
+            <QuickTiles row
+            tiles={[
+              { label: "Actividades", sub: "Ver y asignar", icon: "list", primary: true, onClick: () => navigate(`/activities?month=${encodeURIComponent(month)}`) },
+              { label: "Programar", sub: "Nueva actividad", icon: "plus", onClick: () => onOpenScheduleActivity?.() },
+              { label: "Emergente", sub: "Registrar trabajo", icon: "bolt", onClick: () => onOpenEmergencyActivity?.() },
+              { label: "Condición", sub: "Reportes abiertos", icon: "warn", onClick: () => navigate("/condition-reports?status=OPEN") },
+              { label: "Inventario", sub: lowStockCount > 0 ? "Lubricantes en mínimo" : "Existencias", icon: "drop", badge: lowStockCount > 0 ? lowStockCount : null, onClick: () => navigate("/inventory") },
+              { label: "Plan de acción", sub: "Mis pendientes", icon: "doc", onClick: () => navigate("/action-plan") },
+            ]}
           />
-
-          <PanelCard
-            title="Acciones rápidas"
-            subtitle="Operación diaria del supervisor"
-            right={
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#64748b", fontWeight: 900, fontSize: 12 }}>
-                <Icon name="tool" size="sm" />
-                Atajos
-              </span>
-            }
-          >
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button style={btnAdminPrimary} onClick={() => navigate(`/activities?month=${encodeURIComponent(month)}`)}>
-                <span style={btnRow}>
-                  <Icon name="search" size="sm" />
-                  Ir a actividades
-                </span>
-              </button>
-
-              <button style={btnAdminGhost} onClick={() => onOpenScheduleActivity?.()}>
-                <span style={btnRow}>
-                  <Icon name="plus" size="sm" />
-                  Programar actividad
-                </span>
-              </button>
-
-              <button style={btnAdminGhost} onClick={() => onOpenEmergencyActivity?.()}>
-                <span style={btnRow}>
-                  <Icon name="warn" size="sm" />
-                  Registrar emergente
-                </span>
-              </button>
-
-              <button style={btnAdminGhost} onClick={() => navigate("/condition-reports?status=OPEN")}>
-                <span style={btnRow}>
-                  <Icon name="alert" size="sm" />
-                  Ver reportes de condición
-                </span>
-              </button>
-
-              <button style={btnAdminGhost} onClick={() => navigate("/inventory")}>
-                <span style={btnRow}>
-                  <Icon name="drop" size="sm" />
-                  Inventario {lowStockCount > 0 ? <span style={dotWarnTiny} /> : null}
-                </span>
-              </button>
-
-              <button style={btnAdminGhost} onClick={() => navigate("/analysis")}>
-                <span style={btnRow}>
-                  <Icon name="search" size="sm" />
-                  Ir a análisis
-                </span>
-              </button>
-            </div>
           </PanelCard>
         </div>
-
-        <div style={{ display: "grid", gap: 12, height: "100%", minHeight: 0 }}>
-          {activitiesNode}
-        </div>
+        <AdminInventoryInsightCard
+          lowStockCount={Number(lowStockCount || 0)}
+          dteCount={dteCount}
+          navigate={navigate}
+          aiEnabled={aiEnabled}
+          lowStockItems={inventoryLow}
+          dteItems={Array.isArray(predAlerts?.lubricantDaysToEmptyTop) ? predAlerts.lubricantDaysToEmptyTop : []}
+          supplySuggestion={supplySuggestion}
+        />
       </div>
 
       <WeeklyPlanInsightCard
@@ -5773,13 +5630,7 @@ function SupervisorExecutivePanel({
 
       {trendError ? <div style={miniError}>{trendError}</div> : null}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
-          gap: 12,
-        }}
-      >
+      <div className="pd-row2">
         <MiniBars
           title="Actividades por mes"
           subtitle="Últimos 6 meses"
@@ -5836,16 +5687,6 @@ function SupervisorDashboard(props) {
 
   return (
     <div className="lp-fade-in" style={{ display: "grid", gap: 14 }}>
-      <FocusZoneBar
-        navigate={navigate}
-        month={month}
-        overdueCount={props.overdueCount}
-        lowStockCount={props.lowStockCount}
-        unassignedPending={props.unassignedPending}
-        conditionReportsOpen={props.conditionReportsOpen}
-        criticalExecutions={props.criticalExecutions}
-        equipmentsWithoutRoutes={props.equipmentsWithoutRoutes}
-      />
       <DashTop {...props} title="Dashboard · Supervisor" executive />
       <PlantStatusBanner month={props.month} />
 
