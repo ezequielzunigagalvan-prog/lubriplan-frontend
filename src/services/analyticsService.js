@@ -222,12 +222,3 @@ export function getOleMetrics({ days = 90 } = {}) {
   return httpGet(`/analytics/ole?${qs.toString()}`);
 }
 
-/* =========================
-   DASHBOARD CORPORATIVO
-========================= */
-
-export function getCorporateDashboard({ days = 90 } = {}) {
-  const qs = new URLSearchParams();
-  qs.set("days", String(Number(days) || 90));
-  return httpGet(`/analytics/corporate?${qs.toString()}`);
-}

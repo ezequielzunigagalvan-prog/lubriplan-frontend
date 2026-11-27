@@ -24,7 +24,7 @@ export default function MainLayout({ children }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { currentPlant, currentPlantId, plants } = usePlant();
+  const { currentPlant, currentPlantId } = usePlant();
 
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -678,17 +678,6 @@ export default function MainLayout({ children }) {
             </NavLink>
           )}
 
-          {can.analysis && Array.isArray(plants) && plants.length >= 2 && (
-            <NavLink className="lpSideLink" to="/corporate" style={navLinkStyle("/corporate")}>
-              <span style={sideRow}>
-                <span style={navIconStyle("/corporate")}>
-                  <Icon name="building" />
-                </span>
-                <span style={sideText}>Dashboard Corporativo</span>
-              </span>
-            </NavLink>
-          )}
-
           {can.actionPlan && (
             <NavLink className="lpSideLink" to="/action-plan" style={navLinkStyle("/action-plan")}>
               <span style={sideRow}>
@@ -740,28 +729,6 @@ export default function MainLayout({ children }) {
                   <Icon name="building" />
                 </span>
                 <span style={sideText}>Alta cliente</span>
-              </span>
-            </NavLink>
-          )}
-
-          {role === "ADMIN" && (
-            <NavLink className="lpSideLink" to="/admin/landing-leads" style={navLinkStyle("/admin/landing-leads")}>
-              <span style={sideRow}>
-                <span style={navIconStyle("/admin/landing-leads")}>
-                  <Icon name="list" />
-                </span>
-                <span style={sideText}>Chat Landing</span>
-              </span>
-            </NavLink>
-          )}
-
-          {role === "ADMIN" && (
-            <NavLink className="lpSideLink" to="/admin/leads" style={navLinkStyle("/admin/leads")}>
-              <span style={sideRow}>
-                <span style={navIconStyle("/admin/leads")}>
-                  <Icon name="users" />
-                </span>
-                <span style={sideText}>Prospectos</span>
               </span>
             </NavLink>
           )}
@@ -1022,15 +989,12 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/activities")) return "Actividades";
   if (pathname.startsWith("/history")) return "Historial";
   if (pathname.startsWith("/analysis")) return "Análisis";
-  if (pathname.startsWith("/corporate")) return "Dashboard Corporativo";
   if (pathname.startsWith("/export")) return "Exportar e importar";
   if (pathname.startsWith("/reports/monthly")) return "Reporte mensual";
   if (pathname.startsWith("/action-plan")) return "Plan de acción";
   if (pathname.startsWith("/users")) return "Usuarios";
   if (pathname.startsWith("/admin/links")) return "Vínculos";
   if (pathname.startsWith("/admin/onboarding")) return "Alta cliente";
-  if (pathname.startsWith("/admin/landing-leads")) return "Chat Landing";
-  if (pathname.startsWith("/admin/leads")) return "Prospectos";
   if (pathname.startsWith("/settings")) return "Ajustes";
   if (pathname.startsWith("/notifications")) return "Notificaciones";
   if (pathname.startsWith("/technical-assistant")) return "Asistente técnico";

@@ -37,11 +37,8 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const MonthlyIntelligentReport = lazy(() => import("./pages/reports/MonthlyIntelligentReport"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AdminOnboardingPage = lazy(() => import("./pages/AdminOnboardingPage"));
-const LandingChatLogsPage = lazy(() => import("./pages/admin/LandingChatLogsPage"));
-const LandingLeadsPage = lazy(() => import("./pages/admin/LandingLeadsPage"));
 const LubriPlanCardLanding = lazy(() => import("./pages/LubriPlanCardLanding"));
 const TechnicalAssistantPage = lazy(() => import("./pages/TechnicalAssistantPage"));
-const CorporateDashboard = lazy(() => import("./pages/CorporateDashboard"));
 const LubricationCardPage = lazy(() => import("./pages/LubricationCardPage"));
 const QrResolvePage = lazy(() => import("./pages/QrResolvePage"));
 const EquipmentQrLabelsPage = lazy(() => import("./pages/EquipmentQrLabelsPage"));
@@ -101,8 +98,6 @@ export default function App() {
 
         <Route path="/admin/links/technicians" element={<ProtectedRoute roles={["ADMIN"]}><AdminTechLinksPage /></ProtectedRoute>} />
         <Route path="/admin/onboarding" element={<ProtectedRoute roles={["ADMIN"]}><AdminOnboardingPage /></ProtectedRoute>} />
-        <Route path="/admin/landing-leads" element={<ProtectedRoute roles={["ADMIN"]}><LandingChatLogsPage /></ProtectedRoute>} />
-        <Route path="/admin/leads" element={<ProtectedRoute roles={["ADMIN"]}><LandingLeadsPage /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute roles={["ADMIN"]}><UsersPage /></ProtectedRoute>} />
 
         <Route path="/inventory" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><InventoryPage /></ProtectedRoute>} />
@@ -115,7 +110,7 @@ export default function App() {
         <Route path="/routes/:id/edit" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><EditRoutePage /></ProtectedRoute>} />
         <Route path="/reports/monthly" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><MonthlyIntelligentReport /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute roles={["ADMIN"]}><SettingsPage /></ProtectedRoute>} />
-        <Route path="/corporate" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><CorporateDashboard /></ProtectedRoute>} />
+        <Route path="/corporate" element={<Navigate to="/dashboard" replace />} />
 
         <Route path="/equipments" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><EquipmentsPage /></ProtectedRoute>} />
         <Route path="/equipments/qr-labels" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><EquipmentQrLabelsPage /></ProtectedRoute>} />
