@@ -17,6 +17,8 @@ export default defineConfig({
         "pwa-192x192.png",
         "pwa-512x512.png",
         "maskable-512x512.png",
+        "maskable-192x192.png",
+        "favicon-tab.png",
         "apple-touch-icon.png",
       ],
       manifest: false,

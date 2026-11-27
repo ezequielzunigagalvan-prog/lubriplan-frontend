@@ -5920,8 +5920,8 @@ function DashTop({ user, role, summary, month, setMonth, load, loading, connecte
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", flexShrink: 0 }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", flexShrink: 1, minWidth: 0, maxWidth: "100%" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
           <span style={miniLbl}>Mes</span>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={select} />
         </div>

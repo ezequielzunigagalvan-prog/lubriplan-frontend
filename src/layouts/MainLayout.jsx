@@ -390,6 +390,21 @@ export default function MainLayout({ children }) {
           }
         }
 
+        /* Celular: el selector de planta se encoge y el título se recorta con "…" en vez de encimarse */
+        .lpTopPlantWrap { min-width: 0; }
+        @media (max-width: 640px) {
+          .lpTopbar { gap: 6px; }
+          .lpTopPlantWrap { padding: 4px 6px; gap: 6px; max-width: 128px; }
+          .lpTopPlantWrap > div:first-child { display: none; }
+          .lpTopPlantWrap > div { max-width: 116px !important; }
+          .lpTopPlantWrap > div > div { padding: 7px 8px !important; gap: 6px !important; }
+          .lpTopPlantWrap select { font-size: 12px !important; text-overflow: ellipsis; }
+        }
+        @media (max-width: 380px) {
+          .lpTopPlantWrap { max-width: 104px; }
+          .lpTopPlantWrap > div { max-width: 96px !important; }
+        }
+
         [data-theme="dark"] .lpSidebar {
           background: linear-gradient(180deg, #111827 0%, #0b1120 100%) !important;
           border-right-color: rgba(255,255,255,0.07) !important;
@@ -1277,6 +1292,7 @@ const topbarLeft = {
   alignItems: "center",
   gap: 12,
   minWidth: 0,
+  flex: "1 1 auto",
 };
 
 const topbarRight = {
@@ -1285,6 +1301,8 @@ const topbarRight = {
   gap: 8,
   flexWrap: "nowrap",
   minWidth: 0,
+  flex: "0 1 auto",
+  marginLeft: 8,
 };
 
 const menuBtn = {
@@ -1304,6 +1322,9 @@ const pageTitle = {
   fontWeight: 700,
   color: "#0f172a",
   whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  minWidth: 0,
   fontFamily: EXEC_DISPLAY_FONT,
   letterSpacing: "-0.02em",
 };

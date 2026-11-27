@@ -1,5 +1,6 @@
 /* Dashboard multiplanta — estilo industrial LubriPlan */
-.po-page { display: grid; gap: 14px; padding-top: 4px; }
+.po-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding-top: 4px; min-width: 0; }
+.po-page > * { min-width: 0; }
 
 .po-hero {
   display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; flex-wrap: wrap;
@@ -18,7 +19,9 @@
 .po-btn { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.1); color: #fff; font-weight: 900; cursor: pointer; }
 .po-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.18); }
 
-.po-totals { display: grid; grid-template-columns: minmax(260px, 2fr) repeat(5, minmax(110px, 1fr)); gap: 10px; }
+.po-totals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 10px; }
+/* El anillo ocupa dos columnas; se ajusta al espacio real (con o sin menú lateral) */
+.po-total.is-ring { grid-column: span 2; }
 .po-total { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 12px 14px; border-radius: 16px; background: #fff; border: 1px solid #e2e8f0; border-top: 4px solid #cbd5e1; box-shadow: 0 8px 20px rgba(2, 6, 23, 0.05); }
 .po-total > b { font-size: 26px; font-weight: 950; color: #0f172a; line-height: 1.1; }
 .po-total > span { font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #64748b; }
@@ -33,7 +36,9 @@
 .po-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .po-search { flex: 1 1 220px; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: #fff; color: #64748b; }
 .po-search input { flex: 1; border: none; outline: none; font: inherit; font-weight: 750; color: #0f172a; background: transparent; }
-.po-sort { display: inline-flex; padding: 3px; border-radius: 12px; background: #e2e8f0; gap: 2px; }
+.po-sort { display: inline-flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; padding: 3px; border-radius: 12px; background: #e2e8f0; gap: 2px; }
+.po-sort::-webkit-scrollbar { display: none; }
+.po-sort button { flex-shrink: 0; }
 .po-sort button { height: 34px; padding: 0 12px; border-radius: 9px; border: none; background: transparent; font-weight: 900; font-size: 13px; color: #334155; cursor: pointer; }
 .po-sort button.is-on { background: #0f172a; color: #fff; }
 .po-legend { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -89,13 +94,21 @@
 .po-empty b { color: #0f172a; font-size: 15px; }
 .po-foot { margin: 2px 0 0; font-size: 11px; font-weight: 700; color: #94a3b8; }
 
-@media (max-width: 1100px) { .po-totals { grid-template-columns: repeat(3, minmax(0, 1fr)); } .po-total.is-ring { grid-column: 1 / -1; } }
+
 @media (max-width: 560px) {
   .po-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .po-total.is-ring { grid-column: 1 / -1; }
   .po-hero h1 { font-size: 22px; }
   .po-card-mid { flex-direction: column; align-items: stretch; }
   .po-card-mid .po-ring { align-self: center; }
   .po-legend { display: none; }
+  .po-hero { padding: 16px; }
+  .po-hero-tools { width: 100%; }
+  .po-hero-tools > * { flex: 1 1 auto; justify-content: center; min-width: 0; }
+  .po-month input { min-width: 0; width: 100%; }
+  .po-total.is-ring { gap: 10px; }
+  .po-total.is-ring > div:last-child { min-width: 0; }
+  .po-search { flex-basis: 100%; }
 }
 
 /* Banner de estado en el dashboard de una planta */
@@ -105,7 +118,8 @@
 .psb-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .psb-back { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; color: #0f172a; font-weight: 900; font-size: 13px; cursor: pointer; }
 .psb-back:hover { background: #f1f5f9; }
-.psb-title { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.psb-title { display: flex; flex-direction: column; flex: 1 1 220px; min-width: 0; }
+.psb-title b { overflow-wrap: anywhere; }
 .psb-kicker { font-size: 10px; font-weight: 950; letter-spacing: 1px; color: #f97316; }
 .psb-title b { font-size: 18px; font-weight: 950; color: #0f172a; }
 .psb-body { display: grid; grid-template-columns: auto minmax(0, 1.6fr) minmax(220px, 1fr); gap: 14px; align-items: center; }

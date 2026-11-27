@@ -34,6 +34,10 @@
 .ac-count b { color: var(--tch-text); font-size: 15px; }
 
 @media (max-width: 760px) {
+  /* El menú de impresión se despliega dentro de la barra, no como globo fuera de la pantalla */
+  .ac-print[open] { flex-basis: 100%; }
+  .ac-print > div { position: static; margin-top: 8px; flex-wrap: wrap; white-space: normal; box-shadow: none; }
+  .ac-print > div input { flex: 1 1 130px; min-width: 0; }
   .ac-kpis { grid-template-columns: repeat(2, 1fr); }
   .ac-kpi:nth-child(2) { border-right: 0; }
   .ac-search { max-width: none; }

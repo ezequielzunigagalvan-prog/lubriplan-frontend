@@ -2,34 +2,18 @@
   "name": "LubriPlan",
   "short_name": "LubriPlan",
   "description": "Gestión de lubricación industrial para rutas, actividades, alertas y análisis operativo.",
-  "start_url": "/",
+  "id": "/",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#f97316",
   "lang": "es-MX",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
-    {
-      "src": "/pwa-desktop-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/pwa-desktop-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "/maskable-desktop-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "/pwa-192x192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512x512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/maskable-192x192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/maskable-512x512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
-
-
-
-
-
