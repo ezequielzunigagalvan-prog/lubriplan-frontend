@@ -36,7 +36,7 @@ const NewRoutePage = lazy(() => import("./pages/NewRoutePage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const MonthlyIntelligentReport = lazy(() => import("./pages/reports/MonthlyIntelligentReport"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
-const AdminOnboardingPage = lazy(() => import("./pages/AdminOnboardingPage"));
+const OwnerConsolePage = lazy(() => import("./pages/OwnerConsolePage"));
 const LubriPlanCardLanding = lazy(() => import("./pages/LubriPlanCardLanding"));
 const TechnicalAssistantPage = lazy(() => import("./pages/TechnicalAssistantPage"));
 const LubricationCardPage = lazy(() => import("./pages/LubricationCardPage"));
@@ -97,7 +97,8 @@ export default function App() {
         <Route path="/equipments/:id/diagrams/:diagramId" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR", "TECHNICIAN"]}><LubeDiagramEditorPage /></ProtectedRoute>} />
 
         <Route path="/admin/links/technicians" element={<ProtectedRoute roles={["ADMIN"]}><AdminTechLinksPage /></ProtectedRoute>} />
-        <Route path="/admin/onboarding" element={<ProtectedRoute roles={["ADMIN"]}><AdminOnboardingPage /></ProtectedRoute>} />
+        {/* Consola del dueño de la plataforma: fuera del sistema; el servidor valida que seas el dueño */}
+        <Route path="/consola" element={<ProtectedRoute roles={["ADMIN"]}><OwnerConsolePage /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute roles={["ADMIN"]}><UsersPage /></ProtectedRoute>} />
 
         <Route path="/inventory" element={<ProtectedRoute roles={["ADMIN", "SUPERVISOR"]}><InventoryPage /></ProtectedRoute>} />

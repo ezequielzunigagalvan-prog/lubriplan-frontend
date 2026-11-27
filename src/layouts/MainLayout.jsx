@@ -237,7 +237,6 @@ export default function MainLayout({ children }) {
     links: role === "ADMIN",
 
     settings: role === "ADMIN",
-    onboarding: role === "ADMIN",
     notifications: true,
   };
 
@@ -722,17 +721,6 @@ export default function MainLayout({ children }) {
             </NavLink>
           )}
 
-          {can.onboarding && (
-            <NavLink className="lpSideLink" to="/admin/onboarding" style={navLinkStyle("/admin/onboarding")}>
-              <span style={sideRow}>
-                <span style={navIconStyle("/admin/onboarding")}>
-                  <Icon name="building" />
-                </span>
-                <span style={sideText}>Alta cliente</span>
-              </span>
-            </NavLink>
-          )}
-
           {can.settings && (
             <NavLink className="lpSideLink" to="/settings" style={navLinkStyle("/settings")}>
               <span style={sideRow}>
@@ -994,7 +982,6 @@ function pageTitleFromPath(pathname) {
   if (pathname.startsWith("/action-plan")) return "Plan de acción";
   if (pathname.startsWith("/users")) return "Usuarios";
   if (pathname.startsWith("/admin/links")) return "Vínculos";
-  if (pathname.startsWith("/admin/onboarding")) return "Alta cliente";
   if (pathname.startsWith("/settings")) return "Ajustes";
   if (pathname.startsWith("/notifications")) return "Notificaciones";
   if (pathname.startsWith("/technical-assistant")) return "Asistente técnico";
