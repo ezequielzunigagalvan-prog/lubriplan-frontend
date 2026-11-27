@@ -1005,7 +1005,10 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
   const cached = !!data?.cached;
   const model = data?.model;
   const generatedAt = data?.generatedAt ? fmtDateTimeLocal(data.generatedAt) : null;
-  const isFallback = /fallback/i.test(String(summary?.title || ""));
+  // El servidor dice si el texto lo escribió la IA ("ai"), es el respaldo por falla ("fallback") o reglas fijas ("rules").
+  const source = data?.source || "ai";
+  const isFallback = source !== "ai";
+  const sourceLabel = source === "fallback" ? "Respaldo (IA no disponible)" : source === "rules" ? "Resumen automático" : "IA activa";
 
   const [topOil, setTopOil] = useState(null);
   const [topGrease, setTopGrease] = useState(null);
@@ -1103,7 +1106,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
     : err
     ? "No se pudo generar el resumen IA."
     : summary
-    ? "IA lista · " + (cached ? "cache" : "nuevo") + (model ? " · " + model : "") + (generatedAt ? " · " + generatedAt : "")
+    ? (source === "fallback" ? "La IA no respondió; se muestra un resumen calculado con reglas" : (cached ? "Resumen guardado" : "Resumen nuevo") + (source === "ai" && model ? " · " + model : "")) + (generatedAt ? " · " + generatedAt : "")
     : "Listo para generar una lectura ejecutiva operativa.";
 
   return (
@@ -1122,7 +1125,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           {summary ? (
             <span style={{ ...pqBadge, ...(isFallback ? pqBadgeWarn : pqBadgeInfo) }}>
-              {isFallback ? "Fallback seguro" : "IA activa"}
+              {sourceLabel}
             </span>
           ) : null}
 
@@ -1355,7 +1358,7 @@ function AiSummaryBox({ month, aiState, onGenerate, onRefresh, canForceRefreshAi
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {isFallback ? "Fallback seguro" : "IA activa"}
+                      {sourceLabel}
                     </span>
                   </div>
 

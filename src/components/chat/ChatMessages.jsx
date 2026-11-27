@@ -2,10 +2,12 @@
 import { useEffect, useRef } from "react";
 
 const SUGGESTIONS = [
-  { icon: "⚠️", label: "¿Actividades vencidas?" },
-  { icon: "🛢️", label: "¿Lubricantes bajo mínimo?" },
-  { icon: "👷", label: "¿Carga de técnicos?" },
-  { icon: "📋", label: "¿Reportes de condición abiertos?" },
+  { icon: "⚠️", label: "¿Qué actividades están vencidas y en qué equipos?" },
+  { icon: "📅", label: "¿Qué toca hoy y quién lo tiene?" },
+  { icon: "📈", label: "¿Cómo va el cumplimiento del mes?" },
+  { icon: "🛢️", label: "¿Qué lubricantes están bajo el mínimo?" },
+  { icon: "👷", label: "¿Cómo está la carga de los técnicos?" },
+  { icon: "🔧", label: "¿Qué equipos tienen peor condición?" },
 ];
 
 export default function ChatMessages({ messages, loading, error, onSuggest }) {
@@ -113,11 +115,16 @@ function MessageText({ text, isUser }) {
     return <div style={bubbleTextUser}>{text}</div>;
   }
   const parts = String(text || "").split("\n");
+  // Negritas **así** por si el modelo las usa; el resto como texto plano.
+  const renderLine = (line) =>
+    line.split(/(\*\*[^*]+\*\*)/g).map((seg, j) =>
+      /^\*\*[^*]+\*\*$/.test(seg) ? <b key={j}>{seg.slice(2, -2)}</b> : <span key={j}>{seg}</span>
+    );
   return (
     <div style={bubbleTextBot}>
       {parts.map((line, i) => (
         <span key={i}>
-          {line}
+          {renderLine(line)}
           {i < parts.length - 1 && <br />}
         </span>
       ))}
