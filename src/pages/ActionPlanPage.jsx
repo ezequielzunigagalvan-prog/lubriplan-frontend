@@ -82,7 +82,7 @@ export default function ActionPlanPage() {
   const navigate = useNavigate();
   const admin = String(user?.role || "").toUpperCase() === "ADMIN";
 
-  const [scope, setScope] = useState(admin ? "all" : "mine");
+  const [scope, setScope] = useState(() => (admin && new URLSearchParams(location.search).get("scope") !== "mine" ? "all" : "mine"));
   const [ownerFilter, setOwnerFilter] = useState("");
   const [showClosed, setShowClosed] = useState(false);
   const [onlyOverdue, setOnlyOverdue] = useState(false);

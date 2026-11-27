@@ -2,6 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import PlantStatusBanner from "../components/dashboard/PlantStatusBanner";
 import { ActivityLane, QuickTiles, LaneItem } from "../components/dashboard/DashboardBlocks";
+import useMyPending from "../hooks/useMyPending";
 import TechnicianHome from "../components/dashboard/TechnicianHome";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
@@ -2385,6 +2386,7 @@ function AdminPanel({
   showStructureKpis = true,
   onOpenScheduleActivity,
 }) {
+  const myPending = useMyPending();
   const { currentPlantId, loadingPlants } = usePlant();
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [trendCounts, setTrendCounts] = useState([]);
@@ -2931,6 +2933,7 @@ function AdminPanel({
               { label: "Análisis", sub: "Indicadores", icon: "search", onClick: () => navigate("/analysis") },
               { label: "Condición", sub: "Reportes abiertos", icon: "warn", onClick: () => navigate("/condition-reports?status=OPEN") },
               { label: "Inventario", sub: lowStockCount > 0 ? "Hay lubricantes en mínimo" : "Existencias", icon: "drop", badge: lowStockCount > 0 ? lowStockCount : null, onClick: () => navigate("/inventory") },
+              { label: "Mis pendientes", sub: myPending?.overdue ? `${myPending.overdue} vencido${myPending.overdue === 1 ? "" : "s"}` : myPending?.total ? `${myPending.total} abierto${myPending.total === 1 ? "" : "s"}` : "Plan de acción", icon: "doc", badge: myPending?.overdue || myPending?.total || null, onClick: () => navigate("/action-plan?scope=mine") },
             ]}
           />
           </PanelCard>
@@ -5468,6 +5471,7 @@ function SupervisorExecutivePanel({
   activitiesNode = null,
   showPriority = true,
 }) {
+  const myPending = useMyPending();
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [trendCounts, setTrendCounts] = useState([]);
   const [trendError, setTrendError] = useState("");
@@ -5580,7 +5584,7 @@ function SupervisorExecutivePanel({
               { label: "Emergente", sub: "Registrar trabajo", icon: "bolt", onClick: () => onOpenEmergencyActivity?.() },
               { label: "Condición", sub: "Reportes abiertos", icon: "warn", onClick: () => navigate("/condition-reports?status=OPEN") },
               { label: "Inventario", sub: lowStockCount > 0 ? "Lubricantes en mínimo" : "Existencias", icon: "drop", badge: lowStockCount > 0 ? lowStockCount : null, onClick: () => navigate("/inventory") },
-              { label: "Plan de acción", sub: "Mis pendientes", icon: "doc", onClick: () => navigate("/action-plan") },
+              { label: "Mis pendientes", sub: myPending?.overdue ? `${myPending.overdue} vencido${myPending.overdue === 1 ? "" : "s"}` : myPending?.total ? `${myPending.total} abierto${myPending.total === 1 ? "" : "s"}` : "Plan de acción", icon: "doc", badge: myPending?.overdue || myPending?.total || null, onClick: () => navigate("/action-plan?scope=mine") },
             ]}
           />
           </PanelCard>

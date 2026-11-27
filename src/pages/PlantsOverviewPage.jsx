@@ -9,6 +9,7 @@ import { usePlant } from "../context/PlantContext";
 import { httpGet, httpPost } from "../services/http";
 import { Icon } from "../components/ui/lpIcons";
 import { Ring, Spark } from "../components/dashboard/PlantGauges";
+import MyPendingCard from "../components/dashboard/MyPendingCard";
 import "./PlantsOverviewPage.css";
 
 const LEVEL = {
@@ -213,6 +214,8 @@ export default function PlantsOverviewPage() {
             </div>
           </section>
         ) : null}
+
+        <MyPendingCard />
 
         <div className="po-tools">
           <div className="po-search">

@@ -8,6 +8,7 @@ export const getActionPlan = ({ scope = "mine", includeClosed = false, ownerUser
   return httpGet(`/action-plan?${qs}`);
 };
 export const getActionAssignees = () => httpGet("/action-plan/assignees");
+export const getMyActionSummary = () => httpGet("/action-plan/my-summary");
 export const getActionItem = (id) => httpGet(`/action-plan/${id}`);
 export const createActionItem = (data) => httpPost("/action-plan", data);
 export const updateActionItem = (id, data) => httpPatch(`/action-plan/${id}`, data);
