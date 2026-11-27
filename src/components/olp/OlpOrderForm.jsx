@@ -8,6 +8,7 @@ import TechnicianSelect from "../activities/TechnicianSelect";
 import { getEquipment } from "../../services/equipmentService";
 import { getTechnicians } from "../../services/techniciansService";
 import { preventiveOrdersService } from "../../services/preventiveOrdersService";
+import { getSettings } from "../../services/settingsService";
 import { DUE_STATE, fmtDay, qtyText, todayYmdLocal, ymdOf } from "./olpUi";
 import "../../pages/TechniciansPage.css";
 import "./Olp.css";
@@ -38,6 +39,12 @@ export default function OlpOrderForm({ open, onClose, onSaved, order = null, def
       setEquipments(list);
       setTechs(tc || []);
     });
+    // Orden nueva: la foto obligatoria parte del ajuste de la planta.
+    if (!order?.id) {
+      getSettings()
+        .then((r) => alive && setForm((f) => ({ ...f, requiresPhoto: Boolean((r?.settings ?? r)?.requiresPhotoOLP) })))
+        .catch(() => {});
+    }
     return () => {
       alive = false;
     };

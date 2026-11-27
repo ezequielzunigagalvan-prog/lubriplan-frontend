@@ -4,7 +4,6 @@ import MainLayout from "../layouts/MainLayout";
 import { getSettings, updateSettings } from "../services/settingsService";
 import { getAuditLog } from "../services/auditLogService";
 import { useAuth } from "../context/AuthContext";
-import { btnPrimary, btnGhost } from "../components/ui/styles";
 import { usePlant } from "../context/PlantContext";
 import { Icon } from "../components/ui/lpIcons";
 
@@ -241,11 +240,12 @@ export default function SettingsPage() {
   const [auditDateTo, setAuditDateTo] = useState("");
   const [expandedRow, setExpandedRow] = useState(null);
 
-  const [settings, setSettings] = useState(null);
   const [original, setOriginal] = useState(null);
 
   // ===== UI state =====
   const [executionEvidenceRequired, setExecutionEvidenceRequired] = useState(false);
+  const [requiresPhotoOLP, setRequiresPhotoOLP] = useState(false);
+  const [scope, setScope] = useState("DEFAULT");
   const [preventNegativeStock, setPreventNegativeStock] = useState(true);
   const [lowStockWarningEnabled, setLowStockWarningEnabled] = useState(true);
 
@@ -270,6 +270,7 @@ export default function SettingsPage() {
 
     const current = {
       executionEvidenceRequired: Boolean(executionEvidenceRequired),
+      requiresPhotoOLP: Boolean(requiresPhotoOLP),
       preventNegativeStock: Boolean(preventNegativeStock),
       lowStockWarningEnabled: Boolean(lowStockWarningEnabled),
       technicianOverloadEnabled: Boolean(technicianOverloadEnabled),
@@ -289,6 +290,7 @@ export default function SettingsPage() {
 
     const base = {
       executionEvidenceRequired: Boolean(original.executionEvidenceRequired),
+      requiresPhotoOLP: Boolean(original.requiresPhotoOLP),
       preventNegativeStock: Boolean(original.preventNegativeStock ?? true),
       lowStockWarningEnabled: Boolean(original.lowStockWarningEnabled ?? true),
       technicianOverloadEnabled: Boolean(original.technicianOverloadEnabled ?? true),
@@ -308,7 +310,7 @@ export default function SettingsPage() {
 
     return JSON.stringify(current) !== JSON.stringify(base);
   }, [
-    original, executionEvidenceRequired, preventNegativeStock, lowStockWarningEnabled,
+    original, executionEvidenceRequired, requiresPhotoOLP, preventNegativeStock, lowStockWarningEnabled,
     technicianOverloadEnabled, predictiveAlertsEnabled, aiSummaryEnabled,
     criticalActivityEmailEnabled, conditionReportEmailEnabled,
     overdueSummaryEmailEnabled, monthlyReportEmailEnabled, monthlyTechSummaryEnabled,
@@ -318,10 +320,11 @@ export default function SettingsPage() {
 
   function hydrate(s) {
     const ss = s || {};
-    setSettings(ss);
     setOriginal(ss);
 
     setExecutionEvidenceRequired(Boolean(ss.executionEvidenceRequired));
+    setRequiresPhotoOLP(Boolean(ss.requiresPhotoOLP));
+    setScope(ss.scope === "PLANT" ? "PLANT" : "DEFAULT");
     setPreventNegativeStock(Boolean(ss.preventNegativeStock ?? true));
     setLowStockWarningEnabled(Boolean(ss.lowStockWarningEnabled ?? true));
 
@@ -417,6 +420,7 @@ export default function SettingsPage() {
       }
       const payload = {
         executionEvidenceRequired: Boolean(executionEvidenceRequired),
+        requiresPhotoOLP: Boolean(requiresPhotoOLP),
         preventNegativeStock: Boolean(preventNegativeStock),
         lowStockWarningEnabled: Boolean(lowStockWarningEnabled),
         technicianOverloadEnabled: Boolean(technicianOverloadEnabled),
@@ -436,7 +440,7 @@ export default function SettingsPage() {
       const res = await updateSettings(payload);
       const s = res?.settings ?? res;
       hydrate(s);
-      setSuccess("Ajustes guardados correctamente.");
+      setSuccess(`Ajustes guardados para ${currentPlant?.name || "esta planta"}. Las demás plantas no cambian.`);
     } catch (e) {
       setError(e?.message || "No se pudo guardar.");
     } finally {
@@ -483,9 +487,9 @@ export default function SettingsPage() {
             <Icon name="user" />
             {isAdmin ? "Modo edición habilitado" : "Solo lectura"}
           </MiniBadge>
-          <MiniBadge tone="gray">
+          <MiniBadge tone={scope === "PLANT" ? "green" : "gray"}>
             <Icon name="settings" />
-            Ajustes aplican por planta
+            {scope === "PLANT" ? "Ajustes propios de esta planta" : "Usa la configuración general (al guardar quedan propios de esta planta)"}
           </MiniBadge>
         </div>
 
@@ -541,11 +545,22 @@ export default function SettingsPage() {
                 >
                   <RowItem
                     title="Evidencia obligatoria"
-                    description="Solicita foto o nota al completar una actividad."
+                    description="Solicita foto o nota al completar una actividad o una ruta de orden preventiva."
                     right={
                       <Toggle
                         checked={executionEvidenceRequired}
                         onChange={setExecutionEvidenceRequired}
+                        disabled={!isAdmin || saving}
+                      />
+                    }
+                  />
+                  <RowItem
+                    title="Foto en órdenes preventivas (OLP)"
+                    description="Las nuevas órdenes OLP piden foto de evidencia en cada ruta (se puede cambiar en cada orden)."
+                    right={
+                      <Toggle
+                        checked={requiresPhotoOLP}
+                        onChange={setRequiresPhotoOLP}
                         disabled={!isAdmin || saving}
                       />
                     }
